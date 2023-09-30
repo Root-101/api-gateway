@@ -1,0 +1,23 @@
+server:
+    port: ${PORT}
+    
+spring:
+  profiles:
+    default: ${PROFILE}
+  application:
+    name: Maple Cloud Gateway
+---
+spring:
+  config:
+    activate:
+      on-profile: ${PROFILE}
+
+  cloud:
+    gateway:
+      routes:
+        - id: auth-server
+          uri: https://auth-api.root101.dev
+          predicates:
+            - Path=/**
+          filters:
+            - RewritePath=/auth/(?<segment>.*), /latest/$\{segment}
