@@ -1,5 +1,5 @@
 package dev.root101.maple_api_gateway;
-
+/*
 import java.util.Arrays;
 import org.springframework.security.config.annotation.web.reactive.EnableWebFluxSecurity;
 import org.springframework.security.config.web.server.ServerHttpSecurity;
@@ -43,3 +43,4 @@ public class ApplicationSecurityConfig {
     }
 
 }
+*/
