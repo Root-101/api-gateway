@@ -16,6 +16,11 @@ spring:
 
   cloud:
     gateway:
+      filter:
+        remove-hop-by-hop:
+          - Access-Control-Allow-Origin
+          - Access-Control-Allow-Headers
+          - Access-Control-Allow-Methods
       globalcors:
         corsConfigurations:
           '[/**]':
