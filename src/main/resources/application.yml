@@ -2,6 +2,8 @@ server:
     port: ${PORT}
     
 spring:
+  main:
+    web-application-type: reactive
   profiles:
     default: ${PROFILE}
   application:
