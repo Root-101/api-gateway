@@ -1,4 +1,4 @@
-FROM gradle:7.6-jdk17-alpine AS build
+FROM gradle:8.4.0-jdk21-alpine AS build
 
 ARG APP_HOME=/home/gradle/src
 
@@ -7,7 +7,7 @@ WORKDIR $APP_HOME
 
 RUN gradle --configure-on-demand -x check clean build --no-daemon
 
-FROM openjdk:17-jdk-alpine
+FROM openjdk:21-jdk-oracle
 
 RUN mkdir /app
 COPY --from=build /home/gradle/src/build/libs/*.jar /app/app.jar
