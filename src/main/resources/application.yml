@@ -7,36 +7,4 @@ spring:
   profiles:
     default: ${PROFILE}
   application:
-    name: Maple Cloud Gateway
----
-spring:
-  config:
-    activate:
-      on-profile: ${PROFILE}
-
-  cloud:
-    gateway:
-      filter:
-        remove-hop-by-hop:
-          - Access-Control-Allow-Origin
-          - Access-Control-Allow-Headers
-          - Access-Control-Allow-Methods
-      globalcors:
-        corsConfigurations:
-          '[/**]':
-            allowedOrigins: "*"
-            allowedHeaders: "*"
-            allowedMethods: "*"
-      routes:
-        - id: auth-server
-          uri: https://auth-api.root101.dev
-          predicates:
-            - Path=/auth/**
-          filters:
-            - RewritePath=/auth/(?<segment>.*), /latest/$\{segment}
-        - id: expenses-management
-          uri: https://expenses-management-api.root101.dev
-          predicates:
-            - Path=/expenses-management/**
-          filters:
-            - RewritePath=/expenses-management/(?<segment>.*), /latest/$\{segment}
+    name: ${APPLICATION_NAME}
