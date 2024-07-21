@@ -5,23 +5,23 @@
 #### PROFILE
 The profile type of the service.
 
-Expected: any
+**Expected:** any
 
-Example: DEV
+**Example:** DEV
 
 #### PORT
 The port in wich the service will be running
 
-Expected: number
+**Expected:** number
 
-Example: 8080
+**Example:** 8080
 
 #### APPLICATION_NAME
 The aplication name
 
-Expected: String
+**Expected:** String
 
-Example: Test App Api-Gateway
+**Example:** Test App Api-Gateway
 
 #### ROUTE_CONFIG
 The configuration of the routing for the api gateway
@@ -29,9 +29,9 @@ This is probably the most important field.
 
 This fields is suppost to be a Json representation of the object 'List<RouteConfigModel>'
 
-Expected: String, Json format of 'List<RouteConfigModel>'
+**Expected:** String, Json format of 'List<RouteConfigModel>'
 
-Example: 
+**Example:**
 ``` json
     [
       {
