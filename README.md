@@ -1,33 +1,27 @@
-## Api-Gateway
+# Api-Gateway
+
+---
+**title:** Api-Gateway </br>
+**description:** A basic ready-to-deploy api gateway </br>
+**tags:** </br>
+  - api-gateway
+  - spring boot
+  - java
+---
 
 ### Env Variables to configura the service:
 
-#### PROFILE
-The profile type of the service.
+| Env Variable     | Description                                          | Expected           | Example                  |
+| ---------------- | ---------------------------------------------------- | ------------------ | ------------------------ |
+| PORT             | The port in wich the service will be running         | number             | 8080                     |
+| PROFILE          | The profile type of the service                      | text               | DEV                      |
+| APPLICATION_NAME | The aplication name                                  | text               | Test App Api-Gateway     |
+| ROUTE_CONFIG     | The configuration of the routing for the api gateway | text (json format) | See ROUTE_CONFIG details |
 
-**Expected:** any
+#### ROUTE_CONFIG details
+This is probably the most important field in env variables.
 
-**Example:** DEV
-
-#### PORT
-The port in wich the service will be running
-
-**Expected:** number
-
-**Example:** 8080
-
-#### APPLICATION_NAME
-The aplication name
-
-**Expected:** String
-
-**Example:** Test App Api-Gateway
-
-#### ROUTE_CONFIG
-The configuration of the routing for the api gateway
-This is probably the most important field.
-
-This fields is suppost to be a Json representation of the object 'List<RouteConfigModel>'
+This fields need to be a Json representation of the object 'List<RouteConfigModel>'
 
 **Expected:** String, Json format of 'List<RouteConfigModel>'
 
@@ -50,3 +44,8 @@ This fields is suppost to be a Json representation of the object 'List<RouteConf
       }
    ]
 ```
+
+
+This is after all a project designed for deplay in railway as a template... so: 
+
+[![Deploy on Railway](https://railway.app/button.svg)](https://railway.app/new/template/----)
