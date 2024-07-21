@@ -28,6 +28,7 @@ This fields is suppost to be a Json representation of the object 'List<RouteConf
 
 Expected: String, Json format of 'List<RouteConfigModel>'
 Example: 
+``` json
     [
       {
          "id":"test-service-of-gateway",
@@ -44,3 +45,4 @@ Example:
          "replaceTo":"/"
       }
    ]
+```
