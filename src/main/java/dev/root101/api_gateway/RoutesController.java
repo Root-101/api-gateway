@@ -11,8 +11,12 @@ import reactor.core.publisher.Mono;
 @RequestMapping("/routes")
 public class RoutesController {
 
+    private final DynamicRouteService dynamicRouteService;
+
     @Autowired
-    private DynamicRouteService dynamicRouteService;
+    public RoutesController(DynamicRouteService dynamicRouteService) {
+        this.dynamicRouteService = dynamicRouteService;
+    }
 
     @GetMapping
     public Flux<RouteDefinition> getRoutes() {
