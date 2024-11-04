@@ -13,7 +13,7 @@
 
 | Env Variable     | Description                                          | Expected           | Example                  |
 | ---------------- | ---------------------------------------------------- | ------------------ | ------------------------ |
-| PORT             | The port in wich the service will be running         | number             | 8080                     |
+| PORT             | The port in which the service will be running        | number             | 8080                     |
 | PROFILE          | The profile type of the service                      | text               | DEV                      |
 | APPLICATION_NAME | The aplication name                                  | text               | Test App Api-Gateway     |
 | ROUTE_CONFIG     | The configuration of the routing for the api gateway | text (json format) | See ROUTE_CONFIG details |
@@ -46,6 +46,6 @@ This fields need to be a Json representation of the object 'List<RouteConfigMode
 ```
 
 
-This is after all a project designed for deplay in railway as a template... so: 
+This is after all a project designed for deplay in railway as a template... so:
 
-[![Deploy on Railway](https://railway.app/button.svg)](https://railway.app/new/template/----)
+[![Deploy on Railway](https://railway.app/button.svg)](https://railway.app/template/IR4lVv?referralCode=6_5_ta)
