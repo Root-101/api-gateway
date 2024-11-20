@@ -7,9 +7,7 @@ plugins {
 
 group = 'dev.root101'
 
-version = '2.2.0.20241119'
-
-sourceCompatibility = '21'
+version = '2.2.0'
 
 repositories {
     jcenter()
