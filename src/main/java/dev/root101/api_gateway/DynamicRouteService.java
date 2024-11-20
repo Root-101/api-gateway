@@ -37,21 +37,26 @@ public class DynamicRouteService {
         route.setId(routeDefinition.getId());
         route.setUri(URI.create(routeDefinition.getUri()));
 
+        // Predicado de la ruta
         PredicateDefinition predicateDefinition = new PredicateDefinition();
         predicateDefinition.setName("Path");
         predicateDefinition.setArgs(Map.of("_genkey_0", routeDefinition.getPath()));
         route.setPredicates(List.of(predicateDefinition));
 
-        FilterDefinition filterDefinition = new FilterDefinition();
-        filterDefinition.setName("RewritePath");
-        filterDefinition.setArgs(
+        // Filtro de reescritura de ruta
+        FilterDefinition rewritePathFilter = new FilterDefinition();
+        rewritePathFilter.setName("RewritePath");
+        rewritePathFilter.setArgs(
                 Map.of(
                         "_genkey_0", routeDefinition.getReplaceFrom(),
                         "_genkey_1", routeDefinition.getReplaceTo()
                 )
         );
-        route.setFilters(List.of(filterDefinition));
 
+        // Añadir los filtros a la ruta
+        route.setFilters(List.of(rewritePathFilter));
+
+        // Guardar y refrescar la ruta
         return routeDefinitionWriter.save(Mono.just(route)).then(Mono.defer(() -> {
             publisher.publishEvent(new RefreshRoutesEvent(this));
             return Mono.empty();
