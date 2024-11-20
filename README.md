@@ -21,6 +21,9 @@ to make the job easier.
 NOTE #3: Try to always use the latest version available for each tag. (Eg: The 2.x tag has versions 2.2.0, 2.1.0, 2.0.0;
 try to use the latest tag, in this case 2.2.0)
 
+NOTE #4: We recommend that you always use the latest available version, this way you can enjoy all the features, a more
+polished project and an overall better experience.
+
 ## This is the docs for version 2.x:
 
 ---
@@ -40,7 +43,7 @@ try to use the latest tag, in this case 2.2.0)
 |------------------|------------------------------------------------------|--------------------|--------------------------|
 | PORT             | The port in which the service will be running        | number             | 8080                     |
 | PROFILE          | The profile type of the service                      | text               | DEV                      |
-| APPLICATION_NAME | The aplication name                                  | text               | Test App Api-Gateway     |
+| APPLICATION_NAME | The application name                                 | text               | Test App Api-Gateway     |
 | ROUTE_CONFIG     | The configuration of the routing for the api gateway | text (json format) | See ROUTE_CONFIG details |
 
 #### ROUTE_CONFIG details
@@ -71,6 +74,8 @@ This fields need to be a Json representation of the object 'List<RouteConfigMode
       }
    ]
 ```
+
+##### Examples:
 
 When this service is configured and deployed, this are a couple of examples of redirection:
 
