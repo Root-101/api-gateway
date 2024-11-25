@@ -1,7 +1,8 @@
-package dev.root101.api_gateway;
+package dev.root101.api_gateway.feature.controller;
 
+import dev.root101.api_gateway.feature.model.RouteConfigModel;
+import dev.root101.api_gateway.feature.service.DynamicRouteService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.cloud.gateway.route.RouteDefinition;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Flux;
@@ -19,7 +20,7 @@ public class RoutesController {
     }
 
     @GetMapping
-    public Flux<RouteDefinition> getRoutes() {
+    public Flux<RouteConfigModel> getRoutes() {
         return dynamicRouteService.getRoutes();
     }
 
@@ -29,9 +30,14 @@ public class RoutesController {
         return dynamicRouteService.addRoute(routeDefinition);
     }
 
-    @DeleteMapping("/{routeId}")
+    @PutMapping("/{route-id}")
+    public Mono<Void> editRoute(@PathVariable("route-id") String routeId, @RequestBody RouteConfigModel routeDefinition) {
+        return dynamicRouteService.editRoute(routeId, routeDefinition);
+    }
+
+    @DeleteMapping("/{route-id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public Mono<Void> deleteRoute(@PathVariable String routeId) {
+    public Mono<Void> deleteRoute(@PathVariable("route-id") String routeId) {
         return dynamicRouteService.deleteRoute(routeId);
     }
 }

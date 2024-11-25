@@ -1,4 +1,4 @@
-package dev.root101.api_gateway;
+package dev.root101.api_gateway.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
