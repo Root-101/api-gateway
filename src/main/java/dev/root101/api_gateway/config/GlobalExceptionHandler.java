@@ -9,6 +9,7 @@ import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
+import org.springframework.web.ErrorResponse;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
@@ -41,6 +42,10 @@ public class GlobalExceptionHandler implements ErrorWebExceptionHandler {
                 case HttpClientErrorException ex -> {
                     body = ex.getResponseBodyAsString();
                     status = HttpStatus.valueOf(ex.getStatusCode().value());
+                }
+                case ErrorResponse error -> {
+                    body = error.getBody();
+                    status = HttpStatus.valueOf(error.getStatusCode().value());
                 }
                 default -> {
                     body = rawEx.getMessage();

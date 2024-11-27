@@ -1,6 +1,8 @@
 package dev.root101.api_gateway.feature.service;
 
 import dev.root101.api_gateway.feature.model.RouteConfigModel;
+import dev.root101.commons.exceptions.ConflictException;
+import dev.root101.commons.exceptions.NotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cloud.gateway.event.RefreshRoutesEvent;
 import org.springframework.cloud.gateway.filter.FilterDefinition;
@@ -40,6 +42,11 @@ public class DynamicRouteService {
      * @return void
      */
     public Mono<Void> addRoute(RouteConfigModel routeModel) {
+        RouteConfigModel oldById = findById(routeModel.getId());
+        if (oldById != null) {
+            throw new ConflictException("Route already exists: %s".formatted(routeModel.getId()));
+        }
+
         //parse model to route-definition
         RouteDefinition route = fromModel(routeModel);
 
@@ -48,6 +55,19 @@ public class DynamicRouteService {
 
         //write in route-definition and update routes
         return routeDefinitionWriter.save(Mono.just(route)).then(Mono.defer(this::updateRoutes));
+    }
+
+    public Mono<Void> addAllRoutes(List<RouteConfigModel> routeDefinition) {
+        //Add routes to storage list
+        routeConfigModels.addAll(routeDefinition);
+
+        //Create a flux with all routes
+        Flux<Void> saveOperations = Flux.fromIterable(routeDefinition)
+                .map(this::fromModel) // Parse RouteConfigModel => RouteDefinition
+                .flatMap(route -> routeDefinitionWriter.save(Mono.just(route))); //Save each route and add it to the Flux
+
+        //Run the save operation and call the update-routes
+        return saveOperations.then(this.updateRoutes());
     }
 
     /**
@@ -59,31 +79,22 @@ public class DynamicRouteService {
      * @return void
      */
     public Mono<Void> editRoute(String routeId, RouteConfigModel routeModel) {
-        //load old route
-        RouteConfigModel oldById = findById(routeId);
+        //Search and delete old route (if existed, if not: exception)
+        return Mono.justOrEmpty(findById(routeId))
+                .switchIfEmpty(Mono.error(new NotFoundException("Route does not exist: %s".formatted(routeId))))//If findBy is empty, throw exception
+                .doOnNext(oldRoute -> routeConfigModels.removeIf(e -> routeId.equals(e.getId())))//if existed: delete it
+                .flatMap(oldRoute -> {
+                    //Add model to local list
+                    routeConfigModels.add(routeModel);
 
-        //if route dont exist throw exception
-        if (oldById == null) {
-            throw new IllegalArgumentException("Route does not exist");//TODO: poner ruta que es
-        }
+                    //Parse RouteConfigModel => RouteDefinition
+                    RouteDefinition newRoute = fromModel(routeModel);
 
-        //if route exist:
-        //delete it from local list
-        routeConfigModels.removeIf(e -> routeId.equals(e.getId()));
-
-        //after deletion, update:
-
-        //parse model to route-definition
-        RouteDefinition route = fromModel(routeModel);
-
-        //add route into the list (in order to return it after as model)
-        routeConfigModels.add(routeModel);
-
-        //delete it from route-definition
-        return routeDefinitionWriter.delete(Mono.just(routeId)).then(
-                //write in route-definition and update routes
-                routeDefinitionWriter.save(Mono.just(route)).then(Mono.defer(this::updateRoutes))
-        );
+                    //Delete old route and save new one
+                    return routeDefinitionWriter.delete(Mono.just(routeId))
+                            .then(routeDefinitionWriter.save(Mono.just(newRoute)));
+                })
+                .then(Mono.defer(this::updateRoutes)); //Update routes after all
     }
 
     /**
@@ -92,12 +103,10 @@ public class DynamicRouteService {
      * @param routeId The id of the route to find
      */
     public RouteConfigModel findById(String routeId) {
-        for (RouteConfigModel routeConfigModel : routeConfigModels) {
-            if (routeConfigModel.getId().equals(routeId)) {
-                return routeConfigModel;
-            }
-        }
-        return null;
+        return routeConfigModels.stream()
+                .filter(route -> routeId.equals(route.getId()))
+                .findFirst()
+                .orElse(null);
     }
 
     /**
@@ -106,9 +115,15 @@ public class DynamicRouteService {
      * @param routeId The id of the route to delete
      */
     public Mono<Void> deleteRoute(String routeId) {
-        routeConfigModels.removeIf(e -> routeId.equals(e.getId()));
-
-        return routeDefinitionWriter.delete(Mono.just(routeId)).then(Mono.defer(this::updateRoutes));
+        //Search and delete old route (if existed, if not: exception)
+        return Mono.justOrEmpty(findById(routeId))
+                .switchIfEmpty(Mono.error(new NotFoundException("Route does not exist: %s".formatted(routeId))))//If findBy is empty, throw exception
+                .doOnNext(oldRoute -> routeConfigModels.removeIf(e -> routeId.equals(e.getId())))//if existed: delete it
+                .flatMap(oldRoute -> {
+                    //Delete old route and save new one
+                    return routeDefinitionWriter.delete(Mono.just(routeId));
+                })
+                .then(Mono.defer(this::updateRoutes)); //Update routes after all
     }
 
     /**
@@ -166,4 +181,5 @@ public class DynamicRouteService {
 
         return route;
     }
+
 }

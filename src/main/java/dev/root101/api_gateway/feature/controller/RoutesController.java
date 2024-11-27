@@ -8,6 +8,8 @@ import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/routes")
 public class RoutesController {
@@ -22,6 +24,12 @@ public class RoutesController {
     @GetMapping
     public Flux<RouteConfigModel> getRoutes() {
         return dynamicRouteService.getRoutes();
+    }
+
+    @PostMapping("/multi-add")
+    @ResponseStatus(HttpStatus.CREATED)
+    public Mono<Void> addAllRoutes(@RequestBody List<RouteConfigModel> routeDefinition) {
+        return dynamicRouteService.addAllRoutes(routeDefinition);
     }
 
     @PostMapping
