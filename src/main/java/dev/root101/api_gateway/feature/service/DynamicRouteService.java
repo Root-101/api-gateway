@@ -58,16 +58,21 @@ public class DynamicRouteService {
     }
 
     public Mono<Void> addAllRoutes(List<RouteConfigModel> routeDefinition) {
+        for (RouteConfigModel routeConfigModel : routeDefinition) {
+            RouteConfigModel oldById = findById(routeConfigModel.getId());
+            if (oldById != null) {
+                throw new ConflictException("Route already exists: %s".formatted(routeConfigModel.getId()));
+            }
+        }
+
         //Add routes to storage list
         routeConfigModels.addAll(routeDefinition);
 
         //Create a flux with all routes
-        Flux<Void> saveOperations = Flux.fromIterable(routeDefinition)
+        return Flux.fromIterable(routeDefinition)
                 .map(this::fromModel) // Parse RouteConfigModel => RouteDefinition
-                .flatMap(route -> routeDefinitionWriter.save(Mono.just(route))); //Save each route and add it to the Flux
-
-        //Run the save operation and call the update-routes
-        return saveOperations.then(this.updateRoutes());
+                .concatMap(route -> routeDefinitionWriter.save(Mono.just(route))) // Procesa secuencialmente
+                .then(Mono.defer(this::updateRoutes));
     }
 
     /**
