@@ -1,1 +1,7 @@
 rootProject.name = 'api-gateway'
+
+sourceControl {
+    gitRepository("https://github.com/Root-101/java-commons.git") {
+        producesModule("dev.root101.commons:commons")
+    }
+}
