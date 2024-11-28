@@ -15,10 +15,10 @@ public class RouteConfigModel {
     private String id;
 
     @NotBlank
-    @URL
     private String path;
 
     @NotBlank
+    @URL
     private String uri;
 
     private RewritePath rewritePath;
