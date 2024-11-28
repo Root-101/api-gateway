@@ -11,6 +11,7 @@ import java.util.List;
 @Configuration
 public class CorsConfig {
 
+    //TODO: maybe in a far-far-far away version, add the cors customizable via api
     @Bean
     public CorsWebFilter corsWebFilter() {
         CorsConfiguration corsConfiguration = new CorsConfiguration();
