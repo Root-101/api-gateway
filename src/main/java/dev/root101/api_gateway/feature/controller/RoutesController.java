@@ -11,6 +11,7 @@ import reactor.core.publisher.Mono;
 import java.util.List;
 
 @RestController
+//if this value changes, change it in: dev.root101.api_gateway.security.securityWebFilterChain:pathMatchers("/_admin/**")
 @RequestMapping("/_admin/routes")
 public class RoutesController {
 

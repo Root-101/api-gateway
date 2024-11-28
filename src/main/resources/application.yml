@@ -8,3 +8,9 @@ spring:
     default: ${PROFILE}
   application:
     name: ${APPLICATION_NAME}
+
+app:
+  admin:
+    username: ${ADMIN_USERNAME}
+    password: ${ADMIN_PASSWORD}
+    role: ROLE_GATEWAY_ADMIN      #if this value changes, change it in: dev.root101.api_gateway.security.securityWebFilterChain:(...).hasRole("GATEWAY_ADMIN")
