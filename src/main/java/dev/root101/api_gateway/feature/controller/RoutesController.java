@@ -11,7 +11,7 @@ import reactor.core.publisher.Mono;
 import java.util.List;
 
 @RestController
-@RequestMapping("/routes")
+@RequestMapping("/_admin/routes")
 public class RoutesController {
 
     private final DynamicRouteService dynamicRouteService;
