@@ -18,6 +18,7 @@ import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 public class DynamicRouteService {
@@ -58,6 +59,15 @@ public class DynamicRouteService {
     }
 
     public Mono<Void> addAllRoutes(List<RouteConfigModel> routeDefinition) {
+        //check for duplicated values in same list
+        Map<String, Long> frequencyMap = routeDefinition.stream()
+                .collect(Collectors.groupingBy(RouteConfigModel::getId, Collectors.counting()));
+        for (Map.Entry<String, Long> entry : frequencyMap.entrySet()) {
+            if (entry.getValue() > 1) {
+                throw new ConflictException("Duplicated route: %s".formatted(entry.getKey()));
+            }
+        }
+        //check for duplicated values with already inserted ones
         for (RouteConfigModel routeConfigModel : routeDefinition) {
             RouteConfigModel oldById = findById(routeConfigModel.getId());
             if (oldById != null) {
