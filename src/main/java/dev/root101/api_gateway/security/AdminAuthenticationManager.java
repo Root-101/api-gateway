@@ -19,14 +19,28 @@ import java.util.Collections;
 @Component
 public class AdminAuthenticationManager implements ReactiveAuthenticationManager {
 
-    @Value("${app.admin.username}")
-    private String adminUsername;
+    private final String adminUsername;
 
-    @Value("${app.admin.password}")
-    private String adminPassword;
+    private final String adminPassword;
 
-    @Value("${app.admin.role}")
-    private String adminRole;
+    private final String adminRole;
+
+    public AdminAuthenticationManager(
+            @Value("${app.admin.username}") String adminUsername,
+            @Value("${app.admin.password}") String adminPassword,
+            @Value("${app.admin.role}") String adminRole
+    ) {
+        this.adminUsername = adminUsername;
+        this.adminPassword = adminPassword;
+        this.adminRole = adminRole;
+
+        if("admin".equals(adminUsername) && "admin123**".equals(adminPassword)){
+            System.out.println();
+            System.out.println("Server starting using default username and password (admin:admin123**)");
+            System.out.println("For formal environments consider using the ADMIN_USERNAME and ADMIN_PASSWORD environment variables to configure them");
+            System.out.println();
+        }
+    }
 
     @Override
     public Mono<Authentication> authenticate(Authentication authentication) {
