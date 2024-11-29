@@ -1,16 +1,16 @@
 server:
-    port: ${PORT}
-    
+  port: ${PORT:8080}
+
 spring:
   main:
     web-application-type: reactive
   profiles:
-    default: ${PROFILE}
+    default: ${PROFILE:default}
   application:
-    name: ${APPLICATION_NAME}
+    name: ${APPLICATION_NAME:Api-Gateway}
 
 app:
   admin:
-    username: ${ADMIN_USERNAME}
-    password: ${ADMIN_PASSWORD}
-    role: ROLE_GATEWAY_ADMIN      #if this value changes, change it in: dev.root101.api_gateway.security.securityWebFilterChain:(...).hasRole("GATEWAY_ADMIN")
+    username: ${ADMIN_USERNAME:admin}
+    password: ${ADMIN_PASSWORD:admin123**}
+    role: ROLE_GATEWAY_ADMIN                      #if this value changes, change it in: dev.root101.api_gateway.security.securityWebFilterChain:(...).hasRole("GATEWAY_ADMIN")
