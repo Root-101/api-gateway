@@ -15,6 +15,13 @@ import org.springframework.web.client.RestTemplate;
 
 import java.util.Collections;
 
+/**
+ * Global/General Misc config for the server.
+ * It configures:
+ * - PropertyNamingStrategies.NamingBase
+ * - ObjectMapper
+ * - Validation Service
+ */
 @Service
 public class ServiceConfig {
 

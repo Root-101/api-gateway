@@ -20,6 +20,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+/**
+ * This is the class who really make the modifications in the routes.
+ * At the end of every action the context is updated and the change is ready to use.
+ */
 @Service
 public class DynamicRouteService {
 
@@ -37,13 +41,15 @@ public class DynamicRouteService {
     }
 
     /**
-     * Add a new route to config
+     * Add a single route
      *
-     * @param routeModel The route to add
-     * @return void
+     * @param routeDefinition The route to add
+     * @return Void
      */
     public Mono<Void> addRoute(RouteConfigModel routeModel) {
+        //load route if exist
         RouteConfigModel oldById = findById(routeModel.getId());
+        //if exist throw exception, can't have two routes with same id
         if (oldById != null) {
             throw new ConflictException("Route already exists: %s".formatted(routeModel.getId()));
         }
@@ -58,6 +64,12 @@ public class DynamicRouteService {
         return routeDefinitionWriter.save(Mono.just(route)).then(Mono.defer(this::updateRoutes));
     }
 
+    /**
+     * Create multiple routes at the same time
+     *
+     * @param routeDefinition List of routes to create
+     * @return Void
+     */
     public Mono<Void> addAllRoutes(List<RouteConfigModel> routeDefinition) {
         //check for duplicated values in same list
         Map<String, Long> frequencyMap = routeDefinition.stream()

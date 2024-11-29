@@ -1,0 +1,205 @@
+{
+	"info": {
+		"_postman_id": "9b6a29bd-2d88-4f5e-a89c-a5d2563f215e",
+		"name": "Api-Gateway",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "20229101"
+	},
+	"item": [
+		{
+			"name": "all",
+			"request": {
+				"auth": {
+					"type": "basic",
+					"basic": [
+						{
+							"key": "username",
+							"value": "{{gateway-username}}",
+							"type": "string"
+						},
+						{
+							"key": "password",
+							"value": "{{gateway-password}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{gateway-url}}/_admin/routes",
+					"host": [
+						"{{gateway-url}}"
+					],
+					"path": [
+						"_admin",
+						"routes"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "create",
+			"request": {
+				"auth": {
+					"type": "basic",
+					"basic": [
+						{
+							"key": "password",
+							"value": "{{gateway-password}}",
+							"type": "string"
+						},
+						{
+							"key": "username",
+							"value": "{{gateway-username}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"id\": \"abcd-dev\",\r\n    \"path\": \"/abcd/**\",\r\n    \"uri\": \"http://localhost:8081\",\r\n    \"rewrite_path\": {\r\n        \"replace_from\": \"/abcd/\",\r\n        \"replace_to\": \"/\"\r\n    }\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{gateway-url}}/_admin/routes",
+					"host": [
+						"{{gateway-url}}"
+					],
+					"path": [
+						"_admin",
+						"routes"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "create-all",
+			"request": {
+				"auth": {
+					"type": "basic",
+					"basic": [
+						{
+							"key": "password",
+							"value": "{{gateway-password}}",
+							"type": "string"
+						},
+						{
+							"key": "username",
+							"value": "{{gateway-username}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "[\r\n    {\r\n        \"id\": \"abc-dev\",\r\n        \"path\": \"/abc/**\",\r\n        \"uri\": \"http://localhost:8081\",\r\n        \"rewrite_path\": {\r\n            \"replace_from\": \"/abc/\",\r\n            \"replace_to\": \"/\"\r\n        }\r\n    },\r\n    {\r\n        \"id\": \"abcd-dev\",\r\n        \"path\": \"/abcd/**\",\r\n        \"uri\": \"http://localhost:8081\",\r\n        \"rewrite_path\": {\r\n            \"replace_from\": \"/abcd/\",\r\n            \"replace_to\": \"/\"\r\n        }\r\n    }\r\n]",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{gateway-url}}/_admin/routes/multi-add",
+					"host": [
+						"{{gateway-url}}"
+					],
+					"path": [
+						"_admin",
+						"routes",
+						"multi-add"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "edit",
+			"request": {
+				"auth": {
+					"type": "basic",
+					"basic": [
+						{
+							"key": "password",
+							"value": "{{gateway-password}}",
+							"type": "string"
+						},
+						{
+							"key": "username",
+							"value": "{{gateway-username}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "PUT",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"id\": \"example-dev\",\r\n    \"path\": \"/example/**\",\r\n    \"uri\": \"http://localhost:8081\",\r\n    \"rewrite_path\": {\r\n        \"replace_from\": \"/example/\",\r\n        \"replace_to\": \"/\"\r\n    }\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{gateway-url}}/_admin/routes/abc-dev",
+					"host": [
+						"{{gateway-url}}"
+					],
+					"path": [
+						"_admin",
+						"routes",
+						"abc-dev"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "delete",
+			"request": {
+				"auth": {
+					"type": "basic",
+					"basic": [
+						{
+							"key": "password",
+							"value": "{{gateway-password}}",
+							"type": "string"
+						},
+						{
+							"key": "username",
+							"value": "{{gateway-username}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "DELETE",
+				"header": [],
+				"url": {
+					"raw": "{{gateway-url}}/_admin/routes/abc-dev",
+					"host": [
+						"{{gateway-url}}"
+					],
+					"path": [
+						"_admin",
+						"routes",
+						"abc-dev"
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}

@@ -8,6 +8,10 @@ import org.springframework.web.cors.reactive.UrlBasedCorsConfigurationSource;
 
 import java.util.List;
 
+/**
+ * Global cors config for the api-gateway.
+ * For the moment is an "Allow all" policy.
+ */
 @Configuration
 public class CorsConfig {
 
@@ -15,11 +19,11 @@ public class CorsConfig {
     @Bean
     public CorsWebFilter corsWebFilter() {
         CorsConfiguration corsConfiguration = new CorsConfiguration();
-        corsConfiguration.setAllowedOriginPatterns(List.of("*"));             // Permite cualquier origen
-        corsConfiguration.setAllowedMethods(List.of("*"));                    // Permite cualquier método
-        corsConfiguration.setAllowedHeaders(List.of("*"));                    // Permite todos los encabezados
-        corsConfiguration.setExposedHeaders(List.of("*"));                    // Permite todos los encabezados
-        corsConfiguration.setAllowCredentials(true);                              // Habilita credenciales
+        corsConfiguration.setAllowedOriginPatterns(List.of("*"));             // Allow any origin
+        corsConfiguration.setAllowedMethods(List.of("*"));                    // Allow any method
+        corsConfiguration.setAllowedHeaders(List.of("*"));                    // Allow any header
+        corsConfiguration.setExposedHeaders(List.of("*"));                    // Expose all headers
+        corsConfiguration.setAllowCredentials(true);                              // Allow credentials
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", corsConfiguration);

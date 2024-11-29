@@ -14,14 +14,18 @@ import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
 
+/**
+ * Global exception handler for the gateway.
+ * Allow parse exceptions to correct http code response
+ */
 @Component
 @Order(-2)
 public class GlobalExceptionHandler implements ErrorWebExceptionHandler {
 
-    private final ObjectMapper om;
+    private final ObjectMapper objectMapper;
 
-    public GlobalExceptionHandler(ObjectMapper om) {
-        this.om = om;
+    public GlobalExceptionHandler(ObjectMapper objectMapper) {
+        this.objectMapper = objectMapper;
     }
 
     @Override
@@ -59,7 +63,7 @@ public class GlobalExceptionHandler implements ErrorWebExceptionHandler {
                 bytes = ((String) body).getBytes();
             } else {
                 exchange.getResponse().getHeaders().setContentType(MediaType.APPLICATION_JSON);
-                bytes = om.writeValueAsString(body).getBytes();
+                bytes = objectMapper.writeValueAsString(body).getBytes();
             }
 
             return exchange.getResponse().writeWith(Mono.just(exchange.getResponse()
