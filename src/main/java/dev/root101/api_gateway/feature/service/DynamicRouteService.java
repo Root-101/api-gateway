@@ -18,6 +18,7 @@ import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.TreeMap;
 import java.util.stream.Collectors;
 
 /**
@@ -43,7 +44,7 @@ public class DynamicRouteService {
     /**
      * Add a single route
      *
-     * @param routeDefinition The route to add
+     * @param routeModel The route to add
      * @return Void
      */
     public Mono<Void> addRoute(RouteConfigModel routeModel) {
@@ -198,11 +199,23 @@ public class DynamicRouteService {
 
         //add, if provided, the rewrite path filter
         if (routeModel.getRewritePath() != null) {
+            //create empty filter
             FilterDefinition rewritePathFilter = new FilterDefinition();
+            //set-up name
             rewritePathFilter.setName("RewritePath");
-            rewritePathFilter.setArgs(Map.of("_genkey_0", routeModel.getRewritePath().replaceFrom(), "_genkey_1", routeModel.getRewritePath().replaceTo()));
 
-            // Añadir los filtros a la ruta
+            //prepare filter args. always use a tree-map to always have the values sorted
+            Map<String, String> sortedFilter = new TreeMap<>(
+                    Map.of(
+                            "_genkey_0", routeModel.getRewritePath().replaceFrom(),
+                            "_genkey_1", routeModel.getRewritePath().replaceTo()
+                    )
+            );
+
+            //set arguments to filter
+            rewritePathFilter.setArgs(sortedFilter);
+
+            //set filter to list
             route.setFilters(List.of(rewritePathFilter));
         }
 
