@@ -16,7 +16,7 @@ import java.util.List;
  */
 @RestController
 //if this value changes, change it in: dev.root101.api_gateway.security.securityWebFilterChain:pathMatchers("/_admin/**")
-@RequestMapping("/_admin/routes")
+@RequestMapping("/${app.admin.base-path}/routes")
 public class RoutesController {
 
     private final DynamicRouteService dynamicRouteService;

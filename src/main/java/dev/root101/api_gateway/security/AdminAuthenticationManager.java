@@ -28,15 +28,17 @@ public class AdminAuthenticationManager implements ReactiveAuthenticationManager
     public AdminAuthenticationManager(
             @Value("${app.admin.username}") String adminUsername,
             @Value("${app.admin.password}") String adminPassword,
-            @Value("${app.admin.role}") String adminRole
+            @Value("${app.admin.role}") String adminRole,
+            @Value("${app.defaults.username}") String defaultUsername,
+            @Value("${app.defaults.password}") String defaultPassword
     ) {
         this.adminUsername = adminUsername;
         this.adminPassword = adminPassword;
         this.adminRole = adminRole;
 
-        if("admin".equals(adminUsername) && "admin123**".equals(adminPassword)){
+        if (adminUsername.equals(defaultUsername) && adminPassword.equals(defaultPassword)) {
             System.out.println();
-            System.out.println("Server starting using default username and password (admin:admin123**)");
+            System.out.printf("Server starting using default username and password (%s:%s)%n", defaultUsername, defaultPassword);
             System.out.println("For formal environments consider using the ADMIN_USERNAME and ADMIN_PASSWORD environment variables to configure them");
             System.out.println();
         }
@@ -82,10 +84,6 @@ public class AdminAuthenticationManager implements ReactiveAuthenticationManager
             this.username = username;
             this.password = password;
             this.authorities = authorities;
-        }
-
-        public CustomUserDetails(String username, String password) {
-            this(username, password, Collections.emptyList());
         }
 
         @Override

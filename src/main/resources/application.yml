@@ -10,7 +10,11 @@ spring:
     name: ${APPLICATION_NAME:Api-Gateway}
 
 app:
+  defaults:
+    username: admin
+    password: admin123**
   admin:
-    username: ${ADMIN_USERNAME:admin}
-    password: ${ADMIN_PASSWORD:admin123**}
-    role: ROLE_GATEWAY_ADMIN                      #if this value changes, change it in: dev.root101.api_gateway.security.securityWebFilterChain:(...).hasRole("GATEWAY_ADMIN")
+    username: ${ADMIN_USERNAME:${app.defaults.username}}
+    password: ${ADMIN_PASSWORD:${app.defaults.password}}
+    role: ROLE_GATEWAY_ADMIN
+    base-path: ${ADMIN_PATH:_admin}
