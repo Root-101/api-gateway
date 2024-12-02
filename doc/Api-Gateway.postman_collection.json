@@ -27,12 +27,12 @@
 				"method": "GET",
 				"header": [],
 				"url": {
-					"raw": "{{gateway-url}}/_admin/routes",
+					"raw": "{{gateway-url}}/{{gateway-admin-path}}/routes",
 					"host": [
 						"{{gateway-url}}"
 					],
 					"path": [
-						"_admin",
+						"{{gateway-admin-path}}",
 						"routes"
 					]
 				}
@@ -69,12 +69,12 @@
 					}
 				},
 				"url": {
-					"raw": "{{gateway-url}}/_admin/routes",
+					"raw": "{{gateway-url}}/{{gateway-admin-path}}/routes",
 					"host": [
 						"{{gateway-url}}"
 					],
 					"path": [
-						"_admin",
+						"{{gateway-admin-path}}",
 						"routes"
 					]
 				}
@@ -111,12 +111,12 @@
 					}
 				},
 				"url": {
-					"raw": "{{gateway-url}}/_admin/routes/multi-add",
+					"raw": "{{gateway-url}}/{{gateway-admin-path}}/routes/multi-add",
 					"host": [
 						"{{gateway-url}}"
 					],
 					"path": [
-						"_admin",
+						"{{gateway-admin-path}}",
 						"routes",
 						"multi-add"
 					]
@@ -154,12 +154,12 @@
 					}
 				},
 				"url": {
-					"raw": "{{gateway-url}}/_admin/routes/abc-dev",
+					"raw": "{{gateway-url}}/{{gateway-admin-path}}/routes/abc-dev",
 					"host": [
 						"{{gateway-url}}"
 					],
 					"path": [
-						"_admin",
+						"{{gateway-admin-path}}",
 						"routes",
 						"abc-dev"
 					]
@@ -188,12 +188,12 @@
 				"method": "DELETE",
 				"header": [],
 				"url": {
-					"raw": "{{gateway-url}}/_admin/routes/abc-dev",
+					"raw": "{{gateway-url}}/{{gateway-admin-path}}/routes/abc-dev",
 					"host": [
 						"{{gateway-url}}"
 					],
 					"path": [
-						"_admin",
+						"{{gateway-admin-path}}",
 						"routes",
 						"abc-dev"
 					]
