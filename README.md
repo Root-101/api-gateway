@@ -144,24 +144,50 @@ Note that there are several environment variables configured in Postman, these v
 
 ![postman-env-variables.png](doc/postman-env-variables.png)
 
-Which can be directly imported from the file:
-[Api-Gateway - Local.postman_environment.json](doc/Api-Gateway%20-%20Local.postman_environment.json)
+Which can be directly imported
+from [**THIS FILE**](doc/Api-Gateway%20-%20Local.postman_environment.json).
 
 These are:
 
-| Postman Env Variable | Description                                | Current value         | Configured by                                                                        |
-|----------------------|--------------------------------------------|-----------------------|--------------------------------------------------------------------------------------|
-| gateway-url          | Url where the service is currently running | http://localhost:8080 | Hosting, this is the public url of the service, or localhost if it's running locally |
-| gateway-admin-path   | Administration endpoints URL               | _admin                | Env Variable: `ADMIN_PATH`                                                           |
-| gateway-username     | Username of the admin user                 | admin                 | Env Variable: `ADMIN_USERNAME`                                                       |
-| gateway-password     | Password of the admin user                 | admin123**            | Env Variable: `ADMIN_PASSWORD`                                                       |
+| Postman Env Variable | Description                                | Current value         | Configured by                                                                                     |
+|----------------------|--------------------------------------------|-----------------------|---------------------------------------------------------------------------------------------------|
+| gateway-url          | Url where the service is currently running | http://localhost:8080 | Hosting, this is the url (public or private) of the service, or localhost if it's running locally |
+| gateway-admin-path   | Administration endpoints URL               | _admin                | Env Variable: `ADMIN_PATH`                                                                        |
+| gateway-username     | Username of the admin user                 | admin                 | Env Variable: `ADMIN_USERNAME`                                                                    |
+| gateway-password     | Password of the admin user                 | admin123**            | Env Variable: `ADMIN_PASSWORD`                                                                    |
 
 Note that these values are set to the default values of each environment variable, in case one of these environment
 variables changes, its value must be modified in Postman.
 
 ##### Redirection Examples:
 
-When this service is configured and deployed, these are a couple of examples of redirection:
+Let's assume we start the server and call the endpoint of multi-add to configure the initial routes, this is the
+configuration we use:
+
+```json
+[
+  {
+    "id": "notifications-dev",
+    "path": "/notification/**",
+    "uri": "https://push-notification.com",
+    "rewrite_path": {
+      "replace_from": "/notification/",
+      "replace_to": "/"
+    }
+  },
+  {
+    "id": "test-dev",
+    "path": "/test/**",
+    "uri": "https://url-of-test-service.com",
+    "rewrite_path": {
+      "replace_from": "/test/",
+      "replace_to": "/"
+    }
+  }
+]
+```
+
+With this configuration we will note that a:
 
 | Request to                                                  | Is redirected to                                     |
 |-------------------------------------------------------------|------------------------------------------------------|
