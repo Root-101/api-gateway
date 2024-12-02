@@ -61,8 +61,6 @@ To configure the project we have a variety of environmental variables at our dis
 These environment variables are general service configurations, they can be left perfectly with the default values
 and would not have major impacts.
 
-**It is recommended that production environments be properly configured to avoid (mainly) security issues.**
-
 ##### ADMIN_USERNAME & ADMIN_PASSWORD:
 
 As a security measure, the gateway management endpoints, with which new routes are created, edited, deleted and
@@ -72,6 +70,8 @@ In this case, a `basic` auth type is used, which must be provided with a usernam
 
 By configuring these variables (`ADMIN_USERNAME` and `ADMIN_PASSWORD`) the admin endpoints of the service can be
 protected against unauthorized access.
+
+**It is recommended that production environments be properly configured to avoid (mainly) security issues.**
 
 ##### ADMIN_PATH:
 
@@ -183,6 +183,11 @@ configuration we use:
       "replace_from": "/test/",
       "replace_to": "/"
     }
+  },
+  {
+    "id": "versioning",
+    "path": "/ver/**",
+    "uri": "https://otherrandomservice.com"
   }
 ]
 ```
@@ -195,6 +200,7 @@ With this configuration we will note that a:
 | https://api-gateway.com/notification/{user-id}/send-push    | https://push-notification.com/{user-id}/send-push    |
 | https://api-gateway.com/test/some-test-endpoint             | https://url-of-test-service.com/some-test-endpoint   |
 | https://api-gateway.com/test/{user-id}/hi-world             | https://url-of-test-service.com/{user-id}/hi-world   |
+| https://api-gateway.com/ver/magic-endpoint                  | https://otherrandomservice.com/ver/magic-endpoint    |
 
 #### Extra docs:
 
