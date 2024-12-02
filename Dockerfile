@@ -1,4 +1,4 @@
-FROM gradle:8.4.0-jdk21-alpine AS build
+FROM gradle:8.5.0-jdk21-alpine AS build
 
 ARG APP_HOME=/home/gradle/src
 
