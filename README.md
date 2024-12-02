@@ -56,14 +56,14 @@ To configure the project we have a variety of environmental variables at our dis
 | ADMIN_PASSWORD   | Password of the admin user                | text     | admin123**                  | 3.x              |
 | ADMIN_PATH       | Path of the admin (management) endpoints  | text     | _admin                      | 3.x              |
 
-#### PORT, PROFILE & APPLICATION_NAME:
+##### PORT, PROFILE & APPLICATION_NAME:
 
 These environment variables are general service configurations, they can be left perfectly with the default values
 and would not have major impacts.
 
 **It is recommended that production environments be properly configured to avoid (mainly) security issues.**
 
-#### ADMIN_USERNAME & ADMIN_PASSWORD:
+##### ADMIN_USERNAME & ADMIN_PASSWORD:
 
 As a security measure, the gateway management endpoints, with which new routes are created, edited, deleted and
 listed, are protected with a layer of security.
@@ -73,7 +73,7 @@ In this case, a `basic` auth type is used, which must be provided with a usernam
 By configuring these variables (`ADMIN_USERNAME` and `ADMIN_PASSWORD`) the admin endpoints of the service can be
 protected against unauthorized access.
 
-#### ADMIN_PATH:
+##### ADMIN_PATH:
 
 To avoid conflicts between management endpoints and redirects, this environment variable was designed to define the
 parent path of said management endpoints.
@@ -88,6 +88,46 @@ Setting this variable to `ADMIN_PATH = gateway-admin` would be: `http://localhos
 This way, if we have a service that is expected to be redirected to, and we want its URL to be `gateway-admin`, we can
 modify said variable so that that path is not occupied and the requests are redirected to the service instead of the
 configuration controller.
+
+### Api docs:
+
+The administration API gives us access to endpoint to configure the routes, here we have:
+
+| Method | Endpoint                  | Description                                                                     | Body                |
+|--------|---------------------------|---------------------------------------------------------------------------------|---------------------|
+| GET    | /_admin/routes            | Get all configured routes in the gateway                                        | No body             |
+| POST   | /_admin/routes            | Create a new route to redirect                                                  | Route model         |
+| POST   | /_admin/routes/multi-add  | Create multiple routes in same request                                          | List of Route model |
+| PUT    | /_admin/routes/{route-id} | Edit the route with id = route-id, replace it with route in body of the request | Route model         |
+| DELETE | /_admin/routes/{route-id} | Delete the route with id = route-id                                             | No body             |
+
+NOTE: if the value of env `ADMIN_PATH` changes, the endpoint will change. This table is based on the default value of
+this variable.
+
+#### Route model:
+
+This is the full json of a route model.
+
+```json
+{
+  "id": "abcd-dev",
+  "path": "/abcd/**",
+  "uri": "http://localhost:8081",
+  "rewrite_path": {
+    "replace_from": "/abcd/",
+    "replace_to": "/"
+  }
+}
+```
+
+Here we have:
+
+| Field        | Required | Description                                                                                                 | Validations                        | Recommendations                                                                                                                                                              |
+|--------------|----------|-------------------------------------------------------------------------------------------------------------|------------------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| id           | true     | Name with which this route will be identified for edit/delete operations. Unique identifier for each route. | - Not null<br/>-Not Empty          | Use a unique, easy to identify value                                                                                                                                         |
+| path         | true     | Route with which the redirection to a specific service will be identified                                   | - Not null<br/>-Not Empty          | Use in the format /{path}/**, this means that all requests made to https://gateway/{path}/..... will be redirected to this route                                             |
+| uri          | true     | Url of the service to which you are going to redirect                                                       | - Not null<br/>-Not Empty<br/>-Url | Use same base url of the service (preferably a private URL without internet access, which can only be accessed through the gateway)                                          |
+| rewrite_path | false    | 'Filter' to rewrite the final path to which the request is made                                             | - Not null<br/>-Not Empty<br/>     | Use to fix the extra path added by path property. With example, a request made to:  https://gateway/abcd/users/search, will be rewrite to http://localhost:8081/users/search |
 
 ### Admin endpoint examples:
 
