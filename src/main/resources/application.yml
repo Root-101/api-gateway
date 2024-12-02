@@ -1,10 +1,20 @@
 server:
-    port: ${PORT}
-    
+  port: ${PORT:8080}
+
 spring:
   main:
     web-application-type: reactive
   profiles:
-    default: ${PROFILE}
+    default: ${PROFILE:default}
   application:
-    name: ${APPLICATION_NAME}
+    name: ${APPLICATION_NAME:Api-Gateway}
+
+app:
+  defaults:
+    username: admin
+    password: admin123**
+  admin:
+    username: ${ADMIN_USERNAME:${app.defaults.username}}
+    password: ${ADMIN_PASSWORD:${app.defaults.password}}
+    role: ROLE_GATEWAY_ADMIN
+    base-path: ${ADMIN_PATH:_admin}
