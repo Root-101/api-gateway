@@ -127,12 +127,14 @@ Here we have:
 | id           | true     | Name with which this route will be identified for edit/delete operations. Unique identifier for each route. | - Not null<br/>-Not Empty          | Use a unique, easy to identify value                                                                                                                                                                                                                                        |
 | path         | true     | Route with which the redirection to a specific service will be identified                                   | - Not null<br/>-Not Empty          | Use in the format /{path}/**, this means that all requests made to https://gateway/{path}/..... will be redirected to this route                                                                                                                                            |
 | uri          | true     | Url of the service to which you are going to redirect                                                       | - Not null<br/>-Not Empty<br/>-Url | Use same base url of the service (preferably a private URL without internet access, which can only be accessed through the gateway)                                                                                                                                         |
-| rewrite_path | false    | 'Filter' to rewrite the final path to which the request is made (replace if final url the from => to)       | - Not null<br/>-Not Empty<br/>     | Use to fix the extra path added by path property. With example, a request made to:  https://gateway/abcd/users/search, by default will be redirected to: http://localhost:8081/abcd/users/search, but with rewrite will be redirected to http://localhost:8081/users/search |
+| rewrite_path | false    | 'Filter' to rewrite the final path to which the request is made (replace in final url the *from* => *to*)   | - Not null<br/>-Not Empty<br/>     | Use to fix the extra path added by path property. With example, a request made to:  https://gateway/abcd/users/search, by default will be redirected to: http://localhost:8081/abcd/users/search, but with rewrite will be redirected to http://localhost:8081/users/search |
 
 ### Admin endpoint examples:
 
 To test the endpoints manually, the [`Postman`](https://www.postman.com/downloads/) tool was used,
 so below are all the examples and collections needed using this tool.
+
+The entire collections with all the admin endpoint could be found [**HERE**](doc/Api-Gateway.postman_collection.json).
 
 This is how an administration endpoint would be consumed:
 
