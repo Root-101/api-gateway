@@ -8,7 +8,15 @@ spring:
     default: ${PROFILE:default}
   application:
     name: ${APPLICATION_NAME:Api-Gateway}
-
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: none
+  datasource:
+    driver-class-name: org.postgresql.Driver
+    url: ${DB_URL}                  #jdbc:postgresql:/host:port/db-name?stringtype=unspecified
+    username: ${DB_USERNAME}        #postgres
+    password: ${DB_PASSWORD}        #admin123
 app:
   defaults:
     username: admin
