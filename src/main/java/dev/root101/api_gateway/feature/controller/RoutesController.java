@@ -1,6 +1,7 @@
 package dev.root101.api_gateway.feature.controller;
 
-import dev.root101.api_gateway.feature.model.RouteConfigModel;
+import dev.root101.api_gateway.feature.model.RouteConfigRequest;
+import dev.root101.api_gateway.feature.model.RouteConfigResponse;
 import dev.root101.api_gateway.feature.service.DynamicRouteService;
 import dev.root101.commons.validation.ValidationService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -34,7 +35,7 @@ public class RoutesController {
      * @return Flux with all the routes
      */
     @GetMapping
-    public Flux<RouteConfigModel> getRoutes() {
+    public Flux<RouteConfigResponse> getRoutes() {
         return dynamicRouteService.getRoutes();
     }
 
@@ -45,7 +46,7 @@ public class RoutesController {
      * @return Void
      */
     @PostMapping("/multi-add")
-    public Mono<Void> addAllRoutes(@RequestBody List<RouteConfigModel> routeDefinition) {
+    public Mono<Void> addAllRoutes(@RequestBody List<RouteConfigRequest> routeDefinition) {
         this.validationService.validateRecursiveAndThrow(routeDefinition);
 
         return dynamicRouteService.addAllRoutes(routeDefinition);
@@ -58,7 +59,7 @@ public class RoutesController {
      * @return Void
      */
     @PostMapping
-    public Mono<Void> addRoute(@RequestBody RouteConfigModel routeDefinition) {
+    public Mono<Void> addRoute(@RequestBody RouteConfigRequest routeDefinition) {
         this.validationService.validateRecursiveAndThrow(routeDefinition);
 
         return dynamicRouteService.addRoute(routeDefinition);
@@ -72,7 +73,7 @@ public class RoutesController {
      * @return Void
      */
     @PutMapping("/{route-id}")
-    public Mono<Void> editRoute(@PathVariable("route-id") String routeId, @RequestBody RouteConfigModel routeDefinition) {
+    public Mono<Void> editRoute(@PathVariable("route-id") String routeId, @RequestBody RouteConfigRequest routeDefinition) {
         this.validationService.validateRecursiveAndThrow(routeDefinition);
 
         return dynamicRouteService.editRoute(routeId, routeDefinition);

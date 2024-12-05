@@ -12,14 +12,13 @@ import org.hibernate.validator.constraints.URL;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class RouteConfigModel {
+public class RouteConfigRequest {
 
     /**
-     * Unique identified of the route.
-     * This is the id used to delete/edit
+     * Unique 'human-readable' identified of the route.
      */
     @NotBlank
-    private String id;
+    private String name;
 
     /**
      * The path of the route, the one which the gateway will math the request to know where to redirect
@@ -39,10 +38,9 @@ public class RouteConfigModel {
      */
     private RewritePath rewritePath;
 
-    public record RewritePath(
-            @NotBlank
-            String replaceFrom,
-            @NotBlank
-            String replaceTo) {
-    }
+    /**
+     * Additional description of route. </br>
+     * Can be null.
+     */
+    private String description;
 }

@@ -1,8 +1,13 @@
 package dev.root101.api_gateway.feature.service;
 
-import dev.root101.api_gateway.feature.model.RouteConfigModel;
+import dev.root101.api_gateway.feature.data.entity.RouteEntity;
+import dev.root101.api_gateway.feature.data.jpa.RouteJpaRepo;
+import dev.root101.api_gateway.feature.model.RewritePath;
+import dev.root101.api_gateway.feature.model.RouteConfigRequest;
+import dev.root101.api_gateway.feature.model.RouteConfigResponse;
 import dev.root101.commons.exceptions.ConflictException;
 import dev.root101.commons.exceptions.NotFoundException;
+import dev.root101.commons.validation.ValidationService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cloud.gateway.event.RefreshRoutesEvent;
 import org.springframework.cloud.gateway.filter.FilterDefinition;
@@ -15,7 +20,7 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.net.URI;
-import java.util.ArrayList;
+import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
@@ -32,68 +37,88 @@ public class DynamicRouteService {
 
     private final ApplicationEventPublisher publisher;
 
-    private final List<RouteConfigModel> routeConfigModels;
+    private final RouteJpaRepo routeJpaRepo;
+
+    private final ValidationService vs;
 
     @Autowired
-    public DynamicRouteService(RouteDefinitionWriter routeDefinitionWriter, ApplicationEventPublisher publisher) {
+    public DynamicRouteService(
+            RouteDefinitionWriter routeDefinitionWriter,
+            ApplicationEventPublisher publisher,
+            RouteJpaRepo routeJpaRepo,
+            ValidationService validationService
+    ) {
         this.routeDefinitionWriter = routeDefinitionWriter;
         this.publisher = publisher;
-        this.routeConfigModels = new ArrayList<>();
+        this.routeJpaRepo = routeJpaRepo;
+        this.vs = validationService;
     }
 
     /**
      * Add a single route
      *
-     * @param routeModel The route to add
+     * @param request The route to add
      * @return Void
      */
-    public Mono<Void> addRoute(RouteConfigModel routeModel) {
+    public Mono<Void> addRoute(RouteConfigRequest request) {
         //load route if exist
-        RouteConfigModel oldById = findById(routeModel.getId());
-        //if exist throw exception, can't have two routes with same id
+        RouteEntity oldById = findByName(request.getName());
+
+        //if exist throw exception, can't have two routes with same name
         if (oldById != null) {
-            throw new ConflictException("Route already exists: %s".formatted(routeModel.getId()));
+            throw new ConflictException("Route already exists: %s".formatted(request.getName()));
         }
 
-        //parse model to route-definition
-        RouteDefinition route = fromModel(routeModel);
+        RouteEntity entity = buildEntity(request);
 
-        //add route into the list (in order to return it after as model)
-        routeConfigModels.add(routeModel);
+        vs.validateRecursiveAndThrow(entity);
+
+        //persist route in db
+        RouteEntity parsedEntity = routeJpaRepo.save(entity);//TODO: https://chatgpt.com/c/67510e08-ae28-8010-899e-5f1d3e89c4c6
 
         //write in route-definition and update routes
-        return routeDefinitionWriter.save(Mono.just(route)).then(Mono.defer(this::updateRoutes));
+        return routeDefinitionWriter.save(
+                Mono.just(
+                        buildDefinition(parsedEntity)
+                )
+        ).then(Mono.defer(this::updateRoutes));
     }
 
     /**
      * Create multiple routes at the same time
      *
-     * @param routeDefinition List of routes to create
+     * @param requests List of routes to create
      * @return Void
      */
-    public Mono<Void> addAllRoutes(List<RouteConfigModel> routeDefinition) {
+    public Mono<Void> addAllRoutes(List<RouteConfigRequest> requests) {
         //check for duplicated values in same list
-        Map<String, Long> frequencyMap = routeDefinition.stream()
-                .collect(Collectors.groupingBy(RouteConfigModel::getId, Collectors.counting()));
+        Map<String, Long> frequencyMap = requests.stream()
+                .collect(Collectors.groupingBy(RouteConfigRequest::getName, Collectors.counting()));
         for (Map.Entry<String, Long> entry : frequencyMap.entrySet()) {
             if (entry.getValue() > 1) {
                 throw new ConflictException("Duplicated route: %s".formatted(entry.getKey()));
             }
         }
         //check for duplicated values with already inserted ones
-        for (RouteConfigModel routeConfigModel : routeDefinition) {
-            RouteConfigModel oldById = findById(routeConfigModel.getId());
+        for (RouteConfigRequest routeConfigModel : requests) {
+            RouteEntity oldById = findByName(routeConfigModel.getName());
             if (oldById != null) {
-                throw new ConflictException("Route already exists: %s".formatted(routeConfigModel.getId()));
+                throw new ConflictException("Route already exists: %s".formatted(routeConfigModel.getName()));
             }
         }
 
+        //parse input list into entities
+        List<RouteEntity> entities = requests.stream().map(this::buildEntity).toList();
+
+        //validate all entities
+        vs.validateRecursiveAndThrow(entities);
+
         //Add routes to storage list
-        routeConfigModels.addAll(routeDefinition);
+        List<RouteEntity> parsedEntities = routeJpaRepo.saveAll(entities); //TODO: same as save
 
         //Create a flux with all routes
-        return Flux.fromIterable(routeDefinition)
-                .map(this::fromModel) // Parse RouteConfigModel => RouteDefinition
+        return Flux.fromIterable(parsedEntities)
+                .map(this::buildDefinition) // Parse RouteConfigModel => RouteDefinition
                 .concatMap(route -> routeDefinitionWriter.save(Mono.just(route))) // Procesa secuencialmente
                 .then(Mono.defer(this::updateRoutes));
     }
@@ -102,24 +127,30 @@ public class DynamicRouteService {
      * Edit a route. Since the edit is not allowed in `RouteDefinitionWriter` this logic
      * delete the old route, create a new one and update the context.
      *
-     * @param routeId    The id of the old route
-     * @param routeModel The new config of route
+     * @param routeName The name of the old route
+     * @param request   The new config of route
      * @return void
      */
-    public Mono<Void> editRoute(String routeId, RouteConfigModel routeModel) {
+    public Mono<Void> editRoute(String routeName, RouteConfigRequest request) {
         //Search and delete old route (if existed, if not: exception)
-        return Mono.justOrEmpty(findById(routeId))
-                .switchIfEmpty(Mono.error(new NotFoundException("Route does not exist: %s".formatted(routeId))))//If findBy is empty, throw exception
-                .doOnNext(oldRoute -> routeConfigModels.removeIf(e -> routeId.equals(e.getId())))//if existed: delete it
+        return Mono.justOrEmpty(findByName(routeName))
+                .switchIfEmpty(Mono.error(new NotFoundException("Route does not exist: %s".formatted(routeName))))//If findBy is empty, throw exception
+                .doOnNext(routeJpaRepo::delete)//if existed: delete it
                 .flatMap(oldRoute -> {
-                    //Add model to local list
-                    routeConfigModels.add(routeModel);
+                    RouteEntity entity = buildEntity(request);
+
+                    vs.validateRecursiveAndThrow(entity);
+
+                    //persist route in db
+                    RouteEntity parsedEntity = routeJpaRepo.save(entity);//TODO
 
                     //Parse RouteConfigModel => RouteDefinition
-                    RouteDefinition newRoute = fromModel(routeModel);
+                    RouteDefinition newRoute = buildDefinition(parsedEntity);
 
                     //Delete old route and save new one
-                    return routeDefinitionWriter.delete(Mono.just(routeId))
+                    return routeDefinitionWriter.delete(
+                                    Mono.just(oldRoute.getName())
+                            )
                             .then(routeDefinitionWriter.save(Mono.just(newRoute)));
                 })
                 .then(Mono.defer(this::updateRoutes)); //Update routes after all
@@ -130,26 +161,34 @@ public class DynamicRouteService {
      *
      * @param routeId The id of the route to find
      */
-    public RouteConfigModel findById(String routeId) {
-        return routeConfigModels.stream()
-                .filter(route -> routeId.equals(route.getId()))
-                .findFirst()
+    public RouteEntity findById(Integer routeId) {
+        return routeJpaRepo.findById(routeId)
+                .orElse(null);
+    }
+
+    /**
+     * Find a route by its name, or null if it's not found
+     *
+     * @param routeName The name of the route to find
+     */
+    public RouteEntity findByName(String routeName) {
+        return routeJpaRepo.findByName(routeName)
                 .orElse(null);
     }
 
     /**
      * Delete a route from the gateway
      *
-     * @param routeId The id of the route to delete
+     * @param routeName The name of the route to delete
      */
-    public Mono<Void> deleteRoute(String routeId) {
+    public Mono<Void> deleteRoute(String routeName) {
         //Search and delete old route (if existed, if not: exception)
-        return Mono.justOrEmpty(findById(routeId))
-                .switchIfEmpty(Mono.error(new NotFoundException("Route does not exist: %s".formatted(routeId))))//If findBy is empty, throw exception
-                .doOnNext(oldRoute -> routeConfigModels.removeIf(e -> routeId.equals(e.getId())))//if existed: delete it
+        return Mono.justOrEmpty(findByName(routeName))
+                .switchIfEmpty(Mono.error(new NotFoundException("Route does not exist: %s".formatted(routeName))))//If findBy is empty, throw exception
+                .doOnNext(routeJpaRepo::delete)//if existed: delete it
                 .flatMap(oldRoute -> {
                     //Delete old route and save new one
-                    return routeDefinitionWriter.delete(Mono.just(routeId));
+                    return routeDefinitionWriter.delete(Mono.just(routeName));
                 })
                 .then(Mono.defer(this::updateRoutes)); //Update routes after all
     }
@@ -160,8 +199,12 @@ public class DynamicRouteService {
      * 2 - Calling `routeDefinitionLocator.getRouteDefinitions();`
      * 3 - This will return `Flux<RouteConfigModel>`
      */
-    public Flux<RouteConfigModel> getRoutes() {
-        return Flux.fromIterable(routeConfigModels);
+    public Flux<RouteConfigResponse> getRoutes() {
+        return Flux.fromIterable(
+                routeJpaRepo.findAll().stream().map(
+                        this::buildResponse
+                ).toList()
+        );
     }
 
     /**
@@ -177,28 +220,47 @@ public class DynamicRouteService {
     }
 
     /**
-     * Convert the `RouteConfigModel` into a `RouteDefinition`
+     * Convert the `RouteConfigModel` into a `RouteEntity`
      *
-     * @param routeModel The model to convert into `RouteDefinition`
+     * @param routeModel The model to convert into `RouteEntity`
+     * @return The parsed `RouteEntity`
+     */
+    private RouteEntity buildEntity(RouteConfigRequest routeModel) {
+        return new RouteEntity(
+                null,
+                routeModel.getName(),
+                routeModel.getPath(),
+                routeModel.getUri(),
+                routeModel.getRewritePath() != null ? routeModel.getRewritePath().getReplaceFrom() : null,
+                routeModel.getRewritePath() != null ? routeModel.getRewritePath().getReplaceTo() : null,
+                routeModel.getDescription(),
+                Instant.now()
+        );
+    }
+
+    /**
+     * Convert the `RouteEntity` into a `RouteDefinition`
+     *
+     * @param routeEntity The model to convert into `RouteDefinition`
      * @return The parsed `RouteDefinition`
      */
-    private RouteDefinition fromModel(RouteConfigModel routeModel) {
+    private RouteDefinition buildDefinition(RouteEntity routeEntity) {
         //create the route definition, the model to parse in order to config the gateway
         RouteDefinition route = new RouteDefinition();
 
         //set the route-id
-        route.setId(routeModel.getId());
+        route.setId(routeEntity.getName());
         //set the route uri
-        route.setUri(URI.create(routeModel.getUri()));
+        route.setUri(URI.create(routeEntity.getUri()));
 
         //add the path predicate
         PredicateDefinition predicateDefinition = new PredicateDefinition();
         predicateDefinition.setName("Path");
-        predicateDefinition.setArgs(Map.of("_genkey_0", routeModel.getPath()));
+        predicateDefinition.setArgs(Map.of("_genkey_0", routeEntity.getPath()));
         route.setPredicates(List.of(predicateDefinition));
 
         //add, if provided, the rewrite path filter
-        if (routeModel.getRewritePath() != null) {
+        if (routeEntity.getRewritePathFrom() != null && routeEntity.getRewritePathTo() != null) {
             //create empty filter
             FilterDefinition rewritePathFilter = new FilterDefinition();
             //set-up name
@@ -207,8 +269,8 @@ public class DynamicRouteService {
             //prepare filter args. always use a tree-map to always have the values sorted
             Map<String, String> sortedFilter = new TreeMap<>(
                     Map.of(
-                            "_genkey_0", routeModel.getRewritePath().replaceFrom(),
-                            "_genkey_1", routeModel.getRewritePath().replaceTo()
+                            "_genkey_0", routeEntity.getRewritePathFrom(),
+                            "_genkey_1", routeEntity.getRewritePathTo()
                     )
             );
 
@@ -222,4 +284,21 @@ public class DynamicRouteService {
         return route;
     }
 
+    /**
+     * Convert the `RouteEntity` into a `RouteConfigResponse`
+     *
+     * @param entity The entity to convert into `RouteConfigResponse`
+     * @return The parsed `RouteConfigResponse`
+     */
+    private RouteConfigResponse buildResponse(RouteEntity entity) {
+        return new RouteConfigResponse(
+                entity.getRouteId(),
+                entity.getName(),
+                entity.getPath(),
+                entity.getUri(),
+                entity.getRewritePathFrom() != null && entity.getRewritePathTo() != null ? new RewritePath(entity.getRewritePathFrom(), entity.getRewritePathTo()) : null,
+                entity.getDescription(),
+                entity.getCreatedAt()
+        );
+    }
 }
