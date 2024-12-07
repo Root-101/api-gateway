@@ -1,5 +1,6 @@
 package dev.root101.api_gateway.feature.controller;
 
+import dev.root101.api_gateway.feature.data.entity.RouteEntity;
 import dev.root101.api_gateway.feature.model.RouteConfigRequest;
 import dev.root101.api_gateway.feature.model.RouteConfigResponse;
 import dev.root101.api_gateway.feature.service.DynamicRouteService;
@@ -63,6 +64,17 @@ public class RoutesController {
         this.validationService.validateRecursiveAndThrow(routeDefinition);
 
         return dynamicRouteService.addRoute(routeDefinition);
+    }
+
+    /**
+     * Get a route
+     *
+     * @param routeName         The name of the route to edit
+     * @return Void
+     */
+    @GetMapping("/{route-name}")
+    public Mono<RouteEntity> getRoute(@PathVariable("route-name") String routeName) {
+        return dynamicRouteService.findByName(routeName);
     }
 
     /**
