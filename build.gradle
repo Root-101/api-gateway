@@ -27,8 +27,8 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-webflux'
 
     //DB
-    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
-    implementation 'org.postgresql:postgresql:42.7.3'
+    implementation 'org.springframework.boot:spring-boot-starter-data-r2dbc'
+    implementation 'org.postgresql:r2dbc-postgresql:1.0.7.RELEASE'
 
     //lombok: autogenerate getters, setters....
     implementation 'org.projectlombok:lombok:1.18.36'

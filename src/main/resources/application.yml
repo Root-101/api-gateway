@@ -12,11 +12,12 @@ spring:
     open-in-view: false
     hibernate:
       ddl-auto: none
-  datasource:
-    driver-class-name: org.postgresql.Driver
-    url: ${DB_URL}                  #jdbc:postgresql:/host:port/db-name?stringtype=unspecified
-    username: ${DB_USERNAME}        #postgres
-    password: ${DB_PASSWORD}        #admin123
+  r2dbc:
+    url: r2dbc:postgresql://${DB_HOST}:${DB_PORT}/${DB_NAME}          #jdbc:postgresql:/host:port/db-name?stringtype=unspecified
+    username: ${DB_USERNAME}                                          #postgres
+    password: ${DB_PASSWORD}                                          #admin123
+    pool:
+      enabled: true
 app:
   defaults:
     username: admin
