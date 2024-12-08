@@ -56,24 +56,24 @@ class RouteUseCaseImpl implements RouteUseCase {
         this.vs = validationService;
     }
 
-    @PostConstruct
-    private void initRoutes() {
-        routeRepo.findAll()
-                .map(this::buildDefinition) // Convert each entity to a RouteDefinition
-                .concatMap(route -> routeDefinitionWriter.save(Mono.just(route))) // Save each definition in the RouteDefinitionWriter
-                .then(updateRoutes()) // Trigger the updateRoutes logic
-                .subscribe(
-                        null, // No action needed for onNext since we're working with a Mono<Void>
-                        error -> {
-                            // Log errors without blocking
-                            System.err.println("Error initializing routes: " + error.getMessage());
-                        },
-                        () -> {
-                            // Log successful initialization
-                            System.out.println("All routes initialized successfully.");
-                        }
-                );
-    }
+//    @PostConstruct
+//    private void initRoutes() {
+//        routeRepo.findAll()
+//                .map(this::buildDefinition) // Convert each entity to a RouteDefinition
+//                .concatMap(route -> routeDefinitionWriter.save(Mono.just(route))) // Save each definition in the RouteDefinitionWriter
+//                .then(updateRoutes()) // Trigger the updateRoutes logic
+//                .subscribe(
+//                        null, // No action needed for onNext since we're working with a Mono<Void>
+//                        error -> {
+//                            // Log errors without blocking
+//                            System.err.println("Error initializing routes: " + error.getMessage());
+//                        },
+//                        () -> {
+//                            // Log successful initialization
+//                            System.out.println("All routes initialized successfully.");
+//                        }
+//                );
+//    }
 
     /**
      * Add a single route
