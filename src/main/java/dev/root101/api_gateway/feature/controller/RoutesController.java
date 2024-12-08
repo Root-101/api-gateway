@@ -3,7 +3,7 @@ package dev.root101.api_gateway.feature.controller;
 import dev.root101.api_gateway.feature.data.entity.RouteEntity;
 import dev.root101.api_gateway.feature.model.RouteConfigRequest;
 import dev.root101.api_gateway.feature.model.RouteConfigResponse;
-import dev.root101.api_gateway.feature.service.DynamicRouteService;
+import dev.root101.api_gateway.feature.service.RouteUseCase;
 import dev.root101.commons.validation.ValidationService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -21,12 +21,12 @@ import java.util.List;
 @RequestMapping("/${app.admin.base-path}/routes")
 public class RoutesController {
 
-    private final DynamicRouteService dynamicRouteService;
+    private final RouteUseCase routeUseCase;
     private final ValidationService validationService;
 
     @Autowired
-    public RoutesController(DynamicRouteService dynamicRouteService, ValidationService validationService) {
-        this.dynamicRouteService = dynamicRouteService;
+    public RoutesController(RouteUseCase routeUseCase, ValidationService validationService) {
+        this.routeUseCase = routeUseCase;
         this.validationService = validationService;
     }
 
@@ -37,7 +37,7 @@ public class RoutesController {
      */
     @GetMapping
     public Flux<RouteConfigResponse> getRoutes() {
-        return dynamicRouteService.getRoutes();
+        return routeUseCase.getRoutes();
     }
 
     /**
@@ -50,7 +50,7 @@ public class RoutesController {
     public Mono<Void> addAllRoutes(@RequestBody List<RouteConfigRequest> routeDefinition) {
         this.validationService.validateRecursiveAndThrow(routeDefinition);
 
-        return dynamicRouteService.addAllRoutes(routeDefinition);
+        return routeUseCase.addAllRoutes(routeDefinition);
     }
 
     /**
@@ -63,18 +63,18 @@ public class RoutesController {
     public Mono<Void> addRoute(@RequestBody RouteConfigRequest routeDefinition) {
         this.validationService.validateRecursiveAndThrow(routeDefinition);
 
-        return dynamicRouteService.addRoute(routeDefinition);
+        return routeUseCase.addRoute(routeDefinition);
     }
 
     /**
      * Get a route
      *
-     * @param routeName         The name of the route to edit
+     * @param routeName The name of the route to edit
      * @return Void
      */
     @GetMapping("/{route-name}")
     public Mono<RouteEntity> getRoute(@PathVariable("route-name") String routeName) {
-        return dynamicRouteService.findByName(routeName);
+        return routeUseCase.findByName(routeName);
     }
 
     /**
@@ -88,7 +88,7 @@ public class RoutesController {
     public Mono<Void> editRoute(@PathVariable("route-id") String routeId, @RequestBody RouteConfigRequest routeDefinition) {
         this.validationService.validateRecursiveAndThrow(routeDefinition);
 
-        return dynamicRouteService.editRoute(routeId, routeDefinition);
+        return routeUseCase.editRoute(routeId, routeDefinition);
     }
 
     /**
@@ -99,6 +99,6 @@ public class RoutesController {
      */
     @DeleteMapping("/{route-id}")
     public Mono<Void> deleteRoute(@PathVariable("route-id") String routeId) {
-        return dynamicRouteService.deleteRoute(routeId);
+        return routeUseCase.deleteRoute(routeId);
     }
 }

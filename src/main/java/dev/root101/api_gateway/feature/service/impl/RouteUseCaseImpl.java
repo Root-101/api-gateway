@@ -1,13 +1,15 @@
-package dev.root101.api_gateway.feature.service;
+package dev.root101.api_gateway.feature.service.impl;
 
 import dev.root101.api_gateway.feature.data.entity.RouteEntity;
 import dev.root101.api_gateway.feature.data.repo.RouteRepo;
 import dev.root101.api_gateway.feature.model.RewritePath;
 import dev.root101.api_gateway.feature.model.RouteConfigRequest;
 import dev.root101.api_gateway.feature.model.RouteConfigResponse;
+import dev.root101.api_gateway.feature.service.RouteUseCase;
 import dev.root101.commons.exceptions.ConflictException;
 import dev.root101.commons.exceptions.NotFoundException;
 import dev.root101.commons.validation.ValidationService;
+import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cloud.gateway.event.RefreshRoutesEvent;
 import org.springframework.cloud.gateway.filter.FilterDefinition;
@@ -31,7 +33,7 @@ import java.util.TreeMap;
  * At the end of every action the context is updated and the change is ready to use.
  */
 @Service
-public class DynamicRouteService {
+class RouteUseCaseImpl implements RouteUseCase {
 
     private final RouteDefinitionWriter routeDefinitionWriter;
 
@@ -42,7 +44,7 @@ public class DynamicRouteService {
     private final ValidationService vs;
 
     @Autowired
-    public DynamicRouteService(
+    public RouteUseCaseImpl(
             RouteDefinitionWriter routeDefinitionWriter,
             ApplicationEventPublisher publisher,
             RouteRepo routeRepo,
@@ -150,7 +152,7 @@ public class DynamicRouteService {
      * @return void
      */
     public Mono<Void> editRoute(String routeName, RouteConfigRequest request) {
-        // Buscar la ruta antigua
+        // Search old route
         return routeRepo.findByName(routeName)
                 .switchIfEmpty(Mono.error(new NotFoundException("Route does not exist: %s".formatted(routeName))))
                 .flatMap(oldRoute -> {
@@ -201,7 +203,7 @@ public class DynamicRouteService {
      * @param routeName The name of the route to delete
      */
     public Mono<Void> deleteRoute(String routeName) {
-        // Buscar la ruta y eliminarla
+        // Search old route
         return routeRepo.findByName(routeName)
                 .switchIfEmpty(Mono.error(new NotFoundException("Route does not exist: %s".formatted(routeName))))
                 .flatMap(route ->
@@ -215,7 +217,7 @@ public class DynamicRouteService {
 
     /**
      * This can also be achieved with:
-     * 1 - Receiving in constructor: `RouteDefinitionLocator routeDefinitionLocator;`
+     * 1 - Receiving in constructor: `RouteDefinitionLocator routeDefinition;`
      * 2 - Calling `routeDefinitionLocator.getRouteDefinitions();`
      * 3 - This will return `Flux<RouteConfigModel>`
      */
