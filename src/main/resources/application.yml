@@ -18,6 +18,11 @@ spring:
     password: ${DB_PASSWORD}                                          #admin123
     pool:
       enabled: true
+
+  flyway:
+    enabled: false                                                    # To enable disable the use of railway
+    baselineOnMigrate: true
+
 app:
   defaults:
     username: admin

@@ -17,7 +17,7 @@ public class RouteConfigResponse {
     /**
      * Unique identified of the route.
      */
-    private Integer id;
+    private String id;
 
     /**
      * Unique 'human-readable' identified of the route.

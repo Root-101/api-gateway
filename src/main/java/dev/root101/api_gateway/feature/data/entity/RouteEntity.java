@@ -21,7 +21,7 @@ public class RouteEntity {
 
     @Id
     @Column("route_id")
-    private Integer routeId;
+    private String routeId;
 
     @NotBlank
     @Size(max = 255)
