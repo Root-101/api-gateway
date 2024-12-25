@@ -6,27 +6,22 @@ import dev.root101.api_gateway.feature.model.RewritePath;
 import dev.root101.api_gateway.feature.model.RouteConfigRequest;
 import dev.root101.api_gateway.feature.model.RouteConfigResponse;
 import dev.root101.api_gateway.feature.service.RouteUseCase;
+import dev.root101.api_gateway.feature.utils.RouteDefinitionMapper;
+import dev.root101.api_gateway.feature.utils.RouteUpdater;
 import dev.root101.commons.exceptions.ConflictException;
 import dev.root101.commons.exceptions.NotFoundException;
 import dev.root101.commons.validation.ValidationService;
-import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.cloud.gateway.event.RefreshRoutesEvent;
-import org.springframework.cloud.gateway.filter.FilterDefinition;
-import org.springframework.cloud.gateway.handler.predicate.PredicateDefinition;
 import org.springframework.cloud.gateway.route.RouteDefinition;
 import org.springframework.cloud.gateway.route.RouteDefinitionWriter;
-import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-import java.net.URI;
 import java.time.Instant;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
-import java.util.TreeMap;
 
 /**
  * This is the class who really make the modifications in the routes.
@@ -37,7 +32,7 @@ class RouteUseCaseImpl implements RouteUseCase {
 
     private final RouteDefinitionWriter routeDefinitionWriter;
 
-    private final ApplicationEventPublisher publisher;
+    private final RouteUpdater routeUpdater;
 
     private final RouteRepo routeRepo;
 
@@ -46,12 +41,12 @@ class RouteUseCaseImpl implements RouteUseCase {
     @Autowired
     public RouteUseCaseImpl(
             RouteDefinitionWriter routeDefinitionWriter,
-            ApplicationEventPublisher publisher,
+            RouteUpdater routeUpdater,
             RouteRepo routeRepo,
             ValidationService validationService
     ) {
         this.routeDefinitionWriter = routeDefinitionWriter;
-        this.publisher = publisher;
+        this.routeUpdater = routeUpdater;
         this.routeRepo = routeRepo;
         this.vs = validationService;
     }
@@ -109,7 +104,7 @@ class RouteUseCaseImpl implements RouteUseCase {
                                                                     )
                                                             ).then(
                                                                     //update routes
-                                                                    Mono.defer(this::updateRoutes)
+                                                                    Mono.defer(routeUpdater::updateRoutes)
                                                             )
                                                     )
                                     );
@@ -158,7 +153,7 @@ class RouteUseCaseImpl implements RouteUseCase {
                                 .map(this::buildDefinition)
                                 .concatMap(route -> routeDefinitionWriter.save(Mono.just(route)))
                 )
-                .then(Mono.defer(this::updateRoutes));
+                .then(Mono.defer(routeUpdater::updateRoutes));
     }
 
 
@@ -167,7 +162,7 @@ class RouteUseCaseImpl implements RouteUseCase {
      * delete the old route, create a new one and update the context.
      *
      * @param routeId The name of the old route
-     * @param request   The new config of route
+     * @param request The new config of route
      * @return void
      */
     public Mono<Void> editRoute(String routeId, RouteConfigRequest request) {
@@ -199,7 +194,7 @@ class RouteUseCaseImpl implements RouteUseCase {
                             );
                 })
                 // Update route after all changes
-                .then(Mono.defer(this::updateRoutes));
+                .then(Mono.defer(routeUpdater::updateRoutes));
     }
 
     /**
@@ -228,10 +223,12 @@ class RouteUseCaseImpl implements RouteUseCase {
                 .flatMap(route ->
                         routeRepo.delete(route) // Delete route from db
                                 .then(
-                                        routeDefinitionWriter.delete(Mono.just(routeId)) // Delete route from writer
+                                        routeDefinitionWriter.delete( // Delete route from writer
+                                                Mono.just(routeId)
+                                        )
                                 )
                 )
-                .then(Mono.defer(this::updateRoutes)); // Update route after all changes
+                .then(Mono.defer(routeUpdater::updateRoutes)); // Update route after all changes
     }
 
     /**
@@ -242,18 +239,6 @@ class RouteUseCaseImpl implements RouteUseCase {
      */
     public Flux<RouteConfigResponse> getRoutes() {
         return routeRepo.findAll().map(this::buildResponse);
-    }
-
-    /**
-     * Update all the routes in `routeDefinitionWriter`
-     * This is the method to call for the route actually go into effect, if not, the gateway will not recognize the routes
-     *
-     * @param <T> to avoid warnings, it's not used
-     * @return Mono.empty()
-     */
-    private <T> Mono<T> updateRoutes() {
-        publisher.publishEvent(new RefreshRoutesEvent(this));
-        return Mono.empty();
     }
 
     /**
@@ -282,43 +267,7 @@ class RouteUseCaseImpl implements RouteUseCase {
      * @return The parsed `RouteDefinition`
      */
     private RouteDefinition buildDefinition(RouteEntity routeEntity) {
-        //create the route definition, the model to parse in order to config the gateway
-        RouteDefinition route = new RouteDefinition();
-
-        //set the route-id
-        route.setId(routeEntity.getName());
-        //set the route uri
-        route.setUri(URI.create(routeEntity.getUri()));
-
-        //add the path predicate
-        PredicateDefinition predicateDefinition = new PredicateDefinition();
-        predicateDefinition.setName("Path");
-        predicateDefinition.setArgs(Map.of("_genkey_0", routeEntity.getPath()));
-        route.setPredicates(List.of(predicateDefinition));
-
-        //add, if provided, the rewrite path filter
-        if (routeEntity.getRewritePathFrom() != null && routeEntity.getRewritePathTo() != null) {
-            //create empty filter
-            FilterDefinition rewritePathFilter = new FilterDefinition();
-            //set-up name
-            rewritePathFilter.setName("RewritePath");
-
-            //prepare filter args. always use a tree-map to always have the values sorted
-            Map<String, String> sortedFilter = new TreeMap<>(
-                    Map.of(
-                            "_genkey_0", routeEntity.getRewritePathFrom(),
-                            "_genkey_1", routeEntity.getRewritePathTo()
-                    )
-            );
-
-            //set arguments to filter
-            rewritePathFilter.setArgs(sortedFilter);
-
-            //set filter to list
-            route.setFilters(List.of(rewritePathFilter));
-        }
-
-        return route;
+        return RouteDefinitionMapper.buildDefinition(routeEntity);
     }
 
     /**
