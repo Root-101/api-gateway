@@ -6,7 +6,7 @@ import org.springframework.stereotype.Repository;
 import reactor.core.publisher.Mono;
 
 @Repository
-public interface RouteRepo extends ReactiveCrudRepository<RouteEntity, Integer> {
+public interface RouteRepo extends ReactiveCrudRepository<RouteEntity, String> {
 
     Mono<RouteEntity> findByName(String name);
 }

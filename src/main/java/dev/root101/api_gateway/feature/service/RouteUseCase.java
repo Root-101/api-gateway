@@ -31,25 +31,25 @@ public interface RouteUseCase {
      * Edit a route. Since the edit is not allowed in `RouteDefinitionWriter` this logic
      * delete the old route, create a new one and update the context.
      *
-     * @param routeName The name of the old route
+     * @param routeId The id of the old route
      * @param request   The new config of route
      * @return void
      */
-    Mono<Void> editRoute(String routeName, RouteConfigRequest request);
+    Mono<Void> editRoute(String routeId, RouteConfigRequest request);
 
     /**
-     * Find a route by its name, or null if it's not found
+     * Find a route by its id, or null if it's not found
      *
-     * @param routeName The name of the route to find
+     * @param routeId The id the route to find
      */
-    Mono<RouteEntity> findByName(String routeName);
+    Mono<RouteEntity> findById(String routeId);
 
     /**
      * Delete a route from the gateway
      *
-     * @param routeName The name of the route to delete
+     * @param routeId The id of the route to delete
      */
-    Mono<Void> deleteRoute(String routeName);
+    Mono<Void> deleteRoute(String routeId);
 
     /**
      * This can also be achieved with:

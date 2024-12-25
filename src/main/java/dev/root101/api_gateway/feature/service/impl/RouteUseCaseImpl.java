@@ -166,14 +166,14 @@ class RouteUseCaseImpl implements RouteUseCase {
      * Edit a route. Since the edit is not allowed in `RouteDefinitionWriter` this logic
      * delete the old route, create a new one and update the context.
      *
-     * @param routeName The name of the old route
+     * @param routeId The name of the old route
      * @param request   The new config of route
      * @return void
      */
-    public Mono<Void> editRoute(String routeName, RouteConfigRequest request) {
+    public Mono<Void> editRoute(String routeId, RouteConfigRequest request) {
         // Search old route
-        return routeRepo.findByName(routeName)
-                .switchIfEmpty(Mono.error(new NotFoundException("Route does not exist: %s".formatted(routeName))))
+        return routeRepo.findById(routeId)
+                .switchIfEmpty(Mono.error(new NotFoundException("Route does not exist: %s".formatted(routeId))))
                 .flatMap(oldRoute -> {
                     RouteEntity entityToEdit = buildEntity(request);
                     entityToEdit.setRouteId(oldRoute.getRouteId());//maintain same id
@@ -190,7 +190,7 @@ class RouteUseCaseImpl implements RouteUseCase {
                                                 // 1 - delete
                                                 // 2 - save
                                                 return routeDefinitionWriter.delete(
-                                                        Mono.just(oldRoute.getName())
+                                                        Mono.just(oldRoute.getRouteId())
                                                 ).then(
                                                         routeDefinitionWriter.save(Mono.just(newRoute))
                                                 );
@@ -205,13 +205,13 @@ class RouteUseCaseImpl implements RouteUseCase {
     /**
      * Find a route by its name, or null if it's not found
      *
-     * @param routeName The name of the route to find
+     * @param routeId The name of the route to find
      */
-    public Mono<RouteEntity> findByName(String routeName) {
-        return routeRepo.findByName(routeName)
+    public Mono<RouteEntity> findById(String routeId) {
+        return routeRepo.findById(routeId)
                 .switchIfEmpty(
                         Mono.error(
-                                new NotFoundException("Route does not exist: %s".formatted(routeName))
+                                new NotFoundException("Route does not exist: %s".formatted(routeId))
                         )
                 );
     }
@@ -219,16 +219,16 @@ class RouteUseCaseImpl implements RouteUseCase {
     /**
      * Delete a route from the gateway
      *
-     * @param routeName The name of the route to delete
+     * @param routeId The name of the route to delete
      */
-    public Mono<Void> deleteRoute(String routeName) {
+    public Mono<Void> deleteRoute(String routeId) {
         // Search old route
-        return routeRepo.findByName(routeName)
-                .switchIfEmpty(Mono.error(new NotFoundException("Route does not exist: %s".formatted(routeName))))
+        return routeRepo.findById(routeId)
+                .switchIfEmpty(Mono.error(new NotFoundException("Route does not exist: %s".formatted(routeId))))
                 .flatMap(route ->
                         routeRepo.delete(route) // Delete route from db
                                 .then(
-                                        routeDefinitionWriter.delete(Mono.just(routeName)) // Delete route from writer
+                                        routeDefinitionWriter.delete(Mono.just(routeId)) // Delete route from writer
                                 )
                 )
                 .then(Mono.defer(this::updateRoutes)); // Update route after all changes

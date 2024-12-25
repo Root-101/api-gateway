@@ -72,9 +72,9 @@ public class RoutesController {
      * @param routeName The name of the route to edit
      * @return Void
      */
-    @GetMapping("/{route-name}")
-    public Mono<RouteEntity> getRoute(@PathVariable("route-name") String routeName) {
-        return routeUseCase.findByName(routeName);
+    @GetMapping("/{route-id}")
+    public Mono<RouteEntity> getRoute(@PathVariable("route-id") String routeId) {
+        return routeUseCase.findById(routeId);
     }
 
     /**

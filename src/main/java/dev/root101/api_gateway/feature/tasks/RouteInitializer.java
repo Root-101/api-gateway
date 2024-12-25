@@ -27,6 +27,7 @@ public class RouteInitializer {
 
     private final ApplicationEventPublisher publisher;
 
+    //TODO: clean-up
     public RouteInitializer(RouteRepo routeRepo, RouteDefinitionWriter routeDefinitionWriter, ApplicationEventPublisher publisher) {
         this.routeRepo = routeRepo;
         this.routeDefinitionWriter = routeDefinitionWriter;

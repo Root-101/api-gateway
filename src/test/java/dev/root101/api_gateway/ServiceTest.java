@@ -86,7 +86,7 @@ public class ServiceTest {
                 .assertNext(routeEntity -> {
                     assertThat(routeEntity).isNotNull();
                     assertThat(routeEntity.getRouteId()).isNotNull();
-                    assertThat(routeEntity.getRouteId()).isGreaterThan(0);
+                    assertThat(routeEntity.getRouteId()).isNotBlank();
 
                     assertThat(routeEntity.getName()).isEqualTo(request.getName());
                     assertThat(routeEntity.getPath()).isEqualTo(request.getPath());
