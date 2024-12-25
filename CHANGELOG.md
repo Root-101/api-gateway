@@ -1,3 +1,8 @@
+* 4.x:
+    * 4.0.0:
+        * **DATE** :date: : 2024-12-25.
+        * **General** :hammer_and_wrench: : Initial version 4.0.0 (first of tag 4.x).
+
 * 3.x:
     * 3.0.0:
         * **DATE** :date: : 2024-12-02.

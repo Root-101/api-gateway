@@ -8,6 +8,23 @@ spring:
     default: ${PROFILE:default}
   application:
     name: ${APPLICATION_NAME:Api-Gateway}
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: none
+  r2dbc:
+    url: r2dbc:postgresql://${DB_HOST}:${DB_PORT}/${DB_NAME}          #jdbc:postgresql:/host:port/db-name?stringtype=unspecified
+    username: ${DB_USERNAME}                                          #postgres
+    password: ${DB_PASSWORD}                                          #admin123
+    pool:
+      enabled: true
+
+  flyway:
+    enabled: true                                                    #To enable disable the use of railway
+    baselineOnMigrate: true
+    url: jdbc:postgresql://${DB_HOST}:${DB_PORT}/${DB_NAME}
+    user: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
 
 app:
   defaults:

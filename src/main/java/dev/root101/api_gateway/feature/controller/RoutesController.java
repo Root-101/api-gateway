@@ -1,7 +1,9 @@
 package dev.root101.api_gateway.feature.controller;
 
-import dev.root101.api_gateway.feature.model.RouteConfigModel;
-import dev.root101.api_gateway.feature.service.DynamicRouteService;
+import dev.root101.api_gateway.feature.data.entity.RouteEntity;
+import dev.root101.api_gateway.feature.model.RouteConfigRequest;
+import dev.root101.api_gateway.feature.model.RouteConfigResponse;
+import dev.root101.api_gateway.feature.service.RouteUseCase;
 import dev.root101.commons.validation.ValidationService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -19,12 +21,12 @@ import java.util.List;
 @RequestMapping("/${app.admin.base-path}/routes")
 public class RoutesController {
 
-    private final DynamicRouteService dynamicRouteService;
+    private final RouteUseCase routeUseCase;
     private final ValidationService validationService;
 
     @Autowired
-    public RoutesController(DynamicRouteService dynamicRouteService, ValidationService validationService) {
-        this.dynamicRouteService = dynamicRouteService;
+    public RoutesController(RouteUseCase routeUseCase, ValidationService validationService) {
+        this.routeUseCase = routeUseCase;
         this.validationService = validationService;
     }
 
@@ -34,8 +36,8 @@ public class RoutesController {
      * @return Flux with all the routes
      */
     @GetMapping
-    public Flux<RouteConfigModel> getRoutes() {
-        return dynamicRouteService.getRoutes();
+    public Flux<RouteConfigResponse> getRoutes() {
+        return routeUseCase.getRoutes();
     }
 
     /**
@@ -45,10 +47,10 @@ public class RoutesController {
      * @return Void
      */
     @PostMapping("/multi-add")
-    public Mono<Void> addAllRoutes(@RequestBody List<RouteConfigModel> routeDefinition) {
+    public Mono<Void> addAllRoutes(@RequestBody List<RouteConfigRequest> routeDefinition) {
         this.validationService.validateRecursiveAndThrow(routeDefinition);
 
-        return dynamicRouteService.addAllRoutes(routeDefinition);
+        return routeUseCase.addAllRoutes(routeDefinition);
     }
 
     /**
@@ -58,10 +60,21 @@ public class RoutesController {
      * @return Void
      */
     @PostMapping
-    public Mono<Void> addRoute(@RequestBody RouteConfigModel routeDefinition) {
+    public Mono<Void> addRoute(@RequestBody RouteConfigRequest routeDefinition) {
         this.validationService.validateRecursiveAndThrow(routeDefinition);
 
-        return dynamicRouteService.addRoute(routeDefinition);
+        return routeUseCase.addRoute(routeDefinition);
+    }
+
+    /**
+     * Get a route
+     *
+     * @param routeName The name of the route to edit
+     * @return Void
+     */
+    @GetMapping("/{route-id}")
+    public Mono<RouteEntity> getRoute(@PathVariable("route-id") String routeId) {
+        return routeUseCase.findById(routeId);
     }
 
     /**
@@ -72,10 +85,10 @@ public class RoutesController {
      * @return Void
      */
     @PutMapping("/{route-id}")
-    public Mono<Void> editRoute(@PathVariable("route-id") String routeId, @RequestBody RouteConfigModel routeDefinition) {
+    public Mono<Void> editRoute(@PathVariable("route-id") String routeId, @RequestBody RouteConfigRequest routeDefinition) {
         this.validationService.validateRecursiveAndThrow(routeDefinition);
 
-        return dynamicRouteService.editRoute(routeId, routeDefinition);
+        return routeUseCase.editRoute(routeId, routeDefinition);
     }
 
     /**
@@ -86,6 +99,6 @@ public class RoutesController {
      */
     @DeleteMapping("/{route-id}")
     public Mono<Void> deleteRoute(@PathVariable("route-id") String routeId) {
-        return dynamicRouteService.deleteRoute(routeId);
+        return routeUseCase.deleteRoute(routeId);
     }
 }
