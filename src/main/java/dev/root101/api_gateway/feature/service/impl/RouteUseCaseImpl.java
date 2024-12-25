@@ -172,7 +172,7 @@ class RouteUseCaseImpl implements RouteUseCase {
      */
     public Mono<Void> editRoute(String routeId, RouteConfigRequest request) {
         // Search old route
-        return routeRepo.findById(routeId)
+        return routeRepo.findByRawId(routeId)
                 .switchIfEmpty(Mono.error(new NotFoundException("Route does not exist: %s".formatted(routeId))))
                 .flatMap(oldRoute -> {
                     RouteEntity entityToEdit = buildEntity(request);
@@ -190,7 +190,7 @@ class RouteUseCaseImpl implements RouteUseCase {
                                                 // 1 - delete
                                                 // 2 - save
                                                 return routeDefinitionWriter.delete(
-                                                        Mono.just(oldRoute.getRouteId())
+                                                        Mono.just(oldRoute.getRouteId().toString())
                                                 ).then(
                                                         routeDefinitionWriter.save(Mono.just(newRoute))
                                                 );
@@ -208,7 +208,7 @@ class RouteUseCaseImpl implements RouteUseCase {
      * @param routeId The name of the route to find
      */
     public Mono<RouteEntity> findById(String routeId) {
-        return routeRepo.findById(routeId)
+        return routeRepo.findByRawId(routeId)
                 .switchIfEmpty(
                         Mono.error(
                                 new NotFoundException("Route does not exist: %s".formatted(routeId))
@@ -223,7 +223,7 @@ class RouteUseCaseImpl implements RouteUseCase {
      */
     public Mono<Void> deleteRoute(String routeId) {
         // Search old route
-        return routeRepo.findById(routeId)
+        return routeRepo.findByRawId(routeId)
                 .switchIfEmpty(Mono.error(new NotFoundException("Route does not exist: %s".formatted(routeId))))
                 .flatMap(route ->
                         routeRepo.delete(route) // Delete route from db
@@ -329,7 +329,7 @@ class RouteUseCaseImpl implements RouteUseCase {
      */
     private RouteConfigResponse buildResponse(RouteEntity entity) {
         return new RouteConfigResponse(
-                entity.getRouteId(),
+                entity.getRouteId().toString(),
                 entity.getName(),
                 entity.getPath(),
                 entity.getUri(),

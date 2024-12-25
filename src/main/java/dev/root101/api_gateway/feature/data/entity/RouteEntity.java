@@ -11,6 +11,7 @@ import org.springframework.data.relational.core.mapping.Column;
 import org.springframework.data.relational.core.mapping.Table;
 
 import java.time.Instant;
+import java.util.UUID;
 
 @Data
 @NoArgsConstructor
@@ -21,7 +22,7 @@ public class RouteEntity {
 
     @Id
     @Column("route_id")
-    private String routeId;
+    private UUID routeId;
 
     @NotBlank
     @Size(max = 255)
