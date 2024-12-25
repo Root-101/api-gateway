@@ -26,6 +26,10 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-security'
     implementation 'org.springframework.boot:spring-boot-starter-webflux'
 
+    //DB
+    implementation 'org.springframework.boot:spring-boot-starter-data-r2dbc'
+    implementation 'org.postgresql:r2dbc-postgresql:1.0.7.RELEASE'
+
     //lombok: autogenerate getters, setters....
     implementation 'org.projectlombok:lombok:1.18.36'
     compileOnly 'org.projectlombok:lombok:1.18.36'
@@ -33,4 +37,19 @@ dependencies {
 
     //custom exceptions, validations & more
     implementation 'dev.root101.commons:commons:5.3.0.RELEASE.20240813'
+
+    //flyway
+    implementation 'org.postgresql:postgresql:42.7.4'
+    implementation 'org.flywaydb:flyway-core:11.0.1'
+    implementation 'org.flywaydb:flyway-database-postgresql:11.0.1'
+
+    //tests
+    implementation 'org.springframework.boot:spring-boot-starter-test'
+    implementation 'org.testcontainers:postgresql:1.20.4'
+    implementation 'org.testcontainers:junit-jupiter:1.20.4'
+    implementation 'io.projectreactor:reactor-test:3.7.0'
+}
+
+test {
+    useJUnitPlatform()
 }
