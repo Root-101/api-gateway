@@ -24,7 +24,7 @@ try to use the latest tag, in this case 2.2.0)
 NOTE #4: We recommend that you always use the latest available version, this way you can enjoy all the features, a more
 polished project and an overall better experience.
 
-## This is the docs for version 3.x:
+## This is the docs for version 4.x:
 
 ---
 **title:** Api-Gateway </br>
@@ -37,11 +37,12 @@ polished project and an overall better experience.
 
 ---
 
-#### About v3.x:
+#### About v4.x:
 
-This version add a management api to configure the gateway services without redeploying the service.
+This version adds a postgres DB so that the route configuration can be saved and can be loaded if the service is
+restarted.
 
-This version include the api docs and a postman collection with preconfigured endpoints
+This version include the api docs and a postman collection with preconfigured endpoints.
 
 ### Env Variables to configure the service:
 
@@ -55,6 +56,11 @@ To configure the project we have a variety of environmental variables at our dis
 | ADMIN_USERNAME   | Username of the admin user                | text     | admin                       | 3.x              |
 | ADMIN_PASSWORD   | Password of the admin user                | text     | admin123**                  | 3.x              |
 | ADMIN_PATH       | Path of the admin (management) endpoints  | text     | _admin                      | 3.x              |
+| DB_HOST          | Host of the running DB                    | text     | localhost                   | 4.x              |
+| DB_PORT          | Port of the running DB                    | integer  | 5432                        | 4.x              |
+| DB_NAME          | Name of the DB                            | text     | api-gateway                 | 4.x              |
+| DB_USERNAME      | Username of the DB user                   | text     | postgres                    | 4.x              |
+| DB_PASSWORD      | Password of the DB user                   | text     | postgres_password           | 4.x              |
 
 ##### PORT, PROFILE & APPLICATION_NAME:
 
@@ -89,6 +95,17 @@ This way, if we have a service that is expected to be redirected to, and we want
 modify said variable so that that path is not occupied and the requests are redirected to the service instead of the
 configuration controller.
 
+##### DB_HOST, DB_PORT, DB_NAME, DB_USERNAME, DB_PASSWORD:
+
+These environment variables are used to configure the connection to the DB, and are then used as follows:
+
+```
+  r2dbc:
+    url: r2dbc:postgresql://${DB_HOST}:${DB_PORT}/${DB_NAME}          #jdbc:postgresql:/host:port/db-name?stringtype=unspecified
+    username: ${DB_USERNAME}                                          #postgres
+    password: ${DB_PASSWORD}                                          #admin123
+```
+
 ### Api docs:
 
 The administration API gives us access to endpoint to configure the routes, here we have:
@@ -96,13 +113,14 @@ The administration API gives us access to endpoint to configure the routes, here
 | Method | Endpoint                  | Description                                                                     | Body                |
 |--------|---------------------------|---------------------------------------------------------------------------------|---------------------|
 | GET    | /_admin/routes            | Get all configured routes in the gateway                                        | No body             |
+| GET    | /_admin/routes/{route-id} | Get details of a single route                                                   | No body             |
 | POST   | /_admin/routes            | Create a new route to redirect                                                  | Route model         |
 | POST   | /_admin/routes/multi-add  | Create multiple routes in same request                                          | List of Route model |
 | PUT    | /_admin/routes/{route-id} | Edit the route with id = route-id, replace it with route in body of the request | Route model         |
 | DELETE | /_admin/routes/{route-id} | Delete the route with id = route-id                                             | No body             |
 
 NOTE: if the value of env `ADMIN_PATH` changes, the endpoint will change. This table is based on the default value of
-this variable.
+this variable (_admin).
 
 #### Route model:
 
@@ -110,11 +128,12 @@ This is the full json of a route model.
 
 ```json
 {
-  "id": "abcd-dev",
-  "path": "/abcd/**",
+  "name": "test-dev",
+  "path": "/test-service/**",
   "uri": "http://localhost:8081",
+  "description": "A test route",
   "rewrite_path": {
-    "replace_from": "/abcd/",
+    "replace_from": "/test-service/",
     "replace_to": "/"
   }
 }
@@ -122,12 +141,13 @@ This is the full json of a route model.
 
 Here we have:
 
-| Field        | Required | Description                                                                                                 | Validations                        | Recommendations                                                                                                                                                                                                                                                             |
-|--------------|----------|-------------------------------------------------------------------------------------------------------------|------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| id           | true     | Name with which this route will be identified for edit/delete operations. Unique identifier for each route. | - Not null<br/>-Not Empty          | Use a unique, easy to identify value                                                                                                                                                                                                                                        |
-| path         | true     | Route with which the redirection to a specific service will be identified                                   | - Not null<br/>-Not Empty          | Use in the format /{path}/**, this means that all requests made to https://gateway/{path}/..... will be redirected to this route                                                                                                                                            |
-| uri          | true     | Url of the service to which you are going to redirect                                                       | - Not null<br/>-Not Empty<br/>-Url | Use same base url of the service (preferably a private URL without internet access, which can only be accessed through the gateway)                                                                                                                                         |
-| rewrite_path | false    | 'Filter' to rewrite the final path to which the request is made (replace in final url the *from* => *to*)   | - Not null<br/>-Not Empty<br/>     | Use to fix the extra path added by path property. With example, a request made to:  https://gateway/abcd/users/search, by default will be redirected to: http://localhost:8081/abcd/users/search, but with rewrite will be redirected to http://localhost:8081/users/search |
+| Field        | Required | Description                                                                                                | Validations                        | Recommendations                                                                                                                                                                                                                                                             |
+|--------------|----------|------------------------------------------------------------------------------------------------------------|------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| name         | true     | Name with which this route will be identified (human like name). It's an unique identifier for each route. | - Not null<br/>-Not Empty          | Use a unique, easy to identify value                                                                                                                                                                                                                                        |
+| path         | true     | Route with which the redirection to a specific service will be identified                                  | - Not null<br/>-Not Empty          | Use in the format /{path}/**, this means that all requests made to https://gateway/{path}/..... will be redirected to this route                                                                                                                                            |
+| uri          | true     | Url of the service to which you are going to redirect                                                      | - Not null<br/>-Not Empty<br/>-Url | Use same base url of the service (preferably a private URL without internet access, which can only be accessed through the gateway)                                                                                                                                         |
+| description  | false    | Additional description of the route                                                                        |                                    | Use it for some basic descriptive description of the route                                                                                                                                                                                                                  |
+| rewrite_path | false    | 'Filter' to rewrite the final path to which the request is made (replace in final url the *from* => *to*)  | - Not null<br/>-Not Empty<br/>     | Use to fix the extra path added by path property. With example, a request made to:  https://gateway/abcd/users/search, by default will be redirected to: http://localhost:8081/abcd/users/search, but with rewrite will be redirected to http://localhost:8081/users/search |
 
 ### Admin endpoint examples:
 
