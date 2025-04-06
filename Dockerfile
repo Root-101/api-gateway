@@ -7,11 +7,11 @@ WORKDIR $APP_HOME
 
 RUN gradle --configure-on-demand -x check clean build --no-daemon
 
-FROM openjdk:21-jdk-oracle
+FROM eclipse-temurin:21-jre-alpine
 
 RUN mkdir /app
 COPY --from=build /home/gradle/src/build/libs/*.jar /app/app.jar
 
 EXPOSE $PORT
 
-ENTRYPOINT exec java $JAVA_OPTS -jar -Dserver.port=$PORT /app/app.jar
+ENTRYPOINT ["sh", "-c", "exec java $JAVA_OPTS -Dserver.port=$PORT -jar /app/app.jar"]
