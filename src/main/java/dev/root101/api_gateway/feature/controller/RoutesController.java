@@ -48,7 +48,7 @@ public class RoutesController {
      */
     @PostMapping("/multi-add")
     public Mono<Void> addAllRoutes(@RequestBody List<RouteConfigRequest> routeDefinition) {
-        this.validationService.validateRecursiveAndThrow(routeDefinition);
+        this.validationService.validate(routeDefinition);
 
         return routeUseCase.addAllRoutes(routeDefinition);
     }
@@ -61,7 +61,7 @@ public class RoutesController {
      */
     @PostMapping
     public Mono<Void> addRoute(@RequestBody RouteConfigRequest routeDefinition) {
-        this.validationService.validateRecursiveAndThrow(routeDefinition);
+        this.validationService.validate(routeDefinition);
 
         return routeUseCase.addRoute(routeDefinition);
     }
@@ -86,7 +86,7 @@ public class RoutesController {
      */
     @PutMapping("/{route-id}")
     public Mono<Void> editRoute(@PathVariable("route-id") String routeId, @RequestBody RouteConfigRequest routeDefinition) {
-        this.validationService.validateRecursiveAndThrow(routeDefinition);
+        this.validationService.validate(routeDefinition);
 
         return routeUseCase.editRoute(routeId, routeDefinition);
     }

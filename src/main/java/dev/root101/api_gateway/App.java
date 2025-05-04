@@ -9,6 +9,10 @@ import org.springframework.boot.test.context.SpringBootTest;
 public class App {
 
     public static void main(String[] args) {
+        System.out.println("--------------------------------------------------");
+        System.out.println(System.getProperty("DB_HOST"));
+        System.out.println("--------------------------------------------------");
+
         SpringApplication.run(App.class, args);
     }
 

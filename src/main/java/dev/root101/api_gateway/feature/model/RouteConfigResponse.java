@@ -4,7 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.time.Instant;
+import java.time.OffsetDateTime;
 
 /**
  * Model with the config of any route
@@ -50,5 +50,5 @@ public class RouteConfigResponse {
     /**
      * When the route was created.
      */
-    private Instant createdAt;
+    private OffsetDateTime createdAt;
 }

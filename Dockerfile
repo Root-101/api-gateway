@@ -1,17 +1,25 @@
-FROM gradle:8.5.0-jdk21-alpine AS build
+FROM gradle:jdk-21-and-22-graal-jammy AS builder
 
-ARG APP_HOME=/home/gradle/src
+WORKDIR /workspace
 
-COPY --chown=gradle:gradle . $APP_HOME
-WORKDIR $APP_HOME
+# Copia el código fuente
+COPY . .
 
-RUN gradle --configure-on-demand -x check clean build --no-daemon
+# Da permisos de ejecución al script gradlew
+RUN chmod +x gradlew
 
-FROM eclipse-temurin:21-jre-alpine
+# Compila el binario nativo
+RUN ./gradlew clean nativeCompile --stacktrace --info
 
-RUN mkdir /app
-COPY --from=build /home/gradle/src/build/libs/*.jar /app/app.jar
+# Etapa 2: Imagen final ultraligera
+FROM debian:bookworm-slim
 
-EXPOSE $PORT
+WORKDIR /app
 
-ENTRYPOINT ["sh", "-c", "exec java $JAVA_OPTS -Dserver.port=$PORT -jar /app/app.jar"]
+# Copia el binario nativo desde la etapa de compilación
+COPY --from=builder /workspace/build/native/nativeCompile/graalvm /app/
+
+RUN chmod +x /app/graalvm
+
+# Comando para ejecutar la aplicación
+ENTRYPOINT ["/app/graalvm"]

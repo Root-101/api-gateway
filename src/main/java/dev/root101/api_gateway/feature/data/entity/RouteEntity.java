@@ -10,7 +10,7 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.relational.core.mapping.Column;
 import org.springframework.data.relational.core.mapping.Table;
 
-import java.time.Instant;
+import java.time.OffsetDateTime;
 import java.util.UUID;
 
 @Data
@@ -53,5 +53,5 @@ public class RouteEntity {
     private String description;
 
     @Column("created_at")
-    private Instant createdAt;
+    private OffsetDateTime createdAt;
 }

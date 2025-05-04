@@ -18,7 +18,7 @@ import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-import java.time.Instant;
+import java.time.OffsetDateTime;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -92,7 +92,7 @@ class RouteUseCaseImpl implements RouteUseCase {
                             RouteEntity entity = buildEntity(request);
 
                             //validate request
-                            return Mono.fromRunnable(() -> vs.validateRecursiveAndThrow(entity))//if any error, exception is thrown
+                            return Mono.fromRunnable(() -> vs.validate(entity))//if any error, exception is thrown
                                     .then(
                                             //if all validations oka, save route to DB
                                             routeRepo.save(entity)
@@ -142,7 +142,7 @@ class RouteUseCaseImpl implements RouteUseCase {
                 .map(request -> buildEntity((RouteConfigRequest) request)) // Manual parse of type (up we lose the type)
                 .collectList()
                 .flatMap(
-                        entities -> Mono.fromRunnable(() -> vs.validateRecursiveAndThrow(entities))
+                        entities -> Mono.fromRunnable(() -> vs.validate(entities))
                                 .then(
                                         routeRepo.saveAll(entities).collectList()
                                 )
@@ -174,7 +174,7 @@ class RouteUseCaseImpl implements RouteUseCase {
                     entityToEdit.setRouteId(oldRoute.getRouteId());//maintain same id
                     entityToEdit.setCreatedAt(oldRoute.getCreatedAt());//maintain same create_at
 
-                    return Mono.fromRunnable(() -> vs.validateRecursiveAndThrow(entityToEdit))
+                    return Mono.fromRunnable(() -> vs.validate(entityToEdit))
                             .then(
                                     routeRepo.save(entityToEdit).flatMap(
                                             parsedEntity -> {
@@ -256,7 +256,7 @@ class RouteUseCaseImpl implements RouteUseCase {
                 routeModel.getRewritePath() != null ? routeModel.getRewritePath().getReplaceFrom() : null,
                 routeModel.getRewritePath() != null ? routeModel.getRewritePath().getReplaceTo() : null,
                 routeModel.getDescription(),
-                Instant.now()
+                OffsetDateTime.now()
         );
     }
 
