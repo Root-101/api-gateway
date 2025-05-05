@@ -1,5 +1,9 @@
 * 4.x:
-    * 4.0.1:
+    * 4.1.0:
+        * **DATE** :date: : 2025-05-05.
+        * **Docker** :whale: : Migrated to dockerfile to use/build-run the project as a native image using graalvm.
+        * **General** :hammer_and_wrench: : Migrated all project to handle specific of native image
+      * 4.0.1:
         * **DATE** :date: : 2025-04-04.
         * **Docker** :whale: : Change sdk image in Dockerfile, from `openjdk:21-jdk-oracle` to `eclipse-temurin:21-jre-alpine` (lighter image, like 15-20% less ram usage and like 50% size reduction)
     * 4.0.0:

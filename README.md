@@ -101,10 +101,13 @@ These environment variables are used to configure the connection to the DB, and 
 
 ```
   r2dbc:
-    url: r2dbc:postgresql://${DB_HOST}:${DB_PORT}/${DB_NAME}          #jdbc:postgresql:/host:port/db-name?stringtype=unspecified
-    username: ${DB_USERNAME}                                          #postgres
-    password: ${DB_PASSWORD}                                          #admin123
+    url: r2dbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:api-gateway}
+    username: ${DB_USERNAME:postgres}
+    password: ${DB_PASSWORD:admin123}
 ```
+
+Variables must be available at compile time (since we started using the native image in v4.1.0), so they are set by
+default and then overridden with the real values.
 
 ### Api docs:
 
