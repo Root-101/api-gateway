@@ -3,6 +3,7 @@ package dev.root101.api_gateway.config;
 import dev.root101.api_gateway.feature.model.RewritePath;
 import dev.root101.api_gateway.feature.model.RouteConfigRequest;
 import dev.root101.api_gateway.feature.model.RouteConfigResponse;
+import dev.root101.commons.exceptions.ValidationException;
 import dev.root101.commons.validation.annotations.EnumValidatorRegister_ListOfString;
 import dev.root101.commons.validation.annotations.EnumValidatorRegister_String;
 import dev.root101.commons.validation.annotations.SortRegister;
@@ -13,8 +14,10 @@ import java.time.OffsetDateTime;
 
 @Configuration
 @RegisterReflectionForBinding({
+        //--------- CONFIG ---------\\
+        GlobalExceptionHandler.class,
         //--------- COMMONS ---------\\
-        SortRegister.class, EnumValidatorRegister_ListOfString.class, EnumValidatorRegister_String.class,
+        ValidationException.class, ValidationException.ValidationErrorMessage.class, SortRegister.class, EnumValidatorRegister_ListOfString.class, EnumValidatorRegister_String.class,
         //--------- MODEL ---------\\
         RewritePath.class, RouteConfigRequest.class, RouteConfigResponse.class,
         OffsetDateTime.class
