@@ -1,4 +1,4 @@
-package dev.root101.api_gateway.feature.model;
+package dev.root101.api_gateway.features.routes.logic.model;
 
 import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
@@ -36,7 +36,7 @@ public class RouteConfigRequest {
     /**
      * Object if the path needs to be rewritten.
      */
-    private RewritePath rewritePath;
+    private RewritePathModel rewritePath;
 
     /**
      * Additional description of route. </br>

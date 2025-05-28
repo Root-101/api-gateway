@@ -1,9 +1,9 @@
-package dev.root101.api_gateway.feature.tasks;
+package dev.root101.api_gateway.features.routes.tasks;
 
-import dev.root101.api_gateway.feature.data.entity.RouteEntity;
-import dev.root101.api_gateway.feature.data.repo.RouteRepo;
-import dev.root101.api_gateway.feature.utils.RouteDefinitionMapper;
-import dev.root101.api_gateway.feature.utils.RouteUpdater;
+import dev.root101.api_gateway.features.routes.data.entity.RouteEntity;
+import dev.root101.api_gateway.features.routes.data.repo.RouteRepo;
+import dev.root101.api_gateway.features.routes.utils.RouteDefinitionMapper;
+import dev.root101.api_gateway.features.routes.utils.RouteUpdater;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.cloud.gateway.route.RouteDefinition;
 import org.springframework.cloud.gateway.route.RouteDefinitionWriter;

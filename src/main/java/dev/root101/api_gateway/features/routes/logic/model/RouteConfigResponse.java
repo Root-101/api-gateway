@@ -1,4 +1,4 @@
-package dev.root101.api_gateway.feature.model;
+package dev.root101.api_gateway.features.routes.logic.model;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -39,7 +39,7 @@ public class RouteConfigResponse {
      * Object if the path needs to be rewritten. </br>
      * Can be null.
      */
-    private RewritePath rewritePath;
+    private RewritePathModel rewritePath;
 
     /**
      * Additional description of route. </br>

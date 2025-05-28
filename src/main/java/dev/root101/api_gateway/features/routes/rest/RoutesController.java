@@ -1,9 +1,9 @@
-package dev.root101.api_gateway.feature.controller;
+package dev.root101.api_gateway.features.routes.rest;
 
-import dev.root101.api_gateway.feature.data.entity.RouteEntity;
-import dev.root101.api_gateway.feature.model.RouteConfigRequest;
-import dev.root101.api_gateway.feature.model.RouteConfigResponse;
-import dev.root101.api_gateway.feature.service.RouteUseCase;
+import dev.root101.api_gateway.features.routes.data.entity.RouteEntity;
+import dev.root101.api_gateway.features.routes.logic.model.RouteConfigRequest;
+import dev.root101.api_gateway.features.routes.logic.model.RouteConfigResponse;
+import dev.root101.api_gateway.features.routes.logic.usecase.RouteUseCase;
 import dev.root101.commons.validation.ValidationService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -17,7 +17,6 @@ import java.util.List;
  * By default, is secured and only ROLE_GATEWAY_ADMIN can access (configured in global security config)
  */
 @RestController
-//if this value changes, change it in: dev.root101.api_gateway.security.securityWebFilterChain:pathMatchers("/_admin/**")
 @RequestMapping("/${app.admin.base-path}/routes")
 public class RoutesController {
 

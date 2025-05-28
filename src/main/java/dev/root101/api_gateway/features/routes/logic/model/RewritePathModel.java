@@ -1,4 +1,4 @@
-package dev.root101.api_gateway.feature.model;
+package dev.root101.api_gateway.features.routes.logic.model;
 
 import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
@@ -8,7 +8,7 @@ import lombok.NoArgsConstructor;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class RewritePath {
+public class RewritePathModel {
     @NotBlank
     private String replaceFrom;
 

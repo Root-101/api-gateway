@@ -1,4 +1,4 @@
-package dev.root101.api_gateway.feature.data.entity;
+package dev.root101.api_gateway.features.routes.data.entity;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;

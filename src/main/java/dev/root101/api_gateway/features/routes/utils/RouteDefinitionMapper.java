@@ -1,6 +1,6 @@
-package dev.root101.api_gateway.feature.utils;
+package dev.root101.api_gateway.features.routes.utils;
 
-import dev.root101.api_gateway.feature.data.entity.RouteEntity;
+import dev.root101.api_gateway.features.routes.data.entity.RouteEntity;
 import org.springframework.cloud.gateway.filter.FilterDefinition;
 import org.springframework.cloud.gateway.handler.predicate.PredicateDefinition;
 import org.springframework.cloud.gateway.route.RouteDefinition;

@@ -1,8 +1,8 @@
-package dev.root101.api_gateway.feature.service;
+package dev.root101.api_gateway.features.routes.logic.usecase;
 
-import dev.root101.api_gateway.feature.data.entity.RouteEntity;
-import dev.root101.api_gateway.feature.model.RouteConfigRequest;
-import dev.root101.api_gateway.feature.model.RouteConfigResponse;
+import dev.root101.api_gateway.features.routes.data.entity.RouteEntity;
+import dev.root101.api_gateway.features.routes.logic.model.RouteConfigRequest;
+import dev.root101.api_gateway.features.routes.logic.model.RouteConfigResponse;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 

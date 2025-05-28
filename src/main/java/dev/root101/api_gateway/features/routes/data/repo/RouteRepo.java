@@ -1,6 +1,6 @@
-package dev.root101.api_gateway.feature.data.repo;
+package dev.root101.api_gateway.features.routes.data.repo;
 
-import dev.root101.api_gateway.feature.data.entity.RouteEntity;
+import dev.root101.api_gateway.features.routes.data.entity.RouteEntity;
 import org.springframework.data.repository.reactive.ReactiveCrudRepository;
 import org.springframework.stereotype.Repository;
 import reactor.core.publisher.Mono;

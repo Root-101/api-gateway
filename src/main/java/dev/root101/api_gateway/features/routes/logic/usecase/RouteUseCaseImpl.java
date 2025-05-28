@@ -1,13 +1,12 @@
-package dev.root101.api_gateway.feature.service.impl;
+package dev.root101.api_gateway.features.routes.logic.usecase;
 
-import dev.root101.api_gateway.feature.data.entity.RouteEntity;
-import dev.root101.api_gateway.feature.data.repo.RouteRepo;
-import dev.root101.api_gateway.feature.model.RewritePath;
-import dev.root101.api_gateway.feature.model.RouteConfigRequest;
-import dev.root101.api_gateway.feature.model.RouteConfigResponse;
-import dev.root101.api_gateway.feature.service.RouteUseCase;
-import dev.root101.api_gateway.feature.utils.RouteDefinitionMapper;
-import dev.root101.api_gateway.feature.utils.RouteUpdater;
+import dev.root101.api_gateway.features.routes.data.entity.RouteEntity;
+import dev.root101.api_gateway.features.routes.data.repo.RouteRepo;
+import dev.root101.api_gateway.features.routes.logic.model.RewritePathModel;
+import dev.root101.api_gateway.features.routes.logic.model.RouteConfigRequest;
+import dev.root101.api_gateway.features.routes.logic.model.RouteConfigResponse;
+import dev.root101.api_gateway.features.routes.utils.RouteDefinitionMapper;
+import dev.root101.api_gateway.features.routes.utils.RouteUpdater;
 import dev.root101.commons.exceptions.ConflictException;
 import dev.root101.commons.exceptions.NotFoundException;
 import dev.root101.commons.validation.ValidationService;
@@ -282,7 +281,7 @@ class RouteUseCaseImpl implements RouteUseCase {
                 entity.getName(),
                 entity.getPath(),
                 entity.getUri(),
-                entity.getRewritePathFrom() != null && entity.getRewritePathTo() != null ? new RewritePath(entity.getRewritePathFrom(), entity.getRewritePathTo()) : null,
+                entity.getRewritePathFrom() != null && entity.getRewritePathTo() != null ? new RewritePathModel(entity.getRewritePathFrom(), entity.getRewritePathTo()) : null,
                 entity.getDescription(),
                 entity.getCreatedAt()
         );
