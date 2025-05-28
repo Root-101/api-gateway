@@ -19,15 +19,15 @@ public class SecurityConfig {
             @Value("${app.admin.base-path}") String adminBasePath,
             @Value("${app.admin.role}") String adminRole
     ) {
-        String adminPathMatchers = "/%s/**".formatted(adminBasePath);
         String loginPathMatcher = "/%s/auth/login".formatted(adminBasePath);
+        String adminPathMatchers = "/%s/**".formatted(adminBasePath);
         String adminCleanRole = adminRole.replaceFirst("ROLE_", "");
         return http
                 .csrf(ServerHttpSecurity.CsrfSpec::disable) // Disable CSRF (this is a stateless api, don't need csrf)
                 .authorizeExchange(
                         exchange -> exchange
-                                .pathMatchers(adminPathMatchers).hasRole(adminCleanRole) // Admin routes, need admin role
                                 .pathMatchers(loginPathMatcher).permitAll()//login route, allow all
+                                .pathMatchers(adminPathMatchers).hasRole(adminCleanRole) // Admin routes, need admin role
                                 .anyExchange().permitAll() // Any others, processed as public, the redirected service is the one that handles its own auth
                 )
                 .addFilterAt(adminAuthenticationWebFilter, SecurityWebFiltersOrder.AUTHENTICATION) //Add admin filter
