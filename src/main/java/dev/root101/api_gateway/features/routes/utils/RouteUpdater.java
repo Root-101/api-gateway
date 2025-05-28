@@ -1,4 +1,4 @@
-package dev.root101.api_gateway.feature.utils;
+package dev.root101.api_gateway.features.routes.utils;
 
 import org.springframework.cloud.gateway.event.RefreshRoutesEvent;
 import org.springframework.context.ApplicationEventPublisher;

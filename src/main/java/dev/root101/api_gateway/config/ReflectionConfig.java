@@ -1,8 +1,9 @@
 package dev.root101.api_gateway.config;
 
-import dev.root101.api_gateway.feature.model.RewritePath;
-import dev.root101.api_gateway.feature.model.RouteConfigRequest;
-import dev.root101.api_gateway.feature.model.RouteConfigResponse;
+import dev.root101.api_gateway.features.auth.logic.model.LoginRequest;
+import dev.root101.api_gateway.features.routes.logic.model.RewritePathModel;
+import dev.root101.api_gateway.features.routes.logic.model.RouteConfigRequest;
+import dev.root101.api_gateway.features.routes.logic.model.RouteConfigResponse;
 import dev.root101.commons.exceptions.ValidationException;
 import dev.root101.commons.validation.annotations.EnumValidatorRegister_ListOfString;
 import dev.root101.commons.validation.annotations.EnumValidatorRegister_String;
@@ -18,9 +19,11 @@ import java.time.OffsetDateTime;
         GlobalExceptionHandler.class,
         //--------- COMMONS ---------\\
         ValidationException.class, ValidationException.ValidationErrorMessage.class, SortRegister.class, EnumValidatorRegister_ListOfString.class, EnumValidatorRegister_String.class,
-        //--------- MODEL ---------\\
-        RewritePath.class, RouteConfigRequest.class, RouteConfigResponse.class,
-        OffsetDateTime.class
+        //--------- ROUTES ---------\\
+        RewritePathModel.class, RouteConfigRequest.class, RouteConfigResponse.class,
+        OffsetDateTime.class,
+        //--------- ROUTES ---------\\
+        LoginRequest.class
 })
 public class ReflectionConfig {
 }
