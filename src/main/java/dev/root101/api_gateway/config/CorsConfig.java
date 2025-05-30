@@ -29,10 +29,7 @@ public class CorsConfig {
             "X-Requested-With",
             "Access-Control-Allow-Headers",
             "Access-Control-Request-Method",
-            "Access-Control-Request-Headers",
-            "X-Custom-Header",
-            "Cache-Control",
-            "Pragma"
+            "Access-Control-Request-Headers"
     );
 
     /**
@@ -50,7 +47,18 @@ public class CorsConfig {
     public CorsWebFilter corsWebFilter() {
         CorsConfiguration corsConfiguration = new CorsConfiguration();
         corsConfiguration.setAllowedOriginPatterns(List.of("*"));             // Allow any origin
-        corsConfiguration.setAllowedMethods(List.of("*"));                    // Allow any method
+        corsConfiguration.setAllowedMethods(List.of(                              // Allow all method
+                "QUERY",
+                "GET",
+                "POST",
+                "PUT",
+                "DELETE",
+                "OPTIONS",
+                "HEAD",
+                "PATCH",
+                "TRACE",
+                "CONNECT"
+        ));
 
         List<String> allHeaders = Stream.concat(baseHeaders.stream(), additionalHeaders.stream())
                 .distinct()
