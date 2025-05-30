@@ -37,5 +37,3 @@ app:
     password: ${ADMIN_PASSWORD:${app.defaults.password}}
     role: ROLE_GATEWAY_ADMIN
     base-path: ${ADMIN_PATH:_admin}
-  cors:
-    additional-headers: ${CORS_ADDITIONAL_HEADERS:}
