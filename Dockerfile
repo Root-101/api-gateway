@@ -1,25 +1,28 @@
+#Stage 1: Build
 FROM gradle:jdk-21-and-22-graal-jammy AS builder
 
 WORKDIR /workspace
 
-# Copia el código fuente
+# Copy source coe
 COPY . .
 
-# Da permisos de ejecución al script gradlew
+# Give execution permissions to the gradlew script
 RUN chmod +x gradlew
 
-# Compila el binario nativo
+# Compile the native binary
 RUN ./gradlew clean nativeCompile --stacktrace --info
 
-# Etapa 2: Imagen final ultraligera
+
+#Stage 2: Deploy
+#Final Ultralight Image
 FROM debian:bookworm-slim
 
 WORKDIR /app
 
-# Copia el binario nativo desde la etapa de compilación
+# Copy the native binary from the build stage
 COPY --from=builder /workspace/build/native/nativeCompile/graalvm /app/
 
 RUN chmod +x /app/graalvm
 
-# Comando para ejecutar la aplicación
+# Command to run the application
 ENTRYPOINT ["/app/graalvm"]
