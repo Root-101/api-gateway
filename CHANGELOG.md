@@ -6,7 +6,8 @@
         * **General** :hammer_and_wrench: : Add needed endpoint to client (like `auth/login` to validate correct user)
     * 4.1.0:
         * **DATE** :date: : 2025-05-05.
-        * **Docker** :whale: : Migrated to dockerfile to use/build-run the project as a native image using graalvm.
+        * **Docker** :whale: : Migrated to dockerfile to use/build-run the project as a native image using graalvm,
+          using image: `gradle:jdk-21-and-22-graal-jammy`.
         * **General** :hammer_and_wrench: : Migrated all project to handle specific of native image
     * 4.0.1:
         * **DATE** :date: : 2025-04-04.
