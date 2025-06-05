@@ -15,13 +15,10 @@ In general the tag/features relationship is:
 
 NOTE #1: All this version and explanation are some kind of roadmap of what we pretend to ship in next's iterations.
 
-NOTE #2: All features will have its rest api for communication & configuration, BUT, we pretend to develop a UI client
-to make the job easier.
-
-NOTE #3: Try to always use the latest version available for each tag. (Eg: The 2.x tag has versions 2.2.0, 2.1.0, 2.0.0;
+NOTE #2: Try to always use the latest version available for each tag. (Eg: The 2.x tag has versions 2.2.0, 2.1.0, 2.0.0;
 try to use the latest tag, in this case 2.2.0)
 
-NOTE #4: We recommend that you always use the latest available version, this way you can enjoy all the features, a more
+NOTE #3: We recommend that you always use the latest available version, this way you can enjoy all the features, a more
 polished project and an overall better experience.
 
 ## This is the docs for version 4.x:
@@ -33,16 +30,18 @@ polished project and an overall better experience.
 
 - api-gateway
 - spring boot
-- java
+- native
 
 ---
 
 #### About v4.x:
 
-This version adds a postgres DB so that the route configuration can be saved and can be loaded if the service is
+This version adds a Postgres DB so that the route configuration can be saved and can be loaded if the service is
 restarted.
 
 This version include the api docs and a postman collection with preconfigured endpoints.
+
+This version also include the first ui-client, it's located under `/tools/api_gateway_front`.
 
 ### Env Variables to configure the service:
 
@@ -111,21 +110,28 @@ default and then overridden with the real values.
 
 ### Api docs:
 
-The administration API gives us access to endpoint to configure the routes, here we have:
+The administration API gives us access to endpoints to configure the routes, here we have the `routes` controller:
 
-| Method | Endpoint                  | Description                                                                     | Body                |
-|--------|---------------------------|---------------------------------------------------------------------------------|---------------------|
-| GET    | /_admin/routes            | Get all configured routes in the gateway                                        | No body             |
-| GET    | /_admin/routes/{route-id} | Get details of a single route                                                   | No body             |
-| POST   | /_admin/routes            | Create a new route to redirect                                                  | Route model         |
-| POST   | /_admin/routes/multi-add  | Create multiple routes in same request                                          | List of Route model |
-| PUT    | /_admin/routes/{route-id} | Edit the route with id = route-id, replace it with route in body of the request | Route model         |
-| DELETE | /_admin/routes/{route-id} | Delete the route with id = route-id                                             | No body             |
+| Method | Endpoint                  | Description                                                                     | Body                        |
+|--------|---------------------------|---------------------------------------------------------------------------------|-----------------------------|
+| GET    | /_admin/routes            | Get all configured routes in the gateway                                        | No body                     |
+| GET    | /_admin/routes/{route-id} | Get details of a single route                                                   | No body                     |
+| POST   | /_admin/routes            | Create a new route to redirect                                                  | Route request model         |
+| POST   | /_admin/routes/multi-add  | Create multiple routes in same request                                          | List of Route request model |
+| PUT    | /_admin/routes/{route-id} | Edit the route with id = route-id, replace it with route in body of the request | Route request model         |
+| DELETE | /_admin/routes/{route-id} | Delete the route with id = route-id                                             | No body                     |
+
+Since 4.2.0 we add a client ui, so we have to add an extra controller/endpoint to be able to validate if user is
+correct, so from now on we also have the `auth` controller:
+
+| Method | Endpoint           | Description                        | Body                |
+|--------|--------------------|------------------------------------|---------------------|
+| GET    | /_admin/auth/login | Check if the admin user is correct | Login request model |
 
 NOTE: if the value of env `ADMIN_PATH` changes, the endpoint will change. This table is based on the default value of
 this variable (_admin).
 
-#### Route model:
+#### Route request model:
 
 This is the full json of a route model.
 
@@ -142,6 +148,8 @@ This is the full json of a route model.
 }
 ```
 
+NOTE: The route response model is basically the same with the `id` and `created_at` attribute.
+
 Here we have:
 
 | Field        | Required | Description                                                                                                | Validations                        | Recommendations                                                                                                                                                                                                                                                             |
@@ -151,6 +159,24 @@ Here we have:
 | uri          | true     | Url of the service to which you are going to redirect                                                      | - Not null<br/>-Not Empty<br/>-Url | Use same base url of the service (preferably a private URL without internet access, which can only be accessed through the gateway)                                                                                                                                         |
 | description  | false    | Additional description of the route                                                                        |                                    | Use it for some basic descriptive description of the route                                                                                                                                                                                                                  |
 | rewrite_path | false    | 'Filter' to rewrite the final path to which the request is made (replace in final url the *from* => *to*)  | - Not null<br/>-Not Empty<br/>     | Use to fix the extra path added by path property. With example, a request made to:  https://gateway/abcd/users/search, by default will be redirected to: http://localhost:8081/abcd/users/search, but with rewrite will be redirected to http://localhost:8081/users/search |
+
+#### Login model:
+
+This is the full json of a route model.
+
+```json
+{
+  "username": "admin",
+  "password": "admin123**"
+}
+```
+
+Here we have:
+
+| Field    | Required | Description                                          | Validations               | Recommendations                                   |
+|----------|----------|------------------------------------------------------|---------------------------|---------------------------------------------------|
+| username | true     | Username of the admin user. Default to `admin`.      | - Not null<br/>-Not Empty | It's the one configured in env: `ADMIN_USERNAME`  |
+| password | true     | Password of the admin user. Default to `admin123**`. | - Not null<br/>-Not Empty | It's the one configured in env: `ADMIN_PASSWORD`. |
 
 ### Admin endpoint examples:
 
@@ -180,7 +206,7 @@ These are:
 | gateway-password     | Password of the admin user                 | admin123**            | Env Variable: `ADMIN_PASSWORD`                                                                    |
 
 Note that these values are set to the default values of each environment variable, in case one of these environment
-variables changes, its value must be modified in Postman.
+variables changes, its value must be modified in Postman environment.
 
 ##### Redirection Examples:
 
@@ -238,3 +264,10 @@ This it's all for now,
 this is after all, a project designed for deploy in railway as a template... so:
 
 [![Deploy on Railway](https://railway.app/button.svg)](https://railway.app/template/IR4lVv?referralCode=6_5_ta)
+
+#### Extra/Interesting Tips:
+
+- Since migration deploy image from `openjdk:21-jdk-oracle` to `eclipse-temurin:21-jre-alpine` in version 4.0.1,
+  ram consumption went down from 500MB to 350MB ~, and when migrating to native in version 4.2.0, it went down to 150MB.
+- All the project deployed (postgres-db, api-gateway service and client ui) consume about 200-250MB, for a 1.50 to 2.00
+  USD average usage in Railway.
