@@ -38,3 +38,23 @@ Thumbs.db
 *.flv
 *.mov
 *.wmv
+
+
+# Tools ignored
+# front
+tools/api_gateway_front/.dart_tool/
+tools/api_gateway_front/build/
+tools/api_gateway_front/pubspec.lock
+tools/api_gateway_front/.flutter-plugins-dependencies
+
+tools/api_gateway_front/.idea/
+tools/api_gateway_front/*.iml
+
+#fvm
+tools/api_gateway_front/.fvm/flutter_sdk
+tools/api_gateway_front/.fvm/versions/
+
+#env
+tools/api_gateway_front/web/env.js
+tools/api_gateway_front/.metadata
+
