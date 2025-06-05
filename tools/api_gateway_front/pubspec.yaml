@@ -2,7 +2,7 @@ name: api_gateway_front
 description: "Front-End for Api-Gateway project"
 publish_to: 'none'
 
-version: 0.0.2
+version: 1.0.0
 
 environment:
   flutter: ^3.29.0
