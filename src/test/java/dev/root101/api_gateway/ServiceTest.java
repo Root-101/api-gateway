@@ -1,8 +1,8 @@
 package dev.root101.api_gateway;
 
-import dev.root101.api_gateway.feature.data.repo.RouteRepo;
-import dev.root101.api_gateway.feature.model.RewritePath;
-import dev.root101.api_gateway.feature.model.RouteConfigRequest;
+import dev.root101.api_gateway.features.routes.data.repo.RouteRepo;
+import dev.root101.api_gateway.features.routes.logic.model.RewritePathModel;
+import dev.root101.api_gateway.features.routes.logic.model.RouteConfigRequest;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
@@ -57,7 +57,7 @@ public class ServiceTest {
                 "abc-name",
                 "/abc-service/**",
                 "http://localhost:8080",
-                new RewritePath(
+                new RewritePathModel(
                         "/abc-service/",
                         "/"
                 ),
