@@ -1,5 +1,5 @@
 plugins {
-    id 'org.springframework.boot' version '3.4.5'
+    id 'org.springframework.boot' version '3.5.3'
     id 'io.spring.dependency-management' version '1.1.7'
     id 'java'
     id 'application'
@@ -21,7 +21,9 @@ java {
 
 dependencies {
     //base api-gateway dependency
-    implementation 'org.springframework.cloud:spring-cloud-starter-gateway:4.2.2'
+    implementation 'org.springframework.cloud:spring-cloud-gateway-server-webflux:4.3.0'
+    implementation 'org.springframework.cloud:spring-cloud-gateway-server:4.3.0'
+    implementation 'org.springframework.cloud:spring-cloud-loadbalancer:4.3.0'
 
     //security
     implementation 'org.springframework.boot:spring-boot-starter-security'
@@ -37,12 +39,12 @@ dependencies {
     annotationProcessor 'org.projectlombok:lombok:1.18.38'
 
     //custom exceptions, validations & more
-    implementation 'dev.root101.commons:commons:5.4.2.RELEASE.20250501'
+    implementation 'dev.root101.commons:commons:5.4.3'
 
     //flyway
-    implementation 'org.postgresql:postgresql:42.7.5'
-    implementation 'org.flywaydb:flyway-core:11.8.0'
-    implementation 'org.flywaydb:flyway-database-postgresql:11.8.0'
+    implementation 'org.flywaydb:flyway-core:11.10.0'
+    implementation 'org.flywaydb:flyway-database-postgresql:11.10.0'
+    implementation 'org.postgresql:postgresql:42.7.7'
 
     //tests
     implementation 'org.springframework.boot:spring-boot-starter-test'
