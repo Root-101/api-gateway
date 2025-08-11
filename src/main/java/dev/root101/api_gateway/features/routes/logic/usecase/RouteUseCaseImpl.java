@@ -11,8 +11,10 @@ import dev.root101.commons.exceptions.ConflictException;
 import dev.root101.commons.exceptions.NotFoundException;
 import dev.root101.commons.validation.ValidationService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.cloud.gateway.route.RouteDefinition;
 import org.springframework.cloud.gateway.route.RouteDefinitionWriter;
+import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -21,6 +23,8 @@ import java.time.OffsetDateTime;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
 
 /**
  * This is the class who really make the modifications in the routes.
@@ -37,6 +41,8 @@ class RouteUseCaseImpl implements RouteUseCase {
 
     private final ValidationService vs;
 
+    private final Map<String, RouteEntity> cache = new ConcurrentHashMap<>();
+
     @Autowired
     public RouteUseCaseImpl(
             RouteDefinitionWriter routeDefinitionWriter,
@@ -48,6 +54,41 @@ class RouteUseCaseImpl implements RouteUseCase {
         this.routeUpdater = routeUpdater;
         this.routeRepo = routeRepo;
         this.vs = validationService;
+    }
+
+    @EventListener(ApplicationReadyEvent.class)
+    public void initRoutes() {
+        routeRepo.findAll()
+                .concatMap(
+                        route -> routeDefinitionWriter.save(
+                                Mono.just(
+                                        buildDefinition(route)
+                                )
+                        ).then(
+                                Mono.fromRunnable(
+                                        () -> cache.put(
+                                                route.getRouteId().toString(),
+                                                route
+                                        )
+                                )
+                        )
+                )//if route is saved ok in db, save it to cache (for faster http logs access)
+                // Save each definition in the RouteDefinitionWriter
+                .then(
+                        //update routes
+                        Mono.defer(routeUpdater::updateRoutes)
+                ) // Trigger the updateRoutes logic
+                .subscribe(
+                        null, // No action needed for onNext since we're working with a Mono<Void>
+                        error -> {
+                            // Log errors without blocking
+                            System.err.println("Error initializing routes: " + error.getMessage());
+                        },
+                        () -> {
+                            // Log successful initialization
+                            System.out.println("All routes initialized successfully.");
+                        }
+                );
     }
 
     /**
@@ -76,6 +117,13 @@ class RouteUseCaseImpl implements RouteUseCase {
                                     .then(
                                             //if all validations oka, save route to DB
                                             routeRepo.save(entity)
+                                                    //if route is saved ok in db, save it to cache (for faster http logs access)
+                                                    .doOnNext(
+                                                            routeEntity -> cache.put(
+                                                                    routeEntity.getName(),
+                                                                    entity
+                                                            )
+                                                    )
                                                     .flatMap(
                                                             //save route to gateway
                                                             savedEntity -> routeDefinitionWriter.save(
@@ -125,9 +173,18 @@ class RouteUseCaseImpl implements RouteUseCase {
                         entities -> Mono.fromRunnable(() -> vs.validate(entities))
                                 .then(
                                         routeRepo.saveAll(entities).collectList()
+                                                //if routes are saved ok in db, save it to cache (for faster http logs access)
+                                                .doOnNext(
+                                                        savedEntities -> cache.putAll(
+                                                                savedEntities.stream()
+                                                                        .collect(Collectors.toMap(
+                                                                                routeEntity -> routeEntity.getRouteId().toString(),
+                                                                                routeEntity -> routeEntity
+                                                                        ))
+                                                        )
+                                                )
                                 )
                 )
-                // Process all saved entities and update routes
                 .flatMapMany(
                         savedEntities -> Flux.fromIterable(savedEntities)
                                 .map(this::buildDefinition)
@@ -156,21 +213,28 @@ class RouteUseCaseImpl implements RouteUseCase {
 
                     return Mono.fromRunnable(() -> vs.validate(entityToEdit))
                             .then(
-                                    routeRepo.save(entityToEdit).flatMap(
-                                            parsedEntity -> {
-                                                // Build new route-definition
-                                                RouteDefinition newRoute = buildDefinition(parsedEntity);
+                                    routeRepo.save(entityToEdit)
+                                            //if route is edited ok in db, updated it to cache (for faster http logs access)
+                                            .doOnNext(
+                                                    routeEntity -> cache.put(
+                                                            entityToEdit.getName(),
+                                                            entityToEdit
+                                                    )
+                                            ).flatMap(
+                                                    parsedEntity -> {
+                                                        // Build new route-definition
+                                                        RouteDefinition newRoute = buildDefinition(parsedEntity);
 
-                                                // Update routes
-                                                // 1 - delete
-                                                // 2 - save
-                                                return routeDefinitionWriter.delete(
-                                                        Mono.just(oldRoute.getRouteId().toString())
-                                                ).then(
-                                                        routeDefinitionWriter.save(Mono.just(newRoute))
-                                                );
-                                            }
-                                    )
+                                                        // Update routes
+                                                        // 1 - delete
+                                                        // 2 - save
+                                                        return routeDefinitionWriter.delete(
+                                                                Mono.just(oldRoute.getRouteId().toString())
+                                                        ).then(
+                                                                routeDefinitionWriter.save(Mono.just(newRoute))
+                                                        );
+                                                    }
+                                            )
                             );
                 })
                 // Update route after all changes
@@ -178,9 +242,9 @@ class RouteUseCaseImpl implements RouteUseCase {
     }
 
     /**
-     * Find a route by its name, or null if it's not found
+     * Find a route by its id, or null if it's not found.
      *
-     * @param routeId The name of the route to find
+     * @param routeId The id of the route to find.
      */
     public Mono<RouteEntity> findById(String routeId) {
         return routeRepo.findByRawId(routeId)
@@ -189,6 +253,17 @@ class RouteUseCaseImpl implements RouteUseCase {
                                 new NotFoundException("Route does not exist: %s".formatted(routeId))
                         )
                 );
+    }
+
+    /**
+     * Find a cached route by its id, or null if it's not found.
+     * This method DON'T make a DB request.
+     *
+     * @param routeId The id of the route to find.
+     */
+    @Override
+    public RouteEntity findCachedById(String routeId) {
+        return cache.get(routeId);
     }
 
     /**
@@ -202,6 +277,10 @@ class RouteUseCaseImpl implements RouteUseCase {
                 .switchIfEmpty(Mono.error(new NotFoundException("Route does not exist: %s".formatted(routeId))))
                 .flatMap(route ->
                         routeRepo.delete(route) // Delete route from db
+                                //if route is deleted ok in db, delete it in cache (for faster http logs access)
+                                .then(Mono.fromRunnable(() -> {
+                                    cache.remove(routeId);
+                                }))
                                 .then(
                                         routeDefinitionWriter.delete( // Delete route from writer
                                                 Mono.just(routeId)
@@ -219,6 +298,17 @@ class RouteUseCaseImpl implements RouteUseCase {
      */
     public Flux<RouteConfigResponse> getRoutes() {
         return routeRepo.findAll().map(this::buildResponse);
+    }
+
+    /**
+     * Get the routes as saved in cache... in theory this should have the same result as `getRoutes`.
+     * We still provide both methods... maybe a change was made direct to db....
+     * <p>
+     * This method DON'T make a DB request.
+     */
+    @Override
+    public List<RouteEntity> getCacheRoutes() {
+        return cache.values().stream().toList();
     }
 
     /**
