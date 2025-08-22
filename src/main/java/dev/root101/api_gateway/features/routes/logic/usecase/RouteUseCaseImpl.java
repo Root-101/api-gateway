@@ -100,7 +100,7 @@ class RouteUseCaseImpl implements RouteUseCase {
     public Mono<Void> addRoute(RouteConfigRequest request) {
         //find any route with same name
         return routeRepo.findByName(request.getName())
-                //if a route is found, throw error (cant have two routes with same name)
+                //if a route is found, throw error (can't have two routes with same name)
                 .flatMap(
                         existingRoute -> Mono.error(
                                 new ConflictException("Route already exists: %s".formatted(request.getName()))

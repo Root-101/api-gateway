@@ -2,8 +2,6 @@ package dev.root101.api_gateway.features.http_logs.filter;
 
 import dev.root101.api_gateway.features.http_logs.logic.model.HttpLogRequest;
 import dev.root101.api_gateway.features.http_logs.logic.usecase.HttpLogUseCase;
-import dev.root101.api_gateway.features.routes.data.entity.RouteEntity;
-import dev.root101.api_gateway.features.routes.logic.usecase.RouteUseCase;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cloud.gateway.route.Route;
@@ -17,39 +15,39 @@ import org.springframework.web.server.WebFilterChain;
 import reactor.core.publisher.Mono;
 
 import java.time.OffsetDateTime;
-import java.time.ZoneId;
-import java.time.format.DateTimeFormatter;
 
 @Component
 public class HttpLogsWebFilter implements WebFilter {
 
-    private static final DateTimeFormatter TIME_FORMATTER =
-            DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS").withZone(ZoneId.systemDefault());
-
     private final HttpLogUseCase httpLogUseCase;
 
+    private final String adminBasePath;
+
     public HttpLogsWebFilter(
-            HttpLogUseCase httpLogUseCase
+            HttpLogUseCase httpLogUseCase,
+            @Value("${app.admin.base-path}")
+            String adminBasePath
     ) {
         this.httpLogUseCase = httpLogUseCase;
+        this.adminBasePath = adminBasePath;
     }
 
     @Override
     public @NotNull Mono<Void> filter(@NotNull ServerWebExchange exchange, @NotNull WebFilterChain chain) {
-        // 📍 IP del cliente (puede venir de X-Forwarded-For si hay proxy)
+        final String requestedPath = exchange.getRequest().getPath().toString();
+
+        //ignored http-log controller
+        if (requestedPath.startsWith("/%s/http-log".formatted(adminBasePath))) {
+            return chain.filter(exchange);
+        }
+
         final String clientIp = getClientIp(exchange);
 
-        // 📍 Cliente HTTP (User-Agent)
         final String userAgent = exchange.getRequest().getHeaders().getFirst("User-Agent");
 
-        // 📌 Tiempo del servidor
         final OffsetDateTime serverTime = OffsetDateTime.now();
 
-        // 📌 Método HTTP
         final HttpMethod httpMethod = exchange.getRequest().getMethod();
-
-        // 📌 Path solicitado
-        final String requestedPath = exchange.getRequest().getPath().toString();
 
         long startTime = System.currentTimeMillis();
         return chain.filter(exchange)
@@ -61,7 +59,6 @@ public class HttpLogsWebFilter implements WebFilter {
 
                             HttpStatusCode statusCode = exchange.getResponse().getStatusCode();
 
-                            // 📍 IP del server (puede venir de X-Forwarded-Proto/X-Forwarded-Host si hay proxy)
                             final String serverIp = getServerIp(exchange);
 
                             HttpLogRequest request = new HttpLogRequest(

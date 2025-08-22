@@ -1,6 +1,9 @@
 package dev.root101.api_gateway.features.http_logs.logic.usecase;
 
 import dev.root101.api_gateway.features.http_logs.logic.model.HttpLogRequest;
+import dev.root101.api_gateway.features.http_logs.logic.model.HttpLogSearchRequest;
+import dev.root101.api_gateway.features.http_logs.logic.model.HttpLogSearchResponse;
+import reactor.core.publisher.Mono;
 
 public interface HttpLogUseCase {
 
@@ -11,4 +14,5 @@ public interface HttpLogUseCase {
      */
     void saveHttpLog(HttpLogRequest request);
 
+    Mono<HttpLogSearchResponse> search(HttpLogSearchRequest request);
 }
