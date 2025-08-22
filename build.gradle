@@ -39,7 +39,7 @@ dependencies {
     annotationProcessor 'org.projectlombok:lombok:1.18.38'
 
     //custom exceptions, validations & more
-    implementation 'dev.root101.commons:commons:5.4.3'
+    implementation 'dev.root101.commons:commons:5.4.5'
 
     //flyway
     implementation 'org.flywaydb:flyway-core:11.10.0'
