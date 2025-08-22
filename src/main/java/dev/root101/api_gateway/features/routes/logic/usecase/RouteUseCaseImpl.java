@@ -120,7 +120,7 @@ class RouteUseCaseImpl implements RouteUseCase {
                                                     //if route is saved ok in db, save it to cache (for faster http logs access)
                                                     .doOnNext(
                                                             routeEntity -> cache.put(
-                                                                    routeEntity.getName(),
+                                                                    routeEntity.getRouteId().toString(),
                                                                     entity
                                                             )
                                                     )
@@ -217,7 +217,7 @@ class RouteUseCaseImpl implements RouteUseCase {
                                             //if route is edited ok in db, updated it to cache (for faster http logs access)
                                             .doOnNext(
                                                     routeEntity -> cache.put(
-                                                            entityToEdit.getName(),
+                                                            routeEntity.getRouteId().toString(),
                                                             entityToEdit
                                                     )
                                             ).flatMap(
