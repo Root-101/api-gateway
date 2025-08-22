@@ -40,7 +40,6 @@ public class HttpLogEntity {
 
     @Getter
     @Setter
-    @NotNull
     @Column("user_agent")
     private String userAgent;
 
@@ -98,7 +97,7 @@ public class HttpLogEntity {
     }
 
     public RouteLog getRoute() {
-        return rawRoute.isEmpty() ? null : RouteLog.fromStringJson(rawRoute);
+        return rawRoute == null || rawRoute.isBlank() ? null : RouteLog.fromStringJson(rawRoute);
     }
 
     public void setRawRoute(RouteLog route) {
