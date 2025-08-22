@@ -5,8 +5,8 @@ publish_to: 'none'
 version: 1.0.0
 
 environment:
-  flutter: ^3.29.0
-  sdk: ^3.7.0
+  flutter: ^3.25.0
+  sdk: ^3.9.0
 
 dependencies:
   flutter:
@@ -19,22 +19,22 @@ dependencies:
   get: 4.7.2
 
   #routing
-  go_router: 15.1.2
+  go_router: 16.2.0
 
   #rest client
-  dio: 5.8.0+1
+  dio: 5.9.0
 
   #view
   flutter_animate: 4.5.2
   shimmer_animation: 2.2.2    #el shimer cuando esta cargando
   gap: 3.0.1    #sizebox con with o height automatico en las columnas o filas
   loader_overlay: 5.0.0   #el cargando
-  flutter_svg: 2.1.0    #para cargar svg
+  flutter_svg: 2.2.0    #para cargar svg
   top_snackbar_flutter: 3.3.0     #snackbars
-  flutter_dropzone: 4.2.1
+  flutter_dropzone: 4.2.1       #para soltar ficheros
 
   #utils
-  logger: 2.5.0
+  logger: 2.6.1
   intl: 0.20.2
   web: 1.1.1
   shared_preferences: 2.5.3
@@ -46,11 +46,11 @@ dev_dependencies:
   flutter_lints: 6.0.0
 
   #code gen
-  build_runner: 2.4.15
+  build_runner: 2.7.0
 
   #app config
   flutter_native_splash: 2.4.6
-  flutter_launcher_icons: 0.14.3
+  flutter_launcher_icons: 0.14.4
 
 #configuration of splash screen, if something change, run: `fvm flutter pub run flutter_native_splash:create`
 flutter_native_splash:
