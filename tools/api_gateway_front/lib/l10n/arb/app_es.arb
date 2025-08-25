@@ -37,6 +37,8 @@
   "rewritePathToLabel": "Reescribie Path a",
   "rewritePathToHint": "/",
   "preview": "Previsualizar",
+  "section_logs": "--------- LOGS ---------",
+  "logs": "Logs http",
   "section_errors": "--------- ERRORS ---------",
   "noData": "No hay datos",
   "genericError": "Algo ha salido mal",

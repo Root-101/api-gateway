@@ -25,7 +25,7 @@ class FeaturesInit {
     await AuthInit.init();
     await LanguageInit.init();
 
-    await Future.wait([RoutesInit.init()]);
+    await Future.wait([RoutesInit.init(), LogsInit.init()]);
 
     //prepare logout
     app.di.find<AuthCubit>().stream.listen((event) {
@@ -45,7 +45,11 @@ class FeaturesInit {
     BlocProvider<AuthCubit>(create: (context) => app.di.find<AuthCubit>()),
     //ROUTES
     BlocProvider<RoutesCubit>(create: (context) => app.di.find<RoutesCubit>()),
+    //LOGS
+    BlocProvider<LogsCubit>(create: (context) => app.di.find<LogsCubit>()),
     //LANGUAGE
-    BlocProvider<LanguageCubit>(create: (context) => app.di.find<LanguageCubit>()),
+    BlocProvider<LanguageCubit>(
+      create: (context) => app.di.find<LanguageCubit>(),
+    ),
   ];
 }

@@ -37,6 +37,8 @@
   "rewritePathToLabel": "Rewrite Path To",
   "rewritePathToHint": "/",
   "preview": "Preview",
+  "section_logs": "--------- LOGS ---------",
+  "logs": "Http logs",
   "section_errors": "--------- ERRORS ---------",
   "noData": "Nothing found here",
   "genericError": "An error has ocurred",

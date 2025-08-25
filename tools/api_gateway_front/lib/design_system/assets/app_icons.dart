@@ -8,7 +8,13 @@ class AppIcons {
   final GeneralIcons general = const GeneralIcons();
   final LanguageIcons language = const LanguageIcons();
 
-  SvgAsset get gateway => const SvgAsset('assets/icons/api-gateway.svg');
+  SvgAsset get gateway => const SvgAsset(
+    'assets/icons/api-gateway.svg',
+    defaultColor: Colors.white,
+  );
+
+  SvgAsset get logs =>
+      const SvgAsset('assets/icons/logs.svg', defaultColor: Colors.white);
 }
 
 class ActionsIcons {
@@ -68,9 +74,8 @@ class SvgAsset {
     width: size ?? defaultSize ?? defaultSvgSize,
     height: size ?? defaultSize ?? defaultSvgSize,
     fit: fit ?? BoxFit.fill,
-    colorFilter:
-        (color ?? defaultColor) != null
-            ? ColorFilter.mode((color ?? defaultColor)!, BlendMode.srcIn)
-            : null,
+    colorFilter: (color ?? defaultColor) != null
+        ? ColorFilter.mode((color ?? defaultColor)!, BlendMode.srcIn)
+        : null,
   );
 }

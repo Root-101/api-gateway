@@ -320,6 +320,18 @@ abstract class AppLocalizations {
   /// **'Preview'**
   String get preview;
 
+  /// No description provided for @section_logs.
+  ///
+  /// In en, this message translates to:
+  /// **'--------- LOGS ---------'**
+  String get section_logs;
+
+  /// No description provided for @logs.
+  ///
+  /// In en, this message translates to:
+  /// **'Http logs'**
+  String get logs;
+
   /// No description provided for @section_errors.
   ///
   /// In en, this message translates to:

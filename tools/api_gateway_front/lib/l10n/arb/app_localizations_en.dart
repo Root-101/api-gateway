@@ -120,6 +120,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get preview => 'Preview';
 
   @override
+  String get section_logs => '--------- LOGS ---------';
+
+  @override
+  String get logs => 'Http logs';
+
+  @override
   String get section_errors => '--------- ERRORS ---------';
 
   @override
