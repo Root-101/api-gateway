@@ -1,14 +1,14 @@
 import 'dart:convert';
 
 import 'package:api_gateway_front/app_exporter.dart';
-import 'package:localstorage/localstorage.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 class AuthRepo {
   static final String credentialUsernameKey = 'api-wallet.credentials.username';
   static final String credentialPasswordKey = 'api-wallet.credentials.password';
 
   final AuthClient client;
-  final LocalStorage storage;
+  final FlutterSecureStorage storage;
 
   AuthRepo({required this.client, required this.storage});
 
@@ -28,8 +28,8 @@ class AuthRepo {
       print(encodedPassword);
 
       if (rememberMe) {
-        storage.setItem(credentialUsernameKey, encodedUsername);
-        storage.setItem(credentialPasswordKey, encodedPassword);
+        await storage.write(key: credentialUsernameKey, value: encodedUsername);
+        await storage.write(key: credentialPasswordKey, value: encodedPassword);
       }
     } on Exception catch (exc) {
       throw ExceptionConverter.parse(exc);
@@ -37,14 +37,14 @@ class AuthRepo {
   }
 
   Future logout() async {
-    storage.removeItem(credentialUsernameKey);
-    storage.removeItem(credentialPasswordKey);
+    await storage.delete(key: credentialUsernameKey);
+    await storage.delete(key: credentialPasswordKey);
   }
 
   Future<({String username, String password})?> loadCache() async {
     try {
-      String? cacheRawUsername = storage.getItem(credentialUsernameKey);
-      String? cacheRawPassword = storage.getItem(credentialPasswordKey);
+      String? cacheRawUsername = await storage.read(key: credentialUsernameKey);
+      String? cacheRawPassword = await storage.read(key: credentialPasswordKey);
       print('--------------------------------');
       print(cacheRawUsername);
       print(cacheRawPassword);
@@ -59,8 +59,7 @@ class AuthRepo {
       }
     } on Exception catch (exc) {
       app.logger.e('Error loading credential from cache');
-      storage.removeItem(credentialUsernameKey);
-      storage.removeItem(credentialPasswordKey);
+      await storage.deleteAll();
     }
     return null;
   }

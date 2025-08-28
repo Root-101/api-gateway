@@ -3,7 +3,7 @@ import 'dart:io';
 import 'package:api_gateway_front/app_exporter.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:localstorage/localstorage.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class FeaturesInit {
@@ -24,8 +24,8 @@ class FeaturesInit {
       };
     app.di.put(dio);
 
-    await initLocalStorage();
-    app.di.put(localStorage);
+    FlutterSecureStorage storage = const FlutterSecureStorage();
+    app.di.put(storage);
 
     await AuthInit.init();
     //once the auth is initialized, I subscribe to listen to logout changes and reser cubits

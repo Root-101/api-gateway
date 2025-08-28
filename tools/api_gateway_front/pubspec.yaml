@@ -32,7 +32,7 @@ dependencies:
   top_snackbar_flutter: 3.3.0     #snackbars
   flutter_dropzone: 4.2.1       #for drop files in restore routes
   syncfusion_flutter_datagrid: 30.2.7       #Logs table
-  localstorage: 6.0.0       #for the remember-me in login
+  flutter_secure_storage: 9.2.4       #for the remember-me in login
 
   #utils
   logger: 2.6.1
