@@ -10,6 +10,7 @@ class LogsCubit extends Cubit<LogsState>
   final AuthCubit auth;
   final LogsRepo repo;
 
+  int page = 0;
   late final PagingController<int, HttpLogModel> _pagingController;
 
   LogsCubit({required this.auth, required this.repo})
@@ -20,53 +21,25 @@ class LogsCubit extends Cubit<LogsState>
   }
 
   Future<void> init() async {
-    _pagingController = PagingController<int, HttpLogModel>(
-      getNextPageKey: (state) {
-        int lastLoadedItems = state.pages?.last.length ?? 0;
-        int lastPage = state.keys?.last ?? -1;
+    emit(LogsSearchingState());
 
-        if (lastPage == -1) {
-          return 0;
-        } else if (lastLoadedItems < defaultSize) {
-          return null;
-        }
-
-        return lastPage + 1;
-      },
-      fetchPage: (pageKey) => fetchPage(pageKey: pageKey),
+    HttpLogSearchModel items = await repo.findAll(
+      credential: auth.current,
+      page: page++,
+      size: defaultSize,
     );
 
-    reloadPage();
+    emit(LogsSearchOkState(items: items.pageContent));
   }
 
-  Future<List<HttpLogModel>> fetchPage({required int pageKey}) async {
-    try {
-      //OJO: el fetch page no lanza estado, es el paging controller con sus builders
-      //los que se encargan de actualizar la UI
-      HttpLogSearchModel searchModel = await repo.findAll(
-        credential: auth.current,
-        page: pageKey,
-        size: defaultSize,
-      );
+  Future<List<HttpLogModel>> fetchNextPage() async {
+    List<HttpLogModel> items = (await repo.findAll(
+      credential: auth.current,
+      page: page++,
+      size: defaultSize,
+    )).pageContent;
 
-      return searchModel.pageContent;
-    } on GlobalException catch (global) {
-      emit(LogsSearchErrorState(global));
-      return [];
-    }
-  }
-
-  Future reloadPage() async {
-    try {
-      emit(LogsSearchingState());
-
-      await Future.delayed(const Duration(milliseconds: 150));
-      _pagingController.refresh();
-
-      emit(LogsSearchOkState(pagingController: _pagingController));
-    } on GlobalException catch (global) {
-      emit(LogsSearchErrorState(global));
-    }
+    return items;
   }
 }
 
@@ -88,9 +61,9 @@ class LogsSearchingState extends LogsSearchState {
 }
 
 class LogsSearchOkState extends LogsSearchState {
-  PagingController<int, HttpLogModel> pagingController;
+  List<HttpLogModel> items;
 
-  LogsSearchOkState({required this.pagingController});
+  LogsSearchOkState({required this.items});
 }
 
 class LogsSearchErrorState extends LogsSearchState {
