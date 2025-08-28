@@ -4,12 +4,13 @@ import 'package:api_gateway_front/app_exporter.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 class FeaturesInit {
   static Future<void> init() async {
-    final SharedPreferences sharedPrefs = await SharedPreferences.getInstance();
-    app.di.put(sharedPrefs);
+    FlutterSecureStorage storage = const FlutterSecureStorage(
+      webOptions: WebOptions(publicKey: 'api-gateway'),
+    );
+    app.di.put(storage);
 
     Dio dio = Dio();
     dio
@@ -23,9 +24,6 @@ class FeaturesInit {
         'Access-Control-Allow-Methods': '*',*/
       };
     app.di.put(dio);
-
-    FlutterSecureStorage storage = const FlutterSecureStorage();
-    app.di.put(storage);
 
     await AuthInit.init();
     //once the auth is initialized, I subscribe to listen to logout changes and reser cubits

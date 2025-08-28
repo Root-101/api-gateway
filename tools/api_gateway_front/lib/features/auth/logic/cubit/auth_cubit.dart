@@ -31,11 +31,6 @@ class AuthCubit extends Cubit<AuthState>
   Future init() async {
     try {
       ({String username, String password})? cache = await repo.loadCache();
-
-      print('0000000000000000000000000000');
-      print(cache?.username);
-      print(cache?.password);
-
       if (cache != null) {
         //try to login with credentials
 

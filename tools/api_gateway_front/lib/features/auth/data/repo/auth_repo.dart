@@ -4,8 +4,8 @@ import 'package:api_gateway_front/app_exporter.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 class AuthRepo {
-  static final String credentialUsernameKey = 'api-wallet.credentials.username';
-  static final String credentialPasswordKey = 'api-wallet.credentials.password';
+  static final String credentialUsernameKey = 'credentials.username';
+  static final String credentialPasswordKey = 'credentials.password';
 
   final AuthClient client;
   final FlutterSecureStorage storage;
@@ -22,10 +22,6 @@ class AuthRepo {
 
       String encodedUsername = base64Encode(utf8.encode(username));
       String encodedPassword = base64Encode(utf8.encode(password));
-
-      print('************************');
-      print(encodedUsername);
-      print(encodedPassword);
 
       if (rememberMe) {
         await storage.write(key: credentialUsernameKey, value: encodedUsername);
@@ -45,9 +41,6 @@ class AuthRepo {
     try {
       String? cacheRawUsername = await storage.read(key: credentialUsernameKey);
       String? cacheRawPassword = await storage.read(key: credentialPasswordKey);
-      print('--------------------------------');
-      print(cacheRawUsername);
-      print(cacheRawPassword);
       if (cacheRawUsername != null &&
           cacheRawUsername.isNotEmpty &&
           cacheRawPassword != null &&

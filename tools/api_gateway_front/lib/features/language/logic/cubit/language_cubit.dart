@@ -25,7 +25,13 @@ class LanguageCubit extends Cubit<LanguageState> {
 
   LanguageCubit({required this.repo})
     : super(LanguageInitialState(current: defaultLanguage, allLanguages: [])) {
-    currentSelectedLanguage = _resolve(key: repo.loadKey());
+    init();
+  }
+
+  Future init() async {
+    String? key = await repo.loadKey();
+    currentSelectedLanguage = _resolve(key: key);
+
     emit(
       LanguageChangedState(
         current: currentSelectedLanguage,
