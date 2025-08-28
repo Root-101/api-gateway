@@ -39,6 +39,8 @@ public class HttpLogsWebFilter implements WebFilter {
         final HttpMethod httpMethod = exchange.getRequest().getMethod();
         //ignored filters if:
         if (
+            //auth endpoint
+                requestedPath.startsWith("/%s/auth".formatted(adminBasePath)) ||
             //logs endpoint
                 requestedPath.startsWith("/%s/http-log".formatted(adminBasePath)) ||
                         //is admin and it's a get
@@ -54,7 +56,6 @@ public class HttpLogsWebFilter implements WebFilter {
         final String userAgent = exchange.getRequest().getHeaders().getFirst("User-Agent");
 
         final OffsetDateTime serverTime = OffsetDateTime.now();
-
 
         long startTime = System.currentTimeMillis();
         return chain.filter(exchange)
