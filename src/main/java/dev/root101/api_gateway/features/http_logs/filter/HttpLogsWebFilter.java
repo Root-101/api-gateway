@@ -36,18 +36,25 @@ public class HttpLogsWebFilter implements WebFilter {
     public @NotNull Mono<Void> filter(@NotNull ServerWebExchange exchange, @NotNull WebFilterChain chain) {
         final String requestedPath = exchange.getRequest().getPath().toString();
 
-        //ignored http-log controller
-        if (requestedPath.startsWith("/%s/http-log".formatted(adminBasePath))) {
+        final HttpMethod httpMethod = exchange.getRequest().getMethod();
+        //ignored filters if:
+        if (
+            //logs endpoint
+                requestedPath.startsWith("/%s/http-log".formatted(adminBasePath)) ||
+                        //is admin and it's a get
+                        (requestedPath.startsWith("/%s/routes".formatted(adminBasePath))
+                                && httpMethod == HttpMethod.GET)
+                        //it's an options
+                        || (httpMethod == HttpMethod.OPTIONS)
+        ) {
             return chain.filter(exchange);
         }
-
         final String clientIp = getClientIp(exchange);
 
         final String userAgent = exchange.getRequest().getHeaders().getFirst("User-Agent");
 
         final OffsetDateTime serverTime = OffsetDateTime.now();
 
-        final HttpMethod httpMethod = exchange.getRequest().getMethod();
 
         long startTime = System.currentTimeMillis();
         return chain.filter(exchange)
