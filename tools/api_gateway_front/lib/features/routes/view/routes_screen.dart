@@ -124,31 +124,29 @@ class _RoutesScreenState extends State<RoutesScreen> {
                 painter: GridDotPainter(),
                 child: Padding(
                   padding: EdgeInsets.all(app.dimensions.padding.l),
-                  child:
-                      state.routes.isEmpty
-                          ? const NoDataPage()
-                          : Padding(
-                            padding: EdgeInsets.symmetric(
-                              horizontal: missing / 2,
-                              vertical: app.dimensions.padding.xxl,
-                            ),
-                            child: GridView(
-                              gridDelegate:
-                                  SliverGridDelegateWithFixedCrossAxisCount(
-                                    crossAxisCount: maxTiles,
-                                    childAspectRatio: 2.1,
-                                    crossAxisSpacing: app.dimensions.padding.l,
-                                    mainAxisSpacing: app.dimensions.padding.l,
-                                  ),
-                              children:
-                                  state.routes
-                                      .map(
-                                        (model) =>
-                                            _buildSingleRouteTile(model: model),
-                                      )
-                                      .toList(),
-                            ),
+                  child: state.routes.isEmpty
+                      ? const NoDataPage()
+                      : Padding(
+                          padding: EdgeInsets.symmetric(
+                            horizontal: missing / 2,
+                            vertical: app.dimensions.padding.xxl,
                           ),
+                          child: GridView(
+                            gridDelegate:
+                                SliverGridDelegateWithFixedCrossAxisCount(
+                                  crossAxisCount: maxTiles,
+                                  childAspectRatio: 2.1,
+                                  crossAxisSpacing: app.dimensions.padding.l,
+                                  mainAxisSpacing: app.dimensions.padding.l,
+                                ),
+                            children: state.routes
+                                .map(
+                                  (model) =>
+                                      _buildSingleRouteTile(model: model),
+                                )
+                                .toList(),
+                          ),
+                        ),
                 ),
               ),
             ),
@@ -187,24 +185,31 @@ class _RoutesScreenState extends State<RoutesScreen> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text(model.name, style: app.textTheme.headlineSmall),
+                    Flexible(
+                      child: Tooltip(
+                        message: model.name,
+                        child: Text(
+                          model.name,
+                          style: app.textTheme.headlineSmall,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.end,
                       children: [
                         PrimaryButton.svgIcon(
                           tooltipMessage: app.intl.edit,
-                          onPressed:
-                              () =>
-                                  RoutesFormScreen.navigator.edit(model: model),
+                          onPressed: () =>
+                              RoutesFormScreen.navigator.edit(model: model),
                           icon: app.assets.icons.actions.edit,
                         ),
                         app.dimensions.padding.s.gap(),
                         PrimaryButton.svgIcon(
                           tooltipMessage: app.intl.duplicate,
-                          onPressed:
-                              () => RoutesFormScreen.navigator.duplicate(
-                                model: model,
-                              ),
+                          onPressed: () => RoutesFormScreen.navigator.duplicate(
+                            model: model,
+                          ),
                           icon: app.assets.icons.actions.duplicate,
                         ),
                         app.dimensions.padding.s.gap(),

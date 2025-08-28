@@ -1,6 +1,5 @@
 import 'package:api_gateway_front/app_exporter.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:infinite_scroll_pagination/infinite_scroll_pagination.dart';
 
 class LogsCubit extends Cubit<LogsState>
     with GlobalEventBusCommunication<LogsState> {
@@ -10,8 +9,9 @@ class LogsCubit extends Cubit<LogsState>
   final AuthCubit auth;
   final LogsRepo repo;
 
-  int page = 0;
-  late final PagingController<int, HttpLogModel> _pagingController;
+  int currentPage = 0;
+
+  final List<HttpLogModel> items = [];
 
   LogsCubit({required this.auth, required this.repo})
     : super(const LogsInitialState());
@@ -23,23 +23,26 @@ class LogsCubit extends Cubit<LogsState>
   Future<void> init() async {
     emit(LogsSearchingState());
 
-    HttpLogSearchModel items = await repo.findAll(
+    HttpLogSearchModel response = await repo.findAll(
       credential: auth.current,
-      page: page++,
+      page: currentPage++,
       size: defaultSize,
     );
+    items.addAll(response.pageContent);
 
-    emit(LogsSearchOkState(items: items.pageContent));
+    emit(LogsSearchOkState(items: items));
   }
 
   Future<List<HttpLogModel>> fetchNextPage() async {
-    List<HttpLogModel> items = (await repo.findAll(
+    HttpLogSearchModel response = await repo.findAll(
       credential: auth.current,
-      page: page++,
+      page: currentPage++,
       size: defaultSize,
-    )).pageContent;
+    );
 
-    return items;
+    items.addAll(response.pageContent);
+
+    return response.pageContent;
   }
 }
 
