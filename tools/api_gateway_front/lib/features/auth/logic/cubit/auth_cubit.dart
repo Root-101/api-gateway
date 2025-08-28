@@ -28,16 +28,54 @@ class AuthCubit extends Cubit<AuthState>
     });
   }
 
+  Future init() async {
+    try {
+      ({String username, String password})? cache = await repo.loadCache();
+
+      print('0000000000000000000000000000');
+      print(cache?.username);
+      print(cache?.password);
+
+      if (cache != null) {
+        //try to login with credentials
+
+        //if this runs without problem, the login is successfully, if something is wrong an exception is thrown
+        await repo.login(
+          username: cache.username,
+          password: cache.password,
+          rememberMe: false,
+        );
+
+        //store in memory credential for later use
+        _currentUser = CredentialsModel(
+          username: cache.username,
+          password: cache.password,
+        );
+      }
+    } on Exception catch (exc) {
+      logout();
+      app.logger.e('Error login user with cache credentials');
+    }
+  }
+
   void reset() {
     emit(const AuthInitialState());
   }
 
-  Future login({required String username, required String password}) async {
+  Future login({
+    required String username,
+    required String password,
+    required bool rememberMe,
+  }) async {
     try {
       emit(AuthLoginInProgressState());
 
       //if this runs without problem, the login is successfully, if something is wrong an exception is thrown
-      await repo.login(username: username, password: password);
+      await repo.login(
+        username: username,
+        password: password,
+        rememberMe: rememberMe,
+      );
 
       //store in memory credential for later use
       _currentUser = CredentialsModel(username: username, password: password);
@@ -50,8 +88,10 @@ class AuthCubit extends Cubit<AuthState>
 
   Future logout() async {
     emit(AuthLogoutInProgressState());
+
+    await repo.logout(); //clear cache
     _currentUser = null;
-    FeaturesInit.reset(); //todo: another violation of architecture
+
     emit(AuthLogoutOkState());
   }
 }

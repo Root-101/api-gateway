@@ -42,6 +42,9 @@ class AppLocalizationsEs extends AppLocalizations {
   String get login => 'Login';
 
   @override
+  String get rememberMe => 'Recordarme';
+
+  @override
   String get section_validations => '--------- VALIDATIONS ---------';
 
   @override

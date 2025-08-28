@@ -11,6 +11,7 @@
   "passwordLabel": "Contraseña",
   "passwordHint": "admin123**",
   "login": "Login",
+  "rememberMe": "Recordarme",
   "section_validations": "--------- VALIDATIONS ---------",
   "requiredField": "Campo requerido",
   "section_actions": "--------- ACTIONS ---------",

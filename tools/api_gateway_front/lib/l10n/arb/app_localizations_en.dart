@@ -42,6 +42,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get login => 'Login';
 
   @override
+  String get rememberMe => 'Remember me';
+
+  @override
   String get section_validations => '--------- VALIDATIONS ---------';
 
   @override

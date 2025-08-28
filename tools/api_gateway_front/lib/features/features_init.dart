@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:api_gateway_front/app_exporter.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:localstorage/localstorage.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class FeaturesInit {
@@ -22,7 +23,17 @@ class FeaturesInit {
         'Access-Control-Allow-Methods': '*',*/
       };
     app.di.put(dio);
+
+    await initLocalStorage();
+    app.di.put(localStorage);
+
     await AuthInit.init();
+    //once the auth is initialized, I subscribe to listen to logout changes and reser cubits
+    app.di.find<AuthCubit>().stream.listen((event) {
+      if (event is AuthLogoutOkState) {
+        FeaturesInit.reset();
+      }
+    });
     await LanguageInit.init();
 
     await Future.wait([RoutesInit.init(), LogsInit.init()]);

@@ -26,13 +26,13 @@ dependencies:
 
   #view
   flutter_animate: 4.5.2
-  shimmer_animation: 2.2.2    #el shimer cuando esta cargando
-  gap: 3.0.1    #sizebox con with o height automatico en las columnas o filas
-  loader_overlay: 5.0.0   #el cargando
-  flutter_svg: 2.2.0    #para cargar svg
+  gap: 3.0.1    #sizebox with auto with and height in columns and rows
+  loader_overlay: 5.0.0   #loading
+  flutter_svg: 2.2.0    #to show icons in svg format
   top_snackbar_flutter: 3.3.0     #snackbars
-  flutter_dropzone: 4.2.1       #para soltar ficheros
-  syncfusion_flutter_datagrid: 30.2.7       #tabla de los logs
+  flutter_dropzone: 4.2.1       #for drop files in restore routes
+  syncfusion_flutter_datagrid: 30.2.7       #Logs table
+  localstorage: 6.0.0       #for the remember-me in login
 
   #utils
   logger: 2.6.1

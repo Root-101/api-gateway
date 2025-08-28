@@ -11,6 +11,7 @@
   "passwordLabel": "Password",
   "passwordHint": "admin123**",
   "login": "Login",
+  "rememberMe": "Remember me",
   "section_validations": "--------- VALIDATIONS ---------",
   "requiredField": "Required field",
   "section_actions": "--------- ACTIONS ---------",
