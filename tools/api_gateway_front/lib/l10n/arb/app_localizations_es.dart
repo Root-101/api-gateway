@@ -129,6 +129,24 @@ class AppLocalizationsEs extends AppLocalizations {
   String get logs => 'Logs http';
 
   @override
+  String get columnTimestamp => 'Timestamp';
+
+  @override
+  String get columnMethod => 'Método';
+
+  @override
+  String get columnPath => 'Path';
+
+  @override
+  String get columnRoute => 'Ruta';
+
+  @override
+  String get columnHttpStatus => 'Estado HTTP';
+
+  @override
+  String get columnRequestDuration => 'Duración';
+
+  @override
   String get section_errors => '--------- ERRORS ---------';
 
   @override

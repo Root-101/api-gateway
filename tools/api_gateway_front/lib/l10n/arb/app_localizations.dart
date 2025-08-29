@@ -338,6 +338,42 @@ abstract class AppLocalizations {
   /// **'Http logs'**
   String get logs;
 
+  /// No description provided for @columnTimestamp.
+  ///
+  /// In en, this message translates to:
+  /// **'Timestamp'**
+  String get columnTimestamp;
+
+  /// No description provided for @columnMethod.
+  ///
+  /// In en, this message translates to:
+  /// **'Method'**
+  String get columnMethod;
+
+  /// No description provided for @columnPath.
+  ///
+  /// In en, this message translates to:
+  /// **'Path'**
+  String get columnPath;
+
+  /// No description provided for @columnRoute.
+  ///
+  /// In en, this message translates to:
+  /// **'Route'**
+  String get columnRoute;
+
+  /// No description provided for @columnHttpStatus.
+  ///
+  /// In en, this message translates to:
+  /// **'HTTP Status'**
+  String get columnHttpStatus;
+
+  /// No description provided for @columnRequestDuration.
+  ///
+  /// In en, this message translates to:
+  /// **'Duration'**
+  String get columnRequestDuration;
+
   /// No description provided for @section_errors.
   ///
   /// In en, this message translates to:

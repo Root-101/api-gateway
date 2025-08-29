@@ -33,6 +33,15 @@ class _LogsScreenState extends State<LogsScreen> {
   late final LogsCubit cubit;
   late EmployeeDataSource dataSource;
 
+  Map<String, double?> columnWidths = {
+    'requestedAt': null,
+    'httpMethod': null,
+    'route': null,
+    'responseCode': null,
+    'requestDuration': null,
+    'path': null,
+  };
+
   @override
   void initState() {
     super.initState();
@@ -66,68 +75,116 @@ class _LogsScreenState extends State<LogsScreen> {
                 right: app.dimensions.padding.l,
                 top: app.dimensions.padding.l,
               ),
-              child: SfDataGrid(
-                source: dataSource,
-                allowColumnsResizing: true,
-                allowPullToRefresh: true,
-                columnWidthMode: ColumnWidthMode.none,
-                headerRowHeight: 42,
-                rowHeight: 48,
-                columns: <GridColumn>[
-                  GridColumn(
-                    columnName: 'requestedAt',
-                    width: 200,
-                    label: Padding(
-                      padding: EdgeInsets.all(app.dimensions.padding.s),
-                      child: Text('Time (CST)', style: headerStyle),
-                    ),
-                  ),
-                  GridColumn(
-                    columnName: 'httpMethod',
-                    width: 80,
-                    label: Padding(
-                      padding: EdgeInsets.all(app.dimensions.padding.s),
-                      child: Text('Method', style: headerStyle),
-                    ),
-                  ),
-                  GridColumn(
-                    columnName: 'path',
-                    columnWidthMode: ColumnWidthMode.fill,
-                    label: Padding(
-                      padding: EdgeInsets.all(app.dimensions.padding.s),
-                      child: Text('Path', style: headerStyle),
-                    ),
-                  ),
-                  GridColumn(
-                    columnName: 'route',
-                    width: 230,
-                    label: Padding(
-                      padding: EdgeInsets.all(app.dimensions.padding.s),
-                      child: Text('Route', style: headerStyle),
-                    ),
-                  ),
-                  GridColumn(
-                    columnName: 'responseCode',
-                    width: 120,
-                    label: Padding(
-                      padding: EdgeInsets.all(app.dimensions.padding.s),
-                      child: Text('HTTP Status', style: headerStyle),
-                    ),
-                  ),
-                  GridColumn(
-                    columnName: 'requestDuration',
-                    width: 100,
-                    label: Padding(
-                      padding: EdgeInsets.all(app.dimensions.padding.s),
-                      child: Text('Duration', style: headerStyle),
-                    ),
-                  ),
-                ],
-                loadMoreViewBuilder:
-                    (BuildContext context, LoadMoreRows loadMoreRows) {
-                      loadMoreRows();
-                      return const SizedBox.shrink();
+              child: LayoutBuilder(
+                builder: (context, constraints) {
+                  final totalWidth = constraints.maxWidth;
+
+                  final requestedAtWidth = totalWidth * 0.15;
+                  final methodWidth = totalWidth * 0.10;
+                  final pathWidth = totalWidth * 0.44;
+                  final routeWidth = totalWidth * 0.15;
+                  final statusWidth = totalWidth * 0.08;
+                  double durationWidth = totalWidth * 0.08;
+
+                  return SfDataGrid(
+                    source: dataSource,
+                    allowColumnsResizing: true,
+                    allowPullToRefresh: true,
+                    headerRowHeight: 42,
+                    rowHeight: 42,
+                    onColumnResizeUpdate: (details) {
+                      setState(() {
+                        columnWidths[details.column.columnName] = details.width;
+
+                        final sum = columnWidths.values.fold(
+                          0.0,
+                          (previousValue, element) =>
+                              previousValue + (element ?? 0),
+                        );
+
+                        final dif = totalWidth - sum;
+                        if (columnWidths['requestDuration'] == null) {
+                          columnWidths['requestDuration'] = durationWidth + dif;
+                        } else {
+                          columnWidths['requestDuration'] =
+                              columnWidths['requestDuration']! + dif;
+                        }
+                      });
+                      return true;
                     },
+                    columns: <GridColumn>[
+                      GridColumn(
+                        columnName: 'requestedAt',
+                        width: columnWidths['requestedAt'] ?? requestedAtWidth,
+                        minimumWidth: 130,
+                        label: Padding(
+                          padding: EdgeInsets.all(app.dimensions.padding.s),
+                          child: Text(app.intl.columnTimestamp, style: headerStyle),
+                        ),
+                      ),
+                      GridColumn(
+                        columnName: 'httpMethod',
+                        width: columnWidths['httpMethod'] ?? methodWidth,
+                        minimumWidth: 80,
+                        label: Padding(
+                          padding: EdgeInsets.all(app.dimensions.padding.s),
+                          child: Text(
+                            app.intl.columnMethod,
+                            style: headerStyle,
+                          ),
+                        ),
+                      ),
+                      GridColumn(
+                        columnName: 'path',
+                        width: columnWidths['path'] ?? pathWidth,
+                        minimumWidth: 250,
+                        label: Padding(
+                          padding: EdgeInsets.all(app.dimensions.padding.s),
+                          child: Text(app.intl.columnPath, style: headerStyle),
+                        ),
+                      ),
+                      GridColumn(
+                        columnName: 'route',
+                        width: columnWidths['route'] ?? routeWidth,
+                        minimumWidth: 180,
+                        label: Padding(
+                          padding: EdgeInsets.all(app.dimensions.padding.s),
+                          child: Text(app.intl.columnRoute, style: headerStyle),
+                        ),
+                      ),
+                      GridColumn(
+                        columnName: 'responseCode',
+                        width: columnWidths['responseCode'] ?? statusWidth,
+                        minimumWidth: 80,
+                        label: Padding(
+                          padding: EdgeInsets.all(app.dimensions.padding.s),
+                          child: Text(
+                            app.intl.columnHttpStatus,
+                            style: headerStyle,
+                          ),
+                        ),
+                      ),
+                      GridColumn(
+                        columnName: 'requestDuration',
+                        width: columnWidths['requestDuration'] ?? durationWidth,
+                        minimumWidth: 80,
+                        columnWidthMode: ColumnWidthMode.lastColumnFill,
+                        label: Padding(
+                          padding: EdgeInsets.all(app.dimensions.padding.s),
+                          child: Text(
+                            app.intl.columnRequestDuration,
+                            style: headerStyle,
+                          ),
+                        ),
+                      ),
+                    ],
+                    loadMoreViewBuilder:
+                        (BuildContext context, LoadMoreRows loadMoreRows) {
+                          loadMoreRows();
+                          return const SizedBox.shrink();
+                        },
+                  );
+                },
               ),
             ),
           );
@@ -173,9 +230,17 @@ class EmployeeDataSource extends DataGridSource {
         switch (dataGridCell.columnName) {
           case 'requestedAt':
             DateTime time = dataGridCell.value as DateTime;
-            row = Text(app.dateFormatter.logsTime.format(time), style: style);
+            row = Text(
+              app.dateFormatter.logsTime.format(time),
+              style: style,
+              overflow: TextOverflow.ellipsis,
+            );
           case 'httpMethod':
-            row = Text(dataGridCell.value.toString(), style: style);
+            row = Text(
+              dataGridCell.value.toString(),
+              style: style,
+              overflow: TextOverflow.ellipsis,
+            );
           case 'path':
             row = Text(
               dataGridCell.value.toString(),
@@ -207,11 +272,23 @@ class EmployeeDataSource extends DataGridSource {
             } else {
               color = Colors.blue;
             }
-            row = Text(code.toString(), style: style.copyWith(color: color));
+            row = Text(
+              code.toString(),
+              style: style.copyWith(color: color),
+              overflow: TextOverflow.ellipsis,
+            );
           case 'requestDuration':
-            row = Text(dataGridCell.value.toString(), style: style);
+            row = Text(
+              dataGridCell.value.toString(),
+              style: style,
+              overflow: TextOverflow.ellipsis,
+            );
           default:
-            row = Text(dataGridCell.value.toString(), style: style);
+            row = Text(
+              dataGridCell.value.toString(),
+              style: style,
+              overflow: TextOverflow.ellipsis,
+            );
         }
         return Padding(
           padding: EdgeInsets.all(app.dimensions.padding.s),
