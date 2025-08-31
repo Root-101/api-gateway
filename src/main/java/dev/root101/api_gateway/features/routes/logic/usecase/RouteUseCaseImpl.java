@@ -58,6 +58,7 @@ class RouteUseCaseImpl implements RouteUseCase {
 
     @EventListener(ApplicationReadyEvent.class)
     public void initRoutes() {
+        System.out.println("---------- InitRoutes : onStartup ----------");
         routeRepo.findAll()
                 .concatMap(
                         route -> routeDefinitionWriter.save(

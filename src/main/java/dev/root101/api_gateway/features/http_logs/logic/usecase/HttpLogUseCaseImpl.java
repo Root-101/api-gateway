@@ -85,12 +85,9 @@ public class HttpLogUseCaseImpl implements HttpLogUseCase {
                     routeLog
             );
             vs.validate(entity);
-            repo.save(entity)
-                    .doOnError(err -> System.err.println("Error guardando log: " + err.getMessage()))
-                    .doOnSuccess(unused -> System.out.println("Success save of log"))
-                    .subscribe();
+            repo.save(entity).subscribe();
         } catch (Exception e) {
-            System.out.println("se jodio algo guardando el log");
+            System.err.println("Something went wrong saving log");
         }
     }
 
