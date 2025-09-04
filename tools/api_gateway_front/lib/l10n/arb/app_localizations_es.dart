@@ -129,6 +129,9 @@ class AppLocalizationsEs extends AppLocalizations {
   String get logs => 'Logs http';
 
   @override
+  String get search => 'Buscar';
+
+  @override
   String get columnTimestamp => 'Timestamp';
 
   @override
@@ -145,6 +148,54 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get columnRequestDuration => 'Duración';
+
+  @override
+  String get section_log_details => '--------- LOG-DETAILS ---------';
+
+  @override
+  String get logDetails => 'Detalles';
+
+  @override
+  String get section_log_filters => '--------- LOG-FILTERS ---------';
+
+  @override
+  String get filter => 'Filtrar';
+
+  @override
+  String get applyFilters => 'Aplicar filtros';
+
+  @override
+  String get clearFilters => 'Limpiar filtros';
+
+  @override
+  String get filterHttpStatusLabel => 'Estado HTTP';
+
+  @override
+  String get filterHttpStatusHint => '200';
+
+  @override
+  String get filterMethodLabel => 'Método HTTP';
+
+  @override
+  String get filterMethodHint => 'Seleccion método HTTP (GET, POST)';
+
+  @override
+  String get filterRouteLabel => 'Ruta';
+
+  @override
+  String get filterRouteHint => 'Selecciona ruta (Admin, Sin-Ruta)';
+
+  @override
+  String get filterNoRouteName => 'Sin-Ruta';
+
+  @override
+  String get filterDateHint => 'Selecciona fecha';
+
+  @override
+  String get filterFromDateLabel => 'Fecha inicial';
+
+  @override
+  String get filterToDateLabel => 'Fecha final';
 
   @override
   String get section_errors => '--------- ERRORS ---------';

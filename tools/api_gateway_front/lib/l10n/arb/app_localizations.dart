@@ -338,6 +338,12 @@ abstract class AppLocalizations {
   /// **'Http logs'**
   String get logs;
 
+  /// No description provided for @search.
+  ///
+  /// In en, this message translates to:
+  /// **'Search'**
+  String get search;
+
   /// No description provided for @columnTimestamp.
   ///
   /// In en, this message translates to:
@@ -373,6 +379,102 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Duration'**
   String get columnRequestDuration;
+
+  /// No description provided for @section_log_details.
+  ///
+  /// In en, this message translates to:
+  /// **'--------- LOG-DETAILS ---------'**
+  String get section_log_details;
+
+  /// No description provided for @logDetails.
+  ///
+  /// In en, this message translates to:
+  /// **'Details'**
+  String get logDetails;
+
+  /// No description provided for @section_log_filters.
+  ///
+  /// In en, this message translates to:
+  /// **'--------- LOG-FILTERS ---------'**
+  String get section_log_filters;
+
+  /// No description provided for @filter.
+  ///
+  /// In en, this message translates to:
+  /// **'Filter'**
+  String get filter;
+
+  /// No description provided for @applyFilters.
+  ///
+  /// In en, this message translates to:
+  /// **'Apply filters'**
+  String get applyFilters;
+
+  /// No description provided for @clearFilters.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear filters'**
+  String get clearFilters;
+
+  /// No description provided for @filterHttpStatusLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'HTTP Status'**
+  String get filterHttpStatusLabel;
+
+  /// No description provided for @filterHttpStatusHint.
+  ///
+  /// In en, this message translates to:
+  /// **'200'**
+  String get filterHttpStatusHint;
+
+  /// No description provided for @filterMethodLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'HTTP Method'**
+  String get filterMethodLabel;
+
+  /// No description provided for @filterMethodHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Select HTTP Method (GET, POST)'**
+  String get filterMethodHint;
+
+  /// No description provided for @filterRouteLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Route'**
+  String get filterRouteLabel;
+
+  /// No description provided for @filterRouteHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Select route (Admin, No-Route)'**
+  String get filterRouteHint;
+
+  /// No description provided for @filterNoRouteName.
+  ///
+  /// In en, this message translates to:
+  /// **'No-Route'**
+  String get filterNoRouteName;
+
+  /// No description provided for @filterDateHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Select date'**
+  String get filterDateHint;
+
+  /// No description provided for @filterFromDateLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'From date'**
+  String get filterFromDateLabel;
+
+  /// No description provided for @filterToDateLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'To date'**
+  String get filterToDateLabel;
 
   /// No description provided for @section_errors.
   ///

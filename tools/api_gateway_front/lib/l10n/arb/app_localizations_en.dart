@@ -129,6 +129,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get logs => 'Http logs';
 
   @override
+  String get search => 'Search';
+
+  @override
   String get columnTimestamp => 'Timestamp';
 
   @override
@@ -145,6 +148,54 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get columnRequestDuration => 'Duration';
+
+  @override
+  String get section_log_details => '--------- LOG-DETAILS ---------';
+
+  @override
+  String get logDetails => 'Details';
+
+  @override
+  String get section_log_filters => '--------- LOG-FILTERS ---------';
+
+  @override
+  String get filter => 'Filter';
+
+  @override
+  String get applyFilters => 'Apply filters';
+
+  @override
+  String get clearFilters => 'Clear filters';
+
+  @override
+  String get filterHttpStatusLabel => 'HTTP Status';
+
+  @override
+  String get filterHttpStatusHint => '200';
+
+  @override
+  String get filterMethodLabel => 'HTTP Method';
+
+  @override
+  String get filterMethodHint => 'Select HTTP Method (GET, POST)';
+
+  @override
+  String get filterRouteLabel => 'Route';
+
+  @override
+  String get filterRouteHint => 'Select route (Admin, No-Route)';
+
+  @override
+  String get filterNoRouteName => 'No-Route';
+
+  @override
+  String get filterDateHint => 'Select date';
+
+  @override
+  String get filterFromDateLabel => 'From date';
+
+  @override
+  String get filterToDateLabel => 'To date';
 
   @override
   String get section_errors => '--------- ERRORS ---------';
