@@ -47,6 +47,12 @@ class GeneralIcons {
   static const String _general = 'assets/icons/general';
 
   SvgAsset get folderOpen => const SvgAsset('$_general/folder-open.svg');
+
+  SvgAsset get filter => const SvgAsset('$_general/filter.svg');
+
+  SvgAsset get search => const SvgAsset('$_general/search.svg');
+
+  SvgAsset get close => const SvgAsset('$_general/close.svg');
 }
 
 class LanguageIcons {
