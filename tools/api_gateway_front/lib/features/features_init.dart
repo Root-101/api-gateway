@@ -33,8 +33,9 @@ class FeaturesInit {
       }
     });
     await LanguageInit.init();
+    await RoutesInit.init(); //logs need routes for filter
 
-    await Future.wait([RoutesInit.init(), LogsInit.init()]);
+    await Future.wait([LogsInit.init()]);
 
     //prepare logout
     app.di.find<AuthCubit>().stream.listen((event) {
