@@ -22,11 +22,17 @@ class DateFormatter {
   ///yyyy-MM-dd
   DateFormat get api => DateFormat('yyyy-MM-dd');
 
-  ///dd MMM yyyy hh:mm:ss
+  ///dd MMM yyyy
   DateFormat get logsTime => DateFormat('dd MMM yyyy hh:mm:ss');
+
+  DateFormat get logsTimeS => DateFormat('dd MMM yyyy');
 }
 
 extension DateOnlyCompare on DateTime {
+  DateTime get startOfDay => DateTime(year, month, day);
+
+  DateTime get endOfDay => DateTime(year, month, day, 23, 59, 59, 999, 999);
+
   bool isSameDay(DateTime other) {
     return year == other.year && month == other.month && day == other.day;
   }
