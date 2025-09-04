@@ -48,6 +48,17 @@ public class HttpLogSearchRepo {
             }
         }
 
+        if (request.getFromDate() != null && request.getToDate() != null) {
+            criteria = criteria.and("requested_at")
+                    .greaterThanOrEquals(request.getFromDate())
+                    .and("requested_at")
+                    .lessThanOrEquals(request.getToDate());
+        } else if (request.getFromDate() != null) {
+            criteria = criteria.and("requested_at").greaterThanOrEquals(request.getFromDate());
+        } else if (request.getToDate() != null) {
+            criteria = criteria.and("requested_at").lessThanOrEquals(request.getToDate());
+        }
+
         PageRequest pageRequest = PageRequest.of(
                 request.getPage(),
                 request.getSize(),

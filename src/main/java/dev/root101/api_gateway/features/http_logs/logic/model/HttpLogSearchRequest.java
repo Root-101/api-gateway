@@ -7,6 +7,8 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.time.OffsetDateTime;
+
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -27,4 +29,7 @@ public class HttpLogSearchRequest {
     private String responseCode;
 
     private String routeId;
+
+    private OffsetDateTime fromDate;
+    private OffsetDateTime toDate;
 }
