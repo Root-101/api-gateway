@@ -7,14 +7,22 @@ class FormComponentTemplate extends StatelessWidget {
   final String? errorText;
   final Widget child;
   final double? height;
+  final double? width;
   final BorderRadiusGeometry? borderRadius;
+  final Widget? prefix;
+  final Widget? suffix;
+  final Color? borderColor;
 
   const FormComponentTemplate({
     required this.child,
     this.label,
     this.errorText,
     this.height,
+    this.width,
     this.borderRadius,
+    this.prefix,
+    this.suffix,
+    this.borderColor,
     super.key,
   });
 
@@ -22,7 +30,7 @@ class FormComponentTemplate extends StatelessWidget {
   Widget build(BuildContext context) {
     Color safeBackgroundColor = app.colors.primary.backgroundForm;
 
-    Color safeBorderColor = app.colors.neutral.grey2;
+    Color safeBorderColor = borderColor ?? app.colors.neutral.grey2;
     double safeBorderWidth = app.dimensions.border.width.def;
 
     TextStyle labelTextStyle = app.textTheme.labelMedium!.copyWith(
@@ -43,7 +51,7 @@ class FormComponentTemplate extends StatelessWidget {
     );
     BorderSide fatSide = BorderSide(
       color: errorText?.isNotEmpty == true ? errorColor : safeBorderColor,
-      width: 2 * safeBorderWidth,
+      width: 1.5 * safeBorderWidth,
     );
 
     return Column(
@@ -70,15 +78,20 @@ class FormComponentTemplate extends StatelessWidget {
                     right: smallSide,
                     bottom: fatSide,
                   ),
-                  borderRadius:
-                      errorText?.isNotEmpty == true
-                          ? safeErrorBorderRadius
-                          : borderRadius ?? safeBorderRadius,
+                  borderRadius: errorText?.isNotEmpty == true
+                      ? safeErrorBorderRadius
+                      : borderRadius ?? safeBorderRadius,
                   color: safeBackgroundColor,
                 ),
                 height: height,
-                width: double.infinity,
-                child: child,
+                width: width ?? double.infinity,
+                child: Row(
+                  children: [
+                    ?prefix,
+                    Expanded(child: child),
+                    ?suffix,
+                  ],
+                ),
               ),
               if (errorText?.isNotEmpty == true)
                 Padding(
