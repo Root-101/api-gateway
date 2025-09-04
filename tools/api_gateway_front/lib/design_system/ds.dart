@@ -7,6 +7,7 @@ export 'colors/theme_adapter.dart';
 export 'customs/custom_appbar.dart';
 export 'customs/grid_dot_painter.dart';
 export 'dimensions.dart';
+export 'templates/dialog_template.dart';
 export 'templates/form_component_template.dart';
-export 'templates/form_dialog_template.dart';
 export 'text_input/em_text_input.dart';
+export 'text_input/em_text_search_field.dart';
