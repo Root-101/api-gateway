@@ -93,17 +93,24 @@ public class HttpLogUseCaseImpl implements HttpLogUseCase {
 
     @Override
     public Mono<HttpLogSearchResponse> search(HttpLogSearchRequest request) {
+        Integer originalSize = request.getSize();
+
+        Integer realSize = originalSize != null ? originalSize : Integer.MAX_VALUE;
+        request.setSize(realSize);
+
         return searchRepo.search(request)
                 .map(page -> new HttpLogSearchResponse(
                         page.getNumber(),                // current page
-                        page.getSize(),                  // page size
+                            originalSize == null
+                                ? (int) page.getTotalElements()
+                                : page.getSize(),        // page size
                         page.getTotalPages(),            // total pages
                         page.getTotalElements(),         // total elements
                         page                             // page content
                                 .getContent()
                                 .stream()
                                 .map(this::toResponse)
-                                .toList()                        // page content
+                                .toList()                // page content
                 ));
     }
 

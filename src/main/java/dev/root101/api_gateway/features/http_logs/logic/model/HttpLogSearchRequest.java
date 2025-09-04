@@ -18,9 +18,8 @@ public class HttpLogSearchRequest {
     @PositiveOrZero
     private int page;
 
-    @NotNull
     @Positive
-    private int size;
+    private Integer size;
 
     private String query;
 
