@@ -28,6 +28,8 @@ class HttpLogSearchRequest {
   final String? method;
   final String? query;
   final String? routeId;
+  final DateTime? fromDate;
+  final DateTime? toDate;
 
   HttpLogSearchRequest({
     required this.page,
@@ -36,6 +38,8 @@ class HttpLogSearchRequest {
     this.method,
     this.query,
     this.routeId,
+    this.fromDate,
+    this.toDate,
   });
 
   Map<String, dynamic> toJson() {
@@ -46,6 +50,8 @@ class HttpLogSearchRequest {
       'method': method,
       'query': query,
       'route_id': routeId,
+      'from_date': fromDate?.toUtc().toIso8601String(),
+      'to_date': toDate?.toUtc().toIso8601String(),
     };
   }
 }
@@ -106,8 +112,8 @@ class HttpLogResponse {
       id: json['id'] ?? '',
       sourceIp: json['source_ip'] ?? '',
       requestedAt:
-          DateTime.tryParse(json['requested-at'] ?? '') ?? DateTime.now(),
-      userAgent: json['user-agent'] ?? '',
+          DateTime.tryParse(json['requested_at'] ?? '') ?? DateTime.now(),
+      userAgent: json['user_agent'] ?? '',
       httpMethod: json['http_method'] ?? '',
       path: json['path'] ?? '',
       responseCode: json['response_code'] ?? 0,

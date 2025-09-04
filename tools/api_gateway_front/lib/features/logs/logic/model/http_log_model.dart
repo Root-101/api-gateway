@@ -44,7 +44,7 @@ class HttpLogModel {
 
   @override
   String toString() {
-    return 'HttpLogModel{id: $id, sourceIp: $sourceIp, requestedAt: $requestedAt, userAgent: $userAgent, httpMethod: $httpMethod, path: $path, responseCode: $responseCode, requestDuration: $requestDuration, route: $route}';
+    return 'HttpLogModel{id: $id}';
   }
 }
 
@@ -62,5 +62,27 @@ class RouteLogModel {
   @override
   String toString() {
     return 'RouteLogModel{routeId: $routeId, routeName: $routeName, routePath: $routePath}';
+  }
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is RouteLogModel &&
+          runtimeType == other.runtimeType &&
+          routeId == other.routeId;
+
+  @override
+  int get hashCode => routeId.hashCode;
+
+  RouteLogModel copyWith({
+    String? routeId,
+    String? routeName,
+    String? routePath,
+  }) {
+    return RouteLogModel(
+      routeId: routeId ?? this.routeId,
+      routeName: routeName ?? this.routeName,
+      routePath: routePath ?? this.routePath,
+    );
   }
 }

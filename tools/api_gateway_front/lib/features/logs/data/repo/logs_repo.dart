@@ -13,6 +13,8 @@ class LogsRepo {
     String? method,
     String? query,
     String? routeId,
+    DateTime? fromDate,
+    DateTime? toDate,
   }) async {
     try {
       HttpLogSearchResponse response = await client.findAll(
@@ -24,6 +26,8 @@ class LogsRepo {
           responseCode: responseCode,
           method: method,
           routeId: routeId,
+          fromDate: fromDate,
+          toDate: toDate,
         ),
       );
       return response.toModel();

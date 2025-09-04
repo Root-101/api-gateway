@@ -3,7 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:get/get.dart';
 
-class LanguageCubit extends Cubit<LanguageState> {
+class LanguageCubit extends Cubit<LanguageState>
+    with GlobalEventBusCommunication<LanguageState> {
   final LanguageRepo repo;
 
   static final LanguageModel defaultLanguage = LanguageModel(

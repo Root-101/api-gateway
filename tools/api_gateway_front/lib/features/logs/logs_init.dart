@@ -8,7 +8,11 @@ class LogsInit {
     LogsRepo repo = LogsRepo(client: client);
     app.di.put(repo);
 
-    LogsCubit cubit = LogsCubit(auth: app.di.find(), repo: repo);
+    LogsCubit cubit = LogsCubit(
+      auth: app.di.find(),
+      repo: repo,
+      routesRepo: app.di.find(),
+    );
     app.di.put(cubit);
   }
 }
