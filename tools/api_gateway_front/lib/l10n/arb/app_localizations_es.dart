@@ -150,6 +150,9 @@ class AppLocalizationsEs extends AppLocalizations {
   String get columnRequestDuration => 'Duración';
 
   @override
+  String get export => 'Exportar';
+
+  @override
   String get section_log_details => '--------- LOG-DETAILS ---------';
 
   @override

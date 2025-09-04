@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:api_gateway_front/app_exporter.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -32,6 +34,16 @@ class LogsSearchFilters {
       date != null && (date?.fromDate != null || date?.toDate != null);
 
   bool get hasRoute => route != null;
+
+  Map<String, dynamic> toJson() {
+    return {
+      'query': query,
+      'responseCode': responseCode,
+      'httpMethod': httpMethod,
+      'date': {'fromDate': date?.fromDate, 'toDate': date?.toDate},
+      'route': route?.toJson(),
+    };
+  }
 }
 
 class LogsCubit extends Cubit<LogsState>
@@ -242,6 +254,38 @@ class LogsCubit extends Cubit<LogsState>
       filters.route = noRoute.copyWith();
     }
   }
+
+  Future export() async {
+    try {
+      emit(LogsBackupProcessingState());
+
+      HttpLogSearchModel response = await repo.findAll(
+        credential: auth.current,
+        page: 0,
+        size: null,
+        query: filters.query,
+        method: filters.httpMethod,
+        responseCode: filters.responseCode,
+        fromDate: filters.date?.fromDate,
+        toDate: filters.date?.toDate,
+        routeId: filters.route?.routeId,
+      );
+
+      final encoder = const JsonEncoder.withIndent('  ');
+      String rawData = encoder.convert({
+        'filters': filters.toJson(),
+        'data': response.toJson(),
+      });
+      ExportDocument.downloadDocument(
+        rawData,
+        filename: 'logs-export-${DateTime.now().toString()}.json',
+      );
+
+      emit(LogsBackupOkState());
+    } on Exception catch (exc) {
+      emit(LogsBackupErrorState(ExceptionConverter.parse(exc)));
+    }
+  }
 }
 
 abstract class LogsState {
@@ -278,4 +322,23 @@ class LogsSearchErrorState extends LogsSearchState {
   GlobalException exception;
 
   LogsSearchErrorState(this.exception);
+}
+
+//------------------------- BACKUP -------------------------\\
+abstract class LogsBackupState extends LogsState {
+  LogsBackupState();
+}
+
+class LogsBackupProcessingState extends LogsBackupState {
+  LogsBackupProcessingState();
+}
+
+class LogsBackupOkState extends LogsBackupState {
+  LogsBackupOkState();
+}
+
+class LogsBackupErrorState extends LogsBackupState {
+  GlobalException exception;
+
+  LogsBackupErrorState(this.exception);
 }

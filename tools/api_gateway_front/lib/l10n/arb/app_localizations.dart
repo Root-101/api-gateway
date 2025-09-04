@@ -380,6 +380,12 @@ abstract class AppLocalizations {
   /// **'Duration'**
   String get columnRequestDuration;
 
+  /// No description provided for @export.
+  ///
+  /// In en, this message translates to:
+  /// **'Export'**
+  String get export;
+
   /// No description provided for @section_log_details.
   ///
   /// In en, this message translates to:

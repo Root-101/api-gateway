@@ -47,6 +47,7 @@
   "columnRoute": "Ruta",
   "columnHttpStatus": "Estado HTTP",
   "columnRequestDuration": "Duración",
+  "export": "Exportar",
   "section_log_details": "--------- LOG-DETAILS ---------",
   "logDetails": "Detalles",
   "section_log_filters": "--------- LOG-FILTERS ---------",

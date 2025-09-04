@@ -19,14 +19,11 @@ class FeaturesInit {
       ..httpClientAdapter
       ..options.headers = {
         HttpHeaders.contentTypeHeader: ContentType.json.mimeType,
-        /*'Access-Control-Allow-Origin': '*',
-        'Access-Control-Allow-Headers': '*',
-        'Access-Control-Allow-Methods': '*',*/
       };
     app.di.put(dio);
 
     await AuthInit.init();
-    //once the auth is initialized, I subscribe to listen to logout changes and reser cubits
+    //once the auth is initialized, I subscribe to listen to logout changes to reset cubits
     app.di.find<AuthCubit>().stream.listen((event) {
       if (event is AuthLogoutOkState) {
         FeaturesInit.reset();

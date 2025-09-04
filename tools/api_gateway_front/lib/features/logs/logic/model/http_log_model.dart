@@ -17,6 +17,16 @@ class HttpLogSearchModel {
   String toString() {
     return 'HttpLogSearchModel{page: $page, size: $size, totalPages: $totalPages, totalElements: $totalElements, pageContent: $pageContent}';
   }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'page': page,
+      'size': size,
+      'totalPages': totalPages,
+      'totalElements': totalElements,
+      'pageContent': pageContent.map((log) => log.toJson()).toList(),
+    };
+  }
 }
 
 class HttpLogModel {
@@ -45,6 +55,20 @@ class HttpLogModel {
   @override
   String toString() {
     return 'HttpLogModel{id: $id}';
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'sourceIp': sourceIp,
+      'requestedAt': requestedAt.toUtc().toIso8601String(),
+      'userAgent': userAgent,
+      'httpMethod': httpMethod,
+      'path': path,
+      'responseCode': responseCode,
+      'requestDuration': requestDuration,
+      'route': route?.toJson(),
+    };
   }
 }
 
@@ -84,5 +108,9 @@ class RouteLogModel {
       routeName: routeName ?? this.routeName,
       routePath: routePath ?? this.routePath,
     );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {'id': routeId, 'name': routeName, 'path': routePath};
   }
 }

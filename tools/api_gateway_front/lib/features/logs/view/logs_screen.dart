@@ -54,7 +54,21 @@ class _LogsScreenState extends State<LogsScreen> {
   @override
   Widget build(BuildContext context) {
     return BlocConsumer<LogsCubit, LogsState>(
-      listener: (context, state) {},
+      listener: (context, state) {
+        if (state is LogsBackupState) {
+          if (state is LogsBackupProcessingState) {
+            app.loading.show();
+          } else if (state is LogsBackupOkState) {
+            app.loading.hide();
+          } else if (state is LogsBackupErrorState) {
+            app.loading.hide();
+            app.snack.showError(
+              message: state.exception.message,
+              context: context,
+            );
+          }
+        }
+      },
       buildWhen: (previous, current) => current is LogsSearchState,
       builder: (context, state) {
         if (state is LogsInitialState) {
@@ -88,7 +102,17 @@ class _LogsScreenState extends State<LogsScreen> {
           );
 
           return Scaffold(
-            appBar: CustomAppBar.build(title: app.intl.logs),
+            appBar: CustomAppBar.build(
+              title: app.intl.logs,
+              actions: [
+                PrimaryButton.secondary(
+                  onPressed: cubit.export,
+                  title: app.intl.export,
+                  icon: app.assets.icons.actions.download,
+                ),
+                app.dimensions.padding.xl.gap(),
+              ],
+            ),
             body: Padding(
               padding: EdgeInsets.only(
                 left: app.dimensions.padding.l,

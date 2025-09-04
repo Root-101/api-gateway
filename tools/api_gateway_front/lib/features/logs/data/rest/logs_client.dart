@@ -23,7 +23,7 @@ class LogsClient extends BaseClient {
 
 class HttpLogSearchRequest {
   final int page;
-  final int size;
+  final int? size;
   final int? responseCode;
   final String? method;
   final String? query;
@@ -33,7 +33,7 @@ class HttpLogSearchRequest {
 
   HttpLogSearchRequest({
     required this.page,
-    required this.size,
+    this.size,
     this.responseCode,
     this.method,
     this.query,
