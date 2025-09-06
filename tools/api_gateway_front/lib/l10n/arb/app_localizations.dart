@@ -398,6 +398,66 @@ abstract class AppLocalizations {
   /// **'Details'**
   String get logDetails;
 
+  /// No description provided for @logsDetailsTimestamp.
+  ///
+  /// In en, this message translates to:
+  /// **'Timestamp'**
+  String get logsDetailsTimestamp;
+
+  /// No description provided for @logsDetailsSourceIp.
+  ///
+  /// In en, this message translates to:
+  /// **'Source IP'**
+  String get logsDetailsSourceIp;
+
+  /// No description provided for @logsDetailsHttpStatus.
+  ///
+  /// In en, this message translates to:
+  /// **'HTTP Status'**
+  String get logsDetailsHttpStatus;
+
+  /// No description provided for @logsDetailsHttpMethod.
+  ///
+  /// In en, this message translates to:
+  /// **'Method'**
+  String get logsDetailsHttpMethod;
+
+  /// No description provided for @logsDetailsRequestDuration.
+  ///
+  /// In en, this message translates to:
+  /// **'Duration'**
+  String get logsDetailsRequestDuration;
+
+  /// No description provided for @logsDetailsUserAgent.
+  ///
+  /// In en, this message translates to:
+  /// **'User Agent'**
+  String get logsDetailsUserAgent;
+
+  /// No description provided for @logsDetailsRoute.
+  ///
+  /// In en, this message translates to:
+  /// **'Route'**
+  String get logsDetailsRoute;
+
+  /// No description provided for @logsDetailsRouteName.
+  ///
+  /// In en, this message translates to:
+  /// **'Name'**
+  String get logsDetailsRouteName;
+
+  /// No description provided for @logsDetailsRoutePath.
+  ///
+  /// In en, this message translates to:
+  /// **'Path'**
+  String get logsDetailsRoutePath;
+
+  /// No description provided for @logsDetailsRouteId.
+  ///
+  /// In en, this message translates to:
+  /// **'Id'**
+  String get logsDetailsRouteId;
+
   /// No description provided for @section_log_filters.
   ///
   /// In en, this message translates to:

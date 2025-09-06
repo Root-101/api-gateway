@@ -3,6 +3,19 @@ import 'dart:convert';
 import 'package:api_gateway_front/app_exporter.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+RouteLogModel adminRoute = RouteLogModel(
+  routeId: '00000000-0000-0000-0000-000000000000',
+  routeName: 'Admin',
+  routePath: '/${env.ADMIN_PATH}/**',
+);
+
+final String noRouteId = 'NO-ROUTE';
+RouteLogModel noRoute = RouteLogModel(
+  routeId: noRouteId,
+  routeName: app.intl.filterNoRouteName,
+  routePath: noRouteId,
+);
+
 class LogsSearchFilters {
   String? query;
   int? responseCode;
@@ -235,19 +248,8 @@ class LogsCubit extends Cubit<LogsState>
         .toList();
     routes.addAll(tempRoutes);
 
-    RouteLogModel adminRoute = RouteLogModel(
-      routeId: '00000000-0000-0000-0000-000000000000',
-      routeName: 'Admin',
-      routePath: '/${env.ADMIN_PATH}/**',
-    );
-    routes.add(adminRoute);
 
-    final String noRouteId = 'NO-ROUTE';
-    RouteLogModel noRoute = RouteLogModel(
-      routeId: noRouteId,
-      routeName: app.intl.filterNoRouteName,
-      routePath: noRouteId,
-    );
+    routes.add(adminRoute);
     routes.add(noRoute);
 
     if (filters.route != null && filters.route!.routeId == noRouteId) {

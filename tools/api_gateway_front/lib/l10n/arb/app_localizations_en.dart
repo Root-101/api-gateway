@@ -159,6 +159,36 @@ class AppLocalizationsEn extends AppLocalizations {
   String get logDetails => 'Details';
 
   @override
+  String get logsDetailsTimestamp => 'Timestamp';
+
+  @override
+  String get logsDetailsSourceIp => 'Source IP';
+
+  @override
+  String get logsDetailsHttpStatus => 'HTTP Status';
+
+  @override
+  String get logsDetailsHttpMethod => 'Method';
+
+  @override
+  String get logsDetailsRequestDuration => 'Duration';
+
+  @override
+  String get logsDetailsUserAgent => 'User Agent';
+
+  @override
+  String get logsDetailsRoute => 'Route';
+
+  @override
+  String get logsDetailsRouteName => 'Name';
+
+  @override
+  String get logsDetailsRoutePath => 'Path';
+
+  @override
+  String get logsDetailsRouteId => 'Id';
+
+  @override
   String get section_log_filters => '--------- LOG-FILTERS ---------';
 
   @override
