@@ -22,9 +22,10 @@ class DateFormatter {
   ///yyyy-MM-dd
   DateFormat get api => DateFormat('yyyy-MM-dd');
 
-  ///dd MMM yyyy
-  DateFormat get logsTime => DateFormat('dd MMM yyyy hh:mm:ss');
+  ///dd MMM yyyy hh:mm:ss
+  DateFormat get logsTime => DateFormat('dd MMM yyyy hh:mm:ss a');
 
+  ///dd MMM yyyy
   DateFormat get logsTimeS => DateFormat('dd MMM yyyy');
 }
 

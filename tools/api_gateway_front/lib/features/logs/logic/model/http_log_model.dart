@@ -52,6 +52,8 @@ class HttpLogModel {
     this.route,
   });
 
+  DateTime get requestedAtLocal => requestedAt.toLocal();
+
   @override
   String toString() {
     return 'HttpLogModel{id: $id}';
@@ -69,6 +71,30 @@ class HttpLogModel {
       'requestDuration': requestDuration,
       'route': route?.toJson(),
     };
+  }
+
+  HttpLogModel copyWith({
+    String? id,
+    String? sourceIp,
+    DateTime? requestedAt,
+    String? userAgent,
+    String? httpMethod,
+    String? path,
+    int? responseCode,
+    int? requestDuration,
+    RouteLogModel? route,
+  }) {
+    return HttpLogModel(
+      id: id ?? this.id,
+      sourceIp: sourceIp ?? this.sourceIp,
+      requestedAt: requestedAt ?? this.requestedAt,
+      userAgent: userAgent ?? this.userAgent,
+      httpMethod: httpMethod ?? this.httpMethod,
+      path: path ?? this.path,
+      responseCode: responseCode ?? this.responseCode,
+      requestDuration: requestDuration ?? this.requestDuration,
+      route: route ?? this.route,
+    );
   }
 }
 

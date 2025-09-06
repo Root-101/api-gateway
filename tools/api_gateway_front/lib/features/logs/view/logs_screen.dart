@@ -140,9 +140,9 @@ class _LogsScreenState extends State<LogsScreen> {
                       builder: (context, constraints) {
                         final totalWidth = constraints.maxWidth;
 
-                        final requestedAtWidth = totalWidth * 0.15;
+                        final requestedAtWidth = totalWidth * 0.165;
                         final methodWidth = totalWidth * 0.10;
-                        final pathWidth = totalWidth * 0.44;
+                        final pathWidth = totalWidth * 0.425;
                         final routeWidth = totalWidth * 0.15;
                         final statusWidth = totalWidth * 0.08;
                         double durationWidth = totalWidth * 0.08;
@@ -560,7 +560,7 @@ class LogsDataSource extends DataGridSource {
           case 'requestedAt':
             DateTime time = dataGridCell.value as DateTime;
             row = _HoverableClickableText(
-              text: app.dateFormatter.logsTime.format(time.toUtc()),
+              text: app.dateFormatter.logsTime.format(time.toLocal()),
               color: app.colors.neutral.grey3,
               onTap: () {
                 if (onRequestedAtTap != null) {
@@ -591,11 +591,19 @@ class LogsDataSource extends DataGridSource {
           case 'route':
             RouteLogModel? route = dataGridCell.value as RouteLogModel?;
             row = _HoverableClickableText(
-              text: route == null ? '' : route.routeName,
-              color: app.colors.neutral.white,
+              text: route == null
+                  ? app.intl.filterNoRouteName
+                  : route.routeName,
+              color: route == null
+                  ? app.colors.neutral.grey4
+                  : app.colors.neutral.white,
               onTap: () {
                 if (onRouteTap != null) {
-                  onRouteTap!(currentLog);
+                  if (currentLog.route == null) {
+                    onRouteTap!(currentLog.copyWith(route: noRoute));
+                  } else {
+                    onRouteTap!(currentLog);
+                  }
                 }
               },
             );
@@ -673,7 +681,7 @@ class LogsDataSource extends DataGridSource {
         DataGridCell<HttpLogModel>(columnName: 'data', value: log),
         DataGridCell<DateTime>(
           columnName: 'requestedAt',
-          value: log.requestedAt,
+          value: log.requestedAtLocal,
         ),
         DataGridCell<String>(columnName: 'httpMethod', value: log.httpMethod),
         DataGridCell<String>(columnName: 'path', value: log.path),
