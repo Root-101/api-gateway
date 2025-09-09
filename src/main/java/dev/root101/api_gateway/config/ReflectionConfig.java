@@ -27,8 +27,9 @@ import java.time.OffsetDateTime;
         LoginRequest.class,
         //--------- Flyway ---------\\
         org.flywaydb.database.postgresql.TransactionalModel.class,
+        org.flywaydb.core.internal.configuration.extensions.PrepareScriptFilenameConfigurationExtension.class,
         //--------- CLOUD ---------\\
-        org.springframework.cloud.client.loadbalancer.reactive.ReactiveLoadBalancer.class
+        org.springframework.cloud.client.loadbalancer.reactive.ReactiveLoadBalancer.class,
 })
 public class ReflectionConfig {
 }

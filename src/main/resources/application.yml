@@ -27,6 +27,7 @@ spring:
     url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:api-gateway}
     user: ${DB_USERNAME:postgres}
     password: ${DB_PASSWORD:admin123}
+    locations: classpath:db/migration
 
 app:
   defaults:
