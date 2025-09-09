@@ -1,0 +1,81 @@
+services:
+  # -------------------
+  # POSTGRES DATABASE
+  # -------------------
+  postgres:
+    image: postgres:16
+    container_name: api_gateway_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: api-gateway-local
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: a123b456**
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - api_network
+
+  # -------------------
+  # JAVA API GATEWAY
+  # -------------------
+  api-gateway:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: api-gateway-service
+    container_name: api_gateway_service
+    depends_on:
+      - postgres
+    environment:
+      PROFILE: LOCAL
+      ADMIN_USERNAME: admin
+      ADMIN_PASSWORD: admin123**
+      ADMIN_PATH: _admin
+      APPLICATION_NAME: Api-Gateway
+      PORT: 8080
+
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: api-gateway-local
+      DB_USERNAME: postgres
+      DB_PASSWORD: a123b456**
+
+      MAINTAIN_LOGS_FOR_DAYS: 14
+    ports:
+      - "8080:8080"
+    networks:
+      - api_network
+
+  # -------------------
+  # FLUTTER WEB (NGINX)
+  # -------------------
+  flutter-web:
+    build:
+      context: ./tools/api_gateway_front
+      dockerfile: Dockerfile
+      args:
+        GATEWAY_SERVICE_URL: "http://api-gateway:8080"
+        ADMIN_PATH: "_admin"
+    image: flutter-web-service
+    container_name: flutter_web
+    depends_on:
+      - api-gateway
+    ports:
+      - "80:80"
+    networks:
+      - api_network
+
+# -------------------
+# VOLUMES
+# -------------------
+volumes:
+  postgres_data:
+
+# -------------------
+# NETWORKS
+# -------------------
+networks:
+  api_network:
+    driver: bridge
