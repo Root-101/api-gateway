@@ -8,7 +8,7 @@ plugins {
 
 group = 'dev.root101'
 
-version = '4.2.0'
+version = '5.0.0'
 
 repositories {
     jcenter()
@@ -21,8 +21,8 @@ java {
 
 dependencies {
     //base api-gateway dependency
-    implementation 'org.springframework.cloud:spring-cloud-gateway-server-webflux:4.3.0'
-    implementation 'org.springframework.cloud:spring-cloud-gateway-server:4.3.0'
+    implementation 'org.springframework.cloud:spring-cloud-gateway-server-webflux:4.3.1'
+    implementation 'org.springframework.cloud:spring-cloud-gateway-server:4.3.1'
     implementation 'org.springframework.cloud:spring-cloud-loadbalancer:4.3.0'
 
     //security
@@ -34,16 +34,16 @@ dependencies {
     implementation 'org.postgresql:r2dbc-postgresql:1.0.7.RELEASE'
 
     //lombok: autogenerate getters, setters....
-    implementation 'org.projectlombok:lombok:1.18.38'
-    compileOnly 'org.projectlombok:lombok:1.18.38'
-    annotationProcessor 'org.projectlombok:lombok:1.18.38'
+    implementation 'org.projectlombok:lombok:1.18.40'
+    compileOnly 'org.projectlombok:lombok:1.18.40'
+    annotationProcessor 'org.projectlombok:lombok:1.18.40'
 
     //custom exceptions, validations & more
     implementation 'dev.root101.commons:commons:5.4.5'
 
     //flyway
-    implementation 'org.flywaydb:flyway-core:11.11.1'
-    implementation 'org.flywaydb:flyway-database-postgresql:11.11.1'
+    implementation 'org.flywaydb:flyway-core:11.12.0'
+    implementation 'org.flywaydb:flyway-database-postgresql:11.12.0'
     implementation 'org.postgresql:postgresql:42.7.7'
 
     //tests
