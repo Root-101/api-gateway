@@ -39,7 +39,7 @@ public class HttpLogController {
      * @return Flux with all the routes
      */
     @PostMapping("/search")
-    public Mono<HttpLogSearchResponse> getRoutes(@RequestBody final HttpLogSearchRequest request) {
+    public Mono<HttpLogSearchResponse> searchLogs(@RequestBody final HttpLogSearchRequest request) {
         this.validationService.validate(request);
 
         return httpLogUseCase.search(request);
