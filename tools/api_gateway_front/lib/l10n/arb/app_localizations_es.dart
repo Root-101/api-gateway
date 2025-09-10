@@ -129,7 +129,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get logs => 'Logs http';
 
   @override
-  String get search => 'Buscar';
+  String get search => 'Buscar contra User Agent, Dirección IP, Path o Ruta';
 
   @override
   String get columnTimestamp => 'Timestamp';

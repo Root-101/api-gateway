@@ -40,7 +40,7 @@
   "preview": "Preview",
   "section_logs": "--------- LOGS ---------",
   "logs": "Http logs",
-  "search": "Search",
+  "search": "Search against User Agent, Source IP, Path or Route",
   "columnTimestamp": "Timestamp",
   "columnMethod": "Method",
   "columnPath": "Path",

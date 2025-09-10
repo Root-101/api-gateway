@@ -40,7 +40,7 @@
   "preview": "Previsualizar",
   "section_logs": "--------- LOGS ---------",
   "logs": "Logs http",
-  "search": "Buscar",
+  "search": "Buscar contra User Agent, Dirección IP, Path o Ruta",
   "columnTimestamp": "Timestamp",
   "columnMethod": "Método",
   "columnPath": "Path",

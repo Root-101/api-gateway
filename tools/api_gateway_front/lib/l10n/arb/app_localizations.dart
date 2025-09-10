@@ -341,7 +341,7 @@ abstract class AppLocalizations {
   /// No description provided for @search.
   ///
   /// In en, this message translates to:
-  /// **'Search'**
+  /// **'Search against User Agent, Source IP, Path or Route'**
   String get search;
 
   /// No description provided for @columnTimestamp.
