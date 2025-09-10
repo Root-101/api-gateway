@@ -56,10 +56,10 @@ services:
       context: ./tools/api_gateway_front
       dockerfile: Dockerfile
       args:
-        GATEWAY_SERVICE_URL: "http://api-gateway:8080"
+        GATEWAY_SERVICE_URL: "http://localhost:8080"
         ADMIN_PATH: "_admin"
     image: flutter-web-service
-    container_name: flutter_web
+    container_name: api_gateway_web_ui
     depends_on:
       - api-gateway
     ports:
