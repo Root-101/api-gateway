@@ -190,7 +190,7 @@ By default it's configure to maintain logs for 14 days.
 
 The **API Gateway** exposes several **management endpoints** that allow administrators to:
 
-* 🔐 **Authenticate administrators** — Secure all configuration endpoints with **Basic Auth** credentials.
+* 🔐 **Authenticate** — Secure all configuration endpoints with **Basic Auth** credentials.
 * 🔀 **Manage dynamic routes** — Create, update, and delete routes that define how requests are forwarded to internal
   services.
 * 📜 **Access HTTP logs** — Search, filter, and export all incoming requests for monitoring and debugging purposes.
@@ -210,8 +210,8 @@ Mainly used since in v4.2.0 we add the ui client, and this endpoint is used to v
 > ⚠️ WARNING: if the value of env `ADMIN_PATH` changes, the endpoints will change. These tables are based on the default
 > value of this variable (`_admin`).
 >
-> 💡️ TIP: Here we provide the complete details of each endpoint, the request/response body, with example and visual
-> reference in the web-base admin UI.
+> 💡️ TIP: [Here](./doc/detailed-api-docs-README.md#2) we provide the complete details of each endpoint, the
+> request/response body, with example and visual reference in the web-base admin UI.
 
 ### Routes <a name="5.2"></a>
 
@@ -230,23 +230,23 @@ Each route defines how incoming requests are redirected to internal services.
 > ⚠️ WARNING: if the value of env `ADMIN_PATH` changes, the endpoints will change. These tables are based on the default
 > value of this variable (`_admin`).
 >
-> 💡️ TIP: Here we provide the complete details of each endpoint, the request/response body, with example and visual
-> reference in the web-base admin UI.
+> 💡️ TIP: [Here](./doc/detailed-api-docs-README.md#3) we provide the complete details of each endpoint, the
+> request/response body, with example and visual reference in the web-base admin UI.
 
 ### Http Logs <a name="5.3"></a>
 
 Starting from v5.0.0, the API Gateway includes an HTTP Logs system that allows administrators to search, filter, and
 review all incoming requests passing through the gateway.
 
-| Method | Endpoint             | Description  |
-|--------|----------------------|--------------|
-| POST   | /**_admin**/http-log | Get the logs |
+| Method | Endpoint             | Description                                                  |
+|--------|----------------------|--------------------------------------------------------------|
+| POST   | /**_admin**/http-log | Get the logs, use POST to send in the body the search params |
 
 > ⚠️ WARNING: if the value of env `ADMIN_PATH` changes, the endpoints will change. These tables are based on the default
 > value of this variable (`_admin`).
 >
-> 💡️ TIP: Here we provide the complete details of each endpoint, the request/response body, with example and visual
-> reference in the web-base admin UI.
+> 💡️ TIP: [Here](./doc/detailed-api-docs-README.md#4) we provide the complete details of each endpoint, the
+> request/response body, with example and visual reference in the web-base admin UI.
 
 > **Note:** The API Gateway logs **almost all requests**. Exceptions include:
 >
