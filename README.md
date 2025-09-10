@@ -48,7 +48,7 @@ which handles:
 
 Next, a graphic representation of the gateway:
 
-![api-gateway-example-1.png](doc/api-gateway-1.png)
+![api-gateway-example-1.png](doc/images/api-gateway-1.png)
 
 ### **How it works** <a name="1.1"></a>
 
@@ -75,7 +75,7 @@ Next, a graphic representation of the gateway:
 
 Here, the visual representation of the example:
 
-![api-gateway-example-2.png](doc/api-gateway-2.png)
+![api-gateway-example-2.png](doc/images/api-gateway-2.png)
 
 ---
 
