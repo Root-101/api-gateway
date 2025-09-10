@@ -105,6 +105,7 @@ class _RoutesRestoreDialogState extends State<RoutesRestoreDialog> {
                                       ? app.intl.dropFileHere
                                       : filename!,
                                   style: app.textTheme.titleLarge,
+                                  textAlign: TextAlign.center,
                                 ),
                               ),
                               app.dimensions.padding.xxl.gap(),
