@@ -17,10 +17,28 @@ A fine grain explanation of **every endpoint**, with **example**, **models**, **
     - [3.7 - Backup Routes](#3.7)
     - [3.8 - Restore Routes](#3.8)
 - [4 - Http Logs](#4)
+- [5 - Extra](#5)
+    - [5.1 - Web UI Language](#5.1)
+    - [5.2 - Logout](#5.2)
 
 ## **Overview**<a name="1"></a>
 
-Overview of this project
+This document is the **detailed technical documentation** of the **Admin Panel and REST API** used to manage the **API
+Gateway**.
+It goes beyond a high-level description, providing a **fine-grained explanation of every endpoint**, including
+request/response models, validations, error formats, usage recommendations, and even **screenshots of the Web UI** to
+illustrate how each feature is used in practice.
+
+With this documentation, you will find:
+
+* 📚 **Endpoint References** – Complete details of each operation (`login`, `routes`, `logs`, etc.).
+* 🖼 **UI Screenshots** – Visual guidance to connect API endpoints with their corresponding Web UI features.
+* ✅ **Examples & Validations** – Real request/response samples with clear validation rules.
+* ⚠️ **Error Models** – Standardized error structures to simplify debugging.
+* 💡 **Best Practices** – Recommendations on how to use and configure the system efficiently.
+
+> ⚡ **In short:** This is the **go-to guide** for developers and administrators, offering everything needed to
+> configure, operate, and troubleshoot the API Gateway through both its **Web UI** and **REST API**.
 
 ## Login<a name="2"></a>
 
@@ -46,10 +64,10 @@ Screen that interact with endpoint:
 }
 ```
 
-| Field    | Required | Description                                          | Validations               | Recommendations                                   |
-|----------|----------|------------------------------------------------------|---------------------------|---------------------------------------------------|
-| username | true     | Username of the admin user. Default to `admin`.      | - Not null<br/>-Not Empty | It's the one configured in env: `ADMIN_USERNAME`  |
-| password | true     | Password of the admin user. Default to `admin123**`. | - Not null<br/>-Not Empty | It's the one configured in env: `ADMIN_PASSWORD`. |
+| Field    | Description                                          | Required | Validations                | Recommendations                                   |
+|----------|------------------------------------------------------|----------|----------------------------|---------------------------------------------------|
+| username | Username of the admin user. Default to `admin`.      | ✅        | - Not null<br/>- Not Empty | It's the one configured in env: `ADMIN_USERNAME`  |
+| password | Password of the admin user. Default to `admin123**`. | ✅        | - Not null<br/>- Not Empty | It's the one configured in env: `ADMIN_PASSWORD`. |
 
 #### Response
 
@@ -57,6 +75,35 @@ Screen that interact with endpoint:
 * **Success:** `200 OK` → Username/password are correct
 * **Error Responses:**
     * `422 Unprocessable Entity` → Validation error
+
+#### Validation Error Response Body
+
+If any validation fails, the API will return a **`422 Unprocessable Entity`** status code with a response body like
+this:
+
+```json
+[
+  {
+    "source": "username",
+    "invalid_value": "null",
+    "message": "must not be blank"
+  },
+  {
+    "source": "password",
+    "invalid_value": "null",
+    "message": "must not be blank"
+  }
+]
+```
+
+| Field          | Description                                                                 |
+|----------------|-----------------------------------------------------------------------------|
+| source         | The name of the field in the request body that caused the validation error. |
+| invalid\_value | The value that failed validation.                                           |
+| message        | A human-readable explanation of why the validation failed.                  |
+
+> ℹ️ **Note:** If multiple validations fail for the same field, multiple objects will be returned in the list with the
+> same `source` and `invalid_value`, but each will contain a different `message` describing the specific failure.
 
 ---
 
@@ -363,7 +410,47 @@ select a JSON file** to restore the routes.
 
 ## Http Logs<a name="4"></a>
 
-<!--
+These endpoints and screens allow administrators to **inspect the history of HTTP requests** that have passed through
+the **API Gateway**.
+They are essential for **auditing, monitoring, debugging**, and understanding client and service behavior.
+
+
+> **Note:** The API Gateway logs **almost all requests**. Exceptions include:
+>
+> * **OPTIONS requests** — Considered “preflight” or non-critical, so they are **not logged**.
+> * **Requests to the logs search endpoint** — To avoid recursive logging, requests made to fetch logs are **not
+    recorded**.
+> * **GET requests to the routes endpoints** — Only route creation, update, or deletion requests are logged; simple GETs
+    to retrieve route information are **excluded**.
+>
+> ⚡ **Future improvement:** A configuration option may be added to **customize which requests are logged**.
+
+### View Logs
+
+This endpoint and its corresponding UI screen allow administrators to **list, filter, and explore logs** of all requests
+that went through the gateway.
+
+**Key Features:**
+
+* Displays the complete list of request logs with detailed information.
+* Supports filtering by date range, method, response code, route, and free-text search.
+* Provides pagination and full export of logs.
+* Helps identify errors, bottlenecks, and usage patterns.
+
+Screen example:
+
+![logs-screen](images/web-client-8.png)
+
+Logs filter dialog example:
+
+![logs-filter-dialog](images/web-client-9.png)
+
+#### Endpoint Details
+
+* **HTTP Method:** `POST`
+* **Path:** `/_admin/http-log/search`
+
+#### Request Body
 
 ```json
 {
@@ -378,20 +465,26 @@ select a JSON file** to restore the routes.
 }
 ```
 
-Here we have:
+| Field         | Description                                                            | Validations          | Recommendations                                                                                                            |
+|---------------|------------------------------------------------------------------------|----------------------|----------------------------------------------------------------------------------------------------------------------------|
+| page          | Page number to fetch (for pagination).                                 | - Not null<br/>- ≥ 0 | Use `0` to fetch the first page.                                                                                           |
+| size          | Page size (number of logs per request).                                | - > 0                | If `null` → loads **all logs** (useful for **exporting**).                                                                 |
+| query         | Free-text search. Matches against: `user_agent`, `path`, `route_name`. |                      | Useful for searching by partial URL, route name, or client (e.g., `"Postman"`).                                            |
+| from_date     | Start date (inclusive). Loads logs with `requested_at` >= this value.  |                      | Must use **ISO-8601** format with timezone. Example: `2025-08-01T00:00:00Z`.                                               |
+| to_date       | End date (inclusive). Loads logs with `requested_at` <= this value.    |                      | Useful for generating reports for specific time ranges.                                                                    |
+| response_code | Filters by exact HTTP response code.                                   |                      | Example: `500` for server errors, `404` for not found requests.                                                            |
+| method        | Filters by exact HTTP method.                                          |                      | Example: `GET`, `POST`, `PUT`, `DELETE`.                                                                                   |
+| route_id      | Filters by associated route.                                           |                      | Use:<br/>- `00000000-0000-0000-0000-000000000000` for the **admin route**<br/>- `NO-ROUTE` for logs with no resolved route |
 
-| Field         | Required | Description                                                              | Validations                            | Recommendations                                                                                                      |
-|---------------|----------|--------------------------------------------------------------------------|----------------------------------------|----------------------------------------------------------------------------------------------------------------------|
-| page          | true     | Page to search (to allow paginating the logs).                           | - Not null<br/>-Positive or cero (>=0) |                                                                                                                      |
-| size          | false    | Size of the page to load.                                                | - Positive (>0)                        | A null value will load all the logs in DB. Used in the export of UI client                                           |
-| query         | false    | Used to filter results, matched against: `user_agent`, `path`, `route`.  |                                        |                                                                                                                      |
-| from_date     | false    | Used to filter results, loads logs with `requested_date` >= `from_date`. |                                        |                                                                                                                      |
-| to_date       | false    | Used to filter results, loads logs with `requested_date` <= `to_date`.   |                                        |                                                                                                                      |
-| response_code | false    | Used to filter results, loads logs with this exact `response_code`.      |                                        |                                                                                                                      |
-| method        | false    | Used to filter results, loads logs with this exact `http_method`.        |                                        |                                                                                                                      |
-| route_id      | false    | Used to filter results by `route`.                                       |                                        | Use `00000000-0000-0000-0000-000000000000` to filter by the admin route, and `NO-ROUTE` to filter logs with no route |
+> Note: In the web client, HTTP logs are displayed as an infinite scroll list, sorted by request date with the newest
+> entries shown first.
 
-##### Http Log model:
+#### Response
+
+* **Success:** `200 OK` → Returns an object containing logs and pagination info.
+* **Error Responses:** None (invalid filters return an empty list).
+
+#### Response Body
 
 This is the full json of the search and http log model.
 
@@ -421,34 +514,56 @@ This is the full json of the search and http log model.
 }
 ```
 
-Here we have a wrapper with the page info:
+##### Response Fields
+
+**Pagination Wrapper:**
 
 | Field          | Description                                |
 |----------------|--------------------------------------------|
-| page           | The current page searched                  |
-| size           | The size of the searched page              |
-| total_pages    | The total amount of pages with this config |
-| total_elements | The total amount of logs in DB             |
-| page_content   | The real list of http logs model           |
+| page           | Current page number.                       |
+| size           | Number of items per page.                  |
+| total_pages    | Total number of available pages.           |
+| total_elements | Total number of logs matching the filters. |
+| page_content   | List of log entries (see model below).     |
 
-The Http Log Model in the `page_content`:
+**Log Model (`page_content`):**
 
-| Field            | Description                                                                                                                                                            |
-|------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| id               | Unique UUID that identifies the log entry.                                                                                                                             |
-| source_ip        | IP address from which the request was made.                                                                                                                            |
-| requested_at     | Exact date and time when the request was made.                                                                                                                         |
-| user_agent       | String identifying the client, browser, or tool that made the request.                                                                                                 |
-| http_method      | HTTP method used for the request (e.g., GET, POST, PUT, DELETE).                                                                                                       |
-| path             | The requested HTTP path or endpoint.                                                                                                                                   |
-| response_code    | HTTP status code returned by the server (e.g., 200, 404, 500).                                                                                                         |
-| request_duration | Time taken by the server to process the request, expressed in milliseconds.                                                                                            |
-| route            | Object containing information about the associated route. It will be **null** if no route was resolved in this request (neither a configured route nor an admin route) |
+| Field            | Description                                                                    |
+|------------------|--------------------------------------------------------------------------------|
+| id               | Unique UUID identifying the log entry.                                         |
+| source_ip        | Source IP address of the request.                                              |
+| requested_at     | Exact timestamp of the request (ISO-8601 with timezone).                       |
+| user_agent       | Client identifier (browser, app, or library used).                             |
+| http_method      | HTTP method used (`GET`, `POST`, etc.).                                        |
+| path             | The requested HTTP path or endpoint.                                           |
+| response_code    | HTTP status code returned (`200`, `404`, `500`, etc.).                         |
+| request_duration | Time taken to process the request (in milliseconds).                           |
+| route            | Object with associated route information (or `null` if no route was resolved). |
 
-And the Route in the `route` object:
+**Route Model (`route` inside log):**
 
-| Field      | Description                                                                                                                                                    |
-|------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| route_id   | Unique UUID of the associated route. This is generated in the create route endpoint. It will be `00000000-0000-0000-0000-000000000000` in case the admin route |
-| route_name | Name of the associated route.                                                                                                                                  |
-| route_path | Full URL or base path of the associated route.                                                                                                                 |
+| Field      | Description                                                                                                                |
+|------------|----------------------------------------------------------------------------------------------------------------------------|
+| route_id   | UUID of the associated route.<br/>Will be `00000000-0000-0000-0000-000000000000` if it corresponds to the **admin route**. |
+| route_name | Human-readable name of the associated route.                                                                               |
+| route_path | Base URL or full path of the associated route.                                                                             |
+
+## Extra<a name="5"></a>
+
+Some additional UI features to be aware of.
+
+### Web UI Language Selector <a name="5.1"></a>
+
+In the bottom-left corner of the web UI, there is a **flag icon** that allows users to switch the interface language.
+
+![language](images/web-client-10.png)
+
+> Note: Currently, the available languages are **Spanish** and **English**.
+
+### Logout <a name="5.2"></a>
+
+Next to the language selector, there is a **logout icon (`←]`)** to sign out of the admin panel safely.
+
+![logout](images/web-client-11.png)
+
+> Note: Clicking this will immediately terminate your session.
