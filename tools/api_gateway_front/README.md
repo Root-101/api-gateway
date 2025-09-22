@@ -1,31 +1,97 @@
-# Api-Gateway Front
+# API-Gateway Front
 
-This project is the ui client to handle the admin of the api gateway with ease.
+This project is the **Web UI client** for the **API Gateway**, providing an **easy-to-use interface** to manage routes,
+view HTTP logs, and handle administrative tasks.
 
-This project will be updated with latest version of api gateway
+It is designed to **sync with the latest version** of the API Gateway and provides a visual complement to the REST API.
 
-#### About v1.x:
+## Table of Contents
 
-This version is the first iteration in the integration with api-gateway
+- [1 - Overview](#1)
+- [2 - Configuration](#2)
+- [3 - Flutter](#3)
+- [4 - Screenshots](#4)
 
-### Env Variables to configure the client:
+---
 
-To configure the project we have a couple of environmental variables at our disposal. These are:
+## Overview<a name="1"></a>
 
-| Env Variable        | Description                                                                                 | Expected | Default value (and example) | Added in version |
-|---------------------|---------------------------------------------------------------------------------------------|----------|-----------------------------|------------------|
-| GATEWAY_SERVICE_URL | The url of the api gateway service                                                          | text     | https://gataway-url.test    | 1.0.0            |
-| ADMIN_PATH          | The admin path of the gateway service (should be the same as ADMIN_PATH in gateway-service) | text     | _admin                      | 1.0.0            |
+This is the **next iteration** of the integration with the API Gateway.
 
-### Flutter
+It allows administrators to:
 
-Since I'm a single developer, and the frontend technology I know is flutter, I made this client using, you guess it:
-Flutter.
+* 🔀 **Manage routes** — Create, edit, delete, backup, and restore routes.
+* 📜 **View HTTP logs** — Filter, search, and inspect requests passing through the gateway.
+* 🔐 **Authenticate safely** — Login using the same credentials as the gateway admin endpoints.
 
-Currently, using version `3.32.1`, latest as today (05-dd/06-mm/2025-yy)
+> ⚡ **Note:** This version is tied to the corresponding v5.x API Gateway endpoints. Future UI versions will update
+> automatically to remain compatible with the latest gateway releases.
 
-## The end
+---
 
-This it's all for now... so... deploy it and test it yourself:
+## Configuration — Environment Variables<a name="2"></a>
 
-[![Deploy on Railway](https://railway.app/button.svg)](https://railway.app/template/IR4lVv?referralCode=6_5_ta)
+The client can be customized using the following **environment variables**:
+
+| Env Variable        | Description                                                                    | Expected | Default value (example)                              | Added in version |
+|---------------------|--------------------------------------------------------------------------------|----------|------------------------------------------------------|------------------|
+| GATEWAY_SERVICE_URL | Base URL of the API Gateway service                                            | text     | [https://gateway-url.test](https://gateway-url.test) | 1.0.0            |
+| ADMIN_PATH          | Admin path of the gateway service (must match `ADMIN_PATH` in the API Gateway) | text     | \_admin                                              | 1.0.0            |
+
+> ⚡ **Tip:** Ensure that the `ADMIN_PATH` matches the API Gateway configuration to allow proper authentication and
+> routing of admin requests.
+
+---
+
+## Flutter<a name="3"></a>
+
+This project is developed using **Flutter**, currently version `3.35.1` (as of 05/06/2025).
+
+> 💡 **Note:** Flutter was chosen for rapid development and cross-platform compatibility.
+> As a single developer project, it allows quick updates while maintaining a clean and responsive admin interface.
+
+## Screenshots<a name="4"></a>
+
+#### Login screen
+
+![screenshot-1](../../doc/images/web-client-1.png)
+
+#### Routes screen
+
+![screenshot-2](../../doc/images/web-client-2.png)
+
+#### Create route dialog
+
+![screenshot-3](../../doc/images/web-client-3.png)
+
+#### Edit route dialog
+
+![screenshot-4](../../doc/images/web-client-4.png)
+
+#### Delete route
+
+![screenshot-5](../../doc/images/web-client-5.png)
+
+#### Backup routes
+
+![screenshot-6](../../doc/images/web-client-6.png)
+
+#### Restore routes
+
+![screenshot-7](../../doc/images/web-client-7.png)
+
+#### Logs Screen
+
+![screenshot-8](../../doc/images/web-client-8.png)
+
+#### Logs Filter Dialog
+
+![screenshot-9](../../doc/images/web-client-9.png)
+
+#### Change Language
+
+![screenshot-10](../../doc/images/web-client-10.png)
+
+#### Logout
+
+![screenshot-11](../../doc/images/web-client-11.png)

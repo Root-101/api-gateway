@@ -64,7 +64,10 @@ class RoutesCubit extends Cubit<RoutesState>
       List<RouteModel> routes = await repo.findAll(credential: auth.current);
       final encoder = const JsonEncoder.withIndent('  ');
       String rawData = encoder.convert(routes.map((e) => e.toJson()).toList());
-      ExportDocument.downloadDocument(rawData);
+      ExportDocument.downloadDocument(
+        rawData,
+        filename: 'routes-backup-${DateTime.now().toString()}.json',
+      );
 
       emit(RoutesBackupOkState());
     } on Exception catch (exc) {

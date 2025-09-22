@@ -17,7 +17,11 @@ class AppTextInput extends StatefulWidget {
     List<TextInputFormatter>? inputFormatters,
     ValueChanged<String>? onChange,
     Widget? suffix,
+    Widget? prefix,
     BorderRadiusGeometry? borderRadius,
+    double? height,
+    EdgeInsetsGeometry? contentPadding,
+    Color? borderColor,
   }) {
     return AppTextInput(
       controller: controller,
@@ -33,7 +37,11 @@ class AppTextInput extends StatefulWidget {
       inputFormatters: inputFormatters,
       onChange: onChange,
       suffix: suffix,
+      prefix: prefix,
       borderRadius: borderRadius,
+      height: height,
+      contentPadding: contentPadding,
+      borderColor: borderColor,
     );
   }
 
@@ -45,6 +53,7 @@ class AppTextInput extends StatefulWidget {
     TextCapitalization? textCapitalization,
     String? errorText,
     int? maxLength,
+    double? height,
   }) {
     return AppTextInput(
       controller: controller,
@@ -56,6 +65,7 @@ class AppTextInput extends StatefulWidget {
       label: label,
       maxLines: 1,
       errorText: errorText,
+      height: height,
     );
   }
 
@@ -72,6 +82,10 @@ class AppTextInput extends StatefulWidget {
   final TextCapitalization? textCapitalization;
   final ValueChanged<String>? onChange;
   final Widget? suffix;
+  final Widget? prefix;
+  final double? height;
+  final EdgeInsetsGeometry? contentPadding;
+  final Color? borderColor;
 
   //ui related input
   final Color? hintColor;
@@ -95,9 +109,13 @@ class AppTextInput extends StatefulWidget {
     this.textCapitalization,
     this.onChange,
     this.suffix,
+    this.prefix,
+    this.height,
     //ui
     this.hintColor,
     this.borderRadius,
+    this.contentPadding,
+    this.borderColor,
     //password related
     this.obscureText,
     super.key,
@@ -136,17 +154,21 @@ class _AppTextInputState extends State<AppTextInput> {
         widget.suffix ??
         (safeObscureText
             ? IconButton(
-              icon: Icon(
-                _hidePassword ? Icons.visibility : Icons.visibility_off,
-              ),
-              onPressed: () {
-                setState(() {
-                  _hidePassword = !_hidePassword;
-                });
-              },
-            )
+                icon: Icon(
+                  _hidePassword ? Icons.visibility : Icons.visibility_off,
+                ),
+                onPressed: () {
+                  setState(() {
+                    _hidePassword = !_hidePassword;
+                  });
+                },
+              )
             : null);
     return FormComponentTemplate(
+      borderColor: widget.borderColor,
+      suffix: suffix,
+      prefix: widget.prefix,
+      height: widget.height ?? 50,
       label: widget.label,
       errorText: finalErrorText,
       borderRadius: widget.borderRadius,
@@ -176,16 +198,11 @@ class _AppTextInputState extends State<AppTextInput> {
           color: app.colors.neutral.white,
         ),
         decoration: InputDecoration(
-          contentPadding:
-              suffix != null
-                  ? EdgeInsets.only(
-                    top: app.dimensions.padding.m,
-                    left: app.dimensions.padding.m,
-                  )
-                  : null,
+          isDense: true,
+          contentPadding: widget.contentPadding,
+          hoverColor: Colors.transparent,
           filled: true,
           fillColor: app.colors.neutral.transparent,
-          suffixIcon: suffix,
           hintText: widget.hint,
           hintStyle: hintTextStyle,
           counterText: '',

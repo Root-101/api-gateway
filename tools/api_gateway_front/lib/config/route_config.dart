@@ -4,10 +4,9 @@ import 'package:go_router/go_router.dart';
 
 class RouteConfig {
   static RouterConfig<Object> router = GoRouter(
-    initialLocation:
-        app.di.find<AuthCubit>().isLoggedIn
-            ? RoutesScreen.navigator.path
-            : LoginScreen.navigator.path,
+    initialLocation: app.di.find<AuthCubit>().isLoggedIn
+        ? RoutesScreen.navigator.path
+        : LoginScreen.navigator.path,
     navigatorKey: navigatorKey,
     routes: [
       StatefulShellRoute.indexedStack(
@@ -22,6 +21,16 @@ class RouteConfig {
                 name: RoutesScreen.navigator.name,
                 path: RoutesScreen.navigator.path,
                 builder: RoutesScreen.navigator.builder,
+              ),
+            ],
+          ),
+          StatefulShellBranch(
+            routes: <RouteBase>[
+              ///   /logs
+              GoRoute(
+                name: LogsScreen.navigator.name,
+                path: LogsScreen.navigator.path,
+                builder: LogsScreen.navigator.builder,
               ),
             ],
           ),

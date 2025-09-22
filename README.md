@@ -1,84 +1,155 @@
 # Api-Gateway
 
-This project is structured in several versions, each version with its own configuration and specific features.
-Each version has a tag and in that tag the readme explains these particularities.
+[![Version](https://img.shields.io/badge/Version-5.x-blue)](#)
+[![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.5-green)](#)
+[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-blue)](#)
+[![Flutter](https://img.shields.io/badge/Flutter-3.35-02569B)](#)
+[![License](https://img.shields.io/badge/license-Apache-green)](#)
 
-In general the tag/features relationship is:
+A ready-to-deploy **API Gateway** built with **Spring Boot**, **PostgreSQL** and **Flutter**.
+It centralizes client requests, routes them to internal services, logs traffic, and provides an admin UI for monitoring.
 
-| Version | Description                                                                                                                                  |
-|---------|----------------------------------------------------------------------------------------------------------------------------------------------|
-| 2.x     | Simple gateway, routes are configured via env variable, to change a route the env variable needs to change and the project redeployed.       |
-| 3.x     | Simple gateway, BUT, routes are configured via management endpoint, this allow to change routes without redeploying the service.             |
-| 4.x     | Gateway with a Postgresql DB, this way we can storage the config in order to reload it if the service need to be redeployed.                 |
-| 5.x     | We will add a log filter that storage all requests made to the gateway into DB in order to review all traffic that goes through the service. |
-| 6.x     | We will add a monitoring capability to see the availability of the services (the same of the routes of the gateway or any other).            |
+## Table of Contents
 
-NOTE #1: All this version and explanation are some kind of roadmap of what we pretend to ship in next's iterations.
+- [1 - Overview](#1)
+    - [1.1 - How it work](#1.1)
+    - [1.2 - Example](#1.2)
+- [2 - Quick Start](#2)
+- [3 - About this version (5.x)](#3)
+- [4 - Configuring the service](#4)
+    - [4.1 - Env Variables table](#4.1)
+    - [4.2 - PORT, PROFILE & APPLICATION_NAME](#4.2)
+    - [4.3 - ADMIN_USERNAME & ADMIN_PASSWORD](#4.3)
+    - [4.4 - ADMIN_PATH](#4.4)
+    - [4.5 - DB_HOST, DB_PORT, DB_NAME, DB_USERNAME, DB_PASSWORD](#4.5)
+    - [4.6 - MAINTAIN_LOGS_FOR_DAYS](#4.6)
+- [5 - Api Docs](#5)
+    - [5.1 - Login](#5.1)
+    - [5.2 - Routes](#5.2)
+    - [5.3 - Http Logs](#5.3)
+    - [5.4 - Examples](#5.4)
+- [6 - Project Versions & Roadmap](#6)
+    - [6.1 - Version Overview](#6.1)
+    - [6.2 - Notes & Recommendations](#6.2)
+    - [6.3 - Extra / Interesting Tips](#6.3)
 
-NOTE #2: Try to always use the latest version available for each tag. (Eg: The 2.x tag has versions 2.2.0, 2.1.0, 2.0.0;
-try to use the latest tag, in this case 2.2.0)
+## **Overview**  <a name="1"></a>
 
-NOTE #3: We recommend that you always use the latest available version, this way you can enjoy all the features, a more
-polished project and an overall better experience.
+An **API Gateway** acts as a single entry point for all client requests, routing them to the appropriate internal
+services. Instead of clients communicating directly with multiple microservices, they only interact with the gateway,
+which handles:
 
-## This is the docs for version 4.x:
+* 🔀 **Request routing** → Determines which service should handle the request based on the path.
+* 📜 **Centralized logging** → Captures HTTP logs for monitoring and debugging.
+* 🔒 **Service abstraction** → Clients don’t need to know the internal URLs of services. Services may not be public on
+  the internet.
+* 📈 **Scalability** → Easily connect more services.
+* 🖥️ **Admin Dashboard** → Visual manage routes and review HTTP logs.
+
+Next, a graphic representation of the gateway:
+
+![api-gateway-example-1.png](doc/images/api-gateway-1.png)
+
+### **How it works** <a name="1.1"></a>
+
+1. **Users** send requests to a single public endpoint:
+   `https://cool-api-gateway.com`
+2. The **API Gateway** analyzes the request path and forwards it to the corresponding internal service:
+
+* Requests to `/service-a/**` → routed to **Service A** → `http://service-a.internal.url`
+* Requests to `/service-b/**` → routed to **Service B** → `http://service-b.internal.url`
+
+3. Each request and response is recorded in the **HTTP Logs** for auditing and monitoring.
+4. Internal services are **isolated** and not directly exposed to the users.
+
+### **Example**  <a name="1.2"></a>
+
+* Request: `https://cool-api-gateway.com/service-a/load-planets` → Gateway forwards
+  to: `http://service-a.internal.url/load-planets`
+* Request: `https://cool-api-gateway.com/service-a/pluto/details` → Gateway forwards
+  to: `http://service-a.internal.url/pluto/details`
+* Request: `https://cool-api-gateway.com/service-b/cooking-recipes` → Gateway forwards
+  to: `http://service-b.internal.url/cooking-recipes`
+* Request: `https://cool-api-gateway.com/service-b/pancake/ingredients` → Gateway forwards
+  to: `http://service-b.internal.url/pancake/ingredients`
+
+Here, the visual representation of the example:
+
+![api-gateway-example-2.png](doc/images/api-gateway-2.png)
 
 ---
-**title:** Api-Gateway </br>
-**description:** A basic ready-to-deploy api gateway </br>
-**tags:** </br>
 
-- api-gateway
-- spring boot
-- native
+## **Quick start**  <a name="2"></a>
 
----
+To run it and start testing it right now, you can:
 
-#### About v4.x:
+```bash
+# 1. Clone the repo
+git clone https://github.com/Root-101/api-gateway.git
+cd api-gateway
 
-This version adds a Postgres DB so that the route configuration can be saved and can be loaded if the service is
-restarted.
+# 2. Run the services with Docker
+docker-compose up --build
 
-This version include the api docs and a postman collection with preconfigured endpoints.
+# 3. Go to:
+#    - Gateway API → http://localhost:8080
+#    - PostgreSQL  → localhost:5432
+#    - Web UI      → http://localhost
+```
 
-This version also include the first ui-client, it's located under `/tools/api_gateway_front`.
+> 💡 Tip: If you prefer, you can deploy it on Railway with a single click:
 
-### Env Variables to configure the service:
+[![Deploy on Railway](https://railway.app/button.svg)](https://railway.app/template/IR4lVv?referralCode=6_5_ta)
 
-To configure the project we have a variety of environmental variables at our disposal. These are:
+## About this version (5.x) <a name="3"></a>
 
-| Env Variable     | Description                               | Expected | Default value (and example) | Added in version |
-|------------------|-------------------------------------------|----------|-----------------------------|------------------|
-| PORT             | Port in which the service will be running | number   | 8080                        | 2.x              |
-| PROFILE          | Profile type of the service (Environment) | text     | DEV                         | 2.x              |
-| APPLICATION_NAME | Application name                          | text     | App Api-Gateway             | 2.x              |
-| ADMIN_USERNAME   | Username of the admin user                | text     | admin                       | 3.x              |
-| ADMIN_PASSWORD   | Password of the admin user                | text     | admin123**                  | 3.x              |
-| ADMIN_PATH       | Path of the admin (management) endpoints  | text     | _admin                      | 3.x              |
-| DB_HOST          | Host of the running DB                    | text     | localhost                   | 4.x              |
-| DB_PORT          | Port of the running DB                    | integer  | 5432                        | 4.x              |
-| DB_NAME          | Name of the DB                            | text     | api-gateway                 | 4.x              |
-| DB_USERNAME      | Username of the DB user                   | text     | postgres                    | 4.x              |
-| DB_PASSWORD      | Password of the DB user                   | text     | postgres_password           | 4.x              |
+This version (5.x) adds a Http Logs system, where each request made through this gateway will be saved as logs for later
+review.
 
-##### PORT, PROFILE & APPLICATION_NAME:
+We include the updated ui-client, it's a web made with [Flutter](https://flutter.dev/) located
+under `/tools/api_gateway_front`, and the [Postman collection](doc/Api-Gateway.postman_collection.json) to test the
+management endpoints.
+
+## Configuring the service <a name="4"></a>
+
+To configure the gateway we have a variety of environmental variables at our disposal.
+These are configured before the service start.
+
+### Env Variables table <a name="4.1"></a>
+
+| Env Variable           | Expected | Description                               | Default value (and example) | Added in version |
+|------------------------|----------|-------------------------------------------|-----------------------------|------------------|
+| PORT                   | integer  | Port in which the service will be running | 8080                        | 2.x              |
+| PROFILE                | text     | Profile type of the service (Environment) | DEV                         | 2.x              |
+| APPLICATION_NAME       | text     | Application name                          | App Api-Gateway             | 2.x              |
+| ADMIN_USERNAME         | text     | Username of the admin user                | admin                       | 3.x              |
+| ADMIN_PASSWORD         | text     | Password of the admin user                | admin123**                  | 3.x              |
+| ADMIN_PATH             | text     | Path of the admin (management) endpoints  | _admin                      | 3.x              |
+| DB_HOST                | text     | Host of the running DB                    | localhost                   | 4.x              |
+| DB_PORT                | integer  | Port of the running DB                    | 5432                        | 4.x              |
+| DB_NAME                | text     | Name of the DB                            | api-gateway                 | 4.x              |
+| DB_USERNAME            | text     | Username of the DB user                   | postgres                    | 4.x              |
+| DB_PASSWORD            | text     | Password of the DB user                   | a123b456**                  | 4.x              |
+| MAINTAIN_LOGS_FOR_DAYS | integer  | Number of days the logs will be available | 14                          | 5.x              |
+
+#### PORT, PROFILE & APPLICATION_NAME <a name="4.2"></a>
 
 These environment variables are general service configurations, they can be left perfectly with the default values
 and would not have major impacts.
 
-##### ADMIN_USERNAME & ADMIN_PASSWORD:
+#### ADMIN_USERNAME & ADMIN_PASSWORD <a name="4.3"></a>
 
 As a security measure, the gateway management endpoints, with which new routes are created, edited, deleted and
-listed, are protected with a layer of security.
+listed, and the logs are listed, are protected with a layer of security.
 
 In this case, a `basic` auth type is used, which must be provided with a username and password to access.
 
-By configuring these variables (`ADMIN_USERNAME` and `ADMIN_PASSWORD`) the admin endpoints of the service can be
+By configuring these variables (`ADMIN_USERNAME` and `ADMIN_PASSWORD`), the admin endpoints of the service can be
 protected against unauthorized access.
 
-**It is recommended that production environments be properly configured to avoid (mainly) security issues.**
+> ⚠️ WARNING: It is recommended that production environments be properly configured to avoid (mainly) security issues.
 
-##### ADMIN_PATH:
+#### ADMIN_PATH <a name="4.4"></a>
 
 To avoid conflicts between management endpoints and redirects, this environment variable was designed to define the
 parent path of said management endpoints.
@@ -94,7 +165,7 @@ This way, if we have a service that is expected to be redirected to, and we want
 modify said variable so that that path is not occupied and the requests are redirected to the service instead of the
 configuration controller.
 
-##### DB_HOST, DB_PORT, DB_NAME, DB_USERNAME, DB_PASSWORD:
+#### DB_HOST, DB_PORT, DB_NAME, DB_USERNAME, DB_PASSWORD <a name="4.5"></a>
 
 These environment variables are used to configure the connection to the DB, and are then used as follows:
 
@@ -105,98 +176,102 @@ These environment variables are used to configure the connection to the DB, and 
     password: ${DB_PASSWORD:admin123}
 ```
 
-Variables must be available at compile time (since we started using the native image in v4.1.0), so they are set by
-default and then overridden with the real values.
+#### MAINTAIN_LOGS_FOR_DAYS <a name="4.6"></a>
 
-### Api docs:
+In version 5.x, we introduced logs, which allow each request to be recorded.
 
-The administration API gives us access to endpoints to configure the routes, here we have the `routes` controller:
+To avoid excessive resource consumption, a cron job runs every day at midnight to delete old logs. To define when a log
+is considered old, this environment variable is provided that allows modifying the number of days logs remain in the
+system.
 
-| Method | Endpoint                  | Description                                                                     | Body                        |
-|--------|---------------------------|---------------------------------------------------------------------------------|-----------------------------|
-| GET    | /_admin/routes            | Get all configured routes in the gateway                                        | No body                     |
-| GET    | /_admin/routes/{route-id} | Get details of a single route                                                   | No body                     |
-| POST   | /_admin/routes            | Create a new route to redirect                                                  | Route request model         |
-| POST   | /_admin/routes/multi-add  | Create multiple routes in same request                                          | List of Route request model |
-| PUT    | /_admin/routes/{route-id} | Edit the route with id = route-id, replace it with route in body of the request | Route request model         |
-| DELETE | /_admin/routes/{route-id} | Delete the route with id = route-id                                             | No body                     |
+By default it's configure to maintain logs for 14 days.
 
-Since 4.2.0 we add a client ui, so we have to add an extra controller/endpoint to be able to validate if user is
-correct, so from now on we also have the `auth` controller:
+## **API Docs** <a name="5"></a>
 
-| Method | Endpoint           | Description                        | Body                |
-|--------|--------------------|------------------------------------|---------------------|
-| GET    | /_admin/auth/login | Check if the admin user is correct | Login request model |
+The **API Gateway** exposes several **management endpoints** that allow administrators to:
 
-NOTE: if the value of env `ADMIN_PATH` changes, the endpoint will change. This table is based on the default value of
-this variable (_admin).
+* 🔐 **Authenticate** — Secure all configuration endpoints with **Basic Auth** credentials.
+* 🔀 **Manage dynamic routes** — Create, update, and delete routes that define how requests are forwarded to internal
+  services.
+* 📜 **Access HTTP logs** — Search, filter, and export all incoming requests for monitoring and debugging purposes.
 
-#### Route request model:
+For ease of use, we include a **web-based admin UI** that interacts with these endpoints behind the scenes.
+However, if you prefer, **you can interact with the REST API directly** using tools like **Postman** or **cURL**.
 
-This is the full json of a route model.
+### Login <a name="5.1"></a>
 
-```json
-{
-  "name": "test-dev",
-  "path": "/test-service/**",
-  "uri": "http://localhost:8081",
-  "description": "A test route",
-  "rewrite_path": {
-    "replace_from": "/test-service/",
-    "replace_to": "/"
-  }
-}
-```
+Use this endpoint to validate the administrator credentials before accessing the management features of the API Gateway.
+Mainly used since in v4.2.0 we add the ui client, and this endpoint is used to validate credentials in the login page.
 
-NOTE: The route response model is basically the same with the `id` and `created_at` attribute.
+| Method | Endpoint               | Description                                 |
+|--------|------------------------|---------------------------------------------|
+| GET    | /**_admin**/auth/login | Check if the admin user/password is correct |
 
-Here we have:
+> ⚠️ WARNING: if the value of env `ADMIN_PATH` changes, the endpoints will change. These tables are based on the default
+> value of this variable (`_admin`).
+>
+> 💡️ TIP: [Here](./doc/detailed-api-docs-README.md#2) we provide the complete details of each endpoint, the
+> request/response body, with example and visual reference in the web-base admin UI.
 
-| Field        | Required | Description                                                                                                | Validations                        | Recommendations                                                                                                                                                                                                                                                             |
-|--------------|----------|------------------------------------------------------------------------------------------------------------|------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| name         | true     | Name with which this route will be identified (human like name). It's an unique identifier for each route. | - Not null<br/>-Not Empty          | Use a unique, easy to identify value                                                                                                                                                                                                                                        |
-| path         | true     | Route with which the redirection to a specific service will be identified                                  | - Not null<br/>-Not Empty          | Use in the format /{path}/**, this means that all requests made to https://gateway/{path}/..... will be redirected to this route                                                                                                                                            |
-| uri          | true     | Url of the service to which you are going to redirect                                                      | - Not null<br/>-Not Empty<br/>-Url | Use same base url of the service (preferably a private URL without internet access, which can only be accessed through the gateway)                                                                                                                                         |
-| description  | false    | Additional description of the route                                                                        |                                    | Use it for some basic descriptive description of the route                                                                                                                                                                                                                  |
-| rewrite_path | false    | 'Filter' to rewrite the final path to which the request is made (replace in final url the *from* => *to*)  | - Not null<br/>-Not Empty<br/>     | Use to fix the extra path added by path property. With example, a request made to:  https://gateway/abcd/users/search, by default will be redirected to: http://localhost:8081/abcd/users/search, but with rewrite will be redirected to http://localhost:8081/users/search |
+### Routes <a name="5.2"></a>
 
-#### Login model:
+These endpoints allow administrators to manage dynamic routes in the API Gateway.
+Each route defines how incoming requests are redirected to internal services.
 
-This is the full json of a route model.
+| Method | Endpoint                      | Description                                                                     |
+|--------|-------------------------------|---------------------------------------------------------------------------------|
+| GET    | /**_admin**/routes            | Get all configured routes in the gateway                                        |
+| GET    | /**_admin**/routes/{route-id} | Get details of a single route                                                   |
+| POST   | /**_admin**/routes            | Create a new route to redirect                                                  |
+| POST   | /**_admin**/routes/multi-add  | Create multiple routes in same request                                          |
+| PUT    | /**_admin**/routes/{route-id} | Edit the route with id = route-id, replace it with route in body of the request |
+| DELETE | /**_admin**/routes/{route-id} | Delete the route with id = route-id                                             |
 
-```json
-{
-  "username": "admin",
-  "password": "admin123**"
-}
-```
+> ⚠️ WARNING: if the value of env `ADMIN_PATH` changes, the endpoints will change. These tables are based on the default
+> value of this variable (`_admin`).
+>
+> 💡️ TIP: [Here](./doc/detailed-api-docs-README.md#3) we provide the complete details of each endpoint, the
+> request/response body, with example and visual reference in the web-base admin UI.
 
-Here we have:
+### Http Logs <a name="5.3"></a>
 
-| Field    | Required | Description                                          | Validations               | Recommendations                                   |
-|----------|----------|------------------------------------------------------|---------------------------|---------------------------------------------------|
-| username | true     | Username of the admin user. Default to `admin`.      | - Not null<br/>-Not Empty | It's the one configured in env: `ADMIN_USERNAME`  |
-| password | true     | Password of the admin user. Default to `admin123**`. | - Not null<br/>-Not Empty | It's the one configured in env: `ADMIN_PASSWORD`. |
+Starting from v5.0.0, the API Gateway includes an HTTP Logs system that allows administrators to search, filter, and
+review all incoming requests passing through the gateway.
 
-### Admin endpoint examples:
+| Method | Endpoint             | Description                                                  |
+|--------|----------------------|--------------------------------------------------------------|
+| POST   | /**_admin**/http-log | Get the logs, use POST to send in the body the search params |
 
-To test the endpoints manually, the [`Postman`](https://www.postman.com/downloads/) tool was used,
-so below are all the examples and collections needed using this tool.
+> ⚠️ WARNING: if the value of env `ADMIN_PATH` changes, the endpoints will change. These tables are based on the default
+> value of this variable (`_admin`).
+>
+> 💡️ TIP: [Here](./doc/detailed-api-docs-README.md#4) we provide the complete details of each endpoint, the
+> request/response body, with example and visual reference in the web-base admin UI.
 
-The entire collections with all the admin endpoint could be found [**HERE**](doc/Api-Gateway.postman_collection.json).
+> **Note:** The API Gateway logs **almost all requests**. Exceptions include:
+>
+> * **OPTIONS requests** — Considered “preflight” or non-critical, so they are **not logged**.
+> * **Requests to the logs search endpoint** — To avoid recursive logging, requests made to fetch logs are **not
+    recorded**.
+> * **GET requests to the routes endpoints** — Only route creation, update, or deletion requests are logged; simple GETs
+    to retrieve route information are **excluded**.
+>
+> ⚡ **Future improvement:** A configuration option may be added to **customize which requests are logged**.
 
-This is how an administration endpoint would be consumed:
+### **Examples** <a name="5.4"></a>
 
-![postman-request-example.png](doc/postman-request-example.png)
+To test and explore the API Gateway endpoints, we use [**Postman**](https://www.postman.com/downloads/).
+A complete **Postman collection** is available, containing **all endpoints** and **example requests**:
 
-Note that there are several environment variables configured in Postman, these variables can be found in:
+📄 **Collection file:** [**HERE**](doc/Api-Gateway.postman_collection.json)
 
-![postman-env-variables.png](doc/postman-env-variables.png)
+Additionally, a dedicated **Postman environment** has been configured to manage all required variables automatically:
 
-Which can be directly imported
-from [**THIS FILE**](doc/Api-Gateway%20-%20Local.postman_environment.json).
+🌍 **Environment file:** [**HERE**](doc/Api-Gateway%20-%20Local.postman_environment.json)
 
-These are:
+---
+
+#### **Configured Postman Environment Variables**  <a name="5.4.1"></a>
 
 | Postman Env Variable | Description                                | Current value         | Configured by                                                                                     |
 |----------------------|--------------------------------------------|-----------------------|---------------------------------------------------------------------------------------------------|
@@ -205,69 +280,74 @@ These are:
 | gateway-username     | Username of the admin user                 | admin                 | Env Variable: `ADMIN_USERNAME`                                                                    |
 | gateway-password     | Password of the admin user                 | admin123**            | Env Variable: `ADMIN_PASSWORD`                                                                    |
 
-Note that these values are set to the default values of each environment variable, in case one of these environment
-variables changes, its value must be modified in Postman environment.
+> ⚠️ **Important:** The default values above are based on the default environment variables.
+> If you change any of these variables in your configuration, you must **update them in your Postman environment**
+> accordingly.
 
-##### Redirection Examples:
+## **Project Versions & Roadmap** <a name="6"></a>
 
-Let's assume we start the server and call the endpoint of multi-add to configure the initial routes, this is the
-configuration we use:
+This project is organized into **multiple versions**, each introducing new features and improvements.
+Every version is published under a **dedicated Git tag**, and each tag includes in the **README** details of its
+specific version.
 
-```json
-[
-  {
-    "id": "notifications-dev",
-    "path": "/notification/**",
-    "uri": "https://push-notification.com",
-    "rewrite_path": {
-      "replace_from": "/notification/",
-      "replace_to": "/"
-    }
-  },
-  {
-    "id": "test-dev",
-    "path": "/test/**",
-    "uri": "https://url-of-test-service.com",
-    "rewrite_path": {
-      "replace_from": "/test/",
-      "replace_to": "/"
-    }
-  },
-  {
-    "id": "versioning",
-    "path": "/ver/**",
-    "uri": "https://otherrandomservice.com"
-  }
-]
-```
+### **Version Overview** <a name="6.1"></a>
 
-With this configuration we will note that a:
+| **Version** | **Description**                                                                                                                                        |
+|-------------|--------------------------------------------------------------------------------------------------------------------------------------------------------|
+| **2.x**     | Basic gateway — routes are configured **via environment variables**. To change a route, you must **update the variable** and **redeploy the service**. |
+| **3.x**     | Adds **management endpoints** to configure routes **dynamically**, without redeploying the service.                                                    |
+| **4.x**     | Integrates a **PostgreSQL database** to **persist configurations**, allowing the service to reload them automatically after redeployment.              |
+| **5.x**     | Introduces an **HTTP Logs system** to **store all incoming requests** in the database for later review and analysis.                                   |
+| **x.x**     | Planned: Add a **configuration system** to manage settings like **log retention time**, **CORS policies**, **rate limiting**, and more.                |
+| **x.x**     | Planned: Add **metrics & statistics** to track response times, failure rates, and the most frequently requested endpoints.                             |
 
-| Request to                                                  | Is redirected to                                     |
-|-------------------------------------------------------------|------------------------------------------------------|
-| https://api-gateway.com/notification/send-push-notification | https://push-notification.com/send-push-notification |
-| https://api-gateway.com/notification/{user-id}/send-push    | https://push-notification.com/{user-id}/send-push    |
-| https://api-gateway.com/test/some-test-endpoint             | https://url-of-test-service.com/some-test-endpoint   |
-| https://api-gateway.com/test/{user-id}/hi-world             | https://url-of-test-service.com/{user-id}/hi-world   |
-| https://api-gateway.com/ver/magic-endpoint                  | https://otherrandomservice.com/ver/magic-endpoint    |
+This table outlines both **released** and **planned** features, serving as a **roadmap** for upcoming iterations.
 
-#### Extra docs:
+### **Notes & Recommendations** <a name="6.2"></a>
 
-- Client to consume the administration API: [Postman](https://www.postman.com/downloads/)
-- Postman collection with administration endpoints
-  preconfigured (to import in postman): [Api-Gateway.postman_collection.json](doc/Api-Gateway.postman_collection.json)
-- Service default environment variables (to import in
-  postman): [Api-Gateway - Local.postman_environment.json](doc/Api-Gateway%20-%20Local.postman_environment.json)
+> **📌 Note 1 — Use the Latest Tag**
+>
+> Each major version (`2.x`, `3.x`, etc.) may have several **minor releases** (e.g., `2.2.0`, `2.1.0`, `2.0.0`).
+> Always prefer the **latest available tag** for improved stability and features.
+> **Example:** If using the `2.x` series, choose **`2.2.0`** over earlier versions.
 
-This it's all for now,
+> **📌 Note 2 — Stay Updated**
+>
+> We **recommend** always using the **latest available version** to benefit from:
+>
+> * ✅ New features
+> * 🛠️ Bug fixes
+> * ⚡ Better performance
+> * 🔒 Security patches
 
-this is after all, a project designed for deploy in railway as a template... so:
+### **Extra / Interesting Tips**  <a name="6.3"></a>
 
-[![Deploy on Railway](https://railway.app/button.svg)](https://railway.app/template/IR4lVv?referralCode=6_5_ta)
+Here are some useful insights and performance notes about the project:
 
-#### Extra/Interesting Tips:
+#### 🏎️ **Reduced Memory Consumption**
 
-- Since migration deploy image from `openjdk:21-jdk-oracle` to `eclipse-temurin:21-jre-alpine` in version 4.0.1,
-  ram consumption went down from 500MB to 350MB ~, and when migrating to native in version 4.2.0, it went down to 150MB.
-- All the project deployed (postgres-db, api-gateway service and client ui) consume about 200-250MB, for a 1.50 to 2.00
-  USD average usage in Railway.
+| Version | Base Image / Build                                        | RAM Usage           |
+|---------|-----------------------------------------------------------|---------------------|
+| 4.0.1   | `openjdk:21-jdk-oracle` → `eclipse-temurin:21-jre-alpine` | \~500 MB → \~350 MB |
+| 4.2.0   | Native build                                              | \~150 MB            |
+
+> ✅ Migrating to lighter base images and native builds significantly reduces memory usage.
+
+---
+
+#### 💰 **Low Hosting Costs**
+
+* Full stack deployed (**PostgreSQL DB + API Gateway + Client UI**) consumes **200–250 MB**.
+* Estimated cost on **Railway:** **\$1.50–\$2.00 USD** per month.
+
+> ⚡ Efficient for small deployments and testing environments.
+
+---
+
+#### 🛠️ **Project Focus & Maintenance**
+
+* This is a **side project**, maintained in our free time.
+* Given increasing real-world workloads, we’re **pausing new feature development**.
+* Current focus is on **bug fixes, stability, and performance improvements**.
+
+> 🟡 Status: **Maintenance Mode** — stable and polished for production use.

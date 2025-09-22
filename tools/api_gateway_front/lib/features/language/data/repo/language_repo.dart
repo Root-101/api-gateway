@@ -1,18 +1,17 @@
 import 'package:api_gateway_front/app_exporter.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 class LanguageRepo {
-  SharedPreferences prefs;
+  static final String languageKey = 'language.key';
+  final FlutterSecureStorage storage;
 
-  final String _languageStorageKey = 'api-gateway.cache.language';
+  LanguageRepo({required this.storage});
 
-  LanguageRepo({required this.prefs});
-
-  void save({required LanguageModel model}) {
-    prefs.setString(_languageStorageKey, model.key);
+  Future save({required LanguageModel model}) async {
+    await storage.write(key: languageKey, value: model.key);
   }
 
-  String? loadKey() {
-    return prefs.getString(_languageStorageKey);
+  Future<String?> loadKey() async {
+    return storage.read(key: languageKey);
   }
 }

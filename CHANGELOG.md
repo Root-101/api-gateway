@@ -1,9 +1,14 @@
+* 5.x:
+    * 5.0.0:
+        * **DATE** :date: : 2025-09-10.
+        * **General** :hammer_and_wrench: : Added the Http Logs system
+        * **Docker** :whale: : Added the `docker-compose.yml` to run all the services at once
 * 4.x:
     * 4.2.0:
         * **DATE** :date: : 2025-06-05.
         * **General** :hammer_and_wrench: : Created a UI client to handle admin api with ease. (details
           in `tools/api_gateway_front/CHANGELOG.MD`)
-        * **General** :hammer_and_wrench: : Add needed endpoint to client (like `auth/login` to validate correct user)
+        * **Auth** :lock: : Add needed endpoint to client (like `auth/login` to validate correct user)
     * 4.1.0:
         * **DATE** :date: : 2025-05-05.
         * **Docker** :whale: : Migrated to dockerfile to use/build-run the project as a native image using graalvm,

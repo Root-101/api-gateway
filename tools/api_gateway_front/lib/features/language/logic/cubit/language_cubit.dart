@@ -3,7 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:get/get.dart';
 
-class LanguageCubit extends Cubit<LanguageState> {
+class LanguageCubit extends Cubit<LanguageState>
+    with GlobalEventBusCommunication<LanguageState> {
   final LanguageRepo repo;
 
   static final LanguageModel defaultLanguage = LanguageModel(
@@ -25,7 +26,13 @@ class LanguageCubit extends Cubit<LanguageState> {
 
   LanguageCubit({required this.repo})
     : super(LanguageInitialState(current: defaultLanguage, allLanguages: [])) {
-    currentSelectedLanguage = _resolve(key: repo.loadKey());
+    init();
+  }
+
+  Future init() async {
+    String? key = await repo.loadKey();
+    currentSelectedLanguage = _resolve(key: key);
+
     emit(
       LanguageChangedState(
         current: currentSelectedLanguage,

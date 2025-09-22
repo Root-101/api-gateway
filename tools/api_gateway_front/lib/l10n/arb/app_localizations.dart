@@ -164,6 +164,12 @@ abstract class AppLocalizations {
   /// **'Login'**
   String get login;
 
+  /// No description provided for @rememberMe.
+  ///
+  /// In en, this message translates to:
+  /// **'Remember me'**
+  String get rememberMe;
+
   /// No description provided for @section_validations.
   ///
   /// In en, this message translates to:
@@ -319,6 +325,222 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Preview'**
   String get preview;
+
+  /// No description provided for @section_logs.
+  ///
+  /// In en, this message translates to:
+  /// **'--------- LOGS ---------'**
+  String get section_logs;
+
+  /// No description provided for @logs.
+  ///
+  /// In en, this message translates to:
+  /// **'Http logs'**
+  String get logs;
+
+  /// No description provided for @search.
+  ///
+  /// In en, this message translates to:
+  /// **'Search against User Agent, Source IP, Path or Route'**
+  String get search;
+
+  /// No description provided for @columnTimestamp.
+  ///
+  /// In en, this message translates to:
+  /// **'Timestamp'**
+  String get columnTimestamp;
+
+  /// No description provided for @columnMethod.
+  ///
+  /// In en, this message translates to:
+  /// **'Method'**
+  String get columnMethod;
+
+  /// No description provided for @columnPath.
+  ///
+  /// In en, this message translates to:
+  /// **'Path'**
+  String get columnPath;
+
+  /// No description provided for @columnRoute.
+  ///
+  /// In en, this message translates to:
+  /// **'Route'**
+  String get columnRoute;
+
+  /// No description provided for @columnHttpStatus.
+  ///
+  /// In en, this message translates to:
+  /// **'HTTP Status'**
+  String get columnHttpStatus;
+
+  /// No description provided for @columnRequestDuration.
+  ///
+  /// In en, this message translates to:
+  /// **'Duration'**
+  String get columnRequestDuration;
+
+  /// No description provided for @export.
+  ///
+  /// In en, this message translates to:
+  /// **'Export'**
+  String get export;
+
+  /// No description provided for @section_log_details.
+  ///
+  /// In en, this message translates to:
+  /// **'--------- LOG-DETAILS ---------'**
+  String get section_log_details;
+
+  /// No description provided for @logDetails.
+  ///
+  /// In en, this message translates to:
+  /// **'Details'**
+  String get logDetails;
+
+  /// No description provided for @logsDetailsTimestamp.
+  ///
+  /// In en, this message translates to:
+  /// **'Timestamp'**
+  String get logsDetailsTimestamp;
+
+  /// No description provided for @logsDetailsSourceIp.
+  ///
+  /// In en, this message translates to:
+  /// **'Source IP'**
+  String get logsDetailsSourceIp;
+
+  /// No description provided for @logsDetailsHttpStatus.
+  ///
+  /// In en, this message translates to:
+  /// **'HTTP Status'**
+  String get logsDetailsHttpStatus;
+
+  /// No description provided for @logsDetailsHttpMethod.
+  ///
+  /// In en, this message translates to:
+  /// **'Method'**
+  String get logsDetailsHttpMethod;
+
+  /// No description provided for @logsDetailsRequestDuration.
+  ///
+  /// In en, this message translates to:
+  /// **'Duration'**
+  String get logsDetailsRequestDuration;
+
+  /// No description provided for @logsDetailsUserAgent.
+  ///
+  /// In en, this message translates to:
+  /// **'User Agent'**
+  String get logsDetailsUserAgent;
+
+  /// No description provided for @logsDetailsRoute.
+  ///
+  /// In en, this message translates to:
+  /// **'Route'**
+  String get logsDetailsRoute;
+
+  /// No description provided for @logsDetailsRouteName.
+  ///
+  /// In en, this message translates to:
+  /// **'Name'**
+  String get logsDetailsRouteName;
+
+  /// No description provided for @logsDetailsRoutePath.
+  ///
+  /// In en, this message translates to:
+  /// **'Path'**
+  String get logsDetailsRoutePath;
+
+  /// No description provided for @logsDetailsRouteId.
+  ///
+  /// In en, this message translates to:
+  /// **'Id'**
+  String get logsDetailsRouteId;
+
+  /// No description provided for @section_log_filters.
+  ///
+  /// In en, this message translates to:
+  /// **'--------- LOG-FILTERS ---------'**
+  String get section_log_filters;
+
+  /// No description provided for @filter.
+  ///
+  /// In en, this message translates to:
+  /// **'Filter'**
+  String get filter;
+
+  /// No description provided for @applyFilters.
+  ///
+  /// In en, this message translates to:
+  /// **'Apply filters'**
+  String get applyFilters;
+
+  /// No description provided for @clearFilters.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear filters'**
+  String get clearFilters;
+
+  /// No description provided for @filterHttpStatusLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'HTTP Status'**
+  String get filterHttpStatusLabel;
+
+  /// No description provided for @filterHttpStatusHint.
+  ///
+  /// In en, this message translates to:
+  /// **'200'**
+  String get filterHttpStatusHint;
+
+  /// No description provided for @filterMethodLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'HTTP Method'**
+  String get filterMethodLabel;
+
+  /// No description provided for @filterMethodHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Select HTTP Method (GET, POST)'**
+  String get filterMethodHint;
+
+  /// No description provided for @filterRouteLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Route'**
+  String get filterRouteLabel;
+
+  /// No description provided for @filterRouteHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Select route (Admin, No-Route)'**
+  String get filterRouteHint;
+
+  /// No description provided for @filterNoRouteName.
+  ///
+  /// In en, this message translates to:
+  /// **'No-Route'**
+  String get filterNoRouteName;
+
+  /// No description provided for @filterDateHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Select date'**
+  String get filterDateHint;
+
+  /// No description provided for @filterFromDateLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'From date'**
+  String get filterFromDateLabel;
+
+  /// No description provided for @filterToDateLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'To date'**
+  String get filterToDateLabel;
 
   /// No description provided for @section_errors.
   ///

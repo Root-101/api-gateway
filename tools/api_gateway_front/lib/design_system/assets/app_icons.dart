@@ -8,7 +8,13 @@ class AppIcons {
   final GeneralIcons general = const GeneralIcons();
   final LanguageIcons language = const LanguageIcons();
 
-  SvgAsset get gateway => const SvgAsset('assets/icons/api-gateway.svg');
+  SvgAsset get gateway => const SvgAsset(
+    'assets/icons/api-gateway.svg',
+    defaultColor: Colors.white,
+  );
+
+  SvgAsset get logs =>
+      const SvgAsset('assets/icons/logs.svg', defaultColor: Colors.white);
 }
 
 class ActionsIcons {
@@ -41,6 +47,12 @@ class GeneralIcons {
   static const String _general = 'assets/icons/general';
 
   SvgAsset get folderOpen => const SvgAsset('$_general/folder-open.svg');
+
+  SvgAsset get filter => const SvgAsset('$_general/filter.svg');
+
+  SvgAsset get search => const SvgAsset('$_general/search.svg');
+
+  SvgAsset get close => const SvgAsset('$_general/close.svg');
 }
 
 class LanguageIcons {
@@ -68,9 +80,8 @@ class SvgAsset {
     width: size ?? defaultSize ?? defaultSvgSize,
     height: size ?? defaultSize ?? defaultSvgSize,
     fit: fit ?? BoxFit.fill,
-    colorFilter:
-        (color ?? defaultColor) != null
-            ? ColorFilter.mode((color ?? defaultColor)!, BlendMode.srcIn)
-            : null,
+    colorFilter: (color ?? defaultColor) != null
+        ? ColorFilter.mode((color ?? defaultColor)!, BlendMode.srcIn)
+        : null,
   );
 }

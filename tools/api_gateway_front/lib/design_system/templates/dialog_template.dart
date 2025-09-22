@@ -1,7 +1,7 @@
 import 'package:api_gateway_front/app_exporter.dart';
 import 'package:flutter/material.dart';
 
-class FormDialogTemplate extends StatelessWidget {
+class DialogTemplate extends StatelessWidget {
   static void open({
     required String title,
     required Widget child,
@@ -10,7 +10,7 @@ class FormDialogTemplate extends StatelessWidget {
     double? h,
   }) {
     app.dialog.open(
-      dialog: FormDialogTemplate(title: title, w: w, h: h, child: child),
+      dialog: DialogTemplate(title: title, w: w, h: h, child: child),
       context: context,
     );
   }
@@ -21,7 +21,7 @@ class FormDialogTemplate extends StatelessWidget {
   final String title;
   final Widget child;
 
-  const FormDialogTemplate({
+  const DialogTemplate({
     required this.title,
     required this.child,
     this.w,

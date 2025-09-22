@@ -32,7 +32,7 @@ public interface RouteUseCase {
      * delete the old route, create a new one and update the context.
      *
      * @param routeId The id of the old route
-     * @param request   The new config of route
+     * @param request The new config of route
      * @return void
      */
     Mono<Void> editRoute(String routeId, RouteConfigRequest request);
@@ -58,4 +58,20 @@ public interface RouteUseCase {
      * 3 - This will return `Flux<RouteConfigModel>`
      */
     Flux<RouteConfigResponse> getRoutes();
+
+    /**
+     * Find a cached route by its id, or null if it's not found.
+     * This method DON'T make a DB request.
+     *
+     * @param routeId The id of the route to find.
+     */
+    RouteEntity findCachedById(String routeId);
+
+    /**
+     * Get the routes as saved in cache... in theory this should have the same result as `getRoutes`.
+     * We still provide both methods... maybe a change was made direct to db....
+     * <p>
+     * This method DON'T make a DB request.
+     */
+    List<RouteEntity> getCacheRoutes();
 }
