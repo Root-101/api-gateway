@@ -40,6 +40,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
   final TextEditingController usernameController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
+  bool rememberMe = false;
 
   @override
   void initState() {
@@ -119,6 +120,20 @@ class _LoginScreenState extends State<LoginScreen> {
                               hint: app.intl.passwordHint,
                               validator: validator.password.validator,
                             ),
+                            app.dimensions.padding.l.gap(),
+                            CheckboxListTile(
+                              value: rememberMe,
+                              title: Text(
+                                app.intl.rememberMe,
+                                style: app.textTheme.bodyMedium,
+                              ),
+                              controlAffinity: ListTileControlAffinity.leading,
+                              onChanged: (value) {
+                                setState(() {
+                                  rememberMe = value ?? false;
+                                });
+                              },
+                            ),
                             (1.5 * app.dimensions.padding.xxl).gap(),
                             PrimaryButton.primary(
                               onPressed: _login,
@@ -146,6 +161,7 @@ class _LoginScreenState extends State<LoginScreen> {
       await cubit.login(
         username: usernameController.text,
         password: passwordController.text,
+        rememberMe: rememberMe,
       );
     }
   }

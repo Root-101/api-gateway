@@ -68,7 +68,7 @@ public class RoutesController {
     /**
      * Get a route
      *
-     * @param routeName The name of the route to edit
+     * @param routeId The id of the route to find
      * @return Void
      */
     @GetMapping("/{route-id}")

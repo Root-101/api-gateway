@@ -18,12 +18,18 @@ import java.time.OffsetDateTime;
         //--------- CONFIG ---------\\
         GlobalExceptionHandler.class,
         //--------- COMMONS ---------\\
-        ValidationException.class, ValidationException.ValidationErrorMessage.class, SortRegister.class, EnumValidatorRegister_ListOfString.class, EnumValidatorRegister_String.class,
+        ValidationException.class, ValidationException.ValidationErrorMessage.class, SortRegister.class,
+        EnumValidatorRegister_ListOfString.class, EnumValidatorRegister_String.class,
         //--------- ROUTES ---------\\
         RewritePathModel.class, RouteConfigRequest.class, RouteConfigResponse.class,
         OffsetDateTime.class,
         //--------- ROUTES ---------\\
-        LoginRequest.class
+        LoginRequest.class,
+        //--------- Flyway ---------\\
+        org.flywaydb.database.postgresql.TransactionalModel.class,
+        org.flywaydb.core.internal.configuration.extensions.PrepareScriptFilenameConfigurationExtension.class,
+        //--------- CLOUD ---------\\
+        org.springframework.cloud.client.loadbalancer.reactive.ReactiveLoadBalancer.class,
 })
 public class ReflectionConfig {
 }

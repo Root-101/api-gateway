@@ -27,6 +27,7 @@ spring:
     url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:api-gateway}
     user: ${DB_USERNAME:postgres}
     password: ${DB_PASSWORD:admin123}
+    locations: classpath:db/migration
 
 app:
   defaults:
@@ -37,3 +38,5 @@ app:
     password: ${ADMIN_PASSWORD:${app.defaults.password}}
     role: ROLE_GATEWAY_ADMIN
     base-path: ${ADMIN_PATH:_admin}
+  logs:
+    maintainForDays: ${MAINTAIN_LOGS_FOR_DAYS:14}

@@ -42,6 +42,9 @@ class AppLocalizationsEs extends AppLocalizations {
   String get login => 'Login';
 
   @override
+  String get rememberMe => 'Recordarme';
+
+  @override
   String get section_validations => '--------- VALIDATIONS ---------';
 
   @override
@@ -118,6 +121,114 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get preview => 'Previsualizar';
+
+  @override
+  String get section_logs => '--------- LOGS ---------';
+
+  @override
+  String get logs => 'Logs http';
+
+  @override
+  String get search => 'Buscar contra User Agent, Dirección IP, Path o Ruta';
+
+  @override
+  String get columnTimestamp => 'Timestamp';
+
+  @override
+  String get columnMethod => 'Método';
+
+  @override
+  String get columnPath => 'Path';
+
+  @override
+  String get columnRoute => 'Ruta';
+
+  @override
+  String get columnHttpStatus => 'Estado HTTP';
+
+  @override
+  String get columnRequestDuration => 'Duración';
+
+  @override
+  String get export => 'Exportar';
+
+  @override
+  String get section_log_details => '--------- LOG-DETAILS ---------';
+
+  @override
+  String get logDetails => 'Detalles';
+
+  @override
+  String get logsDetailsTimestamp => 'Timestamp';
+
+  @override
+  String get logsDetailsSourceIp => 'Dirección IP';
+
+  @override
+  String get logsDetailsHttpStatus => 'Estado HTTP';
+
+  @override
+  String get logsDetailsHttpMethod => 'Método';
+
+  @override
+  String get logsDetailsRequestDuration => 'Duración';
+
+  @override
+  String get logsDetailsUserAgent => 'User Agent';
+
+  @override
+  String get logsDetailsRoute => 'Ruta';
+
+  @override
+  String get logsDetailsRouteName => 'Nombre';
+
+  @override
+  String get logsDetailsRoutePath => 'Path';
+
+  @override
+  String get logsDetailsRouteId => 'Id';
+
+  @override
+  String get section_log_filters => '--------- LOG-FILTERS ---------';
+
+  @override
+  String get filter => 'Filtrar';
+
+  @override
+  String get applyFilters => 'Aplicar filtros';
+
+  @override
+  String get clearFilters => 'Limpiar filtros';
+
+  @override
+  String get filterHttpStatusLabel => 'Estado HTTP';
+
+  @override
+  String get filterHttpStatusHint => '200';
+
+  @override
+  String get filterMethodLabel => 'Método HTTP';
+
+  @override
+  String get filterMethodHint => 'Seleccion método HTTP (GET, POST)';
+
+  @override
+  String get filterRouteLabel => 'Ruta';
+
+  @override
+  String get filterRouteHint => 'Selecciona ruta (Admin, Sin-Ruta)';
+
+  @override
+  String get filterNoRouteName => 'Sin-Ruta';
+
+  @override
+  String get filterDateHint => 'Selecciona fecha';
+
+  @override
+  String get filterFromDateLabel => 'Fecha inicial';
+
+  @override
+  String get filterToDateLabel => 'Fecha final';
 
   @override
   String get section_errors => '--------- ERRORS ---------';

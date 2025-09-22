@@ -5,7 +5,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 class RoutesFormScreenNavigator {
   void create() {
-    FormDialogTemplate.open(
+    DialogTemplate.open(
       title: app.intl.create,
       child: BlocProvider(
         create:
@@ -21,7 +21,7 @@ class RoutesFormScreenNavigator {
   }
 
   void edit({required RouteModel model}) {
-    FormDialogTemplate.open(
+    DialogTemplate.open(
       title: app.intl.edit,
       child: BlocProvider(
         create:
@@ -40,7 +40,7 @@ class RoutesFormScreenNavigator {
   }
 
   void duplicate({required RouteModel model}) {
-    FormDialogTemplate.open(
+    DialogTemplate.open(
       title: app.intl.duplicate,
       child: BlocProvider(
         create:

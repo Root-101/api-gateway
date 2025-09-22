@@ -17,11 +17,11 @@ class BaseScreen extends StatefulWidget {
 class _BaseScreenState extends State<BaseScreen> {
   bool _isRailExpanded = false;
 
-  // void _toggleRail() {
-  //   setState(() {
-  //     _isRailExpanded = !_isRailExpanded;
-  //   });
-  // }
+  void _toggleRail() {
+    setState(() {
+      _isRailExpanded = !_isRailExpanded;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -35,17 +35,19 @@ class _BaseScreenState extends State<BaseScreen> {
               extended: _isRailExpanded,
               selectedIndex: widget.navigationShell.currentIndex,
               onDestinationSelected: _onTap,
-              leading: const SizedBox.shrink(),
-              // leading: IconButton(
-              //   icon: Icon(_isRailExpanded ? Icons.arrow_back_ios : Icons.menu),
-              //   onPressed: _toggleRail,
-              // ),
+              //leading: const SizedBox.shrink(),
+              leading: IconButton(
+                icon: Icon(_isRailExpanded ? Icons.arrow_back_ios : Icons.menu),
+                onPressed: _toggleRail,
+              ),
               destinations: [
                 NavigationRailDestination(
-                  icon: app.assets.icons.gateway.build(
-                    color: app.colors.neutral.white,
-                  ),
+                  icon: app.assets.icons.gateway.build(),
                   label: Text(app.intl.routes),
+                ),
+                NavigationRailDestination(
+                  icon: app.assets.icons.logs.build(),
+                  label: Text(app.intl.logs),
                 ),
               ],
               trailing: Expanded(

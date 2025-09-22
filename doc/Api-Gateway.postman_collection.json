@@ -1,281 +1,329 @@
 {
-	"info": {
-		"_postman_id": "9e0c2056-ea60-4883-902c-3adb4e662434",
-		"name": "Api-Gateway",
-		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
-		"_exporter_id": "43135045",
-		"_collection_link": "https://root-101.postman.co/workspace/Maple~7316e428-ec08-48f4-bcc2-0ea6d6ad5243/collection/43135045-9e0c2056-ea60-4883-902c-3adb4e662434?action=share&source=collection_link&creator=43135045"
-	},
-	"item": [
-		{
-			"name": "auth",
-			"item": [
-				{
-					"name": "login",
-					"request": {
-						"auth": {
-							"type": "noauth"
-						},
-						"method": "POST",
-						"header": [],
-						"body": {
-							"mode": "raw",
-							"raw": "{\r\n    \"username\": \"admin\",\r\n    \"password\": \"admin123**\"\r\n}",
-							"options": {
-								"raw": {
-									"language": "json"
-								}
-							}
-						},
-						"url": {
-							"raw": "{{gateway-url}}/{{gateway-admin-path}}/auth/login",
-							"host": [
-								"{{gateway-url}}"
-							],
-							"path": [
-								"{{gateway-admin-path}}",
-								"auth",
-								"login"
-							]
-						}
-					},
-					"response": []
-				}
-			]
-		},
-		{
-			"name": "routes",
-			"item": [
-				{
-					"name": "all",
-					"request": {
-						"auth": {
-							"type": "basic",
-							"basic": [
-								{
-									"key": "username",
-									"value": "{{gateway-username}}",
-									"type": "string"
-								},
-								{
-									"key": "password",
-									"value": "{{gateway-password}}",
-									"type": "string"
-								}
-							]
-						},
-						"method": "GET",
-						"header": [],
-						"url": {
-							"raw": "{{gateway-url}}/{{gateway-admin-path}}/routes",
-							"host": [
-								"{{gateway-url}}"
-							],
-							"path": [
-								"{{gateway-admin-path}}",
-								"routes"
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "create",
-					"request": {
-						"auth": {
-							"type": "basic",
-							"basic": [
-								{
-									"key": "password",
-									"value": "{{gateway-password}}",
-									"type": "string"
-								},
-								{
-									"key": "username",
-									"value": "{{gateway-username}}",
-									"type": "string"
-								}
-							]
-						},
-						"method": "POST",
-						"header": [],
-						"body": {
-							"mode": "raw",
-							"raw": "{\r\n    \"name\": \"test-dev\",\r\n    \"path\": \"/test-service/**\",\r\n    \"uri\": \"http://localhost:8081\",\r\n    \"description\": \"A test route\",\r\n    \"rewrite_path\": {\r\n        \"replace_from\": \"/test-service/\",\r\n        \"replace_to\": \"/\"\r\n    }\r\n}",
-							"options": {
-								"raw": {
-									"language": "json"
-								}
-							}
-						},
-						"url": {
-							"raw": "{{gateway-url}}/{{gateway-admin-path}}/routes",
-							"host": [
-								"{{gateway-url}}"
-							],
-							"path": [
-								"{{gateway-admin-path}}",
-								"routes"
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "create-all",
-					"request": {
-						"auth": {
-							"type": "basic",
-							"basic": [
-								{
-									"key": "password",
-									"value": "{{gateway-password}}",
-									"type": "string"
-								},
-								{
-									"key": "username",
-									"value": "{{gateway-username}}",
-									"type": "string"
-								}
-							]
-						},
-						"method": "POST",
-						"header": [],
-						"body": {
-							"mode": "raw",
-							"raw": "[\r\n    {\r\n        \"name\": \"test-dev\",\r\n        \"path\": \"/test-service/**\",\r\n        \"uri\": \"http://localhost:8081\",\r\n        \"rewrite_path\": {\r\n            \"replace_from\": \"/test-service/\",\r\n            \"replace_to\": \"/\"\r\n        }\r\n    },\r\n    {\r\n        \"name\": \"abc2-dev\",\r\n        \"path\": \"/abc2-service/**\",\r\n        \"uri\": \"http://localhost:8081\",\r\n        \"rewrite_path\": {\r\n            \"replace_from\": \"/abc2-service/\",\r\n            \"replace_to\": \"/\"\r\n        }\r\n    }\r\n]",
-							"options": {
-								"raw": {
-									"language": "json"
-								}
-							}
-						},
-						"url": {
-							"raw": "{{gateway-url}}/{{gateway-admin-path}}/routes/multi-add",
-							"host": [
-								"{{gateway-url}}"
-							],
-							"path": [
-								"{{gateway-admin-path}}",
-								"routes",
-								"multi-add"
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "edit",
-					"request": {
-						"auth": {
-							"type": "basic",
-							"basic": [
-								{
-									"key": "password",
-									"value": "{{gateway-password}}",
-									"type": "string"
-								},
-								{
-									"key": "username",
-									"value": "{{gateway-username}}",
-									"type": "string"
-								}
-							]
-						},
-						"method": "PUT",
-						"header": [],
-						"body": {
-							"mode": "raw",
-							"raw": "{\r\n    \"name\": \"test-dev-123\",\r\n    \"path\": \"/test-service-123/**\",\r\n    \"uri\": \"http://localhost:8081\",\r\n    \"rewrite_path\": {\r\n        \"replace_from\": \"/test-service-123/\",\r\n        \"replace_to\": \"/\"\r\n    }\r\n}",
-							"options": {
-								"raw": {
-									"language": "json"
-								}
-							}
-						},
-						"url": {
-							"raw": "{{gateway-url}}/{{gateway-admin-path}}/routes/6ac5e18a-8ec4-4ac1-9ff3-169a13cb54dc",
-							"host": [
-								"{{gateway-url}}"
-							],
-							"path": [
-								"{{gateway-admin-path}}",
-								"routes",
-								"6ac5e18a-8ec4-4ac1-9ff3-169a13cb54dc"
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "get",
-					"request": {
-						"auth": {
-							"type": "basic",
-							"basic": [
-								{
-									"key": "password",
-									"value": "{{gateway-password}}",
-									"type": "string"
-								},
-								{
-									"key": "username",
-									"value": "{{gateway-username}}",
-									"type": "string"
-								}
-							]
-						},
-						"method": "GET",
-						"header": [],
-						"url": {
-							"raw": "{{gateway-url}}/{{gateway-admin-path}}/routes/6ac5e18a-8ec4-4ac1-9ff3-169a13cb54dc",
-							"host": [
-								"{{gateway-url}}"
-							],
-							"path": [
-								"{{gateway-admin-path}}",
-								"routes",
-								"6ac5e18a-8ec4-4ac1-9ff3-169a13cb54dc"
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "delete",
-					"request": {
-						"auth": {
-							"type": "basic",
-							"basic": [
-								{
-									"key": "password",
-									"value": "{{gateway-password}}",
-									"type": "string"
-								},
-								{
-									"key": "username",
-									"value": "{{gateway-username}}",
-									"type": "string"
-								}
-							]
-						},
-						"method": "DELETE",
-						"header": [],
-						"url": {
-							"raw": "{{gateway-url}}/{{gateway-admin-path}}/routes/6ac5e18a-8ec4-4ac1-9ff3-169a13cb54dc",
-							"host": [
-								"{{gateway-url}}"
-							],
-							"path": [
-								"{{gateway-admin-path}}",
-								"routes",
-								"6ac5e18a-8ec4-4ac1-9ff3-169a13cb54dc"
-							]
-						}
-					},
-					"response": []
-				}
-			]
-		}
-	]
+  "info": {
+    "_postman_id": "9e0c2056-ea60-4883-902c-3adb4e662434",
+    "name": "Api-Gateway",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "43135045",
+    "_collection_link": "https://root-101.postman.co/workspace/Maple~7316e428-ec08-48f4-bcc2-0ea6d6ad5243/collection/43135045-9e0c2056-ea60-4883-902c-3adb4e662434?action=share&source=collection_link&creator=43135045"
+  },
+  "item": [
+    {
+      "name": "auth",
+      "item": [
+        {
+          "name": "login",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"username\": \"admin\",\r\n    \"password\": \"admin123**\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{gateway-url}}/{{gateway-admin-path}}/auth/login",
+              "host": [
+                "{{gateway-url}}"
+              ],
+              "path": [
+                "{{gateway-admin-path}}",
+                "auth",
+                "login"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "routes",
+      "item": [
+        {
+          "name": "all",
+          "request": {
+            "auth": {
+              "type": "basic",
+              "basic": [
+                {
+                  "key": "username",
+                  "value": "{{gateway-username}}",
+                  "type": "string"
+                },
+                {
+                  "key": "password",
+                  "value": "{{gateway-password}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{gateway-url}}/{{gateway-admin-path}}/routes",
+              "host": [
+                "{{gateway-url}}"
+              ],
+              "path": [
+                "{{gateway-admin-path}}",
+                "routes"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "create",
+          "request": {
+            "auth": {
+              "type": "basic",
+              "basic": [
+                {
+                  "key": "password",
+                  "value": "{{gateway-password}}",
+                  "type": "string"
+                },
+                {
+                  "key": "username",
+                  "value": "{{gateway-username}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"name\": \"test-dev\",\r\n    \"path\": \"/test-service/**\",\r\n    \"uri\": \"http://localhost:8081\",\r\n    \"description\": \"A test route\",\r\n    \"rewrite_path\": {\r\n        \"replace_from\": \"/test-service/\",\r\n        \"replace_to\": \"/\"\r\n    }\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{gateway-url}}/{{gateway-admin-path}}/routes",
+              "host": [
+                "{{gateway-url}}"
+              ],
+              "path": [
+                "{{gateway-admin-path}}",
+                "routes"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "create-all",
+          "request": {
+            "auth": {
+              "type": "basic",
+              "basic": [
+                {
+                  "key": "password",
+                  "value": "{{gateway-password}}",
+                  "type": "string"
+                },
+                {
+                  "key": "username",
+                  "value": "{{gateway-username}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "[\r\n    {\r\n        \"name\": \"test-dev\",\r\n        \"path\": \"/test-service/**\",\r\n        \"uri\": \"http://localhost:8081\",\r\n        \"rewrite_path\": {\r\n            \"replace_from\": \"/test-service/\",\r\n            \"replace_to\": \"/\"\r\n        }\r\n    },\r\n    {\r\n        \"name\": \"abc2-dev\",\r\n        \"path\": \"/abc2-service/**\",\r\n        \"uri\": \"http://localhost:8081\",\r\n        \"rewrite_path\": {\r\n            \"replace_from\": \"/abc2-service/\",\r\n            \"replace_to\": \"/\"\r\n        }\r\n    }\r\n]",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{gateway-url}}/{{gateway-admin-path}}/routes/multi-add",
+              "host": [
+                "{{gateway-url}}"
+              ],
+              "path": [
+                "{{gateway-admin-path}}",
+                "routes",
+                "multi-add"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "edit",
+          "request": {
+            "auth": {
+              "type": "basic",
+              "basic": [
+                {
+                  "key": "password",
+                  "value": "{{gateway-password}}",
+                  "type": "string"
+                },
+                {
+                  "key": "username",
+                  "value": "{{gateway-username}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"name\": \"test-dev-123\",\r\n    \"path\": \"/test-service-123/**\",\r\n    \"uri\": \"http://localhost:8081\",\r\n    \"rewrite_path\": {\r\n        \"replace_from\": \"/test-service-123/\",\r\n        \"replace_to\": \"/\"\r\n    }\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{gateway-url}}/{{gateway-admin-path}}/routes/6ac5e18a-8ec4-4ac1-9ff3-169a13cb54dc",
+              "host": [
+                "{{gateway-url}}"
+              ],
+              "path": [
+                "{{gateway-admin-path}}",
+                "routes",
+                "6ac5e18a-8ec4-4ac1-9ff3-169a13cb54dc"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "get",
+          "request": {
+            "auth": {
+              "type": "basic",
+              "basic": [
+                {
+                  "key": "password",
+                  "value": "{{gateway-password}}",
+                  "type": "string"
+                },
+                {
+                  "key": "username",
+                  "value": "{{gateway-username}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{gateway-url}}/{{gateway-admin-path}}/routes/6ac5e18a-8ec4-4ac1-9ff3-169a13cb54dc",
+              "host": [
+                "{{gateway-url}}"
+              ],
+              "path": [
+                "{{gateway-admin-path}}",
+                "routes",
+                "6ac5e18a-8ec4-4ac1-9ff3-169a13cb54dc"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "delete",
+          "request": {
+            "auth": {
+              "type": "basic",
+              "basic": [
+                {
+                  "key": "password",
+                  "value": "{{gateway-password}}",
+                  "type": "string"
+                },
+                {
+                  "key": "username",
+                  "value": "{{gateway-username}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{gateway-url}}/{{gateway-admin-path}}/routes/6ac5e18a-8ec4-4ac1-9ff3-169a13cb54dc",
+              "host": [
+                "{{gateway-url}}"
+              ],
+              "path": [
+                "{{gateway-admin-path}}",
+                "routes",
+                "6ac5e18a-8ec4-4ac1-9ff3-169a13cb54dc"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "http-logs",
+      "item": [
+        {
+          "name": "search",
+          "request": {
+            "auth": {
+              "type": "basic",
+              "basic": [
+                {
+                  "key": "username",
+                  "value": "{{gateway-username}}",
+                  "type": "string"
+                },
+                {
+                  "key": "password",
+                  "value": "{{gateway-password}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"page\": 0,\r\n    \"size\": 20,\r\n    \"query\": \"\",\r\n    \"from_date\": \"2025-08-28T00:00:00Z\",\r\n    \"to_date\": \"2025-08-28T23:59:59Z\"\r\n    //\"response_code\": 200,\r\n    //\"method\": \"POST\",\r\n    //\"route_id\": \"00000000-0000-0000-0000-000000000000\"//\"NO-ROUTE\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{gateway-url}}/{{gateway-admin-path}}/http-log/search",
+              "host": [
+                "{{gateway-url}}"
+              ],
+              "path": [
+                "{{gateway-admin-path}}",
+                "http-log",
+                "search"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    }
+  ]
 }

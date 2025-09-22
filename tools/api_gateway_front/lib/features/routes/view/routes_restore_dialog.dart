@@ -7,7 +7,7 @@ import 'package:flutter_dropzone/flutter_dropzone.dart';
 
 class RoutesRestoreDialog extends StatefulWidget {
   static void show() {
-    FormDialogTemplate.open(
+    DialogTemplate.open(
       title: app.intl.restore,
       w: 650,
       h: 400,
@@ -105,6 +105,7 @@ class _RoutesRestoreDialogState extends State<RoutesRestoreDialog> {
                                       ? app.intl.dropFileHere
                                       : filename!,
                                   style: app.textTheme.titleLarge,
+                                  textAlign: TextAlign.center,
                                 ),
                               ),
                               app.dimensions.padding.xxl.gap(),
