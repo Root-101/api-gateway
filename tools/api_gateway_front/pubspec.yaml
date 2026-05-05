@@ -5,8 +5,8 @@ publish_to: 'none'
 version: 1.0.0
 
 environment:
-  flutter: ^3.38.0
-  sdk: ^3.10.0
+  flutter: ^3.41.0
+  sdk: ^3.11.0
 
 dependencies:
   flutter:
@@ -19,23 +19,23 @@ dependencies:
   get: 4.7.3
 
   #routing
-  go_router: 17.1.0
+  go_router: 17.2.3
 
   #rest client
-  dio: 5.9.1
+  dio: 5.9.2
 
   #view
   flutter_animate: 4.5.2
   gap: 3.0.1    #sizebox with auto with and height in columns and rows
   loader_overlay: 5.0.0   #loading
-  flutter_svg: 2.2.3    #to show icons in svg format
+  flutter_svg: 2.2.4    #to show icons in svg format
   top_snackbar_flutter: 3.3.0     #snackbars
   flutter_dropzone: 4.2.1       #for drop files in restore routes
-  syncfusion_flutter_datagrid: 32.2.3       #Logs table
+  syncfusion_flutter_datagrid: 33.2.5       #Logs table
   flutter_secure_storage: 10.0.0       #for the remember-me in login
 
   #utils
-  logger: 2.6.2
+  logger: 2.7.0
   intl: 0.20.2
   web: 1.1.1
 
@@ -46,7 +46,7 @@ dev_dependencies:
   flutter_lints: 6.0.0
 
   #code gen
-  build_runner: 2.11.0
+  build_runner: 2.15.0
 
   #app config
   flutter_native_splash: 2.4.7
