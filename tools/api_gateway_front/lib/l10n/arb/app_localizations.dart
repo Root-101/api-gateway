@@ -182,6 +182,12 @@ abstract class AppLocalizations {
   /// **'Required field'**
   String get requiredField;
 
+  /// No description provided for @validUriField.
+  ///
+  /// In en, this message translates to:
+  /// **'Must be a valid URI'**
+  String get validUriField;
+
   /// No description provided for @section_actions.
   ///
   /// In en, this message translates to:
