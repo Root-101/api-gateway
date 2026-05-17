@@ -441,9 +441,9 @@ class RoutesFormValidator {
 }
 
 class RoutesFormRequiredFieldValidator {
-  int get maxLong => 45;
+  int get maxLong => 255;
 
-  int get maxShort => 20;
+  int get maxShort => 155;
 
   String? validator(String? value) {
     if (value == null || value.isEmpty) {
@@ -454,7 +454,7 @@ class RoutesFormRequiredFieldValidator {
 }
 
 class RoutesFormUriValidator {
-  int get max => 45;
+  int get max => 255;
 
   String? validator(String? value) {
     if (value == null || value.isEmpty) {
@@ -462,7 +462,7 @@ class RoutesFormUriValidator {
     }
     final uri = Uri.tryParse(value);
     if (!(uri != null && (uri.hasScheme && uri.hasAuthority))) {
-      return 'Must be a valid uri';
+      return app.intl.validUriField;
     }
     return null;
   }
