@@ -14,6 +14,7 @@
   "rememberMe": "Recordarme",
   "section_validations": "--------- VALIDATIONS ---------",
   "requiredField": "Campo requerido",
+  "validUriField": "Debe ser una URL válida",
   "section_actions": "--------- ACTIONS ---------",
   "backup": "Backup",
   "restore": "Restaurar",

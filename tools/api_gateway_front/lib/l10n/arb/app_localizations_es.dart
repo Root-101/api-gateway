@@ -51,6 +51,9 @@ class AppLocalizationsEs extends AppLocalizations {
   String get requiredField => 'Campo requerido';
 
   @override
+  String get validUriField => 'Debe ser una URL válida';
+
+  @override
   String get section_actions => '--------- ACTIONS ---------';
 
   @override

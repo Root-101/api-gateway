@@ -8,6 +8,13 @@ import 'package:logger/logger.dart';
 
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
+//generate code
+//fvm flutter pub run build_runner build --delete-conflicting-outputs
+//fvm flutter gen-l10n
+
+//versions
+//fvm flutter pub outdated
+//fvm flutter pub upgrade --major-versions
 class Init {
   Init._();
 

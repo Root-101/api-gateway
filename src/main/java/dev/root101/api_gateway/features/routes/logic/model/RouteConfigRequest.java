@@ -1,6 +1,7 @@
 package dev.root101.api_gateway.features.routes.logic.model;
 
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -18,12 +19,14 @@ public class RouteConfigRequest {
      * Unique 'human-readable' identified of the route.
      */
     @NotBlank
+    @Size(max = 255)
     private String name;
 
     /**
      * The path of the route, the one which the gateway will math the request to know where to redirect
      */
     @NotBlank
+    @Size(max = 255)
     private String path;
 
     /**
@@ -31,6 +34,7 @@ public class RouteConfigRequest {
      */
     @NotBlank
     @URL
+    @Size(max = 255)
     private String uri;
 
     /**
