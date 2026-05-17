@@ -1,9 +1,9 @@
 plugins {
-    id 'org.springframework.boot' version '3.5.5'
+    id 'org.springframework.boot' version '3.5.14'
     id 'io.spring.dependency-management' version '1.1.7'
     id 'java'
     id 'application'
-    id 'org.graalvm.buildtools.native' version '0.11.0'
+    id 'org.graalvm.buildtools.native' version '0.11.3'
 }
 
 group = 'dev.root101'
@@ -11,7 +11,6 @@ group = 'dev.root101'
 version = '5.0.0'
 
 repositories {
-    jcenter()
     mavenCentral()
 }
 
@@ -21,9 +20,9 @@ java {
 
 dependencies {
     //base api-gateway dependency
-    implementation 'org.springframework.cloud:spring-cloud-gateway-server-webflux:4.3.1'
-    implementation 'org.springframework.cloud:spring-cloud-gateway-server:4.3.1'
-    implementation 'org.springframework.cloud:spring-cloud-loadbalancer:4.3.0'
+    implementation 'org.springframework.cloud:spring-cloud-gateway-server-webflux:4.3.4'
+    implementation 'org.springframework.cloud:spring-cloud-gateway-server:4.3.4'
+    implementation 'org.springframework.cloud:spring-cloud-loadbalancer:4.3.2'
 
     //security
     implementation 'org.springframework.boot:spring-boot-starter-security'
@@ -31,26 +30,26 @@ dependencies {
 
     //DB
     implementation 'org.springframework.boot:spring-boot-starter-data-r2dbc'
-    implementation 'org.postgresql:r2dbc-postgresql:1.0.7.RELEASE'
+    implementation 'org.postgresql:r2dbc-postgresql:1.1.1.RELEASE'
 
     //lombok: autogenerate getters, setters....
-    implementation 'org.projectlombok:lombok:1.18.40'
-    compileOnly 'org.projectlombok:lombok:1.18.40'
-    annotationProcessor 'org.projectlombok:lombok:1.18.40'
+    implementation 'org.projectlombok:lombok:1.18.46'
+    compileOnly 'org.projectlombok:lombok:1.18.46'
+    annotationProcessor 'org.projectlombok:lombok:1.18.46'
 
     //custom exceptions, validations & more
-    implementation 'dev.root101.commons:commons:5.4.5'
+    implementation 'dev.root101.commons:commons:5.5.2'
 
     //flyway
     implementation 'org.flywaydb:flyway-core:11.12.0'
     implementation 'org.flywaydb:flyway-database-postgresql:11.12.0'
-    implementation 'org.postgresql:postgresql:42.7.7'
+    implementation 'org.postgresql:postgresql:42.7.10'
 
     //tests
     implementation 'org.springframework.boot:spring-boot-starter-test'
-    implementation 'org.testcontainers:postgresql:1.21.3'
-    implementation 'org.testcontainers:junit-jupiter:1.21.0'
-    implementation 'io.projectreactor:reactor-test:3.7.9'
+    implementation 'org.testcontainers:postgresql:1.21.4'
+    implementation 'org.testcontainers:junit-jupiter:1.21.4'
+    implementation 'io.projectreactor:reactor-test:3.8.5'
 }
 
 test {
