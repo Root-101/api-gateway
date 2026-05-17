@@ -111,7 +111,6 @@ class _RoutesRestoreDialogState extends State<RoutesRestoreDialog> {
                               app.dimensions.padding.xxl.gap(),
                               PrimaryButton.primary(
                                 h: 45,
-                                w: 150,
                                 color: app.colors.primary.purple,
                                 onPressed: () async {
                                   List<DropzoneFileInterface> files =

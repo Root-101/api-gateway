@@ -1,4 +1,8 @@
 * 5.x:
+    * 5.0.1:
+        * **DATE** :date: : 2026-05-17.
+        * **General** :hammer_and_wrench: : Upgrade all dependencies.
+        * **General** :hammer_and_wrench: : Add @Size validations in routes.
     * 5.0.0:
         * **DATE** :date: : 2025-09-10.
         * **General** :hammer_and_wrench: : Added the Http Logs system

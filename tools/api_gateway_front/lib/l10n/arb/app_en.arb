@@ -14,6 +14,7 @@
   "rememberMe": "Remember me",
   "section_validations": "--------- VALIDATIONS ---------",
   "requiredField": "Required field",
+  "validUriField": "Must be a valid URI",
   "section_actions": "--------- ACTIONS ---------",
   "backup": "Backup",
   "restore": "Restore",
