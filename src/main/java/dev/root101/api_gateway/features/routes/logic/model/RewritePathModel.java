@@ -10,8 +10,10 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class RewritePathModel {
     @NotBlank
+    @Size(max = 255)
     private String replaceFrom;
 
     @NotBlank
+    @Size(max = 255)
     private String replaceTo;
 }
