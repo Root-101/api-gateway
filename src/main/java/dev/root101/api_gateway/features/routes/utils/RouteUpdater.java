@@ -18,10 +18,9 @@ public class RouteUpdater {
      * Update all the routes in `routeDefinitionWriter`
      * This is the method to call for the route actually go into effect, if not, the gateway will not recognize the routes
      *
-     * @param <T> to avoid warnings, it's not used
      * @return Mono.empty()
      */
-    public <T> Mono<T> updateRoutes() {
+    public Mono<Void> updateRoutes() {
         publisher.publishEvent(new RefreshRoutesEvent(this));
         return Mono.empty();
     }

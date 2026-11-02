@@ -30,7 +30,7 @@ public class AuthController {
      * @return Void
      */
     @PostMapping("/login")
-    public Mono<Void> addRoute(@RequestBody LoginRequest request) {
+    public Mono<Void> login(@RequestBody LoginRequest request) {
         return authUseCase.login(request);
     }
 

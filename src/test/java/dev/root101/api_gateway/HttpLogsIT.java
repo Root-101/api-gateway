@@ -1,0 +1,193 @@
+package dev.root101.api_gateway;
+
+import dev.root101.api_gateway.features.http_logs.data.entity.HttpLogEntity;
+import dev.root101.api_gateway.features.http_logs.task.CleanUpOldLogs;
+import dev.root101.api_gateway.support.IntegrationTest;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpMethod;
+
+import java.time.Duration;
+import java.time.OffsetDateTime;
+import java.util.List;
+import java.util.Map;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.awaitility.Awaitility.await;
+
+class HttpLogsIT extends IntegrationTest {
+
+    @Autowired
+    private CleanUpOldLogs cleanUpOldLogs;
+
+    /**
+     * Requests to a route WITHOUT rewrite-path must be logged (it used to fail with a NPE and the log was lost).
+     * Also, a long `X-Forwarded-For` must not make the log be lost.
+     */
+    @Test
+    void logRouteWithoutRewriteAndLongForwardedFor() {
+        String id = unique();
+        createRoute(route("no-rewrite-" + id, "nr-" + id));
+
+        webTestClient.get()
+                .uri("/nr-%s/hello".formatted(id))
+                .header("X-Forwarded-For", "203.0.113.7, 10.0.0.1, 10.0.0.2, 10.0.0.3, 10.0.0.4, 10.0.0.5")
+                .header("User-Agent", "it-agent")
+                .exchange()
+                .expectStatus().isOk();
+
+        HttpLogEntity log = awaitLog("/nr-" + id + "/hello");
+        assertThat(log.getSourceIp()).isEqualTo("203.0.113.7");
+        assertThat(log.getUserAgent()).isEqualTo("it-agent");
+        assertThat(log.getHttpMethod()).isEqualTo("GET");
+        assertThat(log.getResponseCode()).isEqualTo(200);
+        assertThat(log.getRequestDuration()).isGreaterThanOrEqualTo(0);
+        assertThat(log.getRoute().routeId()).isEqualTo(routeId("no-rewrite-" + id));
+        assertThat(log.getRoute().routeName()).isEqualTo("no-rewrite-" + id);
+        assertThat(log.getRoute().routePath()).isEqualTo(upstreamUrl() + "/nr-%s/hello".formatted(id));
+    }
+
+    /**
+     * The final route in the log applies the rewrite only to the path, like the gateway does.
+     */
+    @Test
+    void logRouteWithRewrite() {
+        String id = unique();
+        createRoute(rewriteRoute("rewrite-" + id, "rw-" + id));
+
+        webTestClient.get().uri("/rw-%s/a/b".formatted(id)).exchange()
+                .expectStatus().isOk()
+                .expectBody(String.class).value(body -> assertThat(body).startsWith("/a/b|"));
+
+        assertThat(awaitLog("/rw-" + id + "/a/b").getRoute().routePath()).isEqualTo(upstreamUrl() + "/a/b");
+    }
+
+    /**
+     * The upstream status and the "no route" 404 are what get stored.
+     */
+    @Test
+    void storesUpstreamStatusAndNoRoute() {
+        String id = unique();
+        createRoute(route("status-" + id, "status-" + id));
+
+        webTestClient.get().uri("/status-%s/status/418".formatted(id)).exchange().expectStatus().isEqualTo(418);
+        webTestClient.get().uri("/status-%s/status/503".formatted(id)).exchange().expectStatus().isEqualTo(503);
+        webTestClient.get().uri("/no-route-%s/x".formatted(id)).exchange().expectStatus().isNotFound();
+
+        assertThat(awaitLog("/status-" + id + "/status/418").getResponseCode()).isEqualTo(418);
+        assertThat(awaitLog("/status-" + id + "/status/503").getResponseCode()).isEqualTo(503);
+        HttpLogEntity noRoute = awaitLog("/no-route-" + id);
+        assertThat(noRoute.getResponseCode()).isEqualTo(404);
+        assertThat(noRoute.getRoute()).isNull();
+    }
+
+    /**
+     * NOT logged: admin `GET /routes*`, `/http-log*`, `OPTIONS` and the health check.
+     * Logged: the rest of the admin requests (as the "Admin" route).
+     */
+    @Test
+    void whatIsAndIsNotLogged() {
+        String id = unique();
+        String marker = "/" + ADMIN_PATH + "/routes/00000000-0000-0000-0000-00000000" + id;
+
+        admin(HttpMethod.GET, "/routes").exchange().expectStatus().isOk();
+        admin(HttpMethod.GET, marker.substring(ADMIN_PATH.length() + 1)).exchange().expectStatus().isNotFound();
+        webTestClient.options().uri("/opt-%s/x".formatted(id)).exchange();
+        //logged: a DELETE to the admin
+        admin(HttpMethod.DELETE, marker.substring(ADMIN_PATH.length() + 1)).exchange().expectStatus().isNotFound();
+
+        HttpLogEntity adminLog = awaitLog(log -> log.getPath().equals(marker) && log.getHttpMethod().equals("DELETE"));
+        assertThat(adminLog.getRoute().routeName()).isEqualTo("Admin");
+        assertThat(adminLog.getRoute().routeId()).isEqualTo("00000000-0000-0000-0000-000000000000");
+
+        //the DELETE is saved, so the previous requests (if logged) would be saved too by now
+        await().pollDelay(Duration.ofSeconds(2)).atMost(Duration.ofSeconds(5)).until(() -> true);
+        List<HttpLogEntity> logs = httpLogRepo.findAll().collectList().block();
+        assertThat(logs).noneMatch(log -> log.getPath().equals(marker) && log.getHttpMethod().equals("GET"));
+        assertThat(logs).noneMatch(log -> log.getPath().equals("/opt-%s/x".formatted(id)));
+        assertThat(logs).noneMatch(log -> log.getPath().startsWith("/" + ADMIN_PATH + "/http-log"));
+        assertThat(logs).noneMatch(log -> log.getPath().equals("/" + ADMIN_PATH + "/health"));
+    }
+
+    /**
+     * Search with `size: null` is capped (max-search-size=2 in the tests), but totals are real.
+     * Every filter alone and combined, LIKE wildcards escaped, pagination and order by date desc.
+     */
+    @Test
+    @SuppressWarnings("unchecked")
+    void searchLogs() {
+        String id = unique();
+        createRoute(route("search-" + id, "se-" + id));
+        for (int i = 0; i < 3; i++) {
+            webTestClient.get().uri("/se-%s/item-%d".formatted(id, i)).exchange().expectStatus().isOk();
+        }
+        webTestClient.post().uri("/se-%s/status/500".formatted(id)).exchange().expectStatus().is5xxServerError();
+        webTestClient.get().uri("/se-none-%s/x".formatted(id)).exchange().expectStatus().isNotFound();
+        await().atMost(Duration.ofSeconds(10)).until(
+                () -> httpLogRepo.findAll().filter(log -> log.getPath().contains("/se-")
+                        && log.getPath().contains(id)).count().block() == 5
+        );
+        String routeId = routeId("search-" + id);
+
+        //size cap and real totals
+        Map<String, Object> page = searchLogs(Map.of("page", 0, "query", "/se-" + id));
+        assertThat(((Number) page.get("total_elements")).longValue()).isEqualTo(4);
+        assertThat(page.get("total_pages")).isEqualTo(2);
+        assertThat(page.get("size")).isEqualTo(2);
+        List<Map<String, Object>> content = (List<Map<String, Object>>) page.get("page_content");
+        assertThat(content).hasSize(2);
+        //newest first
+        assertThat((String) content.get(0).get("requested_at")).isGreaterThanOrEqualTo((String) content.get(1).get("requested_at"));
+        assertThat(content.get(0)).containsKeys("id", "source_ip", "user_agent", "http_method", "path", "response_code", "request_duration", "route");
+
+        //pagination
+        Map<String, Object> second = searchLogs(Map.of("page", 1, "size", 2, "query", "/se-" + id));
+        assertThat((List<Object>) second.get("page_content")).hasSize(2);
+
+        //each filter
+        assertThat(totalLogs(Map.of("page", 0, "query", "/se-" + id, "response_code", 200))).isEqualTo(3);
+        assertThat(totalLogs(Map.of("page", 0, "query", "/se-" + id, "response_code", "500"))).isEqualTo(1);
+        assertThat(totalLogs(Map.of("page", 0, "query", "/se-" + id, "method", "POST"))).isEqualTo(1);
+        assertThat(totalLogs(Map.of("page", 0, "route_id", routeId))).isEqualTo(4);
+        assertThat(totalLogs(Map.of("page", 0, "query", id, "route_id", "NO-ROUTE"))).isEqualTo(1);
+        //`_` would match any char if not escaped
+        assertThat(totalLogs(Map.of("page", 0, "query", "/se_" + id))).isZero();
+
+        //dates
+        String tomorrow = OffsetDateTime.now().plusDays(1).toString();
+        String yesterday = OffsetDateTime.now().minusDays(1).toString();
+        assertThat(totalLogs(Map.of("page", 0, "route_id", routeId, "from_date", tomorrow))).isZero();
+        assertThat(totalLogs(Map.of("page", 0, "route_id", routeId, "to_date", yesterday))).isZero();
+        assertThat(totalLogs(Map.of("page", 0, "route_id", routeId, "from_date", yesterday, "to_date", tomorrow))).isEqualTo(4);
+
+        //combined
+        assertThat(totalLogs(Map.of("page", 0, "route_id", routeId, "method", "GET", "response_code", 200, "query", "item-1"))).isEqualTo(1);
+    }
+
+    @Test
+    void searchWithNonNumericResponseCodeIs400() {
+        admin(HttpMethod.POST, "/http-log/search")
+                .bodyValue(Map.of("page", 0, "response_code", "abc"))
+                .exchange()
+                .expectStatus().isBadRequest();
+    }
+
+    /**
+     * The clean up deletes only the logs older than MAINTAIN_LOGS_FOR_DAYS (14 by default).
+     */
+    @Test
+    void cleanUpOldLogs() {
+        String id = unique();
+        OffsetDateTime now = OffsetDateTime.now();
+        httpLogRepo.saveAll(List.of(
+                new HttpLogEntity(null, "127.0.0.1", now.minusDays(30), null, "GET", "/old-" + id, 200, 1, null),
+                new HttpLogEntity(null, "127.0.0.1", now.minusDays(14).minusMinutes(1), null, "GET", "/old-" + id, 200, 1, null),
+                new HttpLogEntity(null, "127.0.0.1", now.minusDays(14).plusMinutes(1), null, "GET", "/recent-" + id, 200, 1, null)
+        )).blockLast();
+
+        cleanUpOldLogs.cleanUpLogs().block();
+
+        assertThat(httpLogRepo.findAll().filter(log -> log.getPath().equals("/old-" + id)).count().block()).isZero();
+        assertThat(httpLogRepo.findAll().filter(log -> log.getPath().equals("/recent-" + id)).count().block()).isEqualTo(1);
+    }
+}

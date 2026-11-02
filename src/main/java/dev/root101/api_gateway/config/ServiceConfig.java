@@ -5,15 +5,14 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.PropertyNamingStrategies;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import dev.root101.commons.validation.ValidationService;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.context.event.ApplicationReadyEvent;
+import org.springframework.context.event.EventListener;
 import org.springframework.context.annotation.Bean;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaType;
-import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
-import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestTemplate;
+import org.springframework.context.annotation.Configuration;
 
-import java.util.Collections;
 
 /**
  * Global/General Misc config for the server.
@@ -22,8 +21,23 @@ import java.util.Collections;
  * - ObjectMapper
  * - Validation Service
  */
-@Service
+@Configuration
 public class ServiceConfig {
+
+    private static final Logger log = LoggerFactory.getLogger(ServiceConfig.class);
+
+    @Value("${spring.r2dbc.password}")
+    private String dbPassword;
+
+    @Value("${app.defaults.db-password}")
+    private String defaultDbPassword;
+
+    @EventListener(ApplicationReadyEvent.class)
+    public void warnDefaultDbPassword() {
+        if (dbPassword.equals(defaultDbPassword)) {
+            log.warn("Server running with the DEFAULT db password. Set the DB_PASSWORD environment variable for any real environment");
+        }
+    }
 
     @Bean
     public PropertyNamingStrategies.NamingBase namingStrategy() {

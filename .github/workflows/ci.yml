@@ -1,0 +1,76 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [ develop, master ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+      - uses: gradle/actions/setup-gradle@v4
+      # unit + integration tests (Testcontainers uses the docker of the runner) + coverage gate + AOT
+      # gradlew is not executable in git
+      - run: chmod +x gradlew && ./gradlew check jacocoTestReport processAot
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: test-and-coverage-reports
+          path: |
+            build/reports/tests
+            build/reports/jacoco
+
+  front:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: tools/api_gateway_front
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: 3.41.9
+          channel: stable
+          cache: true
+      - run: flutter pub get
+      # warnings fail the job, infos don't (6 old infos pending in the front roadmap)
+      - run: flutter analyze --no-fatal-infos
+      # the tests use the `web` package, they need chrome (installed in ubuntu-latest)
+      - run: flutter test --platform chrome
+      - run: flutter build web --release
+
+  native-image:
+    # slow (native compile), only on master
+    if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: docker build -t api-gateway .
+      # smoke test of the native binary: catches GraalVM reflection problems the JVM tests can't see
+      - name: Smoke test
+        run: |
+          set -eu
+          docker network create gw
+          docker run -d --name db --network gw -e POSTGRES_DB=api-gateway -e POSTGRES_PASSWORD=smoke postgres:16
+          until docker exec db pg_isready -U postgres -d api-gateway; do sleep 1; done
+          docker run -d --name gw --network gw -p 8080:8080 -e DB_HOST=db -e DB_PASSWORD=smoke api-gateway
+          for i in $(seq 60); do curl -sf localhost:8080/_admin/health && break || sleep 1; done
+          AUTH="admin:admin123**"
+          curl -sf -X POST localhost:8080/_admin/auth/login -H 'Content-Type: application/json' -d '{"username":"admin","password":"admin123**"}'
+          # a route to the gateway itself: /self/health → /_admin/health
+          curl -sf -u "$AUTH" -X POST localhost:8080/_admin/routes -H 'Content-Type: application/json' \
+            -d '{"name":"self","path":"/self/**","uri":"http://localhost:8080","rewrite_path":{"replace_from":"/self/(?<segment>.*)","replace_to":"/_admin/${segment}"}}'
+          curl -sf -u "$AUTH" localhost:8080/_admin/routes | grep -q '"name":"self"'
+          curl -sf localhost:8080/self/health | grep -q UP
+          sleep 3
+          curl -sf -u "$AUTH" -X POST localhost:8080/_admin/http-log/search -H 'Content-Type: application/json' -d '{"page":0,"size":10}' | grep -q '/self/health'
+      - name: Gateway logs
+        if: always()
+        run: docker logs gw || true

@@ -18,6 +18,8 @@ import java.util.UUID;
 
 @Table("http_log")
 public class HttpLogEntity {
+    //Own mapper on purpose (not the snake_case bean): the `route` column already stores camelCase json (`routeId`...),
+    //changing it would break reading the old rows and the `route_id` search (LIKE over that json)
     private static final ObjectMapper objectMapper = new ObjectMapper();
 
     @Getter
@@ -46,7 +48,7 @@ public class HttpLogEntity {
     @Getter
     @Setter
     @NotNull
-    @Size(max = 50)
+    @Size(max = 25)
     @Column("http_method")
     private String httpMethod;
 

@@ -10,15 +10,18 @@ import dev.root101.api_gateway.features.routes.utils.RouteUpdater;
 import dev.root101.commons.exceptions.ConflictException;
 import dev.root101.commons.exceptions.NotFoundException;
 import dev.root101.commons.validation.ValidationService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.context.event.ApplicationReadyEvent;
+import org.springframework.beans.factory.SmartInitializingSingleton;
 import org.springframework.cloud.gateway.route.RouteDefinition;
 import org.springframework.cloud.gateway.route.RouteDefinitionWriter;
-import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.reactive.TransactionalOperator;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.time.Duration;
 import java.time.OffsetDateTime;
 import java.util.Collection;
 import java.util.List;
@@ -31,7 +34,9 @@ import java.util.stream.Collectors;
  * At the end of every action the context is updated and the change is ready to use.
  */
 @Service
-class RouteUseCaseImpl implements RouteUseCase {
+class RouteUseCaseImpl implements RouteUseCase, SmartInitializingSingleton {
+
+    private static final Logger log = LoggerFactory.getLogger(RouteUseCaseImpl.class);
 
     private final RouteDefinitionWriter routeDefinitionWriter;
 
@@ -41,6 +46,8 @@ class RouteUseCaseImpl implements RouteUseCase {
 
     private final ValidationService vs;
 
+    private final TransactionalOperator tx;
+
     private final Map<String, RouteEntity> cache = new ConcurrentHashMap<>();
 
     @Autowired
@@ -48,48 +55,35 @@ class RouteUseCaseImpl implements RouteUseCase {
             RouteDefinitionWriter routeDefinitionWriter,
             RouteUpdater routeUpdater,
             RouteRepo routeRepo,
-            ValidationService validationService
+            ValidationService validationService,
+            TransactionalOperator tx
     ) {
         this.routeDefinitionWriter = routeDefinitionWriter;
         this.routeUpdater = routeUpdater;
         this.routeRepo = routeRepo;
         this.vs = validationService;
+        this.tx = tx;
     }
 
-    @EventListener(ApplicationReadyEvent.class)
-    public void initRoutes() {
-        System.out.println("---------- InitRoutes : onStartup ----------");
-        routeRepo.findAll()
+    /**
+     * Loads the db routes into the gateway before the web server starts (it starts after all the singletons are created),
+     * so there is no window of 404s after each deploy. Fails the startup if the routes can't be loaded.
+     */
+    @Override
+    public void afterSingletonsInstantiated() {
+        log.info("Loading routes from db");
+        Long count = routeRepo.findAll()
                 .concatMap(
-                        route -> routeDefinitionWriter.save(
-                                Mono.just(
-                                        buildDefinition(route)
-                                )
-                        ).then(
-                                Mono.fromRunnable(
-                                        () -> cache.put(
-                                                route.getRouteId().toString(),
-                                                route
-                                        )
-                                )
-                        )
-                )//if route is saved ok in db, save it to cache (for faster http logs access)
-                // Save each definition in the RouteDefinitionWriter
-                .then(
-                        //update routes
-                        Mono.defer(routeUpdater::updateRoutes)
-                ) // Trigger the updateRoutes logic
-                .subscribe(
-                        null, // No action needed for onNext since we're working with a Mono<Void>
-                        error -> {
-                            // Log errors without blocking
-                            System.err.println("Error initializing routes: " + error.getMessage());
-                        },
-                        () -> {
-                            // Log successful initialization
-                            System.out.println("All routes initialized successfully.");
-                        }
-                );
+                        //save each definition in the RouteDefinitionWriter, then to cache (for faster http logs access)
+                        route -> routeDefinitionWriter.save(Mono.just(buildDefinition(route)))
+                                .then(Mono.fromRunnable(() -> cache.put(route.getRouteId().toString(), route)))
+                                .thenReturn(route)
+                )
+                .count()
+                .block(Duration.ofSeconds(60));
+        //on this (main) thread: the gateway listeners block, not allowed in a netty thread
+        routeUpdater.updateRoutes();
+        log.info("{} routes loaded", count);
     }
 
     /**
@@ -173,7 +167,8 @@ class RouteUseCaseImpl implements RouteUseCase {
                 .flatMap(
                         entities -> Mono.fromRunnable(() -> vs.validate(entities))
                                 .then(
-                                        routeRepo.saveAll(entities).collectList()
+                                        //all or nothing: a failure in the middle must not leave half the routes in db
+                                        routeRepo.saveAll(entities).collectList().as(tx::transactional)
                                                 //if routes are saved ok in db, save it to cache (for faster http logs access)
                                                 .doOnNext(
                                                         savedEntities -> cache.putAll(
@@ -207,6 +202,12 @@ class RouteUseCaseImpl implements RouteUseCase {
         // Search old route
         return routeRepo.findByRawId(routeId)
                 .switchIfEmpty(Mono.error(new NotFoundException("Route does not exist: %s".formatted(routeId))))
+                //the new name can't be used by another route
+                .flatMap(oldRoute -> routeRepo.findByName(request.getName())
+                        .filter(existing -> !existing.getRouteId().equals(oldRoute.getRouteId()))
+                        .flatMap(existing -> Mono.<RouteEntity>error(new ConflictException("Route already exists: %s".formatted(request.getName()))))
+                        .defaultIfEmpty(oldRoute)
+                )
                 .flatMap(oldRoute -> {
                     RouteEntity entityToEdit = buildEntity(request);
                     entityToEdit.setRouteId(oldRoute.getRouteId());//maintain same id
@@ -276,18 +277,18 @@ class RouteUseCaseImpl implements RouteUseCase {
         // Search old route
         return routeRepo.findByRawId(routeId)
                 .switchIfEmpty(Mono.error(new NotFoundException("Route does not exist: %s".formatted(routeId))))
-                .flatMap(route ->
-                        routeRepo.delete(route) // Delete route from db
-                                //if route is deleted ok in db, delete it in cache (for faster http logs access)
-                                .then(Mono.fromRunnable(() -> {
-                                    cache.remove(routeId);
-                                }))
-                                .then(
-                                        routeDefinitionWriter.delete( // Delete route from writer
-                                                Mono.just(routeId)
-                                        )
-                                )
-                )
+                .flatMap(route -> {
+                    //use the normalized id, not the raw one (could be in uppercase and not match the cache/writer keys)
+                    String id = route.getRouteId().toString();
+                    return routeRepo.delete(route) // Delete route from db
+                            //if route is deleted ok in db, delete it in cache (for faster http logs access)
+                            .then(Mono.fromRunnable(() -> cache.remove(id)))
+                            .then(
+                                    routeDefinitionWriter.delete( // Delete route from writer
+                                            Mono.just(id)
+                                    )
+                            );
+                })
                 .then(Mono.defer(routeUpdater::updateRoutes)); // Update route after all changes
     }
 

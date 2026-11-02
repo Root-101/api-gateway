@@ -8,17 +8,24 @@ spring:
     default: ${PROFILE:default}
   application:
     name: ${APPLICATION_NAME:Api-Gateway}
-  jpa:
-    open-in-view: false
-    hibernate:
-      ddl-auto: none
   r2dbc:
     #Variables must be available at compile time (since we started using the native image in v4.1.0), so they are set by default and then overridden with the real values
     url: r2dbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:api-gateway}          #r2dbc:postgresql:/host:port/db-name
     username: ${DB_USERNAME:postgres}                                                            #postgres
-    password: ${DB_PASSWORD:admin123}                                                            #admin123
+    password: ${DB_PASSWORD:${app.defaults.db-password}}                                           #admin123
     pool:
       enabled: true
+
+  cloud:
+    gateway:
+      server:
+        webflux:
+          httpclient:
+            connect-timeout: ${GATEWAY_CONNECT_TIMEOUT_MS:10000}                                 #millis to open the connection to the upstream
+            response-timeout: ${GATEWAY_RESPONSE_TIMEOUT:60s}                                   #max wait for the upstream response, empty = no timeout
+          default-filters:
+            #the gateway already adds the CORS headers, drop the ones the upstream may also send (browsers reject duplicated values)
+            - DedupeResponseHeader=Access-Control-Allow-Origin Access-Control-Allow-Credentials Access-Control-Expose-Headers, RETAIN_FIRST
 
   flyway:
     enabled: true                                                                                #To enable disable the use of railway
@@ -26,17 +33,34 @@ spring:
     #Variables must be available at compile time (since we started using the native image in v4.1.0), so they are set by default and then overridden with the real values
     url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:api-gateway}
     user: ${DB_USERNAME:postgres}
-    password: ${DB_PASSWORD:admin123}
+    password: ${DB_PASSWORD:${app.defaults.db-password}}
     locations: classpath:db/migration
+
+management:
+  endpoints:
+    web:
+      #health check in `/{ADMIN_PATH}/health` (no auth): under the admin path so it never shadows a proxied `/actuator/**` route
+      base-path: /${ADMIN_PATH:_admin}
+      exposure:
+        include: health
+  endpoint:
+    health:
+      show-details: never
 
 app:
   defaults:
     username: admin
     password: admin123**
+    db-password: admin123
   admin:
     username: ${ADMIN_USERNAME:${app.defaults.username}}
     password: ${ADMIN_PASSWORD:${app.defaults.password}}
     role: ROLE_GATEWAY_ADMIN
     base-path: ${ADMIN_PATH:_admin}
+    max-failed-attempts: ${ADMIN_MAX_FAILED_ATTEMPTS:10}                                         #0 disables the lockout
+    lockout-minutes: ${ADMIN_LOCKOUT_MINUTES:15}
+  cors:
+    allowed-origins: ${CORS_ALLOWED_ORIGINS:*}                                                   #comma separated origin patterns
   logs:
     maintainForDays: ${MAINTAIN_LOGS_FOR_DAYS:14}
+    max-search-size: ${MAX_LOGS_SEARCH_SIZE:10000}

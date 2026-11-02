@@ -1,10 +1,10 @@
 package dev.root101.api_gateway.features.auth.logic.usecase;
 
 import dev.root101.api_gateway.features.auth.logic.model.LoginRequest;
+import dev.root101.api_gateway.security.AdminAuthenticationManager;
 import dev.root101.commons.exceptions.ForbiddenException;
 import dev.root101.commons.validation.ValidationService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 
@@ -16,18 +16,14 @@ class AuthUseCaseImpl implements AuthUseCase {
 
     private final ValidationService vs;
 
-    private final String adminUsername;
-
-    private final String adminPassword;
+    private final AdminAuthenticationManager adminAuthenticationManager;
 
     @Autowired
     public AuthUseCaseImpl(
-            @Value("${app.admin.username}") String adminUsername,
-            @Value("${app.admin.password}") String adminPassword,
+            AdminAuthenticationManager adminAuthenticationManager,
             ValidationService validationService
     ) {
-        this.adminUsername = adminUsername;
-        this.adminPassword = adminPassword;
+        this.adminAuthenticationManager = adminAuthenticationManager;
         this.vs = validationService;
     }
 
@@ -36,7 +32,7 @@ class AuthUseCaseImpl implements AuthUseCase {
         return Mono.fromRunnable(() -> vs.validate(request))
                 .then(
                         Mono.defer(() -> {
-                            if (request.getUsername().equals(adminUsername) && request.getPassword().equals(adminPassword)) {
+                            if (adminAuthenticationManager.matches(request.getUsername(), request.getPassword())) {
                                 return Mono.empty();
                             } else {
                                 return Mono.error(new ForbiddenException("Wrong username or password"));

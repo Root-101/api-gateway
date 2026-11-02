@@ -2,6 +2,7 @@ package dev.root101.api_gateway.features.http_logs.data.repo;
 
 import dev.root101.api_gateway.features.http_logs.data.entity.HttpLogEntity;
 import dev.root101.api_gateway.features.http_logs.logic.model.HttpLogSearchRequest;
+import dev.root101.commons.exceptions.BadRequestException;
 import lombok.AllArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -20,49 +21,54 @@ public class HttpLogSearchRepo {
 
     private final R2dbcEntityTemplate template;
 
-    public Mono<Page<HttpLogEntity>> search(HttpLogSearchRequest request) {
+    //criteria use the entity property names (mapped to the columns by the template)
+    public Mono<Page<HttpLogEntity>> search(HttpLogSearchRequest request, int size) {
 
         Criteria criteria = Criteria.empty();
 
         if (request.getMethod() != null && !request.getMethod().isBlank()) {
-            criteria = criteria.and("httpMethod").like("%" + request.getMethod() + "%");
+            criteria = criteria.and("httpMethod").like(contains(request.getMethod()));
         }
-        if (request.getResponseCode() != null) {
-            criteria = criteria.and("responseCode").is(request.getResponseCode());
+        if (request.getResponseCode() != null && !request.getResponseCode().isBlank()) {
+            try {
+                criteria = criteria.and("responseCode").is(Integer.parseInt(request.getResponseCode().trim()));
+            } catch (NumberFormatException e) {
+                throw new BadRequestException("response_code must be a number");
+            }
         }
         if (request.getQuery() != null && !request.getQuery().isBlank()) {
-            String likeQuery = "%" + request.getQuery() + "%";
+            String likeQuery = contains(request.getQuery());
 
-            Criteria orCriteria = Criteria.where("source_ip").like(likeQuery)
-                    .or("user_agent").like(likeQuery)
+            Criteria orCriteria = Criteria.where("sourceIp").like(likeQuery)
+                    .or("userAgent").like(likeQuery)
                     .or("path").like(likeQuery)
-                    .or("route").like(likeQuery);
+                    .or("rawRoute").like(likeQuery);
 
             criteria = criteria.and(orCriteria);
         }
         if (request.getRouteId() != null) {
             if (request.getRouteId().equalsIgnoreCase("NO-ROUTE")) {
-                criteria = criteria.and("route").isNull();
+                criteria = criteria.and("rawRoute").isNull();
             } else if (!request.getRouteId().isBlank()) {
-                criteria = criteria.and("route").like("%" + request.getRouteId() + "%");
+                criteria = criteria.and("rawRoute").like(contains(request.getRouteId()));
             }
         }
 
         if (request.getFromDate() != null && request.getToDate() != null) {
-            criteria = criteria.and("requested_at")
+            criteria = criteria.and("requestedAt")
                     .greaterThanOrEquals(request.getFromDate())
-                    .and("requested_at")
+                    .and("requestedAt")
                     .lessThanOrEquals(request.getToDate());
         } else if (request.getFromDate() != null) {
-            criteria = criteria.and("requested_at").greaterThanOrEquals(request.getFromDate());
+            criteria = criteria.and("requestedAt").greaterThanOrEquals(request.getFromDate());
         } else if (request.getToDate() != null) {
-            criteria = criteria.and("requested_at").lessThanOrEquals(request.getToDate());
+            criteria = criteria.and("requestedAt").lessThanOrEquals(request.getToDate());
         }
 
         PageRequest pageRequest = PageRequest.of(
                 request.getPage(),
-                request.getSize(),
-                Sort.by(Sort.Direction.DESC, "requested_at")
+                size,
+                Sort.by(Sort.Direction.DESC, "requestedAt")
         );
         Query query = Query.query(criteria)
                 .with(pageRequest);
@@ -74,5 +80,12 @@ public class HttpLogSearchRepo {
                 .zipWith(count, (list, total) ->
                         new PageImpl<>(list, pageRequest, total)
                 );
+    }
+
+    /**
+     * `%value%` with the LIKE wildcards of the user input escaped (postgres default escape char is `\`)
+     */
+    static String contains(String value) {
+        return "%" + value.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_") + "%";
     }
 }

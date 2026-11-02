@@ -24,5 +24,9 @@ COPY --from=builder /workspace/build/native/nativeCompile/graalvm /app/
 
 RUN chmod +x /app/graalvm
 
+# Don't run as root
+RUN useradd --system --uid 10001 --no-create-home gateway
+USER gateway
+
 # Command to run the application
 ENTRYPOINT ["/app/graalvm"]

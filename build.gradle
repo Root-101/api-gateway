@@ -4,6 +4,7 @@ plugins {
     id 'java'
     id 'application'
     id 'org.graalvm.buildtools.native' version '0.11.3'
+    id 'jacoco'
 }
 
 group = 'dev.root101'
@@ -19,21 +20,22 @@ java {
 }
 
 dependencies {
-    //base api-gateway dependency
-    implementation 'org.springframework.cloud:spring-cloud-gateway-server-webflux:4.3.4'
-    implementation 'org.springframework.cloud:spring-cloud-gateway-server:4.3.4'
-    implementation 'org.springframework.cloud:spring-cloud-loadbalancer:4.3.2'
+    //base api-gateway dependency (versions from the spring cloud BOM)
+    implementation 'org.springframework.cloud:spring-cloud-gateway-server-webflux'
+    implementation 'org.springframework.cloud:spring-cloud-loadbalancer'
 
     //security
     implementation 'org.springframework.boot:spring-boot-starter-security'
     implementation 'org.springframework.boot:spring-boot-starter-webflux'
+
+    //health check
+    implementation 'org.springframework.boot:spring-boot-starter-actuator'
 
     //DB
     implementation 'org.springframework.boot:spring-boot-starter-data-r2dbc'
     implementation 'org.postgresql:r2dbc-postgresql:1.1.1.RELEASE'
 
     //lombok: autogenerate getters, setters....
-    implementation 'org.projectlombok:lombok:1.18.46'
     compileOnly 'org.projectlombok:lombok:1.18.46'
     annotationProcessor 'org.projectlombok:lombok:1.18.46'
 
@@ -46,14 +48,69 @@ dependencies {
     implementation 'org.postgresql:postgresql:42.7.10'
 
     //tests
-    implementation 'org.springframework.boot:spring-boot-starter-test'
-    implementation 'org.testcontainers:postgresql:1.21.4'
-    implementation 'org.testcontainers:junit-jupiter:1.21.4'
-    implementation 'io.projectreactor:reactor-test:3.8.5'
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testImplementation 'org.testcontainers:postgresql:1.21.4'
+    testImplementation 'org.testcontainers:junit-jupiter:1.21.4'
+    testImplementation 'io.projectreactor:reactor-test'
 }
 
+dependencyManagement {
+    imports {
+        //release train aligned with spring boot 3.5 (gateway 4.3.4, loadbalancer 4.3.2)
+        mavenBom 'org.springframework.cloud:spring-cloud-dependencies:2025.0.2'
+    }
+}
+
+//`test`: fast unit tests. `integrationTest`: `*IT` classes (Spring context + Testcontainers, Docker required)
 test {
     useJUnitPlatform()
+    exclude '**/*IT.class'
+}
+
+tasks.register('integrationTest', Test) {
+    description = 'Integration tests (*IT), needs Docker'
+    group = 'verification'
+    useJUnitPlatform()
+    testClassesDirs = sourceSets.test.output.classesDirs
+    classpath = sourceSets.test.runtimeClasspath
+    include '**/*IT.class'
+    shouldRunAfter test
+}
+
+//coverage of unit + integration tests together
+jacocoTestReport {
+    executionData fileTree(layout.buildDirectory).include('jacoco/*.exec')
+    dependsOn test, integrationTest
+    reports {
+        xml.required = true
+        html.required = true
+    }
+}
+
+jacocoTestCoverageVerification {
+    executionData fileTree(layout.buildDirectory).include('jacoco/*.exec')
+    dependsOn test, integrationTest
+    violationRules {
+        rule {
+            //a bit under the current coverage (95% lines / 90% branches), so it can only go up
+            limit {
+                counter = 'LINE'
+                minimum = 0.90
+            }
+            limit {
+                counter = 'BRANCH'
+                minimum = 0.85
+            }
+        }
+    }
+}
+
+check.dependsOn integrationTest, jacocoTestCoverageVerification
+jacocoTestReport.mustRunAfter integrationTest
+
+//test AOT boots the context at build time, before testcontainers starts the db. Only needed for `nativeTest` (not used)
+tasks.named('processTestAot') {
+    enabled = false
 }
 
 application {

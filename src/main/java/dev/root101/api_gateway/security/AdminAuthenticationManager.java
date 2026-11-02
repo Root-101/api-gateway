@@ -2,6 +2,8 @@ package dev.root101.api_gateway.security;
 
 import dev.root101.commons.exceptions.ForbiddenException;
 import dev.root101.commons.exceptions.UnauthorizedException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.ReactiveAuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -12,12 +14,16 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
 
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
 import java.util.Base64;
 import java.util.Collection;
 import java.util.Collections;
 
 @Component
 public class AdminAuthenticationManager implements ReactiveAuthenticationManager {
+
+    private static final Logger log = LoggerFactory.getLogger(AdminAuthenticationManager.class);
 
     private final String adminUsername;
 
@@ -37,25 +43,40 @@ public class AdminAuthenticationManager implements ReactiveAuthenticationManager
         this.adminRole = adminRole;
 
         if (adminUsername.equals(defaultUsername) && adminPassword.equals(defaultPassword)) {
-            System.out.println();
-            System.out.printf("Server starting using default username and password (%s:%s)%n", defaultUsername, defaultPassword);
-            System.out.println("For formal environments consider using the ADMIN_USERNAME and ADMIN_PASSWORD environment variables to configure them");
-            System.out.println();
+            log.warn("Server starting with the DEFAULT admin username and password. Set the ADMIN_USERNAME and ADMIN_PASSWORD environment variables for any real environment");
         }
+    }
+
+    /**
+     * Constant-time check of the admin credentials (also used by the login endpoint).
+     */
+    public boolean matches(String username, String password) {
+        //`&` (not `&&`): always compare both, so the time doesn't tell which one failed
+        return equalsConstantTime(username, adminUsername) & equalsConstantTime(password, adminPassword);
+    }
+
+    private static boolean equalsConstantTime(String given, String expected) {
+        return given != null && MessageDigest.isEqual(
+                given.getBytes(StandardCharsets.UTF_8),
+                expected.getBytes(StandardCharsets.UTF_8)
+        );
     }
 
     @Override
     public Mono<Authentication> authenticate(Authentication authentication) {
         String base64Credentials = authentication.getCredentials().toString();
-        String credentials = new String(Base64.getDecoder().decode(base64Credentials));
-        final String[] values = credentials.split(":", 2);
+        final String[] values;
+        try {
+            values = new String(Base64.getDecoder().decode(base64Credentials.trim()), StandardCharsets.UTF_8).split(":", 2);
+        } catch (IllegalArgumentException e) {//not valid base64
+            return Mono.error(new UnauthorizedException());
+        }
 
         if (values.length == 2 && values[0] != null && values[1] != null && !values[0].isBlank() && !values[1].isBlank()) {
-            if (values[0].equals(adminUsername) && values[1].equals(adminPassword)) {
+            if (matches(values[0], values[1])) {
                 Mono<CustomUserDetails> user = Mono.just(
                         new CustomUserDetails(
                                 adminUsername,
-                                adminPassword,
                                 Collections.singletonList(
                                         new SimpleGrantedAuthority(adminRole)
                                 )
@@ -67,22 +88,20 @@ public class AdminAuthenticationManager implements ReactiveAuthenticationManager
                         )
                 );
             } else {
-                throw new ForbiddenException();
+                return Mono.error(new ForbiddenException());
             }
         } else {
-            throw new UnauthorizedException();
+            return Mono.error(new UnauthorizedException());
         }
     }
 
     public static class CustomUserDetails implements UserDetails {
 
         private final String username;
-        private final String password;
         private final Collection<? extends GrantedAuthority> authorities;
 
-        public CustomUserDetails(String username, String password, Collection<? extends GrantedAuthority> authorities) {
+        public CustomUserDetails(String username, Collection<? extends GrantedAuthority> authorities) {
             this.username = username;
-            this.password = password;
             this.authorities = authorities;
         }
 
@@ -93,7 +112,7 @@ public class AdminAuthenticationManager implements ReactiveAuthenticationManager
 
         @Override
         public String getPassword() {
-            return password;
+            return null;//never kept in memory after the check
         }
 
         @Override
@@ -103,22 +122,22 @@ public class AdminAuthenticationManager implements ReactiveAuthenticationManager
 
         @Override
         public boolean isAccountNonExpired() {
-            return true; // Ajusta esta lógica según sea necesario
+            return true; // Adjust this logic if needed
         }
 
         @Override
         public boolean isAccountNonLocked() {
-            return true; // Ajusta esta lógica según sea necesario
+            return true; // Adjust this logic if needed
         }
 
         @Override
         public boolean isCredentialsNonExpired() {
-            return true; // Ajusta esta lógica según sea necesario
+            return true; // Adjust this logic if needed
         }
 
         @Override
         public boolean isEnabled() {
-            return true; // Ajusta esta lógica según sea necesario
+            return true; // Adjust this logic if needed
         }
     }
 

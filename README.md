@@ -23,6 +23,8 @@ It centralizes client requests, routes them to internal services, logs traffic, 
     - [4.4 - ADMIN_PATH](#4.4)
     - [4.5 - DB_HOST, DB_PORT, DB_NAME, DB_USERNAME, DB_PASSWORD](#4.5)
     - [4.6 - MAINTAIN_LOGS_FOR_DAYS](#4.6)
+    - [4.7 - Security, timeouts and client ip](#4.7)
+    - [4.8 - Running the tests](#4.8)
 - [5 - Api Docs](#5)
     - [5.1 - Login](#5.1)
     - [5.2 - Routes](#5.2)
@@ -131,6 +133,12 @@ These are configured before the service start.
 | DB_USERNAME            | text     | Username of the DB user                   | postgres                    | 4.x              |
 | DB_PASSWORD            | text     | Password of the DB user                   | a123b456**                  | 4.x              |
 | MAINTAIN_LOGS_FOR_DAYS | integer  | Number of days the logs will be available | 14                          | 5.x              |
+| MAX_LOGS_SEARCH_SIZE   | integer  | Max `size` of a logs search page          | 10000                       | 5.1.x            |
+| ADMIN_MAX_FAILED_ATTEMPTS | integer | Wrong credentials allowed per client ip before the lockout (`0` disables it) | 10 | 5.1.x |
+| ADMIN_LOCKOUT_MINUTES  | integer  | Lockout window after the first failure    | 15                          | 5.1.x            |
+| CORS_ALLOWED_ORIGINS   | text     | Comma separated allowed origin patterns   | * (ej: `https://*.example.com`) | 5.1.x        |
+| GATEWAY_CONNECT_TIMEOUT_MS | integer | Millis to connect to the upstream service | 10000                    | 5.1.x            |
+| GATEWAY_RESPONSE_TIMEOUT | duration | Max wait for the upstream response (`504` after it), empty = no timeout | 60s | 5.1.x       |
 
 #### PORT, PROFILE & APPLICATION_NAME <a name="4.2"></a>
 
@@ -186,6 +194,32 @@ system.
 
 By default it's configure to maintain logs for 14 days.
 
+#### Security, timeouts and client ip <a name="4.7"></a>
+
+- **Brute force lockout:** after `ADMIN_MAX_FAILED_ATTEMPTS` wrong credentials (login or Basic auth) from the same client
+  ip within `ADMIN_LOCKOUT_MINUTES`, the admin endpoints answer `429` to that ip until the window ends. It's kept in
+  memory, per instance.
+- **Timeouts:** an upstream that can't be reached answers `502`, one slower than `GATEWAY_RESPONSE_TIMEOUT` answers
+  `504`. Raise the timeout (or leave it empty) if some service has slow endpoints (big exports, long polling, SSE).
+- **Client ip:** the client ip (logs and lockout) is the first ip of the `X-Forwarded-For` header, or the connection ip
+  when there is none. That header is set by the client, so it's only trustworthy when the gateway runs behind a proxy
+  that overwrites it (ej: Railway, nginx with `proxy_set_header X-Forwarded-For $remote_addr`). If the gateway is
+  exposed directly, the ip in the logs can be spoofed and the lockout bypassed by changing it.
+- **Defaults:** the server logs a warning on startup when it runs with the default admin or db password.
+- **Health check:** `GET /{ADMIN_PATH}/health` (ej: `/_admin/health`), no auth, answers `{"status":"UP"}` (`503` if the
+  db is down). It's not saved in the logs. Use it as the health check path of Railway / Kubernetes / your load balancer.
+- **Single instance:** route changes made through the api are applied only on the instance that receives the call, the
+  other replicas load them on their next restart. Run a single instance (or restart the others after changing routes).
+- **Logs are written async:** each request log goes to an in-memory queue (10 000 max) saved in batches every second. If
+  the db is slow or down and the queue gets full, new logs are dropped (with a warning in the server log) instead of
+  slowing down the traffic. Logs still in the queue are saved on a graceful shutdown.
+
+#### Running the tests <a name="4.8"></a>
+
+- `./gradlew test`: unit tests (fast, no Docker).
+- `./gradlew integrationTest`: integration tests (`*IT`), they start Postgres with Testcontainers: **Docker required**.
+- `./gradlew check jacocoTestReport`: both, plus the coverage gate; the report is in `build/reports/jacoco/test/html`.
+
 ## **API Docs** <a name="5"></a>
 
 The **API Gateway** exposes several **management endpoints** that allow administrators to:
@@ -226,6 +260,12 @@ Each route defines how incoming requests are redirected to internal services.
 | POST   | /**_admin**/routes/multi-add  | Create multiple routes in same request                                          |
 | PUT    | /**_admin**/routes/{route-id} | Edit the route with id = route-id, replace it with route in body of the request |
 | DELETE | /**_admin**/routes/{route-id} | Delete the route with id = route-id                                             |
+
+> ⚠️ WARNING: avoid routes with overlapping paths (ej: `/svc/**` and `/svc/admin/**`): all routes have the same
+> priority, the one created first wins, and after a restart the order depends on the db.
+>
+> ℹ️ NOTE: `GET /routes/{route-id}` returns `route_id` and the rewrite as flat `rewrite_path_from` / `rewrite_path_to`,
+> while `GET /routes` returns `id` and a `rewrite_path` object. Kept as is for compatibility, it will be unified in 6.x.
 
 > ⚠️ WARNING: if the value of env `ADMIN_PATH` changes, the endpoints will change. These tables are based on the default
 > value of this variable (`_admin`).

@@ -1,6 +1,10 @@
 package dev.root101.api_gateway.config;
 
 import dev.root101.api_gateway.features.auth.logic.model.LoginRequest;
+import dev.root101.api_gateway.features.http_logs.data.entity.HttpLogEntity;
+import dev.root101.api_gateway.features.http_logs.logic.model.HttpLogResponse;
+import dev.root101.api_gateway.features.http_logs.logic.model.HttpLogSearchRequest;
+import dev.root101.api_gateway.features.http_logs.logic.model.HttpLogSearchResponse;
 import dev.root101.api_gateway.features.routes.logic.model.RewritePathModel;
 import dev.root101.api_gateway.features.routes.logic.model.RouteConfigRequest;
 import dev.root101.api_gateway.features.routes.logic.model.RouteConfigResponse;
@@ -23,8 +27,10 @@ import java.time.OffsetDateTime;
         //--------- ROUTES ---------\\
         RewritePathModel.class, RouteConfigRequest.class, RouteConfigResponse.class,
         OffsetDateTime.class,
-        //--------- ROUTES ---------\\
+        //--------- AUTH ---------\\
         LoginRequest.class,
+        //--------- HTTP LOGS ---------\\
+        HttpLogSearchRequest.class, HttpLogSearchResponse.class, HttpLogResponse.class, HttpLogEntity.RouteLog.class,
         //--------- Flyway ---------\\
         org.flywaydb.database.postgresql.TransactionalModel.class,
         org.flywaydb.core.internal.configuration.extensions.PrepareScriptFilenameConfigurationExtension.class,
