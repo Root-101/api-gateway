@@ -38,9 +38,9 @@ class ApiExceptionConverter {
         );
       case DioExceptionType.connectionError:
         return GlobalException(
-          //in web, dio handle 403/401 as a connection error, some weird stuff with navigator closing the connection
-          //all other status 200,404,422, work ok, only 403/401, so we gonna handle this connection error as an auth exception
-          type: GlobalExceptionType.auth,
+          //the gateway now sends CORS headers on 401/403 (next release after 5.0.1), so a connection error is a real network error
+          //(before, 401/403 arrived here and it was mapped to auth, logging the user out on any outage)
+          type: GlobalExceptionType.general,
           message: 'Connection Error', //TODO: intl
         );
       case DioExceptionType.badResponse:
@@ -49,37 +49,48 @@ class ApiExceptionConverter {
   }
 
   static GlobalException _parseBadResponse(DioException error) {
-    if (error.response!.statusCode == 422) {
+    final int status = error.response?.statusCode ?? 0;
+    final dynamic data = error.response?.data;
+
+    if (status == 422 && data is List) {
       return GlobalException(
         type: GlobalExceptionType.validation,
         message: 'Validation error', //TODO: intl
-        data:
-            (error.response!.data as List<dynamic>)
-                .map(
-                  (json) =>
-                      ValidationError.fromJson(json as Map<String, dynamic>),
-                )
-                .toList(),
+        data: data
+            .whereType<Map<String, dynamic>>()
+            .map(ValidationError.fromJson)
+            .toList(),
       );
-    } else if (error.response!.statusCode! == 401 ||
-        error.response!.statusCode! == 403) {
+    } else if (status == 401 || status == 403) {
       return GlobalException(
         type: GlobalExceptionType.auth,
         message: 'Auth error',
-        data: error.response!.data,
+        data: data,
       );
-    } else if (error.response!.statusCode! >= 500) {
+    } else if (status >= 500) {
       return GlobalException(
         type: GlobalExceptionType.general,
         message: 'Server error',
-        data: error.response!.data,
+        data: data,
       );
     } else {
       return GlobalException(
         type: GlobalExceptionType.general,
-        message: error.response!.data,
-        data: error.response!.data,
+        message: _messageFrom(data) ?? 'Error $status',
+        data: data,
       );
     }
+  }
+
+  ///body can be a plain string (ApiException) or a ProblemDetail json (spring ErrorResponse)
+  static String? _messageFrom(dynamic data) {
+    if (data is String && data.isNotEmpty) return data;
+    if (data is Map) {
+      for (final key in ['detail', 'message', 'title']) {
+        final value = data[key];
+        if (value is String && value.isNotEmpty) return value;
+      }
+    }
+    return null;
   }
 }

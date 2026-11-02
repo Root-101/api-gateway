@@ -48,22 +48,24 @@ class RoutesRepo {
     }
   }
 
-  Future restore({
-    required CredentialsModel credential,
-    required String rawFileContent,
-  }) async {
-    List<RouteRequest> createModels = [];
+  ///parses a backup file; wrong shapes throw TypeError (not Exception), so catch everything
+  List<RouteRequest> parseBackup(String rawFileContent) {
     try {
-      //      RouteRequest
       List<dynamic> rawList = jsonDecode(rawFileContent) as List<dynamic>;
-
-      createModels = rawList.map((e) => RouteRequest.fromJson(e)).toList();
-    } on Exception catch (_) {
+      return rawList.map((e) => RouteRequest.fromJson(e)).toList();
+    } catch (_) {
       throw GlobalException(
         type: GlobalExceptionType.general,
         message: app.intl.errorDecodingFile,
       );
     }
+  }
+
+  Future restore({
+    required CredentialsModel credential,
+    required String rawFileContent,
+  }) async {
+    List<RouteRequest> createModels = parseBackup(rawFileContent);
     if (createModels.isNotEmpty) {
       try {
         await client.createAll(credential: credential, models: createModels);
@@ -106,10 +108,12 @@ extension RouteRequestParser on RouteFormModel {
     description: description,
     path: path,
     uri: uri,
-    rewritePath: RewritePathEntity(
-      replaceFrom: rewritePath.replaceFrom,
-      replaceTo: rewritePath.replaceTo,
-    ),
+    rewritePath: rewritePath == null
+        ? null
+        : RewritePathEntity(
+            replaceFrom: rewritePath!.replaceFrom,
+            replaceTo: rewritePath!.replaceTo,
+          ),
   );
 }
 
@@ -121,10 +125,12 @@ extension RouteModelParser on RouteResponse {
     description: description,
     path: path,
     uri: uri,
-    rewritePath: RewritePathModel(
-      replaceFrom: rewritePath.replaceFrom,
-      replaceTo: rewritePath.replaceTo,
-    ),
+    rewritePath: rewritePath == null
+        ? null
+        : RewritePathModel(
+            replaceFrom: rewritePath!.replaceFrom,
+            replaceTo: rewritePath!.replaceTo,
+          ),
     gatewayUrl: gatewayUrl,
   );
 }

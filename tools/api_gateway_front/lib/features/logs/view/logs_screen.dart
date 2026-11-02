@@ -34,6 +34,8 @@ class _LogsScreenState extends State<LogsScreen> {
 
   late final LogsCubit cubit;
   late LogsDataSource dataSource;
+  //the grid source is rebuilt only for a new search result, not on every build (column resize), so it keeps its paging state
+  LogsSearchOkState? _dataSourceState;
 
   Map<String, double?> columnWidths = {
     'requestedAt': null,
@@ -52,9 +54,21 @@ class _LogsScreenState extends State<LogsScreen> {
   }
 
   @override
+  void dispose() {
+    searchController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return BlocConsumer<LogsCubit, LogsState>(
       listener: (context, state) {
+        if (state is LogsFilteringState) {
+          app.loading.show();
+        } else if (state is LogsSearchOkState ||
+            state is LogsSearchErrorState) {
+          app.loading.hide();
+        }
         if (state is LogsBackupState) {
           if (state is LogsBackupProcessingState) {
             app.loading.show();
@@ -76,11 +90,18 @@ class _LogsScreenState extends State<LogsScreen> {
         } else if (state is LogsSearchingState) {
           return const LoadingPage();
         } else if (state is LogsSearchOkState) {
-          dataSource = LogsDataSource(
+          if (!identical(_dataSourceState, state)) {
+            _dataSourceState = state;
+            dataSource = LogsDataSource(
             logs: state.items,
             fetchNextPage: cubit.fetchNextPage,
+            hasMorePages: () => cubit.hasMorePages,
+            onLoadError: (exception) => app.snack.showError(
+              message: exception.message,
+              context: context,
+            ),
             onRequestedAtTap: (log) async {
-              cubit.updateFilter(requestedAt: log.requestedAt);
+              cubit.updateFilter(requestedAt: log.requestedAtLocal);
             },
             onHttpMethodTap: (log) async {
               cubit.updateFilter(httpMethod: log.httpMethod);
@@ -96,6 +117,7 @@ class _LogsScreenState extends State<LogsScreen> {
               cubit.updateFilter(responseCode: log.responseCode);
             },
           );
+          }
 
           final TextStyle headerStyle = app.textTheme.bodyLarge!.copyWith(
             color: app.colors.neutral.grey3,
@@ -297,6 +319,17 @@ class _LogsScreenState extends State<LogsScreen> {
                                 BuildContext context,
                                 LoadMoreRows loadMoreRows,
                               ) {
+                                if (dataSource.loadFailed) {
+                                  return Center(
+                                    child: TextButton(
+                                      onPressed: () {
+                                        dataSource.loadFailed = false;
+                                        loadMoreRows();
+                                      },
+                                      child: Text(app.intl.tryAgain),
+                                    ),
+                                  );
+                                }
                                 loadMoreRows();
                                 return const SizedBox.shrink();
                               },
@@ -516,6 +549,8 @@ typedef OnColumnTap = Future Function(HttpLogModel log);
 
 class LogsDataSource extends DataGridSource {
   final Future<List<HttpLogModel>> Function() fetchNextPage;
+  final bool Function() hasMorePages;
+  final void Function(GlobalException exception) onLoadError;
 
   final OnColumnTap? onRequestedAtTap;
   final OnColumnTap? onHttpMethodTap;
@@ -525,11 +560,15 @@ class LogsDataSource extends DataGridSource {
 
   List<DataGridRow> _logs = [];
   bool isLoading = false;
-  bool hasMoreRows = true;
+
+  //set when a page fails, so the grid shows a retry button instead of re-requesting in a loop
+  bool loadFailed = false;
 
   LogsDataSource({
     required List<HttpLogModel> logs,
     required this.fetchNextPage,
+    required this.hasMorePages,
+    required this.onLoadError,
     this.onRequestedAtTap,
     this.onHttpMethodTap,
     this.onPathTap,
@@ -653,15 +692,11 @@ class LogsDataSource extends DataGridSource {
 
   @override
   Future<void> handleLoadMoreRows() async {
-    if (isLoading || !hasMoreRows) return;
+    if (isLoading || loadFailed || !hasMorePages()) return;
     isLoading = true;
 
     try {
       final moreLogs = await fetchNextPage();
-
-      if (moreLogs.length < LogsCubit.defaultPageSize) {
-        hasMoreRows = false;
-      }
 
       if (moreLogs.isNotEmpty) {
         final newRows = moreLogs.map<DataGridRow>((e) => _buildRow(e)).toList();
@@ -670,6 +705,10 @@ class LogsDataSource extends DataGridSource {
 
         notifyListeners(); // Refresh data-grid
       }
+    } on Exception catch (exc) {
+      loadFailed = true;
+      onLoadError(ExceptionConverter.parse(exc));
+      notifyListeners();
     } finally {
       isLoading = false;
     }

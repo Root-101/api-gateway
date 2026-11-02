@@ -7,7 +7,7 @@ class RouteModel {
   final String name;
   final String path;
   final String uri;
-  final RewritePathModel rewritePath;
+  final RewritePathModel? rewritePath;
   final String description;
 
   final String? gatewayUrl;
@@ -15,17 +15,16 @@ class RouteModel {
   String get enterPoint => '${gatewayUrl ?? ''}$path';
 
   ///Url of the final service where the redirect is gonna take place
-  String get redirectTo =>
-      '$uri$path'.replaceAll(rewritePath.replaceFrom, rewritePath.replaceTo);
+  String get redirectTo => '$uri${rewritePath?.apply(path) ?? path}';
 
   RouteModel({
     required this.name,
     required this.path,
     required this.uri,
-    required this.rewritePath,
     required this.description,
     required this.id,
     required this.createdAt,
+    this.rewritePath,
     this.gatewayUrl,
   });
 
@@ -35,8 +34,8 @@ class RouteModel {
       name: json['name'],
       path: json['path'],
       uri: json['uri'],
-      rewritePath: RewritePathModel.fromJson(json['rewrite_path']),
-      description: json['description'],
+      rewritePath: RewritePathModel.tryFromJson(json['rewrite_path']),
+      description: json['description'] ?? '',
       createdAt: DateTime.parse(json['created_at']),
     );
   }
@@ -47,7 +46,7 @@ class RouteModel {
       'name': name,
       'path': path,
       'uri': uri,
-      'rewrite_path': rewritePath.toJson(),
+      'rewrite_path': rewritePath?.toJson(),
       'description': description,
       'created_at': createdAt.toIso8601String(),
     };

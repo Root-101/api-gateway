@@ -21,9 +21,6 @@ class Init {
   static final instance = Init._();
 
   Future initialize() async {
-    ///para que salga el splash, si no es muy rapido
-    await Future.delayed(const Duration(seconds: 1));
-
     await FeaturesInit.init();
   }
 }
@@ -34,7 +31,7 @@ void main() {
 
   WidgetsFlutterBinding.ensureInitialized();
 
-  //manejo de errores
+  //error handling
   FlutterError.onError = (errorDetails) {
     app.logger.e('------------------- error 1 -------------------');
     app.logger.e(errorDetails.exception);
@@ -45,6 +42,20 @@ void main() {
     app.logger.e(stack);
     return true;
   };
+
+  //a broken env.js used to fail silently; show the operator what is wrong (no intl yet, plain text)
+  final configError = Environment.configError;
+  if (configError != null) {
+    runApp(
+      MaterialApp(
+        debugShowCheckedModeBanner: false,
+        home: Scaffold(
+          body: Center(child: SelectableText('Configuration error: $configError')),
+        ),
+      ),
+    );
+    return;
+  }
 
   runApp(
     FutureBuilder(

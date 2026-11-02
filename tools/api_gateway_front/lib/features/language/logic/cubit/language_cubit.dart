@@ -25,9 +25,7 @@ class LanguageCubit extends Cubit<LanguageState>
   LanguageModel currentSelectedLanguage = defaultLanguage;
 
   LanguageCubit({required this.repo})
-    : super(LanguageInitialState(current: defaultLanguage, allLanguages: [])) {
-    init();
-  }
+    : super(LanguageInitialState(current: defaultLanguage, allLanguages: []));
 
   Future init() async {
     String? key = await repo.loadKey();
@@ -62,7 +60,7 @@ class LanguageCubit extends Cubit<LanguageState>
       ),
     );
 
-    ///esta es la magia que actualiza el widget tree sin tener que hacer el rebuild de cada clase
+    ///this is the trick that updates the widget tree without rebuilding every class
     WidgetsBinding.instance.reassembleApplication();
   }
 
@@ -79,7 +77,7 @@ class LanguageCubit extends Cubit<LanguageState>
   Locale get locale => Locale(currentSelectedLanguage.key);
 }
 
-//estados
+//states
 abstract class LanguageState {
   final LanguageModel current;
   final List<LanguageModel> allLanguages;

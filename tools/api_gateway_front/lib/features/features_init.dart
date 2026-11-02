@@ -1,5 +1,3 @@
-import 'dart:io';
-
 import 'package:api_gateway_front/app_exporter.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -18,33 +16,49 @@ class FeaturesInit {
       ..options.receiveTimeout = const Duration(seconds: 10)
       ..httpClientAdapter
       ..options.headers = {
-        HttpHeaders.contentTypeHeader: ContentType.json.mimeType,
+        Headers.contentTypeHeader: Headers.jsonContentType,
       };
+    //any rejected credential on any admin call ends the session (routes, logs, form, restore, export)
+    dio.interceptors.add(
+      InterceptorsWrapper(
+        onError: (error, handler) {
+          final status = error.response?.statusCode;
+          final auth = app.di.find<AuthCubit>();
+          //not logged in = login screen or cached-login check, which handle their own errors
+          if ((status == 401 || status == 403) && auth.isLoggedIn) {
+            auth.logout();
+          }
+          handler.next(error);
+        },
+      ),
+    );
     app.di.put(dio);
 
     await AuthInit.init();
-    //once the auth is initialized, I subscribe to listen to logout changes to reset cubits
+    final sessionTimeout = Environment.sessionTimeout;
+    if (sessionTimeout != null) {
+      InactivityLogout.start(
+        auth: app.di.find<AuthCubit>(),
+        timeout: sessionTimeout,
+      );
+    }
+    //on logout: reset every cubit and go to login (single subscription, lives as long as the app)
     app.di.find<AuthCubit>().stream.listen((event) {
       if (event is AuthLogoutOkState) {
         FeaturesInit.reset();
+        LoginScreen.navigator.neglectGo();
       }
     });
     await LanguageInit.init();
     await RoutesInit.init(); //logs need routes for filter
 
     await Future.wait([LogsInit.init()]);
-
-    //prepare logout
-    app.di.find<AuthCubit>().stream.listen((event) {
-      if (event is AuthLogoutOkState) {
-        LoginScreen.navigator.neglectGo();
-      }
-    });
   }
 
   static Future<void> reset() async {
     app.di.find<AuthCubit>().reset();
     app.di.find<RoutesCubit>().reset();
+    app.di.find<LogsCubit>().reset();
   }
 
   static List<BlocProvider> blocProviders = [

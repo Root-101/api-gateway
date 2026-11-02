@@ -12,6 +12,7 @@
   "passwordHint": "admin123**",
   "login": "Login",
   "rememberMe": "Remember me",
+  "rememberMeWarning": "Your password will be stored in this browser. Use it only on a trusted device.",
   "section_validations": "--------- VALIDATIONS ---------",
   "requiredField": "Required field",
   "validUriField": "Must be a valid URI",
@@ -23,6 +24,9 @@
   "duplicate": "Duplicate",
   "delete": "Delete",
   "tryAgain": "Try again",
+  "cancel": "Cancel",
+  "deleteRouteConfirm": "Delete route \"{name}\"? This cannot be undone.",
+  "@deleteRouteConfirm": {"placeholders": {"name": {"type": "String"}}},
   "back": "Go Back",
   "section_routes": "--------- ROUTES ---------",
   "routes": "Routes",
@@ -82,5 +86,13 @@
   "selectFile": "Select file",
   "dropFileHere": "Drop file here",
   "errorLoadingFile": "Error loading file",
-  "errorDecodingFile": "Error decoding file (This is not the correct file)"
+  "errorDecodingFile": "Error decoding file (This is not the correct file)",
+  "restoreSummary": "{count} routes will be created",
+  "@restoreSummary": {"placeholders": {"count": {"type": "int"}}},
+  "restoreDuplicates": "Duplicated names, nothing would be created: {names}",
+  "@restoreDuplicates": {"placeholders": {"names": {"type": "String"}}},
+  "errorWrongRouteId": "Wrong route id",
+  "errorLoadingRoute": "Error loading route {id}. {message}",
+  "@errorLoadingRoute": {"placeholders": {"id": {"type": "String"}, "message": {"type": "String"}}},
+  "errorUnsupportedAction": "Unsupported action"
 }

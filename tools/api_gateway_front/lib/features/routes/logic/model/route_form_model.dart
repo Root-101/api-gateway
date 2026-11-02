@@ -4,7 +4,7 @@ class RouteFormModel {
   final String name;
   final String path;
   final String uri;
-  final RewritePathModel rewritePath;
+  final RewritePathModel? rewritePath;
   final String description;
 
   final String? gatewayUrl;
@@ -12,15 +12,14 @@ class RouteFormModel {
   String get enterPoint => '${gatewayUrl ?? ''}$path';
 
   ///Url of the final service where the redirect is gonna take place
-  String get redirectTo =>
-      '$uri$path'.replaceAll(rewritePath.replaceFrom, rewritePath.replaceTo);
+  String get redirectTo => '$uri${rewritePath?.apply(path) ?? path}';
 
   RouteFormModel({
     required this.name,
     required this.path,
     required this.uri,
-    required this.rewritePath,
     required this.description,
+    this.rewritePath,
     this.gatewayUrl,
   });
 }

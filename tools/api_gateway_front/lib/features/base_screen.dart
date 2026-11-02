@@ -3,7 +3,7 @@ import 'package:api_gateway_front/features/language/view/language_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
-///este es el screen base con el bottom-nav-bar
+///base screen with the navigation rail
 class BaseScreen extends StatefulWidget {
   /// The navigation shell and container for the branch Navigators.
   final StatefulNavigationShell navigationShell;

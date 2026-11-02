@@ -6,11 +6,12 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 RouteLogModel adminRoute = RouteLogModel(
   routeId: '00000000-0000-0000-0000-000000000000',
   routeName: 'Admin',
-  routePath: '/${env.ADMIN_PATH}/**',
+  routePath: '/${Environment.adminPath}/**',
 );
 
 final String noRouteId = 'NO-ROUTE';
-RouteLogModel noRoute = RouteLogModel(
+//getter so the name follows the current language
+RouteLogModel get noRoute => RouteLogModel(
   routeId: noRouteId,
   routeName: app.intl.filterNoRouteName,
   routePath: noRouteId,
@@ -63,12 +64,16 @@ class LogsCubit extends Cubit<LogsState>
     with GlobalEventBusCommunication<LogsState> {
   static const int defaultPage = 0;
   static const int defaultPageSize = 20;
+  static const int exportPageSize = 1000;
 
   final AuthCubit auth;
   final LogsRepo repo;
   final RoutesRepo routesRepo;
 
   int currentPage = 0;
+
+  //from the last response's total_pages, not from "page came back short"
+  bool hasMorePages = true;
 
   final List<HttpLogModel> items = [];
 
@@ -95,7 +100,18 @@ class LogsCubit extends Cubit<LogsState>
     });
   }
 
+  //called on logout: nothing from the previous session must survive
   void reset() {
+    items.clear();
+    routes.clear();
+    currentPage = defaultPage;
+    hasMorePages = true;
+    filters
+      ..query = null
+      ..responseCode = null
+      ..httpMethod = null
+      ..date = null
+      ..route = null;
     emit(const LogsInitialState());
   }
 
@@ -104,20 +120,13 @@ class LogsCubit extends Cubit<LogsState>
       emit(LogsSearchingState());
 
       await _updateRoutes();
-
-      //when start don't use filters (for now at least)
-      HttpLogSearchModel response = await repo.findAll(
-        credential: auth.current,
-        page: currentPage,
-        size: defaultPageSize,
-      );
-      currentPage++;
-      items.addAll(response.pageContent);
-
-      emit(LogsSearchOkState(items: items, filters: filters, routes: routes));
     } on Exception catch (exc) {
       emit(LogsSearchErrorState(ExceptionConverter.parse(exc)));
+      return;
     }
+
+    //always restart from page 0 with the active filters, so "try again" doesn't duplicate items
+    return _executeSearchFilters();
   }
 
   Future<List<HttpLogModel>> fetchNextPage() async {
@@ -133,6 +142,7 @@ class LogsCubit extends Cubit<LogsState>
       routeId: filters.route?.routeId,
     );
     currentPage++;
+    hasMorePages = currentPage < response.totalPages;
 
     items.addAll(response.pageContent);
 
@@ -208,6 +218,7 @@ class LogsCubit extends Cubit<LogsState>
 
   Future _executeSearchFilters() async {
     try {
+      emit(LogsFilteringState());
       items.clear();
 
       currentPage = 0;
@@ -223,6 +234,7 @@ class LogsCubit extends Cubit<LogsState>
         routeId: filters.route?.routeId,
       );
       currentPage++;
+      hasMorePages = currentPage < response.totalPages;
 
       items.addAll(response.pageContent);
 
@@ -261,22 +273,39 @@ class LogsCubit extends Cubit<LogsState>
     try {
       emit(LogsBackupProcessingState());
 
-      HttpLogSearchModel response = await repo.findAll(
-        credential: auth.current,
-        page: 0,
-        size: null,
-        query: filters.query,
-        method: filters.httpMethod,
-        responseCode: filters.responseCode,
-        fromDate: filters.date?.fromDate,
-        toDate: filters.date?.toDate,
-        routeId: filters.route?.routeId,
-      );
+      //the gateway caps size (MAX_LOGS_SEARCH_SIZE) and truncates silently, so walk every page
+      final List<HttpLogModel> all = [];
+      int totalElements = 0;
+      int page = 0;
+      int totalPages = 1;
+      while (page < totalPages) {
+        HttpLogSearchModel response = await repo.findAll(
+          credential: auth.current,
+          page: page,
+          size: exportPageSize,
+          query: filters.query,
+          method: filters.httpMethod,
+          responseCode: filters.responseCode,
+          fromDate: filters.date?.fromDate,
+          toDate: filters.date?.toDate,
+          routeId: filters.route?.routeId,
+        );
+        all.addAll(response.pageContent);
+        totalElements = response.totalElements;
+        totalPages = response.totalPages;
+        page++;
+      }
 
       final encoder = const JsonEncoder.withIndent('  ');
       String rawData = encoder.convert({
         'filters': filters.toJson(),
-        'data': response.toJson(),
+        'data': HttpLogSearchModel(
+          page: 0,
+          size: all.length,
+          totalPages: 1,
+          totalElements: totalElements,
+          pageContent: all,
+        ).toJson(),
       });
       ExportDocument.downloadDocument(
         rawData,
@@ -324,6 +353,11 @@ class LogsSearchErrorState extends LogsSearchState {
   GlobalException exception;
 
   LogsSearchErrorState(this.exception);
+}
+
+//not a LogsSearchState: the screen keeps the current table and only shows the loading overlay
+class LogsFilteringState extends LogsState {
+  LogsFilteringState();
 }
 
 //------------------------- BACKUP -------------------------\\

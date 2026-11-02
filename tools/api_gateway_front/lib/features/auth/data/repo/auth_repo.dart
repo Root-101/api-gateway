@@ -50,7 +50,7 @@ class AuthRepo {
 
         return (username: cacheUsername, password: cachePassword);
       }
-    } on Exception catch (exc) {
+    } on Exception {
       app.logger.e('Error loading credential from cache');
       await storage.deleteAll();
     }

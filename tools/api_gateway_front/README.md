@@ -37,6 +37,7 @@ The client can be customized using the following **environment variables**:
 |---------------------|--------------------------------------------------------------------------------|----------|------------------------------------------------------|------------------|
 | GATEWAY_SERVICE_URL | Base URL of the API Gateway service                                            | text     | [https://gateway-url.test](https://gateway-url.test) | 1.0.0            |
 | ADMIN_PATH          | Admin path of the gateway service (must match `ADMIN_PATH` in the API Gateway) | text     | \_admin                                              | 1.0.0            |
+| SESSION_TIMEOUT_MINUTES | Optional. Minutes without mouse/keyboard activity before the console logs out. `0` or missing = disabled | number | 0 | next |
 
 > ⚡ **Tip:** Ensure that the `ADMIN_PATH` matches the API Gateway configuration to allow proper authentication and
 > routing of admin requests.

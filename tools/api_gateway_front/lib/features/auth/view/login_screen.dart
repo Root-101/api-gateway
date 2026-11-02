@@ -51,6 +51,14 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   @override
+  void dispose() {
+    _focusNode.dispose();
+    usernameController.dispose();
+    passwordController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return BlocListener<AuthCubit, AuthState>(
       listenWhen: (previous, current) => current is AuthLoginState,
@@ -127,6 +135,15 @@ class _LoginScreenState extends State<LoginScreen> {
                                 app.intl.rememberMe,
                                 style: app.textTheme.bodyMedium,
                               ),
+                              //the api only has Basic auth, so "remember me" has to keep the password in browser storage
+                              subtitle: rememberMe
+                                  ? Text(
+                                      app.intl.rememberMeWarning,
+                                      style: app.textTheme.bodySmall?.copyWith(
+                                        color: app.colors.neutral.grey3,
+                                      ),
+                                    )
+                                  : null,
                               controlAffinity: ListTileControlAffinity.leading,
                               onChanged: (value) {
                                 setState(() {

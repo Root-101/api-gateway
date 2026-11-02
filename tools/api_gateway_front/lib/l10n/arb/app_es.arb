@@ -12,6 +12,7 @@
   "passwordHint": "admin123**",
   "login": "Login",
   "rememberMe": "Recordarme",
+  "rememberMeWarning": "Su contraseña se guardará en este navegador. Úselo solo en un equipo de confianza.",
   "section_validations": "--------- VALIDATIONS ---------",
   "requiredField": "Campo requerido",
   "validUriField": "Debe ser una URL válida",
@@ -23,6 +24,9 @@
   "duplicate": "Duplicar",
   "delete": "Eliminar",
   "tryAgain": "Intentar nuevamente",
+  "cancel": "Cancelar",
+  "deleteRouteConfirm": "¿Eliminar la ruta \"{name}\"? Esta acción no se puede deshacer.",
+  "@deleteRouteConfirm": {"placeholders": {"name": {"type": "String"}}},
   "back": "Regresar",
   "section_routes": "--------- ROUTES ---------",
   "routes": "Rutas",
@@ -82,5 +86,13 @@
   "selectFile": "Select file",
   "dropFileHere": "Arrastre un fichero aquí",
   "errorLoadingFile": "Error cargando archivo",
-  "errorDecodingFile": "Error decodificando el archivo (No es el archivo correcto)"
+  "errorDecodingFile": "Error decodificando el archivo (No es el archivo correcto)",
+  "restoreSummary": "Se crearán {count} rutas",
+  "@restoreSummary": {"placeholders": {"count": {"type": "int"}}},
+  "restoreDuplicates": "Nombres duplicados, no se crearía ninguna ruta: {names}",
+  "@restoreDuplicates": {"placeholders": {"names": {"type": "String"}}},
+  "errorWrongRouteId": "Id de ruta incorrecto",
+  "errorLoadingRoute": "Error cargando la ruta {id}. {message}",
+  "@errorLoadingRoute": {"placeholders": {"id": {"type": "String"}, "message": {"type": "String"}}},
+  "errorUnsupportedAction": "Acción no soportada"
 }

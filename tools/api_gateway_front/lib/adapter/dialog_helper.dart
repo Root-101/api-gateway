@@ -12,8 +12,8 @@ class DialogHelper {
     required Widget dialog,
     BuildContext? context,
     bool barrierDismissible = true,
-  }) async {
-    showGeneralDialog(
+  }) {
+    return showGeneralDialog(
       context: context ?? app.context,
       barrierDismissible: barrierDismissible,
       barrierLabel: '',

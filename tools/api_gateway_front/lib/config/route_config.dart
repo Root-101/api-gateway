@@ -8,6 +8,18 @@ class RouteConfig {
         ? RoutesScreen.navigator.path
         : LoginScreen.navigator.path,
     navigatorKey: navigatorKey,
+    //guard: logged-out users only see login, logged-in users never see it
+    refreshListenable: _AuthRefresh(app.di.find<AuthCubit>().stream),
+    redirect: (context, state) {
+      final loggedIn = app.di.find<AuthCubit>().isLoggedIn;
+      final atLogin = state.matchedLocation == LoginScreen.navigator.path;
+      if (!loggedIn && !atLogin) return LoginScreen.navigator.path;
+      if (loggedIn && atLogin) return RoutesScreen.navigator.path;
+      return null;
+    },
+    //unknown url: go home (the guard sends it to login when logged out)
+    onException: (context, state, router) =>
+        router.go(RoutesScreen.navigator.path),
     routes: [
       StatefulShellRoute.indexedStack(
         builder: (context, state, navigationShell) {
@@ -44,4 +56,10 @@ class RouteConfig {
       ),
     ],
   );
+}
+
+class _AuthRefresh extends ChangeNotifier {
+  _AuthRefresh(Stream<AuthState> stream) {
+    stream.listen((_) => notifyListeners());
+  }
 }

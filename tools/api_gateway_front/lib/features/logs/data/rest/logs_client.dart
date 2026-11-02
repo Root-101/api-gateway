@@ -116,9 +116,9 @@ class HttpLogResponse {
       userAgent: json['user_agent'] ?? '',
       httpMethod: json['http_method'] ?? '',
       path: json['path'] ?? '',
-      responseCode: json['response_code'] ?? 0,
-      requestDuration: json['request_duration'] ?? 0,
-      route: json['route'] != null
+      responseCode: (json['response_code'] as num?)?.toInt() ?? 0,
+      requestDuration: (json['request_duration'] as num?)?.toInt() ?? 0,
+      route: json['route'] is Map<String, dynamic>
           ? RouteLogResponse.fromJson(json['route'])
           : null,
     );
@@ -138,9 +138,10 @@ class RouteLogResponse {
 
   factory RouteLogResponse.fromJson(Map<String, dynamic> json) {
     return RouteLogResponse(
-      routeId: json['route_id'],
-      routeName: json['route_name'],
-      routePath: json['route_path'],
+      //defensive like HttpLogResponse: one bad row must not break the whole page
+      routeId: json['route_id']?.toString() ?? '',
+      routeName: json['route_name']?.toString() ?? '',
+      routePath: json['route_path']?.toString() ?? '',
     );
   }
 }

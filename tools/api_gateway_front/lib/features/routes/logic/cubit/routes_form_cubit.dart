@@ -39,7 +39,7 @@ class RoutesFormCubit extends Cubit<RoutesFormState>
         action == RoutesFormAction.duplicate) {
       try {
         if (paramRouteId == null) {
-          emit(RoutesFormLoadingErrorState('Wrong Route id'));
+          emit(RoutesFormLoadingErrorState(app.intl.errorWrongRouteId));
           return;
         }
         routeId = paramRouteId!;
@@ -63,14 +63,14 @@ class RoutesFormCubit extends Cubit<RoutesFormState>
       } on GlobalException catch (global) {
         emit(
           RoutesFormLoadingErrorState(
-            'Error loading Routes with id $routeId. ${global.message}',
+            app.intl.errorLoadingRoute(routeId, global.message),
           ),
         );
       } on Exception {
-        emit(RoutesFormLoadingErrorState('Unknown error loading Routes'));
+        emit(RoutesFormLoadingErrorState(app.intl.genericError));
       }
     } else {
-      RoutesFormLoadingErrorState('Accediendo a estado no soportado...');
+      emit(RoutesFormLoadingErrorState(app.intl.errorUnsupportedAction));
     }
   }
 

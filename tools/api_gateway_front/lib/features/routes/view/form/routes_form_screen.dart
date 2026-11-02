@@ -1,5 +1,4 @@
 import 'package:api_gateway_front/app_exporter.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -173,28 +172,50 @@ class _RoutesFormWidgetState extends State<RoutesFormWidget> {
   final _rewriteFromCtrl = TextEditingController();
   final _rewriteToCtrl = TextEditingController();
 
+  //local copy: clearing it must not mutate the cubit state's map
+  Map<String, String> _apiErrors = {};
+
   @override
   void initState() {
     super.initState();
+    _apiErrors = {...?widget.failValidations};
 
     if (widget.route != null) {
       _nameCtrl.text = widget.route!.name;
       _uriCtrl.text = widget.route!.uri;
       _pathCtrl.text = widget.route!.path;
-      _rewriteFromCtrl.text = widget.route!.rewritePath.replaceFrom;
-      _rewriteToCtrl.text = widget.route!.rewritePath.replaceTo;
+      _rewriteFromCtrl.text = widget.route!.rewritePath?.replaceFrom ?? '';
+      _rewriteToCtrl.text = widget.route!.rewritePath?.replaceTo ?? '';
     }
   }
 
   @override
+  void didUpdateWidget(covariant RoutesFormWidget oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.failValidations != oldWidget.failValidations) {
+      _apiErrors = {...?widget.failValidations};
+    }
+  }
+
+  @override
+  void dispose() {
+    _nameCtrl.dispose();
+    _uriCtrl.dispose();
+    _pathCtrl.dispose();
+    _rewriteFromCtrl.dispose();
+    _rewriteToCtrl.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    String? nameErrorText = widget.failValidations?['name'];
-    String? uriErrorText = widget.failValidations?['uri'];
-    String? pathErrorText = widget.failValidations?['path'];
+    String? nameErrorText = _apiErrors['name'];
+    String? uriErrorText = _apiErrors['uri'];
+    String? pathErrorText = _apiErrors['path'];
     String? rewriteFromErrorText =
-        widget.failValidations?['rewrite_path.replace_from'];
+        _apiErrors['rewrite_path.replace_from'];
     String? rewriteToErrorText =
-        widget.failValidations?['rewrite_path.replace_to'];
+        _apiErrors['rewrite_path.replace_to'];
 
     return Scaffold(
       backgroundColor: app.colors.neutral.transparent,
@@ -253,7 +274,11 @@ class _RoutesFormWidgetState extends State<RoutesFormWidget> {
                         label: app.intl.rewritePathFromLabel,
                         hint: app.intl.rewritePathFromHint,
                         maxLength: validator.required.maxShort,
-                        validator: validator.required.validator,
+                        validator: (value) =>
+                            validator.required.pairedValidator(
+                              value,
+                              _rewriteToCtrl.text,
+                            ),
                       ),
                     ),
                     app.dimensions.padding.m.gap(),
@@ -266,7 +291,11 @@ class _RoutesFormWidgetState extends State<RoutesFormWidget> {
                         label: app.intl.rewritePathToLabel,
                         hint: app.intl.rewritePathToHint,
                         maxLength: validator.required.maxShort,
-                        validator: validator.required.validator,
+                        validator: (value) =>
+                            validator.required.pairedValidator(
+                              value,
+                              _rewriteFromCtrl.text,
+                            ),
                       ),
                     ),
                   ],
@@ -276,15 +305,15 @@ class _RoutesFormWidgetState extends State<RoutesFormWidget> {
                 ///-------------- PREVIEW --------------\\\
                 Text(app.intl.preview, style: app.textTheme.labelMedium),
                 app.dimensions.padding.xs.gap(),
-                ValueListenableBuilder(
-                  valueListenable: CombinedValueNotifier([
+                ListenableBuilder(
+                  listenable: Listenable.merge([
                     _nameCtrl,
                     _uriCtrl,
                     _pathCtrl,
                     _rewriteFromCtrl,
                     _rewriteToCtrl,
                   ]),
-                  builder: (context, _, __) {
+                  builder: (context, _) {
                     return _buildSingleRouteTile(
                       model: RouteFormModel(
                         gatewayUrl: widget.gatewayUrl,
@@ -292,9 +321,9 @@ class _RoutesFormWidgetState extends State<RoutesFormWidget> {
                         uri: _uriCtrl.text,
                         path: _pathCtrl.text,
                         description: '',
-                        rewritePath: RewritePathModel(
-                          replaceFrom: _rewriteFromCtrl.text,
-                          replaceTo: _rewriteToCtrl.text,
+                        rewritePath: RewritePathModel.fromFields(
+                          from: _rewriteFromCtrl.text,
+                          to: _rewriteToCtrl.text,
                         ),
                       ),
                     );
@@ -315,12 +344,11 @@ class _RoutesFormWidgetState extends State<RoutesFormWidget> {
             if (!_formKey.currentState!.validate()) {
               return;
             } else {
-              //quito el foco del texto para que esconda el teclado
+              //remove focus from the text field to hide the keyboard
               FocusManager.instance.primaryFocus?.unfocus();
 
-              //limpio las excepciones viejas de la api
-              widget.failValidations?.clear();
-              setState(() {});
+              //clear old api validation errors
+              setState(() => _apiErrors = {});
 
               if (widget.action == RoutesFormAction.create ||
                   widget.action == RoutesFormAction.duplicate) {
@@ -329,11 +357,11 @@ class _RoutesFormWidgetState extends State<RoutesFormWidget> {
                     name: _nameCtrl.text,
                     uri: _uriCtrl.text,
                     path: _pathCtrl.text,
-                    //For the moment there is no space in ui for description
-                    description: '',
-                    rewritePath: RewritePathModel(
-                      replaceFrom: _rewriteFromCtrl.text,
-                      replaceTo: _rewriteToCtrl.text,
+                    //no description field in ui yet: keep the existing one so edit/duplicate don't wipe it
+                    description: widget.route?.description ?? '',
+                    rewritePath: RewritePathModel.fromFields(
+                      from: _rewriteFromCtrl.text,
+                      to: _rewriteToCtrl.text,
                     ),
                   ),
                 );
@@ -343,11 +371,10 @@ class _RoutesFormWidgetState extends State<RoutesFormWidget> {
                     name: _nameCtrl.text,
                     uri: _uriCtrl.text,
                     path: _pathCtrl.text,
-                    //For the moment there is no space in ui for description
-                    description: '',
-                    rewritePath: RewritePathModel(
-                      replaceFrom: _rewriteFromCtrl.text,
-                      replaceTo: _rewriteToCtrl.text,
+                    description: widget.route?.description ?? '',
+                    rewritePath: RewritePathModel.fromFields(
+                      from: _rewriteFromCtrl.text,
+                      to: _rewriteToCtrl.text,
                     ),
                   ),
                 );
@@ -412,28 +439,6 @@ class _RoutesFormWidgetState extends State<RoutesFormWidget> {
   }
 }
 
-class CombinedValueNotifier extends ValueNotifier<void> {
-  final List<ValueListenable> listeners;
-  final List<VoidCallback> _subscriptions = [];
-
-  CombinedValueNotifier(this.listeners) : super(null) {
-    for (final listenable in listeners) {
-      sub() => notifyListeners();
-      listenable.addListener(sub);
-      _subscriptions.add(sub);
-    }
-  }
-
-  @override
-  void dispose() {
-    for (int i = 0; i < listeners.length; i++) {
-      listeners[i].removeListener(_subscriptions[i]);
-    }
-    _subscriptions.clear();
-    super.dispose();
-  }
-}
-
 class RoutesFormValidator {
   RoutesFormRequiredFieldValidator required =
       RoutesFormRequiredFieldValidator();
@@ -444,6 +449,14 @@ class RoutesFormRequiredFieldValidator {
   int get maxLong => 255;
 
   int get maxShort => 155;
+
+  ///rewrite path is optional, but if one side is filled the other one is required
+  String? pairedValidator(String? value, String other) {
+    if ((value == null || value.isEmpty) && other.isNotEmpty) {
+      return app.intl.requiredField;
+    }
+    return null;
+  }
 
   String? validator(String? value) {
     if (value == null || value.isEmpty) {

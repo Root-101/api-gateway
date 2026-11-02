@@ -31,7 +31,19 @@ class _RoutesRestoreDialogState extends State<RoutesRestoreDialog> {
   late DropzoneViewController controller1;
   String? filename;
   String? rawFileContent;
+  //names of the routes in the file, validated on select so the user sees what will be created
+  List<String>? routeNames;
   bool highlighted = false;
+
+  //multi-add is all-or-nothing: one name already in the gateway or repeated in the file fails the whole batch (409)
+  List<String> get duplicatedNames {
+    if (routeNames == null) return [];
+    final state = app.di.find<RoutesCubit>().state;
+    final seen = <String>{
+      if (state is RoutesSearchOkState) ...state.routes.map((r) => r.name),
+    };
+    return routeNames!.where((name) => !seen.add(name)).toSet().toList();
+  }
 
   late final RoutesRestoreCubit cubit;
 
@@ -108,6 +120,23 @@ class _RoutesRestoreDialogState extends State<RoutesRestoreDialog> {
                                   textAlign: TextAlign.center,
                                 ),
                               ),
+                              if (routeNames != null) ...[
+                                app.dimensions.padding.m.gap(),
+                                Text(
+                                  app.intl.restoreSummary(routeNames!.length),
+                                  textAlign: TextAlign.center,
+                                ),
+                                if (duplicatedNames.isNotEmpty)
+                                  Text(
+                                    app.intl.restoreDuplicates(
+                                      duplicatedNames.join(', '),
+                                    ),
+                                    style: TextStyle(
+                                      color: app.colors.primary.red,
+                                    ),
+                                    textAlign: TextAlign.center,
+                                  ),
+                              ],
                               app.dimensions.padding.xxl.gap(),
                               PrimaryButton.primary(
                                 h: 45,
@@ -134,14 +163,22 @@ class _RoutesRestoreDialogState extends State<RoutesRestoreDialog> {
                 ),
               ),
               app.dimensions.padding.xl.gap(),
-              PrimaryButton.primary(
-                onPressed: () {
-                  if (rawFileContent != null) {
-                    cubit.restore(rawFileContent: rawFileContent!);
-                  }
-                },
-                icon: app.assets.icons.actions.upload,
-                title: app.intl.restore,
+              //PrimaryButton has no disabled state: dim it and block taps until a valid file without duplicates is loaded
+              IgnorePointer(
+                ignoring: routeNames == null || duplicatedNames.isNotEmpty,
+                child: Opacity(
+                  opacity:
+                      routeNames == null || duplicatedNames.isNotEmpty ? 0.4 : 1,
+                  child: PrimaryButton.primary(
+                    onPressed: () {
+                      if (rawFileContent != null) {
+                        cubit.restore(rawFileContent: rawFileContent!);
+                      }
+                    },
+                    icon: app.assets.icons.actions.upload,
+                    title: app.intl.restore,
+                  ),
+                ),
               ),
             ],
           ),
@@ -160,12 +197,23 @@ class _RoutesRestoreDialogState extends State<RoutesRestoreDialog> {
 
       final bytes = await controller1.getFileData(file);
       rawFileContent = utf8.decode(bytes);
+      routeNames = cubit.repo
+          .parseBackup(rawFileContent!)
+          .map((r) => r.name)
+          .toList();
 
       setState(() {});
-    } on Exception {
+    } catch (exc) {
       filename = null;
       rawFileContent = null;
-      app.snack.showError(message: app.intl.errorLoadingFile, context: context);
+      routeNames = null;
+      if (!context.mounted) return;
+      app.snack.showError(
+        message: exc is GlobalException
+            ? exc.message
+            : app.intl.errorLoadingFile,
+        context: context,
+      );
       setState(() {});
     }
   }

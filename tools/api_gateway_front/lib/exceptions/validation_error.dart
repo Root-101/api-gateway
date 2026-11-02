@@ -11,9 +11,10 @@ class ValidationError {
 
   factory ValidationError.fromJson(Map<String, dynamic> json) =>
       ValidationError(
-        source: json['source'],
-        invalidValue: json['invalid_value'],
-        message: json['message'],
+        //invalid_value can be null or a non-string (number, bool...)
+        source: json['source']?.toString() ?? '',
+        invalidValue: json['invalid_value']?.toString() ?? '',
+        message: json['message']?.toString() ?? '',
       );
 
   @override

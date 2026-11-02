@@ -76,6 +76,12 @@ class _LogsFilterDialogState extends State<LogsFilterDialog> {
   }
 
   @override
+  void dispose() {
+    responseCode.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: app.colors.neutral.transparent,

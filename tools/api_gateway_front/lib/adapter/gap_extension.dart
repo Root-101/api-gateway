@@ -1,6 +1,6 @@
 import 'package:gap/gap.dart';
 
-///Extensiones para facilitar el uso de gap
+///Extensions to simplify the use of gap
 ///uso: 1.0.gap()
 ///       1.gap()
 extension GapExtensionInt on int {

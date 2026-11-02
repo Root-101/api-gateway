@@ -43,11 +43,15 @@ FROM nginx:1.25.2-alpine
 
 #copy the info of the builded web app to nginx
 COPY --from=build-env /app/build/web /usr/share/nginx/html
+#security headers + cache policy (replaces the default server config)
+COPY nginx.conf /etc/nginx/conf.d/default.conf
 
 #from env
 ARG GATEWAY_SERVICE_URL
 ARG ADMIN_PATH
-RUN echo "window.env = { GATEWAY_SERVICE_URL: '${GATEWAY_SERVICE_URL}', ADMIN_PATH: '${ADMIN_PATH}' };" > /usr/share/nginx/html/env.js
+#optional: minutes of inactivity before logout, 0 = disabled
+ARG SESSION_TIMEOUT_MINUTES=0
+RUN echo "window.env = { GATEWAY_SERVICE_URL: '${GATEWAY_SERVICE_URL}', ADMIN_PATH: '${ADMIN_PATH}', SESSION_TIMEOUT_MINUTES: '${SESSION_TIMEOUT_MINUTES}' };" > /usr/share/nginx/html/env.js
 
 #Expose port and run nginx
 EXPOSE 80

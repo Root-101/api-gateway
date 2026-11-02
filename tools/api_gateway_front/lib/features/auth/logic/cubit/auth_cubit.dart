@@ -20,13 +20,8 @@ class AuthCubit extends Cubit<AuthState>
     return _currentUser!;
   }
 
-  AuthCubit({required this.repo}) : super(const AuthInitialState()) {
-    onBus<RoutesSearchErrorState>((event) {
-      if (event.exception.type == GlobalExceptionType.auth) {
-        logout();
-      }
-    });
-  }
+  //401/403 logout is done by the Dio interceptor in FeaturesInit
+  AuthCubit({required this.repo}) : super(const AuthInitialState());
 
   Future init() async {
     try {
@@ -48,8 +43,11 @@ class AuthCubit extends Cubit<AuthState>
         );
       }
     } on Exception catch (exc) {
-      logout();
       app.logger.e('Error login user with cache credentials');
+      //only forget the remembered credentials when the server rejects them, not on network errors
+      if (ExceptionConverter.parse(exc).type == GlobalExceptionType.auth) {
+        await logout();
+      }
     }
   }
 
@@ -84,8 +82,8 @@ class AuthCubit extends Cubit<AuthState>
   Future logout() async {
     emit(AuthLogoutInProgressState());
 
+    _currentUser = null; //first, so parallel 401s don't trigger a second logout
     await repo.logout(); //clear cache
-    _currentUser = null;
 
     emit(AuthLogoutOkState());
   }

@@ -38,12 +38,16 @@ class _RoutesScreenState extends State<RoutesScreen> {
   void initState() {
     super.initState();
     cubit = app.di.find();
+    if (cubit.state is RoutesInitialState) {
+      cubit.search();
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     Size size = MediaQuery.of(context).size;
-    int maxTiles = size.width ~/ 475;
+    //same tile width in both calculations; at least one column
+    int maxTiles = max(1, size.width ~/ 500);
     int realOccupied = maxTiles * 500;
     double missing = max(
       size.width - realOccupied - 50,
@@ -81,7 +85,6 @@ class _RoutesScreenState extends State<RoutesScreen> {
       buildWhen: (previous, current) => current is RoutesSearchState,
       builder: (context, state) {
         if (state is RoutesInitialState) {
-          cubit.search();
           return const LoadingPage();
         } else if (state is RoutesSearchingState) {
           return const LoadingPage();
@@ -167,6 +170,32 @@ class _RoutesScreenState extends State<RoutesScreen> {
     );
   }
 
+  Future<void> _confirmDelete(RouteModel model) async {
+    final bool? confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: Text(app.intl.delete),
+        content: Text(app.intl.deleteRouteConfirm(model.name)),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(false),
+            child: Text(app.intl.cancel),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(true),
+            child: Text(
+              app.intl.delete,
+              style: TextStyle(color: app.colors.primary.red),
+            ),
+          ),
+        ],
+      ),
+    );
+    if (confirmed == true) {
+      cubit.delete(route: model);
+    }
+  }
+
   Widget _buildSingleRouteTile({required RouteModel model}) {
     return SelectionArea(
       child: Container(
@@ -215,9 +244,7 @@ class _RoutesScreenState extends State<RoutesScreen> {
                         app.dimensions.padding.s.gap(),
                         PrimaryButton.svgIcon(
                           tooltipMessage: app.intl.delete,
-                          onPressed: () {
-                            cubit.delete(route: model);
-                          },
+                          onPressed: () => _confirmDelete(model),
                           icon: app.assets.icons.actions.delete,
                         ),
                       ],
@@ -237,7 +264,16 @@ class _RoutesScreenState extends State<RoutesScreen> {
                   color: app.colors.neutral.grey4,
                 ),
               ),
-              Text(model.enterPoint, style: app.textTheme.titleSmall),
+              //fixed-height card: one line, full url on hover
+              Tooltip(
+                message: model.enterPoint,
+                child: Text(
+                  model.enterPoint,
+                  style: app.textTheme.titleSmall,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
               app.dimensions.padding.s.gap(),
               Text(
                 app.intl.redirectedTo,
@@ -245,7 +281,15 @@ class _RoutesScreenState extends State<RoutesScreen> {
                   color: app.colors.neutral.grey4,
                 ),
               ),
-              Text(model.redirectTo, style: app.textTheme.titleSmall),
+              Tooltip(
+                message: model.redirectTo,
+                child: Text(
+                  model.redirectTo,
+                  style: app.textTheme.titleSmall,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
             ],
           ),
         ),

@@ -6,6 +6,6 @@ class CredentialsModel {
 
   @override
   String toString() {
-    return 'CredentialsModel{username: $username, password: $password}';
+    return 'CredentialsModel{username: $username}';
   }
 }

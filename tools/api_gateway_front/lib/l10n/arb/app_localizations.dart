@@ -170,6 +170,12 @@ abstract class AppLocalizations {
   /// **'Remember me'**
   String get rememberMe;
 
+  /// No description provided for @rememberMeWarning.
+  ///
+  /// In en, this message translates to:
+  /// **'Your password will be stored in this browser. Use it only on a trusted device.'**
+  String get rememberMeWarning;
+
   /// No description provided for @section_validations.
   ///
   /// In en, this message translates to:
@@ -235,6 +241,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Try again'**
   String get tryAgain;
+
+  /// No description provided for @cancel.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel'**
+  String get cancel;
+
+  /// No description provided for @deleteRouteConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete route \"{name}\"? This cannot be undone.'**
+  String deleteRouteConfirm(String name);
 
   /// No description provided for @back.
   ///
@@ -595,6 +613,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Error decoding file (This is not the correct file)'**
   String get errorDecodingFile;
+
+  /// No description provided for @restoreSummary.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} routes will be created'**
+  String restoreSummary(int count);
+
+  /// No description provided for @restoreDuplicates.
+  ///
+  /// In en, this message translates to:
+  /// **'Duplicated names, nothing would be created: {names}'**
+  String restoreDuplicates(String names);
+
+  /// No description provided for @errorWrongRouteId.
+  ///
+  /// In en, this message translates to:
+  /// **'Wrong route id'**
+  String get errorWrongRouteId;
+
+  /// No description provided for @errorLoadingRoute.
+  ///
+  /// In en, this message translates to:
+  /// **'Error loading route {id}. {message}'**
+  String errorLoadingRoute(String id, String message);
+
+  /// No description provided for @errorUnsupportedAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Unsupported action'**
+  String get errorUnsupportedAction;
 }
 
 class _AppLocalizationsDelegate

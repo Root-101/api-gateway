@@ -45,6 +45,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get rememberMe => 'Remember me';
 
   @override
+  String get rememberMeWarning =>
+      'Your password will be stored in this browser. Use it only on a trusted device.';
+
+  @override
   String get section_validations => '--------- VALIDATIONS ---------';
 
   @override
@@ -76,6 +80,14 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get tryAgain => 'Try again';
+
+  @override
+  String get cancel => 'Cancel';
+
+  @override
+  String deleteRouteConfirm(String name) {
+    return 'Delete route \"$name\"? This cannot be undone.';
+  }
 
   @override
   String get back => 'Go Back';
@@ -257,4 +269,25 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get errorDecodingFile =>
       'Error decoding file (This is not the correct file)';
+
+  @override
+  String restoreSummary(int count) {
+    return '$count routes will be created';
+  }
+
+  @override
+  String restoreDuplicates(String names) {
+    return 'Duplicated names, nothing would be created: $names';
+  }
+
+  @override
+  String get errorWrongRouteId => 'Wrong route id';
+
+  @override
+  String errorLoadingRoute(String id, String message) {
+    return 'Error loading route $id. $message';
+  }
+
+  @override
+  String get errorUnsupportedAction => 'Unsupported action';
 }

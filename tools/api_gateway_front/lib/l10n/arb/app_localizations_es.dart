@@ -45,6 +45,10 @@ class AppLocalizationsEs extends AppLocalizations {
   String get rememberMe => 'Recordarme';
 
   @override
+  String get rememberMeWarning =>
+      'Su contraseña se guardará en este navegador. Úselo solo en un equipo de confianza.';
+
+  @override
   String get section_validations => '--------- VALIDATIONS ---------';
 
   @override
@@ -76,6 +80,14 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get tryAgain => 'Intentar nuevamente';
+
+  @override
+  String get cancel => 'Cancelar';
+
+  @override
+  String deleteRouteConfirm(String name) {
+    return '¿Eliminar la ruta \"$name\"? Esta acción no se puede deshacer.';
+  }
 
   @override
   String get back => 'Regresar';
@@ -257,4 +269,25 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get errorDecodingFile =>
       'Error decodificando el archivo (No es el archivo correcto)';
+
+  @override
+  String restoreSummary(int count) {
+    return 'Se crearán $count rutas';
+  }
+
+  @override
+  String restoreDuplicates(String names) {
+    return 'Nombres duplicados, no se crearía ninguna ruta: $names';
+  }
+
+  @override
+  String get errorWrongRouteId => 'Id de ruta incorrecto';
+
+  @override
+  String errorLoadingRoute(String id, String message) {
+    return 'Error cargando la ruta $id. $message';
+  }
+
+  @override
+  String get errorUnsupportedAction => 'Acción no soportada';
 }

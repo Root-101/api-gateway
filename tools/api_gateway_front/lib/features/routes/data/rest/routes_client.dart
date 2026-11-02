@@ -81,15 +81,16 @@ class RouteRequest {
   final String name;
   final String path;
   final String uri;
-  final RewritePathEntity rewritePath;
+  //optional in the api: null = no rewrite filter
+  final RewritePathEntity? rewritePath;
   final String description;
 
   RouteRequest({
     required this.name,
     required this.path,
     required this.uri,
-    required this.rewritePath,
     required this.description,
+    this.rewritePath,
   });
 
   Map<String, dynamic> toJson() {
@@ -98,7 +99,7 @@ class RouteRequest {
       'path': path,
       'uri': uri,
       'description': description,
-      'rewrite_path': rewritePath.toJson(),
+      'rewrite_path': rewritePath?.toJson(),
     };
   }
 
@@ -107,8 +108,8 @@ class RouteRequest {
       name: json['name'],
       path: json['path'],
       uri: json['uri'],
-      rewritePath: RewritePathEntity.fromJson(json['rewrite_path']),
-      description: json['description'],
+      rewritePath: RewritePathEntity.tryFromJson(json['rewrite_path']),
+      description: json['description'] ?? '',
     );
   }
 }
@@ -120,27 +121,34 @@ class RouteResponse {
   final String name;
   final String path;
   final String uri;
-  final RewritePathEntity rewritePath;
+  final RewritePathEntity? rewritePath;
   final String description;
 
   RouteResponse({
     required this.name,
     required this.path,
     required this.uri,
-    required this.rewritePath,
     required this.description,
     required this.id,
     required this.createdAt,
+    this.rewritePath,
   });
 
+  //also parses GET /routes/{id}, which returns the raw entity: `route_id` and flat `rewrite_path_from`/`rewrite_path_to`
   factory RouteResponse.fromJson(Map<String, dynamic> json) {
     return RouteResponse(
-      id: json['id'],
+      id: json['id'] ?? json['route_id'],
       name: json['name'],
       path: json['path'],
       uri: json['uri'],
-      rewritePath: RewritePathEntity.fromJson(json['rewrite_path']),
-      description: json['description'],
+      rewritePath: RewritePathEntity.tryFromJson(
+        json['rewrite_path'] ??
+            {
+              'replace_from': json['rewrite_path_from'],
+              'replace_to': json['rewrite_path_to'],
+            },
+      ),
+      description: json['description'] ?? '',
       createdAt: json['created_at'],
     );
   }
@@ -152,11 +160,13 @@ class RewritePathEntity {
 
   RewritePathEntity({required this.replaceFrom, required this.replaceTo});
 
-  factory RewritePathEntity.fromJson(Map<String, dynamic> json) {
-    return RewritePathEntity(
-      replaceFrom: json['replace_from'],
-      replaceTo: json['replace_to'],
-    );
+  ///null when the route has no rewrite (api sends `rewrite_path: null`)
+  static RewritePathEntity? tryFromJson(dynamic json) {
+    if (json is! Map<String, dynamic>) return null;
+    final from = json['replace_from'];
+    final to = json['replace_to'];
+    if (from is! String || to is! String) return null;
+    return RewritePathEntity(replaceFrom: from, replaceTo: to);
   }
 
   Map<String, dynamic> toJson() {

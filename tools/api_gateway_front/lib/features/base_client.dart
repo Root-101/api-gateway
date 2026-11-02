@@ -1,8 +1,6 @@
 import 'dart:convert';
-import 'dart:io';
 
 import 'package:api_gateway_front/app_exporter.dart';
-import 'package:dio/dio.dart' hide Headers;
 import 'package:dio/dio.dart';
 
 abstract class BaseClient {
@@ -22,7 +20,7 @@ abstract class BaseClient {
     return Options(
       headers: <String, dynamic>{
         if (credentials != null)
-          HttpHeaders.authorizationHeader: 'Basic $credentials',
+          'authorization': 'Basic $credentials',
       },
     );
   }

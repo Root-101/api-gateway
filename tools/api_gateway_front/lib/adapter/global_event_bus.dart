@@ -2,7 +2,7 @@ import 'dart:async';
 
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-///Generalizacion de la logica de publisher/subcriber para oir cambios globales
+///Generic publisher/subscriber logic to listen to global changes
 mixin GlobalEventBusCommunication<T> on Cubit<T> {
   List<StreamSubscription> subscriptions = [];
 
