@@ -6,7 +6,7 @@ RUN apt-get update \
     && apt-get install -y --no-install-recommends curl git unzip xz-utils ca-certificates \
     && rm -rf /var/lib/apt/lists/*
 
-ARG FLUTTER_VERSION=3.41.9
+ARG FLUTTER_VERSION=3.47.9
 ARG FLUTTER_SDK_LOCATION=/usr/local/flutter
 
 RUN git clone --depth 1 --branch $FLUTTER_VERSION https://github.com/flutter/flutter.git $FLUTTER_SDK_LOCATION
@@ -16,7 +16,8 @@ RUN flutter config --no-analytics && flutter precache --web
 
 WORKDIR /app
 #dependencies first, so the pub get layer is cached while only code changes
-COPY pubspec.yaml pubspec.lock ./
+#glob: pubspec.lock is git-ignored, so it may be missing in a clean clone
+COPY pubspec.* ./
 RUN flutter pub get
 COPY . .
 RUN flutter build web --release

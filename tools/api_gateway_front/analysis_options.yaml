@@ -3,6 +3,8 @@ include: package:flutter_lints/flutter.yaml
 analyzer:
   exclude:
     - '**/*.g.dart'
+    - build/**
+    - web/**
 
 linter:
   rules:

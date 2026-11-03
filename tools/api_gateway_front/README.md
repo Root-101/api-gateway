@@ -66,7 +66,7 @@ Tests run in a browser (the app is web-only): `fvm flutter test --platform chrom
 
 ## Flutter<a name="3"></a>
 
-This project is developed using **Flutter**, currently version `3.41.9` (pinned in `.fvmrc` and the `Dockerfile`).
+This project is developed using **Flutter**, currently version `3.47.9` (pinned in `.fvmrc` and the `Dockerfile`).
 
 > 💡 **Note:** Flutter was chosen for rapid development and cross-platform compatibility.
 > As a single developer project, it allows quick updates while maintaining a clean and responsive admin interface.

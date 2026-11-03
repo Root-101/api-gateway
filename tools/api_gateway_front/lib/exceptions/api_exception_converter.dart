@@ -31,6 +31,11 @@ class ApiExceptionConverter {
           type: GlobalExceptionType.general,
           message: 'Send timeout with server', //TODO: intl
         );
+      case DioExceptionType.transformTimeout:
+        return GlobalException(
+          type: GlobalExceptionType.general,
+          message: 'Timeout processing the API server response', //TODO: intl
+        );
       case DioExceptionType.badCertificate:
         return GlobalException(
           type: GlobalExceptionType.general,
