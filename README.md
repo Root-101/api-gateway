@@ -1,7 +1,8 @@
 # Api-Gateway
 
 [![Version](https://img.shields.io/badge/Version-5.x-blue)](#)
-[![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.5-green)](#)
+[![Spring Boot](https://img.shields.io/badge/Spring%20Boot-4.1-green)](#)
+[![Java](https://img.shields.io/badge/Java-25-orange)](#)
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-blue)](#)
 [![Flutter](https://img.shields.io/badge/Flutter-3.35-02569B)](#)
 [![License](https://img.shields.io/badge/license-Apache-green)](#)
@@ -215,6 +216,8 @@ By default it's configure to maintain logs for 14 days.
   slowing down the traffic. Logs still in the queue are saved on a graceful shutdown.
 
 #### Running the tests <a name="4.8"></a>
+
+A **JDK 25** must be installed (Gradle finds it by itself through its toolchain, it does not need to be the one in `JAVA_HOME`).
 
 - `./gradlew test`: unit tests (fast, no Docker).
 - `./gradlew integrationTest`: integration tests (`*IT`), they start Postgres with Testcontainers: **Docker required**.

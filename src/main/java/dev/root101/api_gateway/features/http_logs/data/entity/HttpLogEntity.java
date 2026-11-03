@@ -1,12 +1,10 @@
 package dev.root101.api_gateway.features.http_logs.data.entity;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import lombok.SneakyThrows;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.relational.core.mapping.Column;
 import org.springframework.data.relational.core.mapping.Table;
@@ -18,9 +16,6 @@ import java.util.UUID;
 
 @Table("http_log")
 public class HttpLogEntity {
-    //Own mapper on purpose (not the snake_case bean): the `route` column already stores camelCase json (`routeId`...),
-    //changing it would break reading the old rows and the `route_id` search (LIKE over that json)
-    private static final ObjectMapper objectMapper = new ObjectMapper();
 
     @Getter
     @Setter
@@ -124,16 +119,14 @@ public class HttpLogEntity {
             );
         }
 
-        @SneakyThrows
         public String toStringJson() {
-            return objectMapper
+            return RouteLogJson.MAPPER
                     .writeValueAsString(this);
         }
 
-        @SneakyThrows
         public static RouteLog fromStringJson(String json) {
             if (json == null) return null;
-            return objectMapper.readValue(json, RouteLog.class);
+            return RouteLogJson.MAPPER.readValue(json, RouteLog.class);
         }
     }
 }

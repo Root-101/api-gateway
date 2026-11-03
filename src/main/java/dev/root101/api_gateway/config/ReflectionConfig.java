@@ -33,7 +33,6 @@ import java.time.OffsetDateTime;
         HttpLogSearchRequest.class, HttpLogSearchResponse.class, HttpLogResponse.class, HttpLogEntity.RouteLog.class,
         //--------- Flyway ---------\\
         org.flywaydb.database.postgresql.TransactionalModel.class,
-        org.flywaydb.core.internal.configuration.extensions.PrepareScriptFilenameConfigurationExtension.class,
         //--------- CLOUD ---------\\
         org.springframework.cloud.client.loadbalancer.reactive.ReactiveLoadBalancer.class,
 })

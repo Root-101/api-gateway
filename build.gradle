@@ -1,9 +1,9 @@
 plugins {
-    id 'org.springframework.boot' version '3.5.14'
+    id 'org.springframework.boot' version '4.1.2'
     id 'io.spring.dependency-management' version '1.1.7'
     id 'java'
     id 'application'
-    id 'org.graalvm.buildtools.native' version '0.11.3'
+    id 'org.graalvm.buildtools.native' version '1.1.18'
     id 'jacoco'
 }
 
@@ -16,7 +16,10 @@ repositories {
 }
 
 java {
-    sourceCompatibility = JavaVersion.VERSION_21
+    //gradle picks (or detects) a JDK 25 for compile/tests/AOT, no matter the JDK running gradle
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(25)
+    }
 }
 
 dependencies {
@@ -32,32 +35,35 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-actuator'
 
     //DB
+    //versions of the libraries managed by spring boot come from its BOM
     implementation 'org.springframework.boot:spring-boot-starter-data-r2dbc'
-    implementation 'org.postgresql:r2dbc-postgresql:1.1.1.RELEASE'
+    implementation 'org.postgresql:r2dbc-postgresql'
 
     //lombok: autogenerate getters, setters....
-    compileOnly 'org.projectlombok:lombok:1.18.46'
-    annotationProcessor 'org.projectlombok:lombok:1.18.46'
+    compileOnly 'org.projectlombok:lombok'
+    annotationProcessor 'org.projectlombok:lombok'
 
     //custom exceptions, validations & more
-    implementation 'dev.root101.commons:commons:5.5.2'
+    implementation 'dev.root101.commons:commons:5.5.3'
 
-    //flyway
-    implementation 'org.flywaydb:flyway-core:11.12.0'
-    implementation 'org.flywaydb:flyway-database-postgresql:11.12.0'
-    implementation 'org.postgresql:postgresql:42.7.10'
+    //flyway (spring boot 4: the auto-configuration lives in its own starter)
+    implementation 'org.springframework.boot:spring-boot-starter-flyway'
+    implementation 'org.flywaydb:flyway-database-postgresql'
+    implementation 'org.postgresql:postgresql'
 
     //tests
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
-    testImplementation 'org.testcontainers:postgresql:1.21.4'
-    testImplementation 'org.testcontainers:junit-jupiter:1.21.4'
+    testImplementation 'org.springframework.boot:spring-boot-webtestclient'
+    testImplementation 'org.testcontainers:testcontainers-postgresql'
     testImplementation 'io.projectreactor:reactor-test'
+    //gradle 9 no longer adds the junit launcher by itself
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 }
 
 dependencyManagement {
     imports {
-        //release train aligned with spring boot 3.5 (gateway 4.3.4, loadbalancer 4.3.2)
-        mavenBom 'org.springframework.cloud:spring-cloud-dependencies:2025.0.2'
+        //release train aligned with spring boot 4.0/4.1 (gateway 5.0.4, loadbalancer 5.0.4)
+        mavenBom 'org.springframework.cloud:spring-cloud-dependencies:2025.1.4'
     }
 }
 

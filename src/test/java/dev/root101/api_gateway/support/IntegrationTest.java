@@ -8,11 +8,12 @@ import dev.root101.api_gateway.features.routes.logic.model.RouteConfigRequest;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.webtestclient.autoconfigure.AutoConfigureWebTestClient;
 import org.springframework.http.HttpHeaders;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.web.reactive.server.WebTestClient;
-import org.testcontainers.containers.PostgreSQLContainer;
+import org.testcontainers.postgresql.PostgreSQLContainer;
 import reactor.core.publisher.Mono;
 import reactor.netty.DisposableServer;
 import reactor.netty.http.server.HttpServer;
@@ -33,6 +34,7 @@ import static org.awaitility.Awaitility.await;
  * State is NOT cleaned between tests: each test uses its own unique names/paths ({@link #unique()}),
  * so tests are independent without having to reset the gateway routes.
  */
+@AutoConfigureWebTestClient
 @SpringBootTest(
         webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
         properties = {
@@ -47,7 +49,7 @@ public abstract class IntegrationTest {
     public static final String ADMIN_PASSWORD = "admin123**";
 
     //singleton container: started once, stopped by testcontainers (ryuk) when the JVM ends
-    protected static final PostgreSQLContainer<?> POSTGRES = new PostgreSQLContainer<>("postgres:16");
+    protected static final PostgreSQLContainer POSTGRES = new PostgreSQLContainer("postgres:16");
 
     private static final Pattern STATUS = Pattern.compile("/status/(\\d{3})");
 

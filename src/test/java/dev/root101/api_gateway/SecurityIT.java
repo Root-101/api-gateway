@@ -88,7 +88,7 @@ class SecurityIT extends IntegrationTest {
         webTestClient.post().uri("/%s/auth/login".formatted(ADMIN_PATH))
                 .bodyValue(Map.of("username", "", "password", ""))
                 .exchange()
-                .expectStatus().isEqualTo(HttpStatus.UNPROCESSABLE_ENTITY)
+                .expectStatus().isEqualTo(HttpStatus.UNPROCESSABLE_CONTENT)
                 .expectBody().jsonPath("$.length()").isEqualTo(2);
     }
 

@@ -13,7 +13,7 @@ import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.r2dbc.core.DatabaseClient;
 import org.springframework.test.web.reactive.server.WebTestClient;
-import org.testcontainers.containers.PostgreSQLContainer;
+import org.testcontainers.postgresql.PostgreSQLContainer;
 import reactor.test.StepVerifier;
 
 import java.util.List;
@@ -99,7 +99,7 @@ class RoutesIT extends IntegrationTest {
     @MethodSource("invalidRoutes")
     void invalidRouteIs422WithFieldErrors(RouteConfigRequest request) {
         admin(HttpMethod.POST, "/routes").bodyValue(request).exchange()
-                .expectStatus().isEqualTo(HttpStatus.UNPROCESSABLE_ENTITY)
+                .expectStatus().isEqualTo(HttpStatus.UNPROCESSABLE_CONTENT)
                 .expectBody()
                 .jsonPath("$[0].source").exists()
                 .jsonPath("$[0].message").exists();

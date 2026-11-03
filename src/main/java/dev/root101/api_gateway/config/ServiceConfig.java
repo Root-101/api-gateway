@@ -1,9 +1,9 @@
 package dev.root101.api_gateway.config;
 
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.PropertyNamingStrategies;
-import com.fasterxml.jackson.databind.SerializationFeature;
+import tools.jackson.databind.DeserializationFeature;
+import tools.jackson.databind.PropertyNamingStrategies;
+import tools.jackson.databind.json.JsonMapper;
+import tools.jackson.databind.cfg.DateTimeFeature;
 import dev.root101.commons.validation.ValidationService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -45,12 +45,14 @@ public class ServiceConfig {
     }
 
     @Bean
-    public ObjectMapper objectMapper(PropertyNamingStrategies.NamingBase namingStrategy) {
-        return new ObjectMapper()
-                .findAndRegisterModules()
-                .configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false)
-                .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
-                .setPropertyNamingStrategy(namingStrategy);
+    public JsonMapper jsonMapper(PropertyNamingStrategies.NamingBase namingStrategy) {
+        //jackson 2 defaults: same json in/out as before the jackson 3 upgrade (API contract); dates as ISO strings
+        return JsonMapper.builderWithJackson2Defaults()
+                .findAndAddModules()
+                .disable(DateTimeFeature.WRITE_DATES_AS_TIMESTAMPS)
+                .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
+                .propertyNamingStrategy(namingStrategy)
+                .build();
     }
 
     @Bean

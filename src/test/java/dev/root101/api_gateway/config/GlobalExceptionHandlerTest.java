@@ -1,6 +1,6 @@
 package dev.root101.api_gateway.config;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.json.JsonMapper;
 import dev.root101.commons.exceptions.NotFoundException;
 import dev.root101.commons.exceptions.ValidationException;
 import io.netty.channel.ConnectTimeoutException;
@@ -27,7 +27,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 class GlobalExceptionHandlerTest {
 
-    private final GlobalExceptionHandler handler = new GlobalExceptionHandler(new ObjectMapper());
+    private final GlobalExceptionHandler handler = new GlobalExceptionHandler(JsonMapper.builderWithJackson2Defaults().build());
 
     private MockServerWebExchange exchange() {
         return MockServerWebExchange.from(MockServerHttpRequest.get("/any"));
@@ -66,14 +66,14 @@ class GlobalExceptionHandlerTest {
     void statusAndBodyPerException(Throwable error, HttpStatus status, String body) {
         MockServerWebExchange exchange = handled(error);
 
-        assertThat(exchange.getResponse().getStatusCode()).isEqualTo(status);
+        assertThat(exchange.getResponse().getStatusCode().value()).isEqualTo(status.value());
         assertThat(exchange.getResponse().getBodyAsString().block()).contains(body);
     }
 
     static Stream<Arguments> errors() {
         return Stream.of(
                 Arguments.of(new ValidationException(new ValidationException.ValidationErrorMessage("name", "", "must not be blank")),
-                        HttpStatus.UNPROCESSABLE_ENTITY, "{\"source\":\"name\",\"invalid_value\":\"\",\"message\":\"must not be blank\"}"),
+                        HttpStatus.UNPROCESSABLE_CONTENT, "{\"source\":\"name\",\"invalid_value\":\"\",\"message\":\"must not be blank\"}"),
                 Arguments.of(new NotFoundException("Route does not exist: x"), HttpStatus.NOT_FOUND, "Route does not exist: x"),
                 Arguments.of(new DataIntegrityViolationException("duplicate key value violates unique constraint \"unique_route_name\""),
                         HttpStatus.CONFLICT, "Conflict with existing data"),

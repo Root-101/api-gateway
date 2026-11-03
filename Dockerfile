@@ -1,5 +1,9 @@
 #Stage 1: Build
-FROM gradle:jdk-21-and-22-graal-jammy AS builder
+#GraalVM CE 25 (same java version as the project)
+FROM ghcr.io/graalvm/native-image-community:25 AS builder
+
+#gradlew needs xargs (findutils), and git to fetch the `java-commons` source dependency
+RUN microdnf install -y findutils git && microdnf clean all
 
 WORKDIR /workspace
 

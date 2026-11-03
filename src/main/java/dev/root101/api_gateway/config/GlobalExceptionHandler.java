@@ -1,13 +1,13 @@
 package dev.root101.api_gateway.config;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.ObjectMapper;
 import dev.root101.commons.exceptions.ApiException;
 import dev.root101.commons.exceptions.ValidationException;
 import io.netty.channel.ConnectTimeoutException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.boot.web.reactive.error.ErrorWebExceptionHandler;
+import org.springframework.boot.webflux.error.ErrorWebExceptionHandler;
 import org.springframework.core.annotation.Order;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
@@ -117,7 +117,7 @@ public class GlobalExceptionHandler implements ErrorWebExceptionHandler {
             }
 
             return response.writeWith(Mono.just(response.bufferFactory().wrap(bytes)));
-        } catch (JsonProcessingException e) {
+        } catch (JacksonException e) {
             log.error("Error writing the error response", e);
             return Mono.error(rawEx);
         }
