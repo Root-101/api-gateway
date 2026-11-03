@@ -75,6 +75,9 @@ class LogsCubit extends Cubit<LogsState>
   //from the last response's total_pages, not from "page came back short"
   bool hasMorePages = true;
 
+  //total_elements of the last search (with the active filters)
+  int totalElements = 0;
+
   final List<HttpLogModel> items = [];
 
   final List<RouteLogModel> routes = [];
@@ -106,6 +109,7 @@ class LogsCubit extends Cubit<LogsState>
     routes.clear();
     currentPage = defaultPage;
     hasMorePages = true;
+    totalElements = 0;
     filters
       ..query = null
       ..responseCode = null
@@ -148,6 +152,9 @@ class LogsCubit extends Cubit<LogsState>
 
     return response.pageContent;
   }
+
+  ///same search and filters from page 0 (logs are written in ~1 s batches, so the newest may take a moment)
+  Future refresh() => _executeSearchFilters();
 
   Future applySearch({required String query}) async {
     filters.query = query;
@@ -235,6 +242,7 @@ class LogsCubit extends Cubit<LogsState>
       );
       currentPage++;
       hasMorePages = currentPage < response.totalPages;
+      totalElements = response.totalElements;
 
       items.addAll(response.pageContent);
 

@@ -42,11 +42,31 @@ The client can be customized using the following **environment variables**:
 > ⚡ **Tip:** Ensure that the `ADMIN_PATH` matches the API Gateway configuration to allow proper authentication and
 > routing of admin requests.
 
+The variables are read at **container start** (an entrypoint script writes `env.js`), so one image works for every
+environment:
+
+```bash
+docker build -t api-gateway-web ./tools/api_gateway_front
+docker run -p 80:80   -e GATEWAY_SERVICE_URL=https://gateway-url.test   -e ADMIN_PATH=_admin   api-gateway-web
+```
+
+Build args with the same names still work as defaults (e.g. `args:` in `docker-compose.yml`).
+
+### Run locally
+
+```bash
+cp web/env.example.js web/env.js   # web/env.js is git-ignored, edit it for your gateway
+fvm flutter pub get
+fvm flutter run -d chrome
+```
+
+Tests run in a browser (the app is web-only): `fvm flutter test --platform chrome`.
+
 ---
 
 ## Flutter<a name="3"></a>
 
-This project is developed using **Flutter**, currently version `3.35.1` (as of 05/06/2025).
+This project is developed using **Flutter**, currently version `3.41.9` (pinned in `.fvmrc` and the `Dockerfile`).
 
 > 💡 **Note:** Flutter was chosen for rapid development and cross-platform compatibility.
 > As a single developer project, it allows quick updates while maintaining a clean and responsive admin interface.

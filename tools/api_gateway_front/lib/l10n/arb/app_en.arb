@@ -94,5 +94,17 @@
   "errorWrongRouteId": "Wrong route id",
   "errorLoadingRoute": "Error loading route {id}. {message}",
   "@errorLoadingRoute": {"placeholders": {"id": {"type": "String"}, "message": {"type": "String"}}},
-  "errorUnsupportedAction": "Unsupported action"
+  "errorUnsupportedAction": "Unsupported action",
+  "descriptionLabel": "Description",
+  "descriptionHint": "What this route is for (optional)",
+  "searchRoutes": "Search by name, path or URI",
+  "copiedToClipboard": "Copied to clipboard",
+  "copy": "Copy",
+  "refresh": "Refresh",
+  "totalLogs": "{count} logs",
+  "@totalLogs": {"placeholders": {"count": {"type": "int"}}},
+  "gatewayReachable": "Gateway reachable",
+  "gatewayUnreachable": "Gateway unreachable",
+  "consoleVersion": "Console v{version}",
+  "@consoleVersion": {"placeholders": {"version": {"type": "String"}}}
 }

@@ -3,6 +3,7 @@ import 'dart:math';
 import 'package:api_gateway_front/app_exporter.dart';
 import 'package:api_gateway_front/features/routes/view/form/routes_form_screen.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
@@ -33,6 +34,29 @@ class RoutesScreen extends StatefulWidget {
 
 class _RoutesScreenState extends State<RoutesScreen> {
   late final RoutesCubit cubit;
+
+  final TextEditingController _searchCtrl = TextEditingController();
+  String _query = '';
+
+  //local filter: the api has no search for routes and the list is small
+  List<RouteModel> _filter(List<RouteModel> routes) => _query.isEmpty
+      ? routes
+      : routes
+            .where(
+              (r) => [
+                r.name,
+                r.path,
+                r.uri,
+                r.description,
+              ].any((field) => field.toLowerCase().contains(_query)),
+            )
+            .toList();
+
+  @override
+  void dispose() {
+    _searchCtrl.dispose();
+    super.dispose();
+  }
 
   @override
   void initState() {
@@ -127,7 +151,23 @@ class _RoutesScreenState extends State<RoutesScreen> {
                 painter: GridDotPainter(),
                 child: Padding(
                   padding: EdgeInsets.all(app.dimensions.padding.l),
-                  child: state.routes.isEmpty
+                  child: Column(
+                    children: [
+                      Align(
+                        alignment: Alignment.centerLeft,
+                        child: SizedBox(
+                          width: 450,
+                          child: EMTextSearchField(
+                            controller: _searchCtrl,
+                            hint: app.intl.searchRoutes,
+                            onSearch: (value) => setState(
+                              () => _query = value.trim().toLowerCase(),
+                            ),
+                          ),
+                        ),
+                      ),
+                      Expanded(
+                        child: _filter(state.routes).isEmpty
                       ? const NoDataPage()
                       : Padding(
                           padding: EdgeInsets.symmetric(
@@ -142,7 +182,7 @@ class _RoutesScreenState extends State<RoutesScreen> {
                                   crossAxisSpacing: app.dimensions.padding.l,
                                   mainAxisSpacing: app.dimensions.padding.l,
                                 ),
-                            children: state.routes
+                            children: _filter(state.routes)
                                 .map(
                                   (model) =>
                                       _buildSingleRouteTile(model: model),
@@ -150,6 +190,9 @@ class _RoutesScreenState extends State<RoutesScreen> {
                                 .toList(),
                           ),
                         ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),
@@ -216,7 +259,10 @@ class _RoutesScreenState extends State<RoutesScreen> {
                   children: [
                     Flexible(
                       child: Tooltip(
-                        message: model.name,
+                        //the card has a fixed height: the description lives in the tooltip
+                        message: model.description.isEmpty
+                            ? model.name
+                            : [model.name, model.description].join('\n'),
                         child: Text(
                           model.name,
                           style: app.textTheme.headlineSmall,
@@ -264,16 +310,7 @@ class _RoutesScreenState extends State<RoutesScreen> {
                   color: app.colors.neutral.grey4,
                 ),
               ),
-              //fixed-height card: one line, full url on hover
-              Tooltip(
-                message: model.enterPoint,
-                child: Text(
-                  model.enterPoint,
-                  style: app.textTheme.titleSmall,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
+              _buildUrl(model.enterPoint),
               app.dimensions.padding.s.gap(),
               Text(
                 app.intl.redirectedTo,
@@ -281,19 +318,45 @@ class _RoutesScreenState extends State<RoutesScreen> {
                   color: app.colors.neutral.grey4,
                 ),
               ),
-              Tooltip(
-                message: model.redirectTo,
-                child: Text(
-                  model.redirectTo,
-                  style: app.textTheme.titleSmall,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
+              _buildUrl(model.redirectTo),
             ],
           ),
         ),
       ),
+    );
+  }
+
+  //fixed-height card: one line, full url on hover, copy button
+  Widget _buildUrl(String url) {
+    return Row(
+      children: [
+        Flexible(
+          child: Tooltip(
+            message: url,
+            child: Text(
+              url,
+              style: app.textTheme.titleSmall,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+        ),
+        app.dimensions.padding.s.gap(),
+        Tooltip(
+          message: app.intl.copy,
+          child: InkWell(
+            onTap: () async {
+              await Clipboard.setData(ClipboardData(text: url));
+              if (!mounted) return;
+              app.snack.showSuccess(
+                message: app.intl.copiedToClipboard,
+                context: context,
+              );
+            },
+            child: Icon(Icons.copy, size: 14, color: app.colors.neutral.grey4),
+          ),
+        ),
+      ],
     );
   }
 }

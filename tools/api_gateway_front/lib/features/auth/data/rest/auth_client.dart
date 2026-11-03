@@ -14,4 +14,9 @@ class AuthClient extends BaseClient {
       data: {'username': username, 'password': password},
     );
   }
+
+  ///GET /{ADMIN_PATH}/health: no auth, 200 {"status":"UP"}, 503 when the db is down
+  Future health() async {
+    await dio.get('${Environment.baseApiUrl}/health', options: options());
+  }
 }

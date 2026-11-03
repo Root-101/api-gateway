@@ -1,0 +1,2 @@
+# shell scripts run inside the linux container: CRLF would break /bin/sh
+*.sh text eol=lf

@@ -1,5 +1,6 @@
 import 'package:api_gateway_front/app_exporter.dart';
 import 'package:api_gateway_front/features/language/view/language_widget.dart';
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -15,6 +16,12 @@ class BaseScreen extends StatefulWidget {
 }
 
 class _BaseScreenState extends State<BaseScreen> {
+  //`flutter build web` writes version.json from pubspec.yaml: no extra dependency, loaded once
+  static final Future<String?> _version = Dio()
+      .get(Uri.base.resolve('version.json').toString())
+      .then((r) => (r.data is Map ? r.data['version'] : null)?.toString())
+      .catchError((_) => null);
+
   bool _isRailExpanded = false;
 
   void _toggleRail() {
@@ -63,6 +70,22 @@ class _BaseScreenState extends State<BaseScreen> {
                       buttonSize: 38,
                       icon: app.assets.icons.actions.logout,
                       iconColor: app.colors.neutral.white,
+                    ),
+                    app.dimensions.padding.m.gap(),
+                    FutureBuilder<String?>(
+                      future: _version,
+                      builder: (context, snapshot) {
+                        final version = snapshot.data;
+                        if (version == null) return const SizedBox.shrink();
+                        return Text(
+                          _isRailExpanded
+                              ? app.intl.consoleVersion(version)
+                              : 'v$version',
+                          style: app.textTheme.bodySmall?.copyWith(
+                            color: app.colors.neutral.grey4,
+                          ),
+                        );
+                      },
                     ),
                     app.dimensions.padding.l.gap(),
                   ],

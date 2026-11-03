@@ -94,5 +94,17 @@
   "errorWrongRouteId": "Id de ruta incorrecto",
   "errorLoadingRoute": "Error cargando la ruta {id}. {message}",
   "@errorLoadingRoute": {"placeholders": {"id": {"type": "String"}, "message": {"type": "String"}}},
-  "errorUnsupportedAction": "Acción no soportada"
+  "errorUnsupportedAction": "Acción no soportada",
+  "descriptionLabel": "Descripción",
+  "descriptionHint": "Para qué sirve esta ruta (opcional)",
+  "searchRoutes": "Buscar por nombre, path o URI",
+  "copiedToClipboard": "Copiado al portapapeles",
+  "copy": "Copiar",
+  "refresh": "Refrescar",
+  "totalLogs": "{count} logs",
+  "@totalLogs": {"placeholders": {"count": {"type": "int"}}},
+  "gatewayReachable": "Gateway accesible",
+  "gatewayUnreachable": "Gateway no accesible",
+  "consoleVersion": "Consola v{version}",
+  "@consoleVersion": {"placeholders": {"version": {"type": "String"}}}
 }

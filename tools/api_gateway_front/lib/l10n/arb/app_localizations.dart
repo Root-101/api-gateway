@@ -643,6 +643,66 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Unsupported action'**
   String get errorUnsupportedAction;
+
+  /// No description provided for @descriptionLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Description'**
+  String get descriptionLabel;
+
+  /// No description provided for @descriptionHint.
+  ///
+  /// In en, this message translates to:
+  /// **'What this route is for (optional)'**
+  String get descriptionHint;
+
+  /// No description provided for @searchRoutes.
+  ///
+  /// In en, this message translates to:
+  /// **'Search by name, path or URI'**
+  String get searchRoutes;
+
+  /// No description provided for @copiedToClipboard.
+  ///
+  /// In en, this message translates to:
+  /// **'Copied to clipboard'**
+  String get copiedToClipboard;
+
+  /// No description provided for @copy.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy'**
+  String get copy;
+
+  /// No description provided for @refresh.
+  ///
+  /// In en, this message translates to:
+  /// **'Refresh'**
+  String get refresh;
+
+  /// No description provided for @totalLogs.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} logs'**
+  String totalLogs(int count);
+
+  /// No description provided for @gatewayReachable.
+  ///
+  /// In en, this message translates to:
+  /// **'Gateway reachable'**
+  String get gatewayReachable;
+
+  /// No description provided for @gatewayUnreachable.
+  ///
+  /// In en, this message translates to:
+  /// **'Gateway unreachable'**
+  String get gatewayUnreachable;
+
+  /// No description provided for @consoleVersion.
+  ///
+  /// In en, this message translates to:
+  /// **'Console v{version}'**
+  String consoleVersion(String version);
 }
 
 class _AppLocalizationsDelegate

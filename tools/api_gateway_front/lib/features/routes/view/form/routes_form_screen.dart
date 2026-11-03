@@ -171,6 +171,7 @@ class _RoutesFormWidgetState extends State<RoutesFormWidget> {
   final _pathCtrl = TextEditingController();
   final _rewriteFromCtrl = TextEditingController();
   final _rewriteToCtrl = TextEditingController();
+  final _descriptionCtrl = TextEditingController();
 
   //local copy: clearing it must not mutate the cubit state's map
   Map<String, String> _apiErrors = {};
@@ -186,6 +187,7 @@ class _RoutesFormWidgetState extends State<RoutesFormWidget> {
       _pathCtrl.text = widget.route!.path;
       _rewriteFromCtrl.text = widget.route!.rewritePath?.replaceFrom ?? '';
       _rewriteToCtrl.text = widget.route!.rewritePath?.replaceTo ?? '';
+      _descriptionCtrl.text = widget.route!.description;
     }
   }
 
@@ -204,6 +206,7 @@ class _RoutesFormWidgetState extends State<RoutesFormWidget> {
     _pathCtrl.dispose();
     _rewriteFromCtrl.dispose();
     _rewriteToCtrl.dispose();
+    _descriptionCtrl.dispose();
     super.dispose();
   }
 
@@ -300,6 +303,16 @@ class _RoutesFormWidgetState extends State<RoutesFormWidget> {
                     ),
                   ],
                 ),
+                app.dimensions.padding.m.gap(),
+
+                ///-------------- DESCRIPTION --------------\                //optional in the api (text column, no length limit)
+                AppTextInput.textField(
+                  controller: _descriptionCtrl,
+                  errorText: _apiErrors['description'],
+                  label: app.intl.descriptionLabel,
+                  hint: app.intl.descriptionHint,
+                  maxLines: 3,
+                ),
                 app.dimensions.padding.xxl.gap(),
 
                 ///-------------- PREVIEW --------------\\\
@@ -320,7 +333,7 @@ class _RoutesFormWidgetState extends State<RoutesFormWidget> {
                         name: _nameCtrl.text,
                         uri: _uriCtrl.text,
                         path: _pathCtrl.text,
-                        description: '',
+                        description: _descriptionCtrl.text,
                         rewritePath: RewritePathModel.fromFields(
                           from: _rewriteFromCtrl.text,
                           to: _rewriteToCtrl.text,
@@ -357,8 +370,7 @@ class _RoutesFormWidgetState extends State<RoutesFormWidget> {
                     name: _nameCtrl.text,
                     uri: _uriCtrl.text,
                     path: _pathCtrl.text,
-                    //no description field in ui yet: keep the existing one so edit/duplicate don't wipe it
-                    description: widget.route?.description ?? '',
+                    description: _descriptionCtrl.text,
                     rewritePath: RewritePathModel.fromFields(
                       from: _rewriteFromCtrl.text,
                       to: _rewriteToCtrl.text,
@@ -371,7 +383,7 @@ class _RoutesFormWidgetState extends State<RoutesFormWidget> {
                     name: _nameCtrl.text,
                     uri: _uriCtrl.text,
                     path: _pathCtrl.text,
-                    description: widget.route?.description ?? '',
+                    description: _descriptionCtrl.text,
                     rewritePath: RewritePathModel.fromFields(
                       from: _rewriteFromCtrl.text,
                       to: _rewriteToCtrl.text,

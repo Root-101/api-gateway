@@ -1,58 +1,45 @@
 #STEP 1: BUILD
-# Environemnt to install flutter and build web
-FROM debian:latest AS build-env
+#pinned base + shallow clone of the exact flutter tag: reproducible and much faster than a full clone
+FROM debian:bookworm-slim AS build-env
 
-#install all needed stuff
-RUN apt-get update
-RUN apt-get install -y curl git unzip
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends curl git unzip xz-utils ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
 
-#define variables
 ARG FLUTTER_VERSION=3.41.9
 ARG FLUTTER_SDK_LOCATION=/usr/local/flutter
-ARG APP_LOCATION=/app/
 
-#clone flutter
-RUN git clone https://github.com/flutter/flutter.git $FLUTTER_SDK_LOCATION
-#change dir to current flutter folder and make a checkout to the specific version
-RUN cd $FLUTTER_SDK_LOCATION && git checkout tags/$FLUTTER_VERSION
-
-#setup the flutter path as an environment variable
+RUN git clone --depth 1 --branch $FLUTTER_VERSION https://github.com/flutter/flutter.git $FLUTTER_SDK_LOCATION
 ENV PATH="$FLUTTER_SDK_LOCATION/bin:$FLUTTER_SDK_LOCATION/bin/cache/dart-sdk/bin:${PATH}"
 
-#Start to run Flutter commands
-#doctor to see if all was installed ok
-RUN flutter doctor -v
+RUN flutter config --no-analytics && flutter precache --web
 
-#create folder to copy source code
-RUN mkdir $APP_LOCATION
-#copy source code to folder
-COPY . $APP_LOCATION
-#stup new folder as the working directory
-WORKDIR $APP_LOCATION
-
-#Run build: 1 - clean, 2 - pub get, 3 - build web
-RUN flutter clean
+WORKDIR /app
+#dependencies first, so the pub get layer is cached while only code changes
+COPY pubspec.yaml pubspec.lock ./
 RUN flutter pub get
-RUN flutter build web
-
-#once heare the app will be compiled and ready to deploy
+COPY . .
+RUN flutter build web --release
 
 #STEP 2: DEPLOY
-#use nginx to deploy
-FROM nginx:1.25.2-alpine
+FROM nginx:1.28-alpine
 
-#copy the info of the builded web app to nginx
 COPY --from=build-env /app/build/web /usr/share/nginx/html
 #security headers + cache policy (replaces the default server config)
 COPY nginx.conf /etc/nginx/conf.d/default.conf
+#the nginx image runs /docker-entrypoint.d/*.sh on start: env.js is generated from the container env vars
+COPY docker/40-env-js.sh /docker-entrypoint.d/40-env-js.sh
+RUN chmod +x /docker-entrypoint.d/40-env-js.sh
 
-#from env
+#build args are kept only as defaults, so existing `docker compose` files with `args:` keep working;
+#prefer runtime `environment:` (same names) to reuse one image across environments
 ARG GATEWAY_SERVICE_URL
 ARG ADMIN_PATH
 #optional: minutes of inactivity before logout, 0 = disabled
 ARG SESSION_TIMEOUT_MINUTES=0
-RUN echo "window.env = { GATEWAY_SERVICE_URL: '${GATEWAY_SERVICE_URL}', ADMIN_PATH: '${ADMIN_PATH}', SESSION_TIMEOUT_MINUTES: '${SESSION_TIMEOUT_MINUTES}' };" > /usr/share/nginx/html/env.js
+ENV GATEWAY_SERVICE_URL=${GATEWAY_SERVICE_URL} \
+    ADMIN_PATH=${ADMIN_PATH} \
+    SESSION_TIMEOUT_MINUTES=${SESSION_TIMEOUT_MINUTES}
 
-#Expose port and run nginx
 EXPOSE 80
 CMD ["nginx", "-g", "daemon off;"]

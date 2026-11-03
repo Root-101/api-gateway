@@ -51,6 +51,8 @@ class AuthCubit extends Cubit<AuthState>
     }
   }
 
+  Future<bool> isGatewayUp() => repo.isGatewayUp();
+
   void reset() {
     emit(const AuthInitialState());
   }

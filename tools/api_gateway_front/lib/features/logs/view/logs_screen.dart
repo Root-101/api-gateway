@@ -127,6 +127,19 @@ class _LogsScreenState extends State<LogsScreen> {
             appBar: CustomAppBar.build(
               title: app.intl.logs,
               actions: [
+                Text(
+                  app.intl.totalLogs(cubit.totalElements),
+                  style: app.textTheme.bodyMedium?.copyWith(
+                    color: app.colors.neutral.grey3,
+                  ),
+                ),
+                app.dimensions.padding.m.gap(),
+                PrimaryButton.secondary(
+                  onPressed: cubit.refresh,
+                  title: app.intl.refresh,
+                  icon: app.assets.icons.actions.reload,
+                ),
+                app.dimensions.padding.m.gap(),
                 PrimaryButton.secondary(
                   onPressed: cubit.export,
                   title: app.intl.export,

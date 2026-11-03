@@ -90,26 +90,36 @@ Legend: **P0** bug that breaks/destroys data · **P1** visible bug or security �
 
 ## Phase 6 — Build, Docker and docs (P3)
 
-- [ ] **Dockerfile**: `debian:latest` and a full Flutter `git clone` → slow, non-reproducible build. Use a pinned image (`ghcr.io/cirruslabs/flutter:3.41.9`) or `git clone --depth 1 --branch 3.41.9`. Pin `nginx` to a current version (1.25.2 is from 2023). `flutter clean` is unnecessary.
-- [ ] **`env.js` generated at *build* time (`ARG`)** → one image per environment. Generate it at *startup* from env vars (script in `/docker-entrypoint.d/`), keeping the same names `GATEWAY_SERVICE_URL` / `ADMIN_PATH`.
-- [ ] Add `.dockerignore` (`build/`, `.dart_tool/`, `.idea/`, `.fvm/flutter_sdk`).
-- [ ] Local `.gitignore` is empty (everything is in the root one) — fine, but `l10n_errors.txt` is versioned and is a generated artifact.
-- [ ] `web/manifest.json`: `name`/`short_name` = `api_gateway_front`, `orientation: portrait-primary` on a desktop app. `index.html`: `user-scalable=no` meta (accessibility) and `apple-mobile-web-app-title`.
-- [ ] README: outdated Flutter version (says 3.35.1, uses 3.41.9); add how to run locally (add a `web/env.example.js`).
-- [ ] `SplashScreen.splashImageUrl` points to a missing asset (`lib/features/global/splash_screen.dart:5`). Delete.
-- [ ] `DateFormatter` creates a new `DateFormat` on every access and `logsTime` uses `hh` + `a` (12 h) — consider `HH` or a locale-based format.
-- [ ] Review dependencies: `get` is only used for DI and `firstWhereOrNull` (the latter exists in `package:collection`). Consider `get_it` as `di.dart` itself suggests — **only if decided**, not required.
+- [x] **Dockerfile**: `debian:latest` and a full Flutter `git clone` → slow, non-reproducible build. Use a pinned image (`ghcr.io/cirruslabs/flutter:3.41.9`) or `git clone --depth 1 --branch 3.41.9`. Pin `nginx` to a current version (1.25.2 is from 2023). `flutter clean` is unnecessary.
+  - Done: `debian:bookworm-slim` + `git clone --depth 1 --branch 3.41.9`, `pub get` layer cached before `COPY . .`, no `flutter clean`, `nginx:1.28-alpine`.
+- [x] **`env.js` generated at *build* time (`ARG`)** → one image per environment. Generate it at *startup* from env vars (script in `/docker-entrypoint.d/`), keeping the same names `GATEWAY_SERVICE_URL` / `ADMIN_PATH`.
+  - Done: `docker/40-env-js.sh` in `/docker-entrypoint.d/` writes it on start from the env vars; the `ARG`s stay as defaults so `args:` in docker-compose keeps working. `.gitattributes` forces LF on `*.sh`. Verified in a container (headers, SPA fallback, env.js).
+- [x] Add `.dockerignore` (`build/`, `.dart_tool/`, `.idea/`, `.fvm/flutter_sdk`).
+- [x] Local `.gitignore` is empty (everything is in the root one) — fine, but `l10n_errors.txt` is versioned and is a generated artifact.
+  - Kept as is: `l10n_errors.txt` is written by `gen-l10n` (`untranslated-messages-file`) and is useful in review (`{}` = nothing untranslated).
+- [x] `web/manifest.json`: `name`/`short_name` = `api_gateway_front`, `orientation: portrait-primary` on a desktop app. `index.html`: `user-scalable=no` meta (accessibility) and `apple-mobile-web-app-title`.
+- [x] README: outdated Flutter version (says 3.35.1, uses 3.41.9); add how to run locally (add a `web/env.example.js`).
+  - Done: version, runtime env vars with `docker run -e`, run locally with `web/env.example.js`.
+- [x] `SplashScreen.splashImageUrl` points to a missing asset (`lib/features/global/splash_screen.dart:5`). Delete.
+- [x] `DateFormatter` creates a new `DateFormat` on every access and `logsTime` uses `hh` + `a` (12 h) — consider `HH` or a locale-based format.
+  - Done: formats created once, `logsTime` is 24 h (`HH:mm:ss`).
+- [ ] Review dependencies (not done: optional, needs a decision): `get` is only used for DI and `firstWhereOrNull` (the latter exists in `package:collection`). Consider `get_it` as `di.dart` itself suggests — **only if decided**, not required.
 
 ## Phase 7 — Product improvements (optional, no API break)
 
-- [ ] `description` field visible/editable in the form and the card (the API already supports it).
-- [ ] Search/filter on the routes screen.
-- [ ] Edit route by URL (`/routes/:id/edit`) — the code already has "the bases" (`routes_form_screen.dart:32`). Needs the `GET /routes/{id}` adapter (Phase 2).
-- [ ] Copy entry/target URL to clipboard from the card.
-- [ ] Refresh logs (button / auto-refresh) and show the total (`totalElements`).
+- [x] `description` field visible/editable in the form and the card (the API already supports it).
+  - Done: optional multi-line field in the form (also used by create/duplicate); in the card it is shown in the name tooltip because the tile has a fixed height.
+- [x] Search/filter on the routes screen.
+  - Done: local filter by name, path, URI or description (the API has no route search).
+- [ ] Edit route by URL (`/routes/:id/edit`) (Pending: the `GET /routes/{id}` adapter is ready; needs a route inside the shell that opens the form dialog.) — the code already has "the bases" (`routes_form_screen.dart:32`). Needs the `GET /routes/{id}` adapter (Phase 2).
+- [x] Copy entry/target URL to clipboard from the card.
+- [x] Refresh logs (button / auto-refresh) and show the total (`totalElements`).
+  - Done: Refresh button (same search and filters from page 0) and total of the last search. No auto-refresh.
   - 🔗 Logs are written async in ~1s batches: a request appears in `/http-log/search` 1-2 s later, so don't expect it on an immediate refresh.
-- [ ] Show the console version (and the gateway's, if there is an endpoint 🔗) in the rail.
-- [ ] "Backend reachable" indicator on the login screen using `GET /{ADMIN_PATH}/health` (🔗 new, no auth, `{"status":"UP"}`, 503 if the db is down). Would also tell "gateway down" apart from "wrong credentials".
+- [x] Show the console version (and the gateway's, if there is an endpoint 🔗) in the rail.
+  - Done for the console (read from the `version.json` that `flutter build web` generates). The gateway has no version endpoint.
+- [x] "Backend reachable" indicator on the login screen using `GET /{ADMIN_PATH}/health` (🔗 new, no auth, `{"status":"UP"}`, 503 if the db is down). Would also tell "gateway down" apart from "wrong credentials".
+  - Done: green/red dot under the login title, from `GET /{ADMIN_PATH}/health`.
 
 ---
 

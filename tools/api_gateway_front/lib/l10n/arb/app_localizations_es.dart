@@ -290,4 +290,38 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get errorUnsupportedAction => 'Acción no soportada';
+
+  @override
+  String get descriptionLabel => 'Descripción';
+
+  @override
+  String get descriptionHint => 'Para qué sirve esta ruta (opcional)';
+
+  @override
+  String get searchRoutes => 'Buscar por nombre, path o URI';
+
+  @override
+  String get copiedToClipboard => 'Copiado al portapapeles';
+
+  @override
+  String get copy => 'Copiar';
+
+  @override
+  String get refresh => 'Refrescar';
+
+  @override
+  String totalLogs(int count) {
+    return '$count logs';
+  }
+
+  @override
+  String get gatewayReachable => 'Gateway accesible';
+
+  @override
+  String get gatewayUnreachable => 'Gateway no accesible';
+
+  @override
+  String consoleVersion(String version) {
+    return 'Consola v$version';
+  }
 }

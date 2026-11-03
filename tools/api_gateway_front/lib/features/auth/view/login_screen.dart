@@ -48,7 +48,11 @@ class _LoginScreenState extends State<LoginScreen> {
     _focusNode.requestFocus();
 
     cubit = app.di.find<AuthCubit>();
+    _gatewayUp = cubit.isGatewayUp();
   }
+
+  //tells "gateway down" apart from "wrong credentials" before the user even tries
+  late final Future<bool> _gatewayUp;
 
   @override
   void dispose() {
@@ -112,6 +116,33 @@ class _LoginScreenState extends State<LoginScreen> {
                             Text(
                               app.intl.login,
                               style: app.textTheme.headlineSmall,
+                            ),
+                            app.dimensions.padding.s.gap(),
+                            FutureBuilder<bool>(
+                              future: _gatewayUp,
+                              builder: (context, snapshot) {
+                                if (!snapshot.hasData) {
+                                  return const SizedBox.shrink();
+                                }
+                                final up = snapshot.data!;
+                                return Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(
+                                      Icons.circle,
+                                      size: 10,
+                                      color: up ? Colors.green : Colors.red,
+                                    ),
+                                    app.dimensions.padding.s.gap(),
+                                    Text(
+                                      up
+                                          ? app.intl.gatewayReachable
+                                          : app.intl.gatewayUnreachable,
+                                      style: app.textTheme.bodySmall,
+                                    ),
+                                  ],
+                                );
+                              },
                             ),
                             app.dimensions.padding.xxl.gap(),
                             AppTextInput.textField(

@@ -2,8 +2,6 @@ import 'package:api_gateway_front/app_exporter.dart';
 import 'package:flutter/material.dart';
 
 class SplashScreen extends StatelessWidget {
-  static const String splashImageUrl = 'assets/app/app_splashscreen_full.png';
-
   const SplashScreen({super.key});
 
   @override

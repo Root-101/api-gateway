@@ -1,12 +1,12 @@
 {
-    "name": "api_gateway_front",
-    "short_name": "api_gateway_front",
+    "name": "API Gateway Admin",
+    "short_name": "API Gateway",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#00000000",
     "theme_color": "#00000000",
     "description": "Front end for Api-Gateway project",
-    "orientation": "portrait-primary",
+    "orientation": "any",
     "prefer_related_applications": false,
     "icons": [
         {

@@ -7,26 +7,28 @@ class DateFormatter {
 
   factory DateFormatter() => _instance;
 
+  //created once: the app never changes Intl.defaultLocale, and the logs grid formats every visible cell
+
   ///dd/M/yy
-  DateFormat get xs => DateFormat('dd/M/yy');
+  final DateFormat xs = DateFormat('dd/M/yy');
 
   ///dd/MM/yy
-  DateFormat get xss => DateFormat('dd/MM/yy');
+  final DateFormat xss = DateFormat('dd/MM/yy');
 
   ///dd/MM/yyyy
-  DateFormat get s => DateFormat('dd/MM/yyyy');
+  final DateFormat s = DateFormat('dd/MM/yyyy');
 
   ///dd/MMM/yyyy
-  DateFormat get m => DateFormat('dd/MMM/yyyy');
+  final DateFormat m = DateFormat('dd/MMM/yyyy');
 
   ///yyyy-MM-dd
-  DateFormat get api => DateFormat('yyyy-MM-dd');
+  final DateFormat api = DateFormat('yyyy-MM-dd');
 
-  ///dd MMM yyyy hh:mm:ss
-  DateFormat get logsTime => DateFormat('dd MMM yyyy hh:mm:ss a');
+  ///dd MMM yyyy HH:mm:ss (24 h)
+  final DateFormat logsTime = DateFormat('dd MMM yyyy HH:mm:ss');
 
   ///dd MMM yyyy
-  DateFormat get logsTimeS => DateFormat('dd MMM yyyy');
+  final DateFormat logsTimeS = DateFormat('dd MMM yyyy');
 }
 
 extension DateOnlyCompare on DateTime {

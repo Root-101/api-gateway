@@ -32,6 +32,16 @@ class AuthRepo {
     }
   }
 
+  ///any error (network, CORS, 503) means the console can't use the gateway right now
+  Future<bool> isGatewayUp() async {
+    try {
+      await client.health();
+      return true;
+    } catch (_) {
+      return false;
+    }
+  }
+
   Future logout() async {
     await storage.delete(key: credentialUsernameKey);
     await storage.delete(key: credentialPasswordKey);
