@@ -71,6 +71,11 @@ jobs:
           curl -sf localhost:8080/self/health | grep -q UP
           sleep 3
           curl -sf -u "$AUTH" -X POST localhost:8080/_admin/http-log/search -H 'Content-Type: application/json' -d '{"page":0,"size":10}' | grep -q '/self/health'
+      # contract of the admin API for external clients: the documented collection, with its assertions, against the native image
+      - name: Postman collection
+        run: |
+          curl -o- "https://dl-cli.pstmn.io/install/linux64.sh" | sh
+          postman collection run doc/Api-Gateway.postman_collection.json -e "doc/Api-Gateway - Local.postman_environment.json" --no-report-events
       - name: Gateway logs
         if: always()
         run: docker logs gw || true

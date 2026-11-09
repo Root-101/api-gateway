@@ -106,8 +106,8 @@ Every fix of any phase ships with its regression test.
   Done: the first created wins at runtime; after a restart it depends on the db order. Documented in the README: avoid overlapping paths.
 
 ### Contract and native build
-- [ ] Run the Postman collection from `doc/` with **Postman CLI** against `docker-compose` in CI (catches contract breaks for external clients).
-  Not done: the collection in `doc/` has no assertions and uses fixed route ids, it can't be run as is. The contract (status codes, JSON shapes) is pinned by the `*IT` tests instead.
+- [x] Run the Postman collection from `doc/` with **Postman CLI** against `docker-compose` in CI (catches contract breaks for external clients).
+  Done: the collection now has assertions on every request (20 requests, 32 assertions: status codes, JSON shapes, error bodies), reads the route ids from the responses and uses per-run names, deleting what it creates. Runs in the CI job `native-image` against the native image (the same image `docker-compose` builds). Verified locally with Postman CLI 1.73 (repeatable, exit code 1 on any failure).
 - [x] Smoke test of the **native image** in CI: build the Dockerfile, start with Postgres, login + create route + proxied request (catches GraalVM reflection problems that JVM tests don't see).
   Done in `.github/workflows/ci.yml` (job `native-image`, on `master`): health, login, create a route to itself, proxied request, logs search. Not run yet (it runs on GitHub).
 - [ ] (Optional) Mutation testing with **PIT** on the routes and logs logic, to measure test quality beyond coverage.
@@ -132,7 +132,7 @@ Every fix of any phase ships with its regression test.
   Done: documented in the README (only trustworthy behind a proxy that overwrites the header). No transformer: it would change the `X-Forwarded-*` the upstreams receive.
 - [x] **CORS "allow all + credentials" for everything, admin included.** ⚠️
   Make it configurable by env var (`CORS_ALLOWED_ORIGINS`, default `*` to not break anything). Also check CORS headers are not duplicated with the ones the upstream already returns (`DedupeResponseHeader`).
-- [ ] **Front: "Remember me" stores username and password** (on web, `flutter_secure_storage` = localStorage encrypted with a key also stored in the browser). Minimum: warn about it in the UI; later, a session token (see Future). ✅ (front agent)
+- [x] **Front: "Remember me" stores username and password** (on web, `flutter_secure_storage` = localStorage encrypted with a key also stored in the browser). Minimum: warn about it in the UI; later, a session token (see Future). ✅ (front agent)
 - [x] **Remove default credentials from `application.yml`** (`DB_PASSWORD:admin123`) or at least warn on startup, same as with the admin. ✅
   Done: startup warning (removing the default breaks the native build, see comment in the yml).
 

@@ -2,10 +2,64 @@
   "info": {
     "_postman_id": "9e0c2056-ea60-4883-902c-3adb4e662434",
     "name": "Api-Gateway",
-    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
-    "_exporter_id": "43135045",
-    "_collection_link": "https://root-101.postman.co/workspace/Maple~7316e428-ec08-48f4-bcc2-0ea6d6ad5243/collection/43135045-9e0c2056-ea60-4883-902c-3adb4e662434?action=share&source=collection_link&creator=43135045"
+    "description": "Admin API of the gateway, with assertions (`pm.test`) on every request. Run it in order (Runner or `postman collection run`): the requests create, edit and delete their own routes (names with a per-run suffix, `{{run}}`), so it can run against any environment without fixed ids and leaves no data behind.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
+  "auth": {
+    "type": "basic",
+    "basic": [
+      {
+        "key": "username",
+        "value": "{{gateway-username}}",
+        "type": "string"
+      },
+      {
+        "key": "password",
+        "value": "{{gateway-password}}",
+        "type": "string"
+      }
+    ]
+  },
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "//unique suffix per run: route names/paths never clash with existing data or other runs",
+          "if (!pm.collectionVariables.get('run') || pm.info.requestName === 'login') {",
+          "    pm.collectionVariables.set('run', Date.now().toString(36));",
+          "}"
+        ]
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "run",
+      "value": ""
+    },
+    {
+      "key": "route-id",
+      "value": ""
+    },
+    {
+      "key": "route-id-a",
+      "value": ""
+    },
+    {
+      "key": "route-id-b",
+      "value": ""
+    },
+    {
+      "key": "logs-from",
+      "value": ""
+    },
+    {
+      "key": "logs-to",
+      "value": ""
+    }
+  ],
   "item": [
     {
       "name": "auth",
@@ -13,20 +67,13 @@
         {
           "name": "login",
           "request": {
-            "auth": {
-              "type": "noauth"
-            },
             "method": "POST",
-            "header": [],
-            "body": {
-              "mode": "raw",
-              "raw": "{\r\n    \"username\": \"admin\",\r\n    \"password\": \"admin123**\"\r\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
               }
-            },
+            ],
             "url": {
               "raw": "{{gateway-url}}/{{gateway-admin-path}}/auth/login",
               "host": [
@@ -37,33 +84,83 @@
                 "auth",
                 "login"
               ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"username\": \"{{gateway-username}}\",\n    \"password\": \"{{gateway-password}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "auth": {
+              "type": "noauth"
             }
           },
-          "response": []
-        }
-      ]
-    },
-    {
-      "name": "routes",
-      "item": [
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
         {
-          "name": "all",
+          "name": "login - wrong credentials",
           "request": {
-            "auth": {
-              "type": "basic",
-              "basic": [
-                {
-                  "key": "username",
-                  "value": "{{gateway-username}}",
-                  "type": "string"
-                },
-                {
-                  "key": "password",
-                  "value": "{{gateway-password}}",
-                  "type": "string"
-                }
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{gateway-url}}/{{gateway-admin-path}}/auth/login",
+              "host": [
+                "{{gateway-url}}"
+              ],
+              "path": [
+                "{{gateway-admin-path}}",
+                "auth",
+                "login"
               ]
             },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"username\": \"{{gateway-username}}\",\n    \"password\": \"wrong-password\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 403', () => pm.response.to.have.status(403));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "routes - without credentials",
+          "request": {
             "method": "GET",
             "header": [],
             "url": {
@@ -75,39 +172,29 @@
                 "{{gateway-admin-path}}",
                 "routes"
               ]
+            },
+            "auth": {
+              "type": "noauth"
             }
           },
-          "response": []
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 401', () => pm.response.to.have.status(401));"
+                ]
+              }
+            }
+          ]
         },
         {
-          "name": "create",
+          "name": "routes - wrong credentials",
           "request": {
-            "auth": {
-              "type": "basic",
-              "basic": [
-                {
-                  "key": "password",
-                  "value": "{{gateway-password}}",
-                  "type": "string"
-                },
-                {
-                  "key": "username",
-                  "value": "{{gateway-username}}",
-                  "type": "string"
-                }
-              ]
-            },
-            "method": "POST",
+            "method": "GET",
             "header": [],
-            "body": {
-              "mode": "raw",
-              "raw": "{\r\n    \"name\": \"test-dev\",\r\n    \"path\": \"/test-service/**\",\r\n    \"uri\": \"http://localhost:8081\",\r\n    \"description\": \"A test route\",\r\n    \"rewrite_path\": {\r\n        \"replace_from\": \"/test-service/\",\r\n        \"replace_to\": \"/\"\r\n    }\r\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
             "url": {
               "raw": "{{gateway-url}}/{{gateway-admin-path}}/routes",
               "host": [
@@ -117,39 +204,186 @@
                 "{{gateway-admin-path}}",
                 "routes"
               ]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "create-all",
-          "request": {
+            },
             "auth": {
               "type": "basic",
               "basic": [
                 {
-                  "key": "password",
-                  "value": "{{gateway-password}}",
-                  "type": "string"
-                },
-                {
                   "key": "username",
                   "value": "{{gateway-username}}",
                   "type": "string"
+                },
+                {
+                  "key": "password",
+                  "value": "wrong-password",
+                  "type": "string"
                 }
               ]
-            },
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 403', () => pm.response.to.have.status(403));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "routes",
+      "item": [
+        {
+          "name": "create",
+          "request": {
             "method": "POST",
-            "header": [],
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{gateway-url}}/{{gateway-admin-path}}/routes",
+              "host": [
+                "{{gateway-url}}"
+              ],
+              "path": [
+                "{{gateway-admin-path}}",
+                "routes"
+              ]
+            },
             "body": {
               "mode": "raw",
-              "raw": "[\r\n    {\r\n        \"name\": \"test-dev\",\r\n        \"path\": \"/test-service/**\",\r\n        \"uri\": \"http://localhost:8081\",\r\n        \"rewrite_path\": {\r\n            \"replace_from\": \"/test-service/\",\r\n            \"replace_to\": \"/\"\r\n        }\r\n    },\r\n    {\r\n        \"name\": \"abc2-dev\",\r\n        \"path\": \"/abc2-service/**\",\r\n        \"uri\": \"http://localhost:8081\",\r\n        \"rewrite_path\": {\r\n            \"replace_from\": \"/abc2-service/\",\r\n            \"replace_to\": \"/\"\r\n        }\r\n    }\r\n]",
+              "raw": "{\n    \"name\": \"test-dev-{{run}}\",\n    \"path\": \"/test-service-{{run}}/**\",\n    \"uri\": \"http://localhost:8081\",\n    \"description\": \"A test route\",\n    \"rewrite_path\": {\n        \"replace_from\": \"/test-service-{{run}}/\",\n        \"replace_to\": \"/\"\n    }\n}",
               "options": {
                 "raw": {
                   "language": "json"
                 }
               }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "create - duplicated name",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{gateway-url}}/{{gateway-admin-path}}/routes",
+              "host": [
+                "{{gateway-url}}"
+              ],
+              "path": [
+                "{{gateway-admin-path}}",
+                "routes"
+              ]
             },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"name\": \"test-dev-{{run}}\",\n    \"path\": \"/test-service-{{run}}/**\",\n    \"uri\": \"http://localhost:8081\",\n    \"description\": \"A test route\",\n    \"rewrite_path\": {\n        \"replace_from\": \"/test-service-{{run}}/\",\n        \"replace_to\": \"/\"\n    }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 409', () => pm.response.to.have.status(409));",
+                  "pm.test('body: Route already exists', () => pm.expect(pm.response.text()).to.include('Route already exists'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "create - invalid",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{gateway-url}}/{{gateway-admin-path}}/routes",
+              "host": [
+                "{{gateway-url}}"
+              ],
+              "path": [
+                "{{gateway-admin-path}}",
+                "routes"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"name\": \"\",\n    \"path\": \"/x/**\",\n    \"uri\": \"not a url\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 422', () => pm.response.to.have.status(422));",
+                  "pm.test('body is a list of field errors', () => {",
+                  "    const errors = pm.response.json();",
+                  "    pm.expect(errors).to.be.an('array').that.is.not.empty;",
+                  "    errors.forEach(e => pm.expect(e).to.have.all.keys('source', 'invalid_value', 'message'));",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "create-all",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
             "url": {
               "raw": "{{gateway-url}}/{{gateway-admin-path}}/routes/multi-add",
               "host": [
@@ -160,120 +394,400 @@
                 "routes",
                 "multi-add"
               ]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "edit",
-          "request": {
-            "auth": {
-              "type": "basic",
-              "basic": [
-                {
-                  "key": "password",
-                  "value": "{{gateway-password}}",
-                  "type": "string"
-                },
-                {
-                  "key": "username",
-                  "value": "{{gateway-username}}",
-                  "type": "string"
-                }
-              ]
             },
-            "method": "PUT",
-            "header": [],
             "body": {
               "mode": "raw",
-              "raw": "{\r\n    \"name\": \"test-dev-123\",\r\n    \"path\": \"/test-service-123/**\",\r\n    \"uri\": \"http://localhost:8081\",\r\n    \"rewrite_path\": {\r\n        \"replace_from\": \"/test-service-123/\",\r\n        \"replace_to\": \"/\"\r\n    }\r\n}",
+              "raw": "[\n    {\n        \"name\": \"test-dev-a-{{run}}\",\n        \"path\": \"/test-service-a-{{run}}/**\",\n        \"uri\": \"http://localhost:8081\",\n        \"rewrite_path\": {\n            \"replace_from\": \"/test-service-a-{{run}}/\",\n            \"replace_to\": \"/\"\n        }\n    },\n    {\n        \"name\": \"test-dev-b-{{run}}\",\n        \"path\": \"/test-service-b-{{run}}/**\",\n        \"uri\": \"http://localhost:8082\"\n    }\n]",
               "options": {
                 "raw": {
                   "language": "json"
                 }
               }
-            },
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "all",
+          "request": {
+            "method": "GET",
+            "header": [],
             "url": {
-              "raw": "{{gateway-url}}/{{gateway-admin-path}}/routes/6ac5e18a-8ec4-4ac1-9ff3-169a13cb54dc",
+              "raw": "{{gateway-url}}/{{gateway-admin-path}}/routes",
               "host": [
                 "{{gateway-url}}"
               ],
               "path": [
                 "{{gateway-admin-path}}",
-                "routes",
-                "6ac5e18a-8ec4-4ac1-9ff3-169a13cb54dc"
+                "routes"
               ]
-            }
+            },
+            "description": "Also saves the ids of the routes created by `create` and `create-all` for the next requests."
           },
-          "response": []
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 200', () => pm.response.to.have.status(200));",
+                  "const isRoute = (r) => {",
+                  "    pm.expect(r).to.have.all.keys('id', 'name', 'path', 'uri', 'rewrite_path', 'description', 'created_at');",
+                  "    pm.expect(r.id).to.match(/^[0-9a-f-]{36}$/);",
+                  "};",
+                  "",
+                  "const routes = pm.response.json();",
+                  "pm.test('every route has the response shape', () => routes.forEach(isRoute));",
+                  "const byName = (name) => routes.find(r => r.name === name);",
+                  "const run = pm.collectionVariables.get('run');",
+                  "pm.test('created routes are listed', () => {",
+                  "    const created = byName(`test-dev-${run}`);",
+                  "    pm.expect(created, 'route of `create`').to.exist;",
+                  "    pm.expect(created.rewrite_path).to.eql({replace_from: `/test-service-${run}/`, replace_to: '/'});",
+                  "    pm.expect(byName(`test-dev-a-${run}`), 'route a of `create-all`').to.exist;",
+                  "    pm.expect(byName(`test-dev-b-${run}`).rewrite_path, 'route b without rewrite').to.be.null;",
+                  "});",
+                  "//ids for the next requests",
+                  "pm.collectionVariables.set('route-id', byName(`test-dev-${run}`).id);",
+                  "pm.collectionVariables.set('route-id-a', byName(`test-dev-a-${run}`).id);",
+                  "pm.collectionVariables.set('route-id-b', byName(`test-dev-b-${run}`).id);"
+                ]
+              }
+            }
+          ]
         },
         {
           "name": "get",
           "request": {
-            "auth": {
-              "type": "basic",
-              "basic": [
-                {
-                  "key": "password",
-                  "value": "{{gateway-password}}",
-                  "type": "string"
-                },
-                {
-                  "key": "username",
-                  "value": "{{gateway-username}}",
-                  "type": "string"
-                }
-              ]
-            },
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{gateway-url}}/{{gateway-admin-path}}/routes/6ac5e18a-8ec4-4ac1-9ff3-169a13cb54dc",
+              "raw": "{{gateway-url}}/{{gateway-admin-path}}/routes/{{route-id}}",
               "host": [
                 "{{gateway-url}}"
               ],
               "path": [
                 "{{gateway-admin-path}}",
                 "routes",
-                "6ac5e18a-8ec4-4ac1-9ff3-169a13cb54dc"
+                "{{route-id}}"
               ]
             }
           },
-          "response": []
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 200', () => pm.response.to.have.status(200));",
+                  "//`GET /routes/{id}` returns the entity (flat rewrite fields), unlike `GET /routes` (unified in 6.x)",
+                  "const r = pm.response.json();",
+                  "const run = pm.collectionVariables.get('run');",
+                  "pm.test('route data', () => {",
+                  "    pm.expect(r.route_id).to.eql(pm.collectionVariables.get('route-id'));",
+                  "    pm.expect(r.name).to.eql(`test-dev-${run}`);",
+                  "    pm.expect(r.path).to.eql(`/test-service-${run}/**`);",
+                  "    pm.expect(r.uri).to.eql('http://localhost:8081');",
+                  "    pm.expect(r.rewrite_path_from).to.eql(`/test-service-${run}/`);",
+                  "    pm.expect(r.rewrite_path_to).to.eql('/');",
+                  "    pm.expect(r.description).to.eql('A test route');",
+                  "    pm.expect(new Date(r.created_at).getTime()).to.not.be.NaN;",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "get - not found",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{gateway-url}}/{{gateway-admin-path}}/routes/00000000-0000-0000-0000-000000000001",
+              "host": [
+                "{{gateway-url}}"
+              ],
+              "path": [
+                "{{gateway-admin-path}}",
+                "routes",
+                "00000000-0000-0000-0000-000000000001"
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 404', () => pm.response.to.have.status(404));",
+                  "pm.test('body: Route does not exist', () => pm.expect(pm.response.text()).to.include('Route does not exist'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "edit",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{gateway-url}}/{{gateway-admin-path}}/routes/{{route-id}}",
+              "host": [
+                "{{gateway-url}}"
+              ],
+              "path": [
+                "{{gateway-admin-path}}",
+                "routes",
+                "{{route-id}}"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"name\": \"test-dev-123-{{run}}\",\n    \"path\": \"/test-service-123-{{run}}/**\",\n    \"uri\": \"http://localhost:8081\",\n    \"rewrite_path\": {\n        \"replace_from\": \"/test-service-123-{{run}}/\",\n        \"replace_to\": \"/\"\n    }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "edit - name of another route",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{gateway-url}}/{{gateway-admin-path}}/routes/{{route-id}}",
+              "host": [
+                "{{gateway-url}}"
+              ],
+              "path": [
+                "{{gateway-admin-path}}",
+                "routes",
+                "{{route-id}}"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"name\": \"test-dev-a-{{run}}\",\n    \"path\": \"/test-service-123-{{run}}/**\",\n    \"uri\": \"http://localhost:8081\",\n    \"rewrite_path\": {\n        \"replace_from\": \"/test-service-123-{{run}}/\",\n        \"replace_to\": \"/\"\n    }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 409', () => pm.response.to.have.status(409));",
+                  "pm.test('body: Route already exists', () => pm.expect(pm.response.text()).to.include('Route already exists'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "get - after edit",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{gateway-url}}/{{gateway-admin-path}}/routes/{{route-id}}",
+              "host": [
+                "{{gateway-url}}"
+              ],
+              "path": [
+                "{{gateway-admin-path}}",
+                "routes",
+                "{{route-id}}"
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 200', () => pm.response.to.have.status(200));",
+                  "const r = pm.response.json();",
+                  "const run = pm.collectionVariables.get('run');",
+                  "pm.test('route edited', () => {",
+                  "    pm.expect(r.name).to.eql(`test-dev-123-${run}`);",
+                  "    pm.expect(r.path).to.eql(`/test-service-123-${run}/**`);",
+                  "    pm.expect(r.rewrite_path_from).to.eql(`/test-service-123-${run}/`);",
+                  "});"
+                ]
+              }
+            }
+          ]
         },
         {
           "name": "delete",
           "request": {
-            "auth": {
-              "type": "basic",
-              "basic": [
-                {
-                  "key": "password",
-                  "value": "{{gateway-password}}",
-                  "type": "string"
-                },
-                {
-                  "key": "username",
-                  "value": "{{gateway-username}}",
-                  "type": "string"
-                }
-              ]
-            },
             "method": "DELETE",
             "header": [],
             "url": {
-              "raw": "{{gateway-url}}/{{gateway-admin-path}}/routes/6ac5e18a-8ec4-4ac1-9ff3-169a13cb54dc",
+              "raw": "{{gateway-url}}/{{gateway-admin-path}}/routes/{{route-id}}",
               "host": [
                 "{{gateway-url}}"
               ],
               "path": [
                 "{{gateway-admin-path}}",
                 "routes",
-                "6ac5e18a-8ec4-4ac1-9ff3-169a13cb54dc"
+                "{{route-id}}"
               ]
             }
           },
-          "response": []
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "delete - create-all a",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{gateway-url}}/{{gateway-admin-path}}/routes/{{route-id-a}}",
+              "host": [
+                "{{gateway-url}}"
+              ],
+              "path": [
+                "{{gateway-admin-path}}",
+                "routes",
+                "{{route-id-a}}"
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "delete - create-all b",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{gateway-url}}/{{gateway-admin-path}}/routes/{{route-id-b}}",
+              "host": [
+                "{{gateway-url}}"
+              ],
+              "path": [
+                "{{gateway-admin-path}}",
+                "routes",
+                "{{route-id-b}}"
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "get - deleted",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{gateway-url}}/{{gateway-admin-path}}/routes/{{route-id}}",
+              "host": [
+                "{{gateway-url}}"
+              ],
+              "path": [
+                "{{gateway-admin-path}}",
+                "routes",
+                "{{route-id}}"
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 404', () => pm.response.to.have.status(404));",
+                  "pm.test('body: Route does not exist', () => pm.expect(pm.response.text()).to.include('Route does not exist'));"
+                ]
+              }
+            }
+          ]
         }
       ]
     },
@@ -283,32 +797,13 @@
         {
           "name": "search",
           "request": {
-            "auth": {
-              "type": "basic",
-              "basic": [
-                {
-                  "key": "username",
-                  "value": "{{gateway-username}}",
-                  "type": "string"
-                },
-                {
-                  "key": "password",
-                  "value": "{{gateway-password}}",
-                  "type": "string"
-                }
-              ]
-            },
             "method": "POST",
-            "header": [],
-            "body": {
-              "mode": "raw",
-              "raw": "{\r\n    \"page\": 0,\r\n    \"size\": 20,\r\n    \"query\": \"\",\r\n    \"from_date\": \"2025-08-28T00:00:00Z\",\r\n    \"to_date\": \"2025-08-28T23:59:59Z\"\r\n    //\"response_code\": 200,\r\n    //\"method\": \"POST\",\r\n    //\"route_id\": \"00000000-0000-0000-0000-000000000000\"//\"NO-ROUTE\"\r\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
               }
-            },
+            ],
             "url": {
               "raw": "{{gateway-url}}/{{gateway-admin-path}}/http-log/search",
               "host": [
@@ -319,9 +814,99 @@
                 "http-log",
                 "search"
               ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"page\": 0,\n    \"size\": 20,\n    \"query\": \"\",\n    \"from_date\": \"{{logs-from}}\",\n    \"to_date\": \"{{logs-to}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
             }
           },
-          "response": []
+          "response": [],
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "//last hour (the requests of this run included)",
+                  "const now = Date.now();",
+                  "pm.collectionVariables.set('logs-from', new Date(now - 60 * 60 * 1000).toISOString());",
+                  "pm.collectionVariables.set('logs-to', new Date(now + 60 * 1000).toISOString());"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 200', () => pm.response.to.have.status(200));",
+                  "const page = pm.response.json();",
+                  "pm.test('page shape', () => {",
+                  "    pm.expect(page).to.have.all.keys('page', 'size', 'total_pages', 'total_elements', 'page_content');",
+                  "    pm.expect(page.page).to.eql(0);",
+                  "    pm.expect(page.page_content.length).to.be.at.most(20);",
+                  "});",
+                  "pm.test('log shape', () => {",
+                  "    pm.expect(page.total_elements, 'requests of this run are logged').to.be.above(0);",
+                  "    page.page_content.forEach(log => {",
+                  "        pm.expect(log).to.include.all.keys('id', 'source_ip', 'requested_at', 'user_agent', 'http_method', 'path', 'response_code', 'request_duration', 'route');",
+                  "        pm.expect(log.response_code).to.be.a('number');",
+                  "    });",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "search - invalid response code",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{gateway-url}}/{{gateway-admin-path}}/http-log/search",
+              "host": [
+                "{{gateway-url}}"
+              ],
+              "path": [
+                "{{gateway-admin-path}}",
+                "http-log",
+                "search"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"page\": 0,\n    \"size\": 20,\n    \"response_code\": \"abc\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 400', () => pm.response.to.have.status(400));",
+                  "pm.test('body: response_code must be a number', () => pm.expect(pm.response.text()).to.include('response_code must be a number'));"
+                ]
+              }
+            }
+          ]
         }
       ]
     }

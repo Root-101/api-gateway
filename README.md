@@ -327,6 +327,21 @@ Additionally, a dedicated **Postman environment** has been configured to manage 
 > If you change any of these variables in your configuration, you must **update them in your Postman environment**
 > accordingly.
 
+#### **Running the collection as a test suite**  <a name="5.4.2"></a>
+
+Every request has assertions (status code and JSON shape). Run the whole collection **in order** (Postman Runner, or
+[Postman CLI](https://learning.postman.com/docs/postman-cli/postman-cli-overview/)):
+
+```shell
+postman collection run doc/Api-Gateway.postman_collection.json -e "doc/Api-Gateway - Local.postman_environment.json"
+```
+
+- It creates, edits and deletes **its own routes** (names with a per-run suffix) and reads their ids from the responses,
+  so it runs against any environment and leaves no data behind.
+- It includes **2 requests with wrong credentials**: they count for the brute force lockout (`ADMIN_MAX_FAILED_ATTEMPTS`),
+  a correct login resets the count.
+- The CI runs it against the native docker image (job `native-image`).
+
 ## **Project Versions & Roadmap** <a name="6"></a>
 
 This project is organized into **multiple versions**, each introducing new features and improvements.
