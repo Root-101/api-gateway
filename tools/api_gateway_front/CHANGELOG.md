@@ -1,7 +1,9 @@
-* 1.x:
-    * 1.2.0 (in progress):
+* 6.x:
+    * 6.0.0 (in progress):
         * **DATE** :date: : not released yet (started 2026-11-02).
-        * **Deploy** :warning: : Deploy together with the gateway `5.1.0`: with an older gateway a `401`
+        * **Version** :bookmark: : The console now shares the version of the API Gateway, so both projects are
+          released with the same number. It jumps from `1.1.1` to `6.0.0` for that reason.
+        * **Deploy** :warning: : Deploy together with the gateway `6.0.0`: with an older gateway a `401`
           arrives as a connection error and does not log out.
         * **Versions** :arrow_up: : Upgrade Flutter to `3.47.9` and all dependencies to their latest versions.
         * **Routes** :twisted_rightwards_arrows: : Fixes: routes without rewrite-path broke the list, editing or
@@ -21,6 +23,7 @@
           `env.js` is generated on container start, so one image serves every environment.
         * **General** :hammer_and_wrench: : Added unit tests and CI job, updated README, console version in the
           side menu and several memory and UI fixes.
+* 1.x:
     * 1.1.1:
         * **DATE** :date: : 2026-05-17.
         * **General** :hammer_and_wrench: : Fix validation in routes form.
