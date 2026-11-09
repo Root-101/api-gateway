@@ -14,12 +14,10 @@ class LoadingOverlay {
   static GlobalLoaderOverlay buildGlobal({required Widget child}) {
     return GlobalLoaderOverlay(
       overlayColor: Colors.transparent,
-      overlayWidgetBuilder:
-          //TODO: improve
-          (progress) => BackdropFilter(
-            filter: ImageFilter.blur(sigmaX: 4.5, sigmaY: 4.5),
-            child: const Center(child: CircularProgressIndicator()),
-          ),
+      overlayWidgetBuilder: (progress) => BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 4.5, sigmaY: 4.5),
+        child: const Center(child: CircularProgressIndicator()),
+      ),
       child: child,
     );
   }

@@ -20,5 +20,4 @@ Legend: **P2** robustness/quality · **P3** improvement/cleanup
 
 ## Phase 6 — Build, Docker and docs (P3)
 
-- [ ] **Update versions to the latest.** The latest Flutter installed on the machine (`fvm list`, currently 3.47.9, in `.fvmrc`, `Dockerfile`, CI and `README.md`), every version in `pubspec.yaml` and the code migrations they require. Last check (2026-11-09): Flutter is up to date; behind are `gap` 3.0.1 → 3.1.0, `go_router` 18.1.2 → 18.1.3 and `syncfusion_flutter_datagrid` 35.1.42 → 35.1.43.
 - [ ] Review dependencies (optional, needs a decision): `get` is only used for DI and `firstWhereOrNull` (the latter exists in `package:collection`). Consider `get_it` as `lib/adapter/di.dart` itself suggests — **only if decided**, not required.

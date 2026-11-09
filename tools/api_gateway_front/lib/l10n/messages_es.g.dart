@@ -383,7 +383,7 @@ class AppMessages$logFilters$es implements AppMessages$logFilters$en {
   @override
   String get filterMethodLabel => 'Método HTTP';
   @override
-  String get filterMethodHint => 'Seleccion método HTTP (GET, POST)';
+  String get filterMethodHint => 'Seleccione método HTTP (GET, POST)';
   @override
   String get filterRouteLabel => 'Ruta';
   @override
@@ -519,7 +519,7 @@ extension on AppMessagesEs {
       'logFilters.filterHttpStatusLabel' => 'Estado HTTP',
       'logFilters.filterHttpStatusHint' => '200',
       'logFilters.filterMethodLabel' => 'Método HTTP',
-      'logFilters.filterMethodHint' => 'Seleccion método HTTP (GET, POST)',
+      'logFilters.filterMethodHint' => 'Seleccione método HTTP (GET, POST)',
       'logFilters.filterRouteLabel' => 'Ruta',
       'logFilters.filterRouteHint' => 'Selecciona ruta (Admin, Sin-Ruta)',
       'logFilters.filterNoRouteName' => 'Sin-Ruta',

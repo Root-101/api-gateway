@@ -62,7 +62,6 @@ class RoutesFormScreenNavigator {
           auth: app.di.find(),
           repo: app.di.find(),
           action: RoutesFormAction.duplicate,
-          //in a future we will support the edit from url, this are the bases
           paramRouteId: model.id,
           paramRouteModel: model,
         ),

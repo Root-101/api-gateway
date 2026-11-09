@@ -144,7 +144,7 @@ class _RoutesRestoreDialogState extends State<RoutesRestoreDialog> {
                                 onPressed: () async {
                                   List<DropzoneFileInterface> files =
                                       await controller1.pickFiles();
-                                  if (files.isNotEmpty) {
+                                  if (files.isNotEmpty && context.mounted) {
                                     _setupFile(
                                       file: files.first,
                                       context: context,
