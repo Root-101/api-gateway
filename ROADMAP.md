@@ -11,7 +11,6 @@ Rules:
 
 ## Console
 
-- [ ] **Full block below 800×400** (`console/lib/main.dart:93`). Needs a responsive layout for the rail, logs table and form; not a small change. At least allow login and list on medium screens.
 - [ ] ⚠️ The tests have never been executed: on the dev machine `flutter test --platform chrome` fails even for a trivial test ("Connection closed before test suite loaded", Chrome and Edge). First real run will be the CI.
 
 ## Possible improvements
@@ -23,7 +22,7 @@ Rules:
 
 ## 6.0.0 release
 
-- [ ] Review the CI on GitHub, after all the changes above. The `native-image` job, with the smoke test and the Postman collection, only runs on `master`.
+- [ ] Review the CI on GitHub, after all the changes above.
 - [ ] Review the deployments: from the repository they need the new root directories (Railway: `/gateway` and `/console`).
 - [ ] Set `version = '6.0.0'` in `gateway/build.gradle` and the release date in `CHANGELOG.md`.
 - [ ] **Last step:** migrate to images on **GHCR** (`ghcr.io`): publish the docker images from the CI and use them in `docker-compose.yml` and the deploy docs instead of building locally.

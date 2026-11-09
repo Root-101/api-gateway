@@ -21,7 +21,7 @@
         * **Docker** :whale: : `docker-compose`: the gateway waits for Postgres to be healthy, the new env vars are listed, and the web console gets its config at runtime (`environment:`, one image for every environment). Final image on `debian:trixie-slim`.
         * **Code** :broom: : Dependencies cleanup (test libraries out of the production binary, Lombok only at compile time, Spring Cloud from its BOM) and code cleanup without behavior changes.
         * **Tests** :test_tube: : Unit tests (`./gradlew test`) and integration tests with Testcontainers (`./gradlew integrationTest`, Docker required): 101 tests, 95.9 % lines / 91 % branches, with a coverage gate in `check`.
-        * **CI** :construction_worker: : GitHub Actions: tests and coverage gate, web console build and tests, and on `master` the native docker image with a smoke test and the Postman collection.
+        * **CI** :construction_worker: : GitHub Actions: tests and coverage gate, web console build and tests, and the native docker image with a smoke test and the Postman collection.
         * **Docs** :books: : README: new env vars, security and timeouts, health check, single-instance note, how to run the tests. Postman collection (`doc/`) rewritten as a test suite: assertions on every request, no fixed ids, cleans up after itself.
         * **Web console** :computer: : Bug fixes, security, robustness and tests. The docker image generates `env.js` at container start (`GATEWAY_SERVICE_URL`, `ADMIN_PATH`, `SESSION_TIMEOUT_MINUTES`), so one image works for every environment. Texts migrated to slang, and routes can be edited by url (`/routes/:id/edit`).
 * 5.x:

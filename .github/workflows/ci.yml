@@ -5,6 +5,11 @@ on:
   push:
     branches: [ develop, master ]
 
+# a new push to the same branch or PR replaces the run in progress
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   test:
     runs-on: ubuntu-latest
@@ -36,9 +41,12 @@ jobs:
         working-directory: console
     steps:
       - uses: actions/checkout@v7
+      - name: Flutter version from .fvmrc
+        id: fvm
+        run: echo "version=$(jq -r .flutter .fvmrc)" >> "$GITHUB_OUTPUT"
       - uses: subosito/flutter-action@v2
         with:
-          flutter-version: 3.47.9
+          flutter-version: ${{ steps.fvm.outputs.version }}
           channel: stable
           cache: true
       - run: flutter pub get
@@ -49,8 +57,7 @@ jobs:
       - run: flutter build web --release
 
   native-image:
-    # slow (native compile), only on master
-    if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+    # slow (native compile), but it catches what the JVM tests can't see: every PR, once the tests pass
     needs: test
     runs-on: ubuntu-latest
     steps:
@@ -79,6 +86,10 @@ jobs:
         run: |
           curl -o- "https://dl-cli.pstmn.io/install/linux64.sh" | sh
           postman collection run doc/Api-Gateway.postman_collection.json -e "doc/Api-Gateway - Local.postman_environment.json" --no-report-events
+      # a route the gateway can't build still answers 200 to the api, it only shows up here
+      - name: No route build errors in the log
+        if: always()
+        run: "! docker logs gw 2>&1 | grep -A5 'Refresh routes error'"
       - name: Gateway logs
         if: always()
         run: docker logs gw || true
