@@ -134,12 +134,12 @@ These are configured before the service start.
 | DB_USERNAME            | text     | Username of the DB user                   | postgres                    | 4.x              |
 | DB_PASSWORD            | text     | Password of the DB user                   | a123b456**                  | 4.x              |
 | MAINTAIN_LOGS_FOR_DAYS | integer  | Number of days the logs will be available | 14                          | 5.x              |
-| MAX_LOGS_SEARCH_SIZE   | integer  | Max `size` of a logs search page          | 10000                       | 5.1.x            |
-| ADMIN_MAX_FAILED_ATTEMPTS | integer | Wrong credentials allowed per client ip before the lockout (`0` disables it) | 10 | 5.1.x |
-| ADMIN_LOCKOUT_MINUTES  | integer  | Lockout window after the first failure    | 15                          | 5.1.x            |
-| CORS_ALLOWED_ORIGINS   | text     | Comma separated allowed origin patterns   | * (ej: `https://*.example.com`) | 5.1.x        |
-| GATEWAY_CONNECT_TIMEOUT_MS | integer | Millis to connect to the upstream service | 10000                    | 5.1.x            |
-| GATEWAY_RESPONSE_TIMEOUT | duration | Max wait for the upstream response (`504` after it), empty = no timeout | 60s | 5.1.x       |
+| MAX_LOGS_SEARCH_SIZE   | integer  | Max `size` of a logs search page          | 10000                       | 6.x              |
+| ADMIN_MAX_FAILED_ATTEMPTS | integer | Wrong credentials allowed per client ip before the lockout (`0` disables it) | 10 | 6.x   |
+| ADMIN_LOCKOUT_MINUTES  | integer  | Lockout window after the first failure    | 15                          | 6.x              |
+| CORS_ALLOWED_ORIGINS   | text     | Comma separated allowed origin patterns   | * (ej: `https://*.example.com`) | 6.x          |
+| GATEWAY_CONNECT_TIMEOUT_MS | integer | Millis to connect to the upstream service | 10000                    | 6.x              |
+| GATEWAY_RESPONSE_TIMEOUT | duration | Max wait for the upstream response (`504` after it), empty = no timeout | 60s | 6.x         |
 
 #### PORT, PROFILE & APPLICATION_NAME <a name="4.2"></a>
 
@@ -356,6 +356,7 @@ specific version.
 | **3.x**     | Adds **management endpoints** to configure routes **dynamically**, without redeploying the service.                                                    |
 | **4.x**     | Integrates a **PostgreSQL database** to **persist configurations**, allowing the service to reload them automatically after redeployment.              |
 | **5.x**     | Introduces an **HTTP Logs system** to **store all incoming requests** in the database for later review and analysis.                                   |
+| **6.x**     | In progress: **general restructuring** of the project, **API changes** and official docker images on **GHCR**.                                         |
 | **x.x**     | Planned: Add a **configuration system** to manage settings like **log retention time**, **CORS policies**, **rate limiting**, and more.                |
 | **x.x**     | Planned: Add **metrics & statistics** to track response times, failure rates, and the most frequently requested endpoints.                             |
 

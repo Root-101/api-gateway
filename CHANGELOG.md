@@ -1,5 +1,5 @@
-* 5.x:
-    * 5.1.0 (in progress):
+* 6.x:
+    * 6.0.0 (in progress):
         * **DATE** :date: : not released yet (started 2026-11-02).
         * **Deploy** :warning: : Deploy together with the web console `tools/api_gateway_front` of this same release: it relies on the `401`/`403` with CORS headers to log out. Building now needs a **JDK 25** (Gradle finds the installed ones).
         * **Versions** :arrow_up: : Upgrade to the latest versions: Java `21` → `25` (LTS), GraalVM CE `25` for the native image, Spring Boot `3.5.14` → `4.1.2` (Spring Framework `7.0.10`, Spring Security `7.1.2`, Jackson `3.1.7`), Spring Cloud `2025.0.2` → `2025.1.4` (Gateway `4.3.4` → `5.0.4`), Gradle `8.14.2` → `9.8.2`, native build tools `0.11.3` → `1.1.18`, `dev.root101.commons` `5.5.3`, Flutter `3.47.9`, GitHub Actions to their latest majors. From the Spring Boot BOM (no hardcoded versions): Flyway `12.4.0`, Postgres driver `42.7.14`, r2dbc-postgresql `1.1.3`, Lombok `1.18.48`, Testcontainers `2.0.5`, JUnit `6.0.3`. Same API contract: the json mapper keeps the Jackson 2 defaults.
@@ -18,6 +18,7 @@
         * **CI** :construction_worker: : GitHub Actions: tests and coverage gate, web console build and tests, and on `master` the native docker image with a smoke test and the Postman collection.
         * **Docs** :books: : README: new env vars, security and timeouts, health check, single-instance note, how to run the tests. Postman collection (`doc/`) rewritten as a test suite: assertions on every request, no fixed ids, cleans up after itself.
         * **Web console** :computer: : Bug fixes, security, robustness and tests. The docker image generates `env.js` at container start (`GATEWAY_SERVICE_URL`, `ADMIN_PATH`, `SESSION_TIMEOUT_MINUTES`), so one image works for every environment. Texts migrated to slang, and routes can be edited by url (`/routes/:id/edit`).
+* 5.x:
     * 5.0.1:
         * **DATE** :date: : 2026-05-17.
         * **General** :hammer_and_wrench: : Upgrade all dependencies.
