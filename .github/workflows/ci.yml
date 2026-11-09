@@ -4,6 +4,8 @@ on:
   pull_request:
   push:
     branches: [ develop, master ]
+  # release.yml runs it before publishing the images
+  workflow_call:
 
 # a new push to the same branch or PR replaces the run in progress
 concurrency:
@@ -49,7 +51,7 @@ jobs:
           flutter-version: ${{ steps.fvm.outputs.version }}
           channel: stable
           cache: true
-      - run: flutter pub get
+      - run: flutter pub get --enforce-lockfile
       # warnings fail the job, infos don't
       - run: flutter analyze --no-fatal-infos
       # the tests use the `web` package, they need chrome (installed in ubuntu-latest)

@@ -1,0 +1,59 @@
+# A version tag (6.0.0, 6.1.0-rc.1) publishes both images on ghcr.io, once the CI passes:
+# ghcr.io/root-101/api-gateway and ghcr.io/root-101/api-gateway-console, tagged with the version.
+# `latest` only moves with a version without `-rc`.
+name: Release
+
+on:
+  push:
+    tags: ['*.*.*']
+
+jobs:
+  check:
+    uses: ./.github/workflows/ci.yml
+
+  image:
+    name: Image ${{ matrix.image }}
+    needs: check
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    strategy:
+      matrix:
+        include:
+          - image: api-gateway
+            context: gateway
+          - image: api-gateway-console
+            context: console
+    steps:
+      - uses: actions/checkout@v7
+      - name: Flutter version from .fvmrc
+        id: fvm
+        run: echo "version=$(jq -r .flutter console/.fvmrc)" >> "$GITHUB_OUTPUT"
+
+      - uses: docker/setup-buildx-action@v4
+
+      - uses: docker/login-action@v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - id: meta
+        uses: docker/metadata-action@v6
+        with:
+          images: ghcr.io/root-101/${{ matrix.image }}
+          tags: type=semver,pattern={{version}}
+
+      - uses: docker/build-push-action@v7
+        with:
+          context: ${{ matrix.context }}
+          # shortcut: amd64 only, a native compile under QEMU is too slow; use an arm runner if arm64 is needed
+          platforms: linux/amd64
+          # only the console's Dockerfile reads it
+          build-args: FLUTTER_VERSION=${{ steps.fvm.outputs.version }}
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha,scope=${{ matrix.image }}
+          cache-to: type=gha,mode=max,scope=${{ matrix.image }}

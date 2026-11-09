@@ -7,7 +7,6 @@ build/
 # console
 console/.dart_tool/
 console/build/
-console/pubspec.lock
 console/.flutter-plugins-dependencies
 
 console/.idea/

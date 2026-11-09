@@ -16,9 +16,8 @@ RUN flutter config --no-analytics && flutter precache --web
 
 WORKDIR /app
 #dependencies first, so the pub get layer is cached while only code changes
-#glob: pubspec.lock is git-ignored, so it may be missing in a clean clone
 COPY pubspec.* ./
-RUN flutter pub get
+RUN flutter pub get --enforce-lockfile
 COPY . .
 RUN flutter build web --release
 
