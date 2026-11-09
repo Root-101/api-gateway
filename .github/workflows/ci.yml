@@ -8,6 +8,9 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: gateway
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-java@v6
@@ -23,14 +26,14 @@ jobs:
         with:
           name: test-and-coverage-reports
           path: |
-            build/reports/tests
-            build/reports/jacoco
+            gateway/build/reports/tests
+            gateway/build/reports/jacoco
 
   front:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: tools/api_gateway_front
+        working-directory: console
     steps:
       - uses: actions/checkout@v7
       - uses: subosito/flutter-action@v2
@@ -39,7 +42,7 @@ jobs:
           channel: stable
           cache: true
       - run: flutter pub get
-      # warnings fail the job, infos don't (6 old infos pending in the front roadmap)
+      # warnings fail the job, infos don't
       - run: flutter analyze --no-fatal-infos
       # the tests use the `web` package, they need chrome (installed in ubuntu-latest)
       - run: flutter test --platform chrome
@@ -52,7 +55,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
-      - run: docker build -t api-gateway .
+      - run: docker build -t api-gateway gateway
       # smoke test of the native binary: catches GraalVM reflection problems the JVM tests can't see
       - name: Smoke test
         run: |

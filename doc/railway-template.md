@@ -56,7 +56,7 @@ This setup isolates your internal microservices from the public internet while p
 * Railway PostgreSQL Template: [https://railway.com/template/postgres](https://railway.com/template/postgres)
 * Api-Gateway Core Service: [https://github.com/Root-101/api-gateway](https://github.com/Root-101/api-gateway)
 * Api-Gateway Web
-  Client: [api-gateway/tools/api_gateway_front](https://github.com/Root-101/api-gateway/tree/master/tools/api_gateway_front)
+  Client: [api-gateway/console](https://github.com/Root-101/api-gateway/tree/master/console)
 
 ---
 

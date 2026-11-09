@@ -27,7 +27,7 @@ services:
   # -------------------
   api-gateway:
     build:
-      context: .
+      context: ./gateway
       dockerfile: Dockerfile
     image: api-gateway-service
     container_name: api_gateway_service
@@ -67,7 +67,7 @@ services:
   # -------------------
   flutter-web:
     build:
-      context: ./tools/api_gateway_front
+      context: ./console
       dockerfile: Dockerfile
     image: flutter-web-service
     container_name: api_gateway_web_ui

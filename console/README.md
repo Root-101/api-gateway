@@ -46,7 +46,7 @@ The variables are read at **container start** (an entrypoint script writes `env.
 environment:
 
 ```bash
-docker build -t api-gateway-web ./tools/api_gateway_front
+docker build -t api-gateway-web ./console
 docker run -p 80:80   -e GATEWAY_SERVICE_URL=https://gateway-url.test   -e ADMIN_PATH=_admin   api-gateway-web
 ```
 
@@ -75,44 +75,44 @@ This project is developed using **Flutter**, currently version `3.47.9` (pinned 
 
 #### Login screen
 
-![screenshot-1](../../doc/images/web-client-1.png)
+![screenshot-1](../doc/images/web-client-1.png)
 
 #### Routes screen
 
-![screenshot-2](../../doc/images/web-client-2.png)
+![screenshot-2](../doc/images/web-client-2.png)
 
 #### Create route dialog
 
-![screenshot-3](../../doc/images/web-client-3.png)
+![screenshot-3](../doc/images/web-client-3.png)
 
 #### Edit route dialog
 
-![screenshot-4](../../doc/images/web-client-4.png)
+![screenshot-4](../doc/images/web-client-4.png)
 
 #### Delete route
 
-![screenshot-5](../../doc/images/web-client-5.png)
+![screenshot-5](../doc/images/web-client-5.png)
 
 #### Backup routes
 
-![screenshot-6](../../doc/images/web-client-6.png)
+![screenshot-6](../doc/images/web-client-6.png)
 
 #### Restore routes
 
-![screenshot-7](../../doc/images/web-client-7.png)
+![screenshot-7](../doc/images/web-client-7.png)
 
 #### Logs Screen
 
-![screenshot-8](../../doc/images/web-client-8.png)
+![screenshot-8](../doc/images/web-client-8.png)
 
 #### Logs Filter Dialog
 
-![screenshot-9](../../doc/images/web-client-9.png)
+![screenshot-9](../doc/images/web-client-9.png)
 
 #### Change Language
 
-![screenshot-10](../../doc/images/web-client-10.png)
+![screenshot-10](../doc/images/web-client-10.png)
 
 #### Logout
 
-![screenshot-11](../../doc/images/web-client-11.png)
+![screenshot-11](../doc/images/web-client-11.png)

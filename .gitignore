@@ -4,20 +4,19 @@ build/
 
 *.env
 
-# Tools ignored
-# front
-tools/api_gateway_front/.dart_tool/
-tools/api_gateway_front/build/
-tools/api_gateway_front/pubspec.lock
-tools/api_gateway_front/.flutter-plugins-dependencies
+# console
+console/.dart_tool/
+console/build/
+console/pubspec.lock
+console/.flutter-plugins-dependencies
 
-tools/api_gateway_front/.idea/
-tools/api_gateway_front/*.iml
+console/.idea/
+console/*.iml
 
 #fvm
-tools/api_gateway_front/.fvm/flutter_sdk
-tools/api_gateway_front/.fvm/versions/
+console/.fvm/flutter_sdk
+console/.fvm/versions/
 
 #env
-tools/api_gateway_front/web/env.js
-tools/api_gateway_front/.metadata
+console/web/env.js
+console/.metadata

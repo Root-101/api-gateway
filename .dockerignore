@@ -1,9 +1,0 @@
-# Only the backend sources are needed for the native build
-.git
-.gradle
-.idea
-build
-tools
-doc
-*.env
-*.md

@@ -110,7 +110,7 @@ This version (5.x) adds a Http Logs system, where each request made through this
 review.
 
 We include the updated ui-client, it's a web made with [Flutter](https://flutter.dev/) located
-under `/tools/api_gateway_front`, and the [Postman collection](doc/Api-Gateway.postman_collection.json) to test the
+under `/console`, and the [Postman collection](doc/Api-Gateway.postman_collection.json) to test the
 management endpoints.
 
 ## Configuring the service <a name="4"></a>
@@ -219,9 +219,11 @@ By default it's configure to maintain logs for 14 days.
 
 A **JDK 25** must be installed (Gradle finds it by itself through its toolchain, it does not need to be the one in `JAVA_HOME`).
 
+Run them from the `gateway` folder.
+
 - `./gradlew test`: unit tests (fast, no Docker).
 - `./gradlew integrationTest`: integration tests (`*IT`), they start Postgres with Testcontainers: **Docker required**.
-- `./gradlew check jacocoTestReport`: both, plus the coverage gate; the report is in `build/reports/jacoco/test/html`.
+- `./gradlew check jacocoTestReport`: both, plus the coverage gate; the report is in `gateway/build/reports/jacoco/test/html`.
 
 ## **API Docs** <a name="5"></a>
 
