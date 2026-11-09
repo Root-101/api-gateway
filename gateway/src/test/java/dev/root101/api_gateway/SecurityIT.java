@@ -82,7 +82,7 @@ class SecurityIT extends IntegrationTest {
                 .header("X-Forwarded-For", "192.0.2." + (int) (Math.random() * 200))
                 .bodyValue(Map.of("username", "admin", "password", "wrong"))
                 .exchange()
-                .expectStatus().isForbidden()
+                .expectStatus().isUnauthorized()
                 .expectHeader().valueEquals(HttpHeaders.ACCESS_CONTROL_ALLOW_ORIGIN, ORIGIN);
 
         webTestClient.post().uri("/%s/auth/login".formatted(ADMIN_PATH))
@@ -90,6 +90,82 @@ class SecurityIT extends IntegrationTest {
                 .exchange()
                 .expectStatus().isEqualTo(HttpStatus.UNPROCESSABLE_CONTENT)
                 .expectBody().jsonPath("$.length()").isEqualTo(2);
+    }
+
+    private String loginToken(String clientIp) {
+        return (String) webTestClient.post().uri("/%s/auth/login".formatted(ADMIN_PATH))
+                .header("X-Forwarded-For", clientIp)
+                .bodyValue(Map.of("username", ADMIN_USERNAME, "password", ADMIN_PASSWORD))
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody(Map.class).returnResult().getResponseBody().get("token");
+    }
+
+    @Test
+    void loginReturnsAToken() {
+        webTestClient.post().uri("/%s/auth/login".formatted(ADMIN_PATH))
+                .bodyValue(Map.of("username", ADMIN_USERNAME, "password", ADMIN_PASSWORD))
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody()
+                .jsonPath("$.token").isNotEmpty()
+                .jsonPath("$.expires_in").isEqualTo(28800);
+    }
+
+    /**
+     * The token works on the admin endpoints. A wrong one is a 401 with CORS, doesn't count for the lockout,
+     * and doesn't break the endpoints without auth.
+     */
+    @Test
+    void bearerToken() {
+        String ip = "203.0.113." + (int) (Math.random() * 200);
+        String token = loginToken(ip);
+
+        webTestClient.get().uri("/%s/routes".formatted(ADMIN_PATH))
+                .header("X-Forwarded-For", ip)
+                .header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
+                .exchange()
+                .expectStatus().isOk();
+
+        for (int i = 0; i < 6; i++) {
+            webTestClient.get().uri("/%s/routes".formatted(ADMIN_PATH))
+                    .header("X-Forwarded-For", ip)
+                    .header(HttpHeaders.ORIGIN, ORIGIN)
+                    .header(HttpHeaders.AUTHORIZATION, "Bearer wrong-" + i)
+                    .exchange()
+                    .expectStatus().isUnauthorized()
+                    .expectHeader().valueEquals(HttpHeaders.ACCESS_CONTROL_ALLOW_ORIGIN, ORIGIN);
+        }
+
+        webTestClient.post().uri("/%s/auth/login".formatted(ADMIN_PATH))
+                .header("X-Forwarded-For", ip)
+                .header(HttpHeaders.AUTHORIZATION, "Bearer expired")
+                .bodyValue(Map.of("username", ADMIN_USERNAME, "password", ADMIN_PASSWORD))
+                .exchange()
+                .expectStatus().isOk();
+        webTestClient.get().uri("/%s/health".formatted(ADMIN_PATH))
+                .header("X-Forwarded-For", ip)
+                .header(HttpHeaders.AUTHORIZATION, "Bearer expired")
+                .exchange()
+                .expectStatus().isOk();
+    }
+
+    /**
+     * A successful login resets the failed attempts: a client using only tokens never sends Basic, which also resets them.
+     */
+    @Test
+    void successfulLoginResetsFailedAttempts() {
+        String ip = "203.0.113." + (int) (Math.random() * 200);
+        for (int round = 0; round < 2; round++) {
+            for (int i = 0; i < 4; i++) {
+                webTestClient.post().uri("/%s/auth/login".formatted(ADMIN_PATH))
+                        .header("X-Forwarded-For", ip)
+                        .bodyValue(Map.of("username", "admin", "password", "wrong-" + i))
+                        .exchange()
+                        .expectStatus().isUnauthorized();
+            }
+            loginToken(ip);
+        }
     }
 
     /**
@@ -138,7 +214,7 @@ class SecurityIT extends IntegrationTest {
                     .header("X-Forwarded-For", attackerIp)
                     .bodyValue(Map.of("username", "admin", "password", "wrong-" + i))
                     .exchange()
-                    .expectStatus().isForbidden();
+                    .expectStatus().isUnauthorized();
         }
 
         webTestClient.get()

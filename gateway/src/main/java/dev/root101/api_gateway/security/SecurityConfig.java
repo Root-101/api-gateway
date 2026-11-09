@@ -20,6 +20,7 @@ public class SecurityConfig {
     public SecurityWebFilterChain securityWebFilterChain(
             ServerHttpSecurity http,
             AdminAuthenticationManager adminAuthenticationManager,
+            AdminTokens adminTokens,
             LoginAttemptsGuard loginAttemptsGuard,
             @Value("${app.admin.base-path}") String adminBasePath,
             @Value("${app.admin.role}") String adminRole
@@ -29,7 +30,7 @@ public class SecurityConfig {
         String adminPathMatchers = "/%s/**".formatted(adminBasePath);
         String adminCleanRole = adminRole.replaceFirst("ROLE_", "");
         //not a bean: as a bean/@Component, WebFlux would also register it in the global chain and run it twice
-        AdminAuthenticationWebFilter adminAuthenticationWebFilter = new AdminAuthenticationWebFilter(adminAuthenticationManager, loginAttemptsGuard, adminBasePath);
+        AdminAuthenticationWebFilter adminAuthenticationWebFilter = new AdminAuthenticationWebFilter(adminAuthenticationManager, adminTokens, loginAttemptsGuard, adminBasePath);
         return http
                 .csrf(ServerHttpSecurity.CsrfSpec::disable)                                       // Disable CSRF (this is a stateless api, don't need csrf)
                 .cors(Customizer.withDefaults())                                                  // Uses the CorsConfigurationSource bean, so 401/403 also get CORS headers

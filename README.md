@@ -137,6 +137,7 @@ These are configured before the service start.
 | MAX_LOGS_SEARCH_SIZE   | integer  | Max `size` of a logs search page          | 10000                       | 6.x              |
 | ADMIN_MAX_FAILED_ATTEMPTS | integer | Wrong credentials allowed per client ip before the lockout (`0` disables it) | 10 | 6.x   |
 | ADMIN_LOCKOUT_MINUTES  | integer  | Lockout window after the first failure    | 15                          | 6.x              |
+| ADMIN_TOKEN_MINUTES    | integer  | Minutes a token given by the login is valid | 480                       | 6.x              |
 | CORS_ALLOWED_ORIGINS   | text     | Comma separated allowed origin patterns   | * (ej: `https://*.example.com`) | 6.x          |
 | GATEWAY_CONNECT_TIMEOUT_MS | integer | Millis to connect to the upstream service | 10000                    | 6.x              |
 | GATEWAY_RESPONSE_TIMEOUT | duration | Max wait for the upstream response (`504` after it), empty = no timeout | 60s | 6.x         |
@@ -151,7 +152,8 @@ and would not have major impacts.
 As a security measure, the gateway management endpoints, with which new routes are created, edited, deleted and
 listed, and the logs are listed, are protected with a layer of security.
 
-In this case, a `basic` auth type is used, which must be provided with a username and password to access.
+The login endpoint gives a token to send as `Authorization: Bearer <token>`. `Basic` auth with the username and
+password is also accepted.
 
 By configuring these variables (`ADMIN_USERNAME` and `ADMIN_PASSWORD`), the admin endpoints of the service can be
 protected against unauthorized access.
@@ -211,6 +213,8 @@ By default it's configure to maintain logs for 14 days.
   db is down). It's not saved in the logs. Use it as the health check path of Railway / Kubernetes / your load balancer.
 - **Single instance:** route changes made through the api are applied only on the instance that receives the call, the
   other replicas load them on their next restart. Run a single instance (or restart the others after changing routes).
+- **Tokens:** kept in memory, per instance: a restart invalidates them and the clients must log in again. They expire
+  `ADMIN_TOKEN_MINUTES` after the login and can't be revoked before that.
 - **Logs are written async:** each request log goes to an in-memory queue (10 000 max) saved in batches every second. If
   the db is slow or down and the queue gets full, new logs are dropped (with a warning in the server log) instead of
   slowing down the traffic. Logs still in the queue are saved on a graceful shutdown.
@@ -229,7 +233,7 @@ Run them from the `gateway` folder.
 
 The **API Gateway** exposes several **management endpoints** that allow administrators to:
 
-* 🔐 **Authenticate** — Secure all configuration endpoints with **Basic Auth** credentials.
+* 🔐 **Authenticate** — Secure all configuration endpoints with a **login token** or **Basic Auth** credentials.
 * 🔀 **Manage dynamic routes** — Create, update, and delete routes that define how requests are forwarded to internal
   services.
 * 📜 **Access HTTP logs** — Search, filter, and export all incoming requests for monitoring and debugging purposes.
@@ -239,12 +243,12 @@ However, if you prefer, **you can interact with the REST API directly** using to
 
 ### Login <a name="5.1"></a>
 
-Use this endpoint to validate the administrator credentials before accessing the management features of the API Gateway.
-Mainly used since in v4.2.0 we add the ui client, and this endpoint is used to validate credentials in the login page.
+Use this endpoint to validate the administrator credentials and get the token to access the management features of the
+API Gateway.
 
-| Method | Endpoint               | Description                                 |
-|--------|------------------------|---------------------------------------------|
-| GET    | /**_admin**/auth/login | Check if the admin user/password is correct |
+| Method | Endpoint               | Description                                                   |
+|--------|------------------------|---------------------------------------------------------------|
+| POST   | /**_admin**/auth/login | Check if the admin user/password is correct and give a token  |
 
 > ⚠️ WARNING: if the value of env `ADMIN_PATH` changes, the endpoints will change. These tables are based on the default
 > value of this variable (`_admin`).
@@ -266,11 +270,8 @@ Each route defines how incoming requests are redirected to internal services.
 | PUT    | /**_admin**/routes/{route-id} | Edit the route with id = route-id, replace it with route in body of the request |
 | DELETE | /**_admin**/routes/{route-id} | Delete the route with id = route-id                                             |
 
-> ⚠️ WARNING: avoid routes with overlapping paths (ej: `/svc/**` and `/svc/admin/**`): all routes have the same
-> priority, the one created first wins, and after a restart the order depends on the db.
->
-> ℹ️ NOTE: `GET /routes/{route-id}` returns `route_id` and the rewrite as flat `rewrite_path_from` / `rewrite_path_to`,
-> while `GET /routes` returns `id` and a `rewrite_path` object. Kept as is for compatibility, it will be unified in 6.x.
+> ⚠️ WARNING: routes with overlapping paths (ej: `/svc/**` and `/svc/admin/**`) need a different `order` (lower is
+> evaluated first). With the same `order` the one created first wins, and after a restart it depends on the db.
 
 > ⚠️ WARNING: if the value of env `ADMIN_PATH` changes, the endpoints will change. These tables are based on the default
 > value of this variable (`_admin`).

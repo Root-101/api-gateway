@@ -105,6 +105,51 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
+                  "pm.test('status is 200', () => pm.response.to.have.status(200));",
+                  "const r = pm.response.json();",
+                  "pm.test('returns a token', () => {",
+                  "    pm.expect(r.token).to.be.a('string').and.not.empty;",
+                  "    pm.expect(r.expires_in).to.be.above(0);",
+                  "});",
+                  "pm.collectionVariables.set('login-token', r.token);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "routes - with the login token",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{gateway-url}}/{{gateway-admin-path}}/routes",
+              "host": [
+                "{{gateway-url}}"
+              ],
+              "path": [
+                "{{gateway-admin-path}}",
+                "routes"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{login-token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
                   "pm.test('status is 200', () => pm.response.to.have.status(200));"
                 ]
               }
@@ -152,7 +197,7 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('status is 403', () => pm.response.to.have.status(403));"
+                  "pm.test('status is 401', () => pm.response.to.have.status(401));"
                 ]
               }
             }
@@ -397,7 +442,7 @@
             },
             "body": {
               "mode": "raw",
-              "raw": "[\n    {\n        \"name\": \"test-dev-a-{{run}}\",\n        \"path\": \"/test-service-a-{{run}}/**\",\n        \"uri\": \"http://localhost:8081\",\n        \"rewrite_path\": {\n            \"replace_from\": \"/test-service-a-{{run}}/\",\n            \"replace_to\": \"/\"\n        }\n    },\n    {\n        \"name\": \"test-dev-b-{{run}}\",\n        \"path\": \"/test-service-b-{{run}}/**\",\n        \"uri\": \"http://localhost:8082\"\n    }\n]",
+              "raw": "[\n    {\n        \"name\": \"test-dev-a-{{run}}\",\n        \"path\": \"/test-service-a-{{run}}/**\",\n        \"uri\": \"http://localhost:8081\",\n        \"rewrite_path\": {\n            \"replace_from\": \"/test-service-a-{{run}}/\",\n            \"replace_to\": \"/\"\n        }\n    },\n    {\n        \"name\": \"test-dev-b-{{run}}\",\n        \"path\": \"/test-service-b-{{run}}/**\",\n        \"uri\": \"http://localhost:8082\",\n        \"order\": 5,\n        \"methods\": [\"GET\"],\n        \"hosts\": [\"**\"],\n        \"headers\": [{\"name\": \"X-Probe\", \"regexp\": \"[0-9]+\"}, {\"name\": \"X-Present\"}],\n        \"filters\": [\n            {\"name\": \"AddRequestHeader\", \"args\": [\"X-A\", \"1\"]},\n            {\"name\": \"AddResponseHeader\", \"args\": [\"X-B\", \"1\"]},\n            {\"name\": \"SetRequestHeader\", \"args\": [\"X-C\", \"1\"]},\n            {\"name\": \"SetResponseHeader\", \"args\": [\"X-D\", \"1\"]},\n            {\"name\": \"RemoveRequestHeader\", \"args\": [\"X-E\"]},\n            {\"name\": \"RemoveResponseHeader\", \"args\": [\"X-F\"]}\n        ]\n    }\n]",
               "options": {
                 "raw": {
                   "language": "json"
@@ -413,6 +458,48 @@
                 "type": "text/javascript",
                 "exec": [
                   "pm.test('status is 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "proxy - route with every predicate and filter",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-Probe",
+                "value": "1"
+              },
+              {
+                "key": "X-Present",
+                "value": "1"
+              }
+            ],
+            "url": {
+              "raw": "{{gateway-url}}/test-service-b-{{run}}/x",
+              "host": [
+                "{{gateway-url}}"
+              ],
+              "path": [
+                "test-service-b-{{run}}",
+                "x"
+              ]
+            },
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "//the route is built when it's saved: in the native image a missing reflection hint leaves it inactive (404), any other status means it matched",
+                  "pm.test('route is active', () => pm.expect(pm.response.code).to.not.eql(404));"
                 ]
               }
             }
@@ -444,7 +531,7 @@
                 "exec": [
                   "pm.test('status is 200', () => pm.response.to.have.status(200));",
                   "const isRoute = (r) => {",
-                  "    pm.expect(r).to.have.all.keys('id', 'name', 'path', 'uri', 'rewrite_path', 'description', 'created_at');",
+                  "    pm.expect(r).to.have.all.keys('id', 'name', 'path', 'uri', 'rewrite_path', 'description', 'created_at', 'order', 'methods', 'hosts', 'headers', 'filters');",
                   "    pm.expect(r.id).to.match(/^[0-9a-f-]{36}$/);",
                   "};",
                   "",
@@ -493,16 +580,17 @@
                 "type": "text/javascript",
                 "exec": [
                   "pm.test('status is 200', () => pm.response.to.have.status(200));",
-                  "//`GET /routes/{id}` returns the entity (flat rewrite fields), unlike `GET /routes` (unified in 6.x)",
                   "const r = pm.response.json();",
                   "const run = pm.collectionVariables.get('run');",
                   "pm.test('route data', () => {",
-                  "    pm.expect(r.route_id).to.eql(pm.collectionVariables.get('route-id'));",
+                  "    pm.expect(r.id).to.eql(pm.collectionVariables.get('route-id'));",
                   "    pm.expect(r.name).to.eql(`test-dev-${run}`);",
                   "    pm.expect(r.path).to.eql(`/test-service-${run}/**`);",
                   "    pm.expect(r.uri).to.eql('http://localhost:8081');",
-                  "    pm.expect(r.rewrite_path_from).to.eql(`/test-service-${run}/`);",
-                  "    pm.expect(r.rewrite_path_to).to.eql('/');",
+                  "    pm.expect(r.rewrite_path.replace_from).to.eql(`/test-service-${run}/`);",
+                  "    pm.expect(r.rewrite_path.replace_to).to.eql('/');",
+                  "    pm.expect(r.order).to.eql(0);",
+                  "    pm.expect(r.methods).to.eql([]);",
                   "    pm.expect(r.description).to.eql('A test route');",
                   "    pm.expect(new Date(r.created_at).getTime()).to.not.be.NaN;",
                   "});"
@@ -661,7 +749,7 @@
                   "pm.test('route edited', () => {",
                   "    pm.expect(r.name).to.eql(`test-dev-123-${run}`);",
                   "    pm.expect(r.path).to.eql(`/test-service-123-${run}/**`);",
-                  "    pm.expect(r.rewrite_path_from).to.eql(`/test-service-123-${run}/`);",
+                  "    pm.expect(r.rewrite_path.replace_from).to.eql(`/test-service-123-${run}/`);",
                   "});"
                 ]
               }

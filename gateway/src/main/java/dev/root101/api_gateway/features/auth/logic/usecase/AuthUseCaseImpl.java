@@ -1,15 +1,17 @@
 package dev.root101.api_gateway.features.auth.logic.usecase;
 
 import dev.root101.api_gateway.features.auth.logic.model.LoginRequest;
+import dev.root101.api_gateway.features.auth.logic.model.LoginResponse;
 import dev.root101.api_gateway.security.AdminAuthenticationManager;
-import dev.root101.commons.exceptions.ForbiddenException;
+import dev.root101.api_gateway.security.AdminTokens;
+import dev.root101.commons.exceptions.UnauthorizedException;
 import dev.root101.commons.validation.ValidationService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 
 /**
- * This is the class who really 'login' the user (Again, just a simple check to see if it's the correct user)
+ * This is the class who really 'login' the user: checks the credentials and issues the token
  */
 @Service
 class AuthUseCaseImpl implements AuthUseCase {
@@ -18,24 +20,28 @@ class AuthUseCaseImpl implements AuthUseCase {
 
     private final AdminAuthenticationManager adminAuthenticationManager;
 
+    private final AdminTokens adminTokens;
+
     @Autowired
     public AuthUseCaseImpl(
             AdminAuthenticationManager adminAuthenticationManager,
+            AdminTokens adminTokens,
             ValidationService validationService
     ) {
         this.adminAuthenticationManager = adminAuthenticationManager;
+        this.adminTokens = adminTokens;
         this.vs = validationService;
     }
 
     @Override
-    public Mono<Void> login(LoginRequest request) {
+    public Mono<LoginResponse> login(LoginRequest request) {
         return Mono.fromRunnable(() -> vs.validate(request))
                 .then(
                         Mono.defer(() -> {
                             if (adminAuthenticationManager.matches(request.getUsername(), request.getPassword())) {
-                                return Mono.empty();
+                                return Mono.just(new LoginResponse(adminTokens.issue(), adminTokens.ttlSeconds()));
                             } else {
-                                return Mono.error(new ForbiddenException("Wrong username or password"));
+                                return Mono.error(new UnauthorizedException("Wrong username or password"));
                             }
                         })
                 );

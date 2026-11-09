@@ -3,6 +3,8 @@ package dev.root101.api_gateway;
 import dev.root101.api_gateway.features.routes.data.entity.RouteEntity;
 import dev.root101.api_gateway.features.routes.logic.model.RewritePathModel;
 import dev.root101.api_gateway.features.routes.logic.model.RouteConfigRequest;
+import dev.root101.api_gateway.features.routes.logic.model.RouteFilterModel;
+import dev.root101.api_gateway.features.routes.logic.model.RouteHeaderModel;
 import dev.root101.api_gateway.support.IntegrationTest;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -51,8 +53,7 @@ class RoutesIT extends IntegrationTest {
     }
 
     /**
-     * Pins the current response shapes (used by the web console and external clients):
-     * `GET /routes` → `id` + `rewrite_path` object, `GET /routes/{id}` → the entity with `route_id` + flat rewrite.
+     * Pins the response shape (used by the web console and external clients), the same in both endpoints.
      */
     @Test
     void listAndGetKeepTheirShape() {
@@ -77,11 +78,134 @@ class RoutesIT extends IntegrationTest {
         admin(HttpMethod.GET, "/routes/" + routeId).exchange()
                 .expectStatus().isOk()
                 .expectBody()
-                .jsonPath("$.route_id").isEqualTo(routeId)
+                .jsonPath("$.id").isEqualTo(routeId)
                 .jsonPath("$.name").isEqualTo("shape-" + id)
-                .jsonPath("$.rewrite_path_from").isEqualTo("/shape-" + id + "/(?<segment>.*)")
-                .jsonPath("$.rewrite_path_to").isEqualTo("/${segment}")
-                .jsonPath("$.created_at").exists();
+                .jsonPath("$.path").isEqualTo("/shape-" + id + "/**")
+                .jsonPath("$.uri").isEqualTo(upstreamUrl())
+                .jsonPath("$.rewrite_path.replace_from").isEqualTo("/shape-" + id + "/(?<segment>.*)")
+                .jsonPath("$.rewrite_path.replace_to").isEqualTo("/${segment}")
+                .jsonPath("$.description").isEqualTo("desc")
+                .jsonPath("$.created_at").exists()
+                .jsonPath("$.route_id").doesNotExist()
+                .jsonPath("$.rewrite_path_from").doesNotExist();
+    }
+
+    private static RouteConfigRequest rules(String name, String path, Integer order, List<String> methods, List<String> hosts,
+                                            List<RouteHeaderModel> headers, List<RouteFilterModel> filters) {
+        return new RouteConfigRequest(name, path, upstreamUrl(), null, null, order, methods, hosts, headers, filters);
+    }
+
+    private static RouteFilterModel marker(String value) {
+        return new RouteFilterModel("AddRequestHeader", List.of("X-Test", value));
+    }
+
+    /**
+     * The lower order wins even when created later.
+     */
+    @Test
+    void orderDecidesBetweenOverlappingRoutes() {
+        String id = unique();
+        createRoute(rules("general-" + id, "/ord-" + id + "/**", 5, null, null, null, List.of(marker("general"))));
+        createRoute(rules("specific-" + id, "/ord-" + id + "/echo/**", 1, null, null, null, List.of(marker("specific"))));
+
+        webTestClient.get().uri("/ord-%s/echo/x".formatted(id)).exchange()
+                .expectStatus().isOk()
+                .expectBody(String.class).value(body -> assertThat(body).contains("|specific|"));
+    }
+
+    @Test
+    void methodHostAndHeaderPredicates() {
+        String id = unique();
+        createRoute(rules("preds-" + id, "/preds-" + id + "/**", null, List.of("POST"), List.of(id + ".example.com"),
+                List.of(new RouteHeaderModel("X-Number", "\\d+"), new RouteHeaderModel("X-Present", null)), null));
+        String path = "/preds-%s/x".formatted(id);
+
+        webTestClient.post().uri(path).header("Host", id + ".example.com").header("X-Number", "12").header("X-Present", "any")
+                .exchange().expectStatus().isOk();
+        //each one failing
+        webTestClient.get().uri(path).header("Host", id + ".example.com").header("X-Number", "12").header("X-Present", "any")
+                .exchange().expectStatus().isNotFound();
+        webTestClient.post().uri(path).header("Host", "other.example.com").header("X-Number", "12").header("X-Present", "any")
+                .exchange().expectStatus().isNotFound();
+        webTestClient.post().uri(path).header("Host", id + ".example.com").header("X-Number", "abc").header("X-Present", "any")
+                .exchange().expectStatus().isNotFound();
+        webTestClient.post().uri(path).header("Host", id + ".example.com").header("X-Number", "12")
+                .exchange().expectStatus().isNotFound();
+    }
+
+    @Test
+    void extraFilters() {
+        String id = unique();
+        createRoute(rules("filters-" + id, "/filters-" + id + "/**", null, null, null, null, List.of(
+                marker("added"),
+                new RouteFilterModel("AddResponseHeader", List.of("X-Resp", "yes"))
+        )));
+
+        webTestClient.get().uri("/filters-%s/echo".formatted(id)).exchange()
+                .expectStatus().isOk()
+                .expectHeader().valueEquals("X-Resp", "yes")
+                .expectBody(String.class).value(body -> assertThat(body).contains("|added|"));
+    }
+
+    /**
+     * Both reads return the new fields, and a `PUT` without them resets them.
+     */
+    @Test
+    void rulesAreReturnedAndReplacedOnEdit() {
+        String id = unique();
+        createRoute(rules("ret-" + id, "/ret-" + id + "/**", 7, List.of("GET"), List.of("a.com"),
+                List.of(new RouteHeaderModel("X-A", "b")), List.of(new RouteFilterModel("RemoveRequestHeader", List.of("X-C")))));
+        String routeId = routeId("ret-" + id);
+
+        admin(HttpMethod.GET, "/routes/" + routeId).exchange()
+                .expectStatus().isOk()
+                .expectBody()
+                .jsonPath("$.order").isEqualTo(7)
+                .jsonPath("$.methods[0]").isEqualTo("GET")
+                .jsonPath("$.hosts[0]").isEqualTo("a.com")
+                .jsonPath("$.headers[0].name").isEqualTo("X-A")
+                .jsonPath("$.headers[0].regexp").isEqualTo("b")
+                .jsonPath("$.headers[0].valid_regexp").doesNotExist()
+                .jsonPath("$.filters[0].name").isEqualTo("RemoveRequestHeader")
+                .jsonPath("$.filters[0].args[0]").isEqualTo("X-C")
+                .jsonPath("$.filters[0].supported").doesNotExist();
+
+        admin(HttpMethod.PUT, "/routes/" + routeId).bodyValue(route("ret-" + id, "ret-" + id)).exchange().expectStatus().isOk();
+
+        admin(HttpMethod.GET, "/routes/" + routeId).exchange()
+                .expectStatus().isOk()
+                .expectBody()
+                .jsonPath("$.order").isEqualTo(0)
+                .jsonPath("$.methods.length()").isEqualTo(0)
+                .jsonPath("$.hosts.length()").isEqualTo(0)
+                .jsonPath("$.headers.length()").isEqualTo(0)
+                .jsonPath("$.filters.length()").isEqualTo(0);
+    }
+
+    static Stream<RouteConfigRequest> invalidRules() {
+        return Stream.of(
+                rules("n", "/x/**", null, List.of("get"), null, null, null),
+                rules("n", "/x/**", null, null, List.of(" "), null, null),
+                rules("n", "/x/**", null, null, null, List.of(new RouteHeaderModel(" ", null)), null),
+                rules("n", "/x/**", null, null, null, List.of(new RouteHeaderModel("X-A", "(")), null),
+                rules("n", "/x/**", null, null, null, null, List.of(new RouteFilterModel("StripPrefix", List.of("1")))),
+                rules("n", "/x/**", null, null, null, null, List.of(new RouteFilterModel("AddRequestHeader", List.of("only-name")))),
+                rules("n", "/x/**", null, null, null, null, List.of(new RouteFilterModel("RemoveRequestHeader", null)))
+        );
+    }
+
+    /**
+     * A route the gateway can't build must never get saved: it would break the refresh of every route.
+     */
+    @ParameterizedTest
+    @MethodSource("invalidRules")
+    void invalidRulesAre422(RouteConfigRequest request) {
+        admin(HttpMethod.POST, "/routes").bodyValue(request).exchange()
+                .expectStatus().isEqualTo(HttpStatus.UNPROCESSABLE_CONTENT)
+                .expectBody()
+                .jsonPath("$.length()").isEqualTo(1)
+                .jsonPath("$[0].source").exists()
+                .jsonPath("$[0].message").exists();
     }
 
     static Stream<RouteConfigRequest> invalidRoutes() {

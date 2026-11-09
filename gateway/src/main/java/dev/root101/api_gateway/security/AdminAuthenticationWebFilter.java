@@ -3,6 +3,7 @@ package dev.root101.api_gateway.security;
 
 import dev.root101.api_gateway.features.http_logs.filter.HttpLogsWebFilter;
 import dev.root101.commons.exceptions.ForbiddenException;
+import dev.root101.commons.exceptions.UnauthorizedException;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -20,7 +21,11 @@ public class AdminAuthenticationWebFilter extends AuthenticationWebFilter {
 
     private final static String BASIC = "Basic ";
 
+    private final static String BEARER = "Bearer ";
+
     private final AdminAuthenticationManager adminAuthenticationManager;
+
+    private final AdminTokens adminTokens;
 
     private final LoginAttemptsGuard loginAttemptsGuard;
 
@@ -28,11 +33,13 @@ public class AdminAuthenticationWebFilter extends AuthenticationWebFilter {
 
     public AdminAuthenticationWebFilter(
             AdminAuthenticationManager adminAuthenticationManager,
+            AdminTokens adminTokens,
             LoginAttemptsGuard loginAttemptsGuard,
             String adminBasePath
     ) {
         super(adminAuthenticationManager);
         this.adminAuthenticationManager = adminAuthenticationManager;
+        this.adminTokens = adminTokens;
         this.loginAttemptsGuard = loginAttemptsGuard;
         this.adminBasePath = "/" + adminBasePath;
     }
@@ -57,10 +64,21 @@ public class AdminAuthenticationWebFilter extends AuthenticationWebFilter {
                         .doOnNext(auth -> loginAttemptsGuard.succeeded(clientIp))
                         .flatMap(auth -> chain.filter(exchange)
                                 .contextWrite(ReactiveSecurityContextHolder.withAuthentication(auth)));
+            } else if (token != null && token.startsWith(BEARER) && adminTokens.isValid(token.substring(BEARER.length()))) {
+                result = chain.filter(exchange)
+                        .contextWrite(ReactiveSecurityContextHolder.withAuthentication(adminAuthenticationManager.adminAuthentication()));
             } else {
+                //also an invalid or expired Bearer: anonymous, so 401 on protected paths while login and health keep working
                 result = chain.filter(exchange);
             }
-            //wrong credentials, from Basic auth or from the login endpoint (its error goes through this filter too)
+
+            if (path.equals(adminBasePath + "/auth/login")) {
+                //wrong credentials in the login endpoint (its error goes through this filter too)
+                result = result
+                        .doOnSuccess(v -> loginAttemptsGuard.succeeded(clientIp))
+                        .doOnError(UnauthorizedException.class, e -> loginAttemptsGuard.failed(clientIp));
+            }
+            //wrong credentials in Basic auth
             return result.doOnError(ForbiddenException.class, e -> loginAttemptsGuard.failed(clientIp));
         }
         return chain.filter(exchange);

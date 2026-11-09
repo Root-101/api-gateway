@@ -74,25 +74,21 @@ public class AdminAuthenticationManager implements ReactiveAuthenticationManager
 
         if (values.length == 2 && values[0] != null && values[1] != null && !values[0].isBlank() && !values[1].isBlank()) {
             if (matches(values[0], values[1])) {
-                Mono<CustomUserDetails> user = Mono.just(
-                        new CustomUserDetails(
-                                adminUsername,
-                                Collections.singletonList(
-                                        new SimpleGrantedAuthority(adminRole)
-                                )
-                        )
-                );
-                return user.map(
-                        userDetails -> new UsernamePasswordAuthenticationToken(
-                                userDetails, null, userDetails.getAuthorities()
-                        )
-                );
+                return Mono.just(adminAuthentication());
             } else {
                 return Mono.error(new ForbiddenException());
             }
         } else {
             return Mono.error(new UnauthorizedException());
         }
+    }
+
+    /**
+     * The authentication of the admin, once its credentials or token have been checked.
+     */
+    public Authentication adminAuthentication() {
+        CustomUserDetails user = new CustomUserDetails(adminUsername, Collections.singletonList(new SimpleGrantedAuthority(adminRole)));
+        return new UsernamePasswordAuthenticationToken(user, null, user.getAuthorities());
     }
 
     public static class CustomUserDetails implements UserDetails {

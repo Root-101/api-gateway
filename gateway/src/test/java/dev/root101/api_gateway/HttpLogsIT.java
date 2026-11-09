@@ -172,6 +172,14 @@ class HttpLogsIT extends IntegrationTest {
                 .expectStatus().isBadRequest();
     }
 
+    @Test
+    void searchWithInvalidRouteIdIs400() {
+        admin(HttpMethod.POST, "/http-log/search")
+                .bodyValue(Map.of("page", 0, "route_id", "not-a-uuid"))
+                .exchange()
+                .expectStatus().isBadRequest();
+    }
+
     /**
      * The clean up deletes only the logs older than MAINTAIN_LOGS_FOR_DAYS (14 by default).
      */

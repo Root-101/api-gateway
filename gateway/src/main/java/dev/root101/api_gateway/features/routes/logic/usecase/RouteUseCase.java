@@ -42,7 +42,7 @@ public interface RouteUseCase {
      *
      * @param routeId The id the route to find
      */
-    Mono<RouteEntity> findById(String routeId);
+    Mono<RouteConfigResponse> findById(String routeId);
 
     /**
      * Delete a route from the gateway

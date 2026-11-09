@@ -1,17 +1,17 @@
 package dev.root101.api_gateway.features.auth.logic.usecase;
 
 import dev.root101.api_gateway.features.auth.logic.model.LoginRequest;
+import dev.root101.api_gateway.features.auth.logic.model.LoginResponse;
 import reactor.core.publisher.Mono;
 
 public interface AuthUseCase {
 
     /**
      * Login the admin user (for the moment just admin, buajajajajajajaja)
-     * This method is to like validate the credentials are ok... this don't do anything else
      *
      * @param request The user to log in
-     * @return Void
+     * @return The token to use in the next requests
      */
-    Mono<Void> login(LoginRequest request);
+    Mono<LoginResponse> login(LoginRequest request);
 
 }

@@ -15,6 +15,8 @@ import org.springframework.stereotype.Repository;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.util.UUID;
+
 @Repository
 @AllArgsConstructor
 public class HttpLogSearchRepo {
@@ -48,9 +50,13 @@ public class HttpLogSearchRepo {
         }
         if (request.getRouteId() != null) {
             if (request.getRouteId().equalsIgnoreCase("NO-ROUTE")) {
-                criteria = criteria.and("rawRoute").isNull();
+                criteria = criteria.and("routeId").isNull();
             } else if (!request.getRouteId().isBlank()) {
-                criteria = criteria.and("rawRoute").like(contains(request.getRouteId()));
+                try {
+                    criteria = criteria.and("routeId").is(UUID.fromString(request.getRouteId().trim()));
+                } catch (IllegalArgumentException e) {
+                    throw new BadRequestException("route_id must be a uuid or NO-ROUTE");
+                }
             }
         }
 

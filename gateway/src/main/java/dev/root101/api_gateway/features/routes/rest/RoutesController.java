@@ -1,6 +1,5 @@
 package dev.root101.api_gateway.features.routes.rest;
 
-import dev.root101.api_gateway.features.routes.data.entity.RouteEntity;
 import dev.root101.api_gateway.features.routes.logic.model.RouteConfigRequest;
 import dev.root101.api_gateway.features.routes.logic.model.RouteConfigResponse;
 import dev.root101.api_gateway.features.routes.logic.usecase.RouteUseCase;
@@ -72,7 +71,7 @@ public class RoutesController {
      * @return Void
      */
     @GetMapping("/{route-id}")
-    public Mono<RouteEntity> getRoute(@PathVariable("route-id") String routeId) {
+    public Mono<RouteConfigResponse> getRoute(@PathVariable("route-id") String routeId) {
         return routeUseCase.findById(routeId);
     }
 

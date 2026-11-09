@@ -59,6 +59,7 @@ app:
     base-path: ${ADMIN_PATH:_admin}
     max-failed-attempts: ${ADMIN_MAX_FAILED_ATTEMPTS:10}                                         #0 disables the lockout
     lockout-minutes: ${ADMIN_LOCKOUT_MINUTES:15}
+    token-minutes: ${ADMIN_TOKEN_MINUTES:480}                                                    #validity of the token given by the login
   cors:
     allowed-origins: ${CORS_ALLOWED_ORIGINS:*}                                                   #comma separated origin patterns
   logs:

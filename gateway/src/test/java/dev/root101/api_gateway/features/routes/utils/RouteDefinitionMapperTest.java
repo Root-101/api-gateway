@@ -1,6 +1,9 @@
 package dev.root101.api_gateway.features.routes.utils;
 
 import dev.root101.api_gateway.features.routes.data.entity.RouteEntity;
+import dev.root101.api_gateway.features.routes.logic.model.RouteFilterModel;
+import dev.root101.api_gateway.features.routes.logic.model.RouteHeaderModel;
+import dev.root101.api_gateway.features.routes.logic.model.RouteRules;
 import org.junit.jupiter.api.Test;
 import org.springframework.cloud.gateway.route.RouteDefinition;
 
@@ -15,7 +18,29 @@ import static org.assertj.core.api.Assertions.assertThat;
 class RouteDefinitionMapperTest {
 
     private static RouteEntity entity(String from, String to) {
-        return new RouteEntity(UUID.fromString("6ac5e18a-8ec4-4ac1-9ff3-169a13cb54dc"), "name", "/svc/**", "http://host:8081", from, to, null, OffsetDateTime.now());
+        return new RouteEntity(UUID.fromString("6ac5e18a-8ec4-4ac1-9ff3-169a13cb54dc"), "name", "/svc/**", "http://host:8081", from, to, null, OffsetDateTime.now(), 0, "{}");
+    }
+
+    @Test
+    void orderPredicatesAndFilters() {
+        RouteEntity entity = entity("/a", "/b");
+        entity.setRouteOrder(-5);
+        entity.setRules(RouteRulesJson.toJson(new RouteRules(
+                List.of("GET", "POST"),
+                List.of("a.com"),
+                List.of(new RouteHeaderModel("X-A", "\\d+"), new RouteHeaderModel("X-B", null)),
+                List.of(new RouteFilterModel("AddRequestHeader", List.of("X-C", "v")))
+        )));
+
+        RouteDefinition def = RouteDefinitionMapper.buildDefinition(entity);
+
+        assertThat(def.getOrder()).isEqualTo(-5);
+        assertThat(def.getPredicates()).extracting("name").containsExactly("Path", "Method", "Host", "Header", "Header");
+        assertThat(def.getPredicates().get(1).getArgs().values()).containsExactly("GET", "POST");
+        assertThat(def.getPredicates().get(3).getArgs().values()).containsExactly("X-A", "\\d+");
+        assertThat(def.getPredicates().get(4).getArgs().values()).containsExactly("X-B");
+        assertThat(def.getFilters()).extracting("name").containsExactly("RewritePath", "AddRequestHeader");
+        assertThat(def.getFilters().get(1).getArgs().values()).containsExactly("X-C", "v");
     }
 
     @Test

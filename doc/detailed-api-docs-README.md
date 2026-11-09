@@ -42,7 +42,7 @@ With this documentation, you will find:
 
 ## Login<a name="2"></a>
 
-This endpoint validates the **username/password** of an admin user.
+This endpoint validates the **username/password** of an admin user and gives a token to use in the next requests.
 
 #### Login Screen
 
@@ -71,10 +71,23 @@ Screen that interact with endpoint:
 
 #### Response
 
-* **Body:** Empty
 * **Success:** `200 OK` → Username/password are correct
 * **Error Responses:**
+    * `401 Unauthorized` → Wrong username or password
     * `422 Unprocessable Entity` → Validation error
+    * `429 Too Many Requests` → Too many failed attempts from this client ip
+
+```json
+{
+  "token": "tWzq3Xk1...",
+  "expires_in": 28800
+}
+```
+
+| Field      | Description                                                                               |
+|------------|-------------------------------------------------------------------------------------------|
+| token      | Value to send in the next requests. Kept in memory: a restart of the gateway invalidates it. |
+| expires_in | Seconds until the token expires (env `ADMIN_TOKEN_MINUTES`). Then, login again.            |
 
 #### Validation Error Response Body
 
@@ -120,13 +133,14 @@ log in again every time they revisit the admin panel.
 > From now on, all endpoints require a valid `Authorization` header:
 >
 > ```
+> Authorization: Bearer Token
 > Authorization: Basic Username:Password
 > ```
 >
 >
 > Without it, the API will return:
-> - `401 Unauthorized` → Authorization not provided
-> - `403 Forbidden` → Wrong provided auth
+> - `401 Unauthorized` → Authorization not provided, or the token is invalid or expired
+> - `403 Forbidden` → Wrong username or password in Basic auth
 
 ## Routes<a name="3"></a>
 
@@ -186,7 +200,22 @@ Screen example:
       "replace_to": "/"
     },
     "description": "",
-    "created_at": "2025-08-22T14:44:53.902031-06:00"
+    "created_at": "2025-08-22T14:44:53.902031-06:00",
+    "order": 0,
+    "methods": ["GET", "POST"],
+    "hosts": ["**.example.com"],
+    "headers": [
+      {
+        "name": "X-Tenant",
+        "regexp": "acme.*"
+      }
+    ],
+    "filters": [
+      {
+        "name": "AddRequestHeader",
+        "args": ["X-From", "gateway"]
+      }
+    ]
   }
 ]
 ```
@@ -200,6 +229,11 @@ Screen example:
 | description  | Text          | Additional description of the route                                                                                       |
 | create_at    | Timestamp     | Date when the route was created                                                                                           |
 | rewrite_path | Custom Object | 'Filter' to rewrite the final path to which the request is made (replace in final URL the *replace_from* => *replace_to*) |
+| order        | Integer       | Routes with a lower order are evaluated first                                                                             |
+| methods      | List of text  | Http methods the route accepts, empty means all                                                                           |
+| hosts        | List of text  | Host patterns (ant style) the route accepts, empty means all                                                              |
+| headers      | List          | Headers the request must have (*name*, and *regexp* the value must match, null if it only has to be present)              |
+| filters      | List          | Extra filters (*name* and *args*), applied in order after *rewrite_path*                                                  |
 
 ---
 
@@ -228,7 +262,22 @@ Clicking it opens the following creation dialog:
   "rewrite_path": {
     "replace_from": "/service-a/",
     "replace_to": "/"
-  }
+  },
+  "order": 0,
+  "methods": ["GET", "POST"],
+  "hosts": ["**.example.com"],
+  "headers": [
+    {
+      "name": "X-Tenant",
+      "regexp": "acme.*"
+    }
+  ],
+  "filters": [
+    {
+      "name": "AddRequestHeader",
+      "args": ["X-From", "gateway"]
+    }
+  ]
 }
 ```
 
@@ -239,6 +288,16 @@ Clicking it opens the following creation dialog:
 | uri          | true     | URL of the service to which you are going to redirect                                                                     | - Not null<br/>-Not Empty<br/>-URL | Use same base URL of the service (preferably a private URL without internet access, which can only be accessed through the gateway)                                                                                                                                                                |
 | description  | false    | Additional description of the route                                                                                       |                                    | Use it for some basic descriptive description of the route                                                                                                                                                                                                                                         |
 | rewrite_path | false    | 'Filter' to rewrite the final path to which the request is made (replace in final URL the *replace_from* => *replace_to*) | - Not null<br/>-Not Empty<br/>     | Use to fix the extra path added by path property. With example, a request made to:  https://gateway/abcd/users/search, by default will be redirected to: http://localhost:8081/abcd/users/search, but with rewrite (like  `/abcd/` → `/`) will be redirected to http://localhost:8081/users/search |
+
+Optional fields, a `PUT` without them resets them:
+
+| Field   | Default | Validations                                                                 |
+|---------|---------|-----------------------------------------------------------------------------|
+| order   | 0       | Integer, can be negative                                                    |
+| methods | all     | Uppercase: GET, HEAD, POST, PUT, PATCH, DELETE, OPTIONS, TRACE              |
+| hosts   | all     | Not blank, max 255                                                          |
+| headers | none    | *name* not blank, *regexp* a valid regular expression                       |
+| filters | none    | `AddRequestHeader`, `AddResponseHeader`, `SetRequestHeader`, `SetResponseHeader` with *args* `[name, value]`; `RemoveRequestHeader`, `RemoveResponseHeader` with *args* `[name]` |
 
 #### Response
 
@@ -323,14 +382,31 @@ the details of a single route**.
 
 ```json
 {
-  "route_id": "1b2266de-5178-4089-a7ee-f0c500aa1537",
+  "id": "1b2266de-5178-4089-a7ee-f0c500aa1537",
   "name": "Service A",
   "path": "/service-a/**",
   "uri": "http://service-a.internal.url",
-  "rewrite_path_from": "/service-a/",
-  "rewrite_path_to": "/",
+  "rewrite_path": {
+    "replace_from": "/service-a/",
+    "replace_to": "/"
+  },
   "description": "",
-  "created_at": "2025-08-22T14:44:53.902031-06:00"
+  "created_at": "2025-08-22T14:44:53.902031-06:00",
+  "order": 0,
+  "methods": ["GET", "POST"],
+  "hosts": ["**.example.com"],
+  "headers": [
+    {
+      "name": "X-Tenant",
+      "regexp": "acme.*"
+    }
+  ],
+  "filters": [
+    {
+      "name": "AddRequestHeader",
+      "args": ["X-From", "gateway"]
+    }
+  ]
 }
 ```
 
@@ -474,7 +550,7 @@ Logs filter dialog example:
 | to_date       | End date (inclusive). Loads logs with `requested_at` <= this value.    |                      | Useful for generating reports for specific time ranges.                                                                    |
 | response_code | Filters by exact HTTP response code.                                   |                      | Example: `500` for server errors, `404` for not found requests.                                                            |
 | method        | Filters by exact HTTP method.                                          |                      | Example: `GET`, `POST`, `PUT`, `DELETE`.                                                                                   |
-| route_id      | Filters by associated route.                                           |                      | Use:<br/>- `00000000-0000-0000-0000-000000000000` for the **admin route**<br/>- `NO-ROUTE` for logs with no resolved route |
+| route_id      | Filters by associated route, exact match. `400` if it's not a UUID or `NO-ROUTE`. |                      | Use:<br/>- `00000000-0000-0000-0000-000000000000` for the **admin route**<br/>- `NO-ROUTE` for logs with no resolved route |
 
 > Note: In the web client, HTTP logs are displayed as an infinite scroll list, sorted by request date with the newest
 > entries shown first.

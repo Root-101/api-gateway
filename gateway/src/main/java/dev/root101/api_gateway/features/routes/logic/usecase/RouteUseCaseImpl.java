@@ -5,7 +5,9 @@ import dev.root101.api_gateway.features.routes.data.repo.RouteRepo;
 import dev.root101.api_gateway.features.routes.logic.model.RewritePathModel;
 import dev.root101.api_gateway.features.routes.logic.model.RouteConfigRequest;
 import dev.root101.api_gateway.features.routes.logic.model.RouteConfigResponse;
+import dev.root101.api_gateway.features.routes.logic.model.RouteRules;
 import dev.root101.api_gateway.features.routes.utils.RouteDefinitionMapper;
+import dev.root101.api_gateway.features.routes.utils.RouteRulesJson;
 import dev.root101.api_gateway.features.routes.utils.RouteUpdater;
 import dev.root101.commons.exceptions.ConflictException;
 import dev.root101.commons.exceptions.NotFoundException;
@@ -248,13 +250,14 @@ class RouteUseCaseImpl implements RouteUseCase, SmartInitializingSingleton {
      *
      * @param routeId The id of the route to find.
      */
-    public Mono<RouteEntity> findById(String routeId) {
+    public Mono<RouteConfigResponse> findById(String routeId) {
         return routeRepo.findByRawId(routeId)
                 .switchIfEmpty(
                         Mono.error(
                                 new NotFoundException("Route does not exist: %s".formatted(routeId))
                         )
-                );
+                )
+                .map(this::buildResponse);
     }
 
     /**
@@ -328,7 +331,9 @@ class RouteUseCaseImpl implements RouteUseCase, SmartInitializingSingleton {
                 routeModel.getRewritePath() != null ? routeModel.getRewritePath().getReplaceFrom() : null,
                 routeModel.getRewritePath() != null ? routeModel.getRewritePath().getReplaceTo() : null,
                 routeModel.getDescription(),
-                OffsetDateTime.now()
+                OffsetDateTime.now(),
+                routeModel.getOrder() != null ? routeModel.getOrder() : 0,
+                RouteRulesJson.toJson(new RouteRules(routeModel.getMethods(), routeModel.getHosts(), routeModel.getHeaders(), routeModel.getFilters()))
         );
     }
 
@@ -349,6 +354,7 @@ class RouteUseCaseImpl implements RouteUseCase, SmartInitializingSingleton {
      * @return The parsed `RouteConfigResponse`
      */
     private RouteConfigResponse buildResponse(RouteEntity entity) {
+        RouteRules rules = RouteRulesJson.fromJson(entity.getRules());
         return new RouteConfigResponse(
                 entity.getRouteId().toString(),
                 entity.getName(),
@@ -356,7 +362,12 @@ class RouteUseCaseImpl implements RouteUseCase, SmartInitializingSingleton {
                 entity.getUri(),
                 entity.getRewritePathFrom() != null && entity.getRewritePathTo() != null ? new RewritePathModel(entity.getRewritePathFrom(), entity.getRewritePathTo()) : null,
                 entity.getDescription(),
-                entity.getCreatedAt()
+                entity.getCreatedAt(),
+                entity.getRouteOrder(),
+                rules.methods(),
+                rules.hosts(),
+                rules.headers(),
+                rules.filters()
         );
     }
 }

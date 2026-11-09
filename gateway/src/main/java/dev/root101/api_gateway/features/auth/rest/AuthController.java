@@ -1,6 +1,7 @@
 package dev.root101.api_gateway.features.auth.rest;
 
 import dev.root101.api_gateway.features.auth.logic.model.LoginRequest;
+import dev.root101.api_gateway.features.auth.logic.model.LoginResponse;
 import dev.root101.api_gateway.features.auth.logic.usecase.AuthUseCase;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -27,10 +28,10 @@ public class AuthController {
      * Login the current user
      *
      * @param request The user to login
-     * @return Void
+     * @return The token to use in the next requests
      */
     @PostMapping("/login")
-    public Mono<Void> login(@RequestBody LoginRequest request) {
+    public Mono<LoginResponse> login(@RequestBody LoginRequest request) {
         return authUseCase.login(request);
     }
 
