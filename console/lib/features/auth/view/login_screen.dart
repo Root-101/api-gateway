@@ -166,7 +166,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                 app.intl.login.rememberMe,
                                 style: app.textTheme.bodyMedium,
                               ),
-                              //the api only has Basic auth, so "remember me" has to keep the password in browser storage
+                              //"remember me" keeps the session token in browser storage
                               subtitle: rememberMe
                                   ? Text(
                                       app.intl.login.rememberMeWarning,

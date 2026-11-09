@@ -3,7 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 
 class FakeAuth implements AuthCubit {
   @override
-  CredentialsModel get current => CredentialsModel(username: 'u', password: 'p');
+  CredentialsModel get current => CredentialsModel(token: 't');
 
   @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);

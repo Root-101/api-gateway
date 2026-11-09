@@ -16,6 +16,11 @@
         * **Auth** :lock: : A `401`/`403` on any screen logs out and a network error no longer does. Added route
           guard, optional inactivity logout (`SESSION_TIMEOUT_MINUTES`), `Remember me` warning and gateway
           status on login. The password is no longer printed in the logs.
+        * **Auth** :lock: : Login now uses the gateway token (`Authorization: Bearer`). `Remember me` stores the
+          token instead of the password, and a password stored by an older version is removed on start.
+        * **Routes** :twisted_rightwards_arrows: : `GET /routes/{id}` is parsed with the same shape as the list.
+        * **Routes** :twisted_rightwards_arrows: : New `Advanced` section in the route form to set `order`,
+          `methods`, `hosts`, `headers` and `filters`. Editing, duplicating, backup and restore keep them.
         * **Errors** :hammer_and_wrench: : API errors are parsed safely whatever their format and clear error screen
           when `env.js` is invalid.
         * **i18n** :globe_with_meridians: : Texts migrated to `slang` and all the error messages translated.

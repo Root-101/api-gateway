@@ -84,6 +84,7 @@ class RouteRequest {
   //optional in the api: null = no rewrite filter
   final RewritePathEntity? rewritePath;
   final String description;
+  final RouteAdvancedModel advanced;
 
   RouteRequest({
     required this.name,
@@ -91,6 +92,7 @@ class RouteRequest {
     required this.uri,
     required this.description,
     this.rewritePath,
+    this.advanced = const RouteAdvancedModel(),
   });
 
   Map<String, dynamic> toJson() {
@@ -100,6 +102,7 @@ class RouteRequest {
       'uri': uri,
       'description': description,
       'rewrite_path': rewritePath?.toJson(),
+      ...advanced.toJson(),
     };
   }
 
@@ -110,6 +113,7 @@ class RouteRequest {
       uri: json['uri'],
       rewritePath: RewritePathEntity.tryFromJson(json['rewrite_path']),
       description: json['description'] ?? '',
+      advanced: RouteAdvancedModel.fromJson(json),
     );
   }
 }
@@ -123,6 +127,7 @@ class RouteResponse {
   final String uri;
   final RewritePathEntity? rewritePath;
   final String description;
+  final RouteAdvancedModel advanced;
 
   RouteResponse({
     required this.name,
@@ -132,24 +137,19 @@ class RouteResponse {
     required this.id,
     required this.createdAt,
     this.rewritePath,
+    this.advanced = const RouteAdvancedModel(),
   });
 
-  //also parses GET /routes/{id}, which returns the raw entity: `route_id` and flat `rewrite_path_from`/`rewrite_path_to`
   factory RouteResponse.fromJson(Map<String, dynamic> json) {
     return RouteResponse(
-      id: json['id'] ?? json['route_id'],
+      id: json['id'],
       name: json['name'],
       path: json['path'],
       uri: json['uri'],
-      rewritePath: RewritePathEntity.tryFromJson(
-        json['rewrite_path'] ??
-            {
-              'replace_from': json['rewrite_path_from'],
-              'replace_to': json['rewrite_path_to'],
-            },
-      ),
+      rewritePath: RewritePathEntity.tryFromJson(json['rewrite_path']),
       description: json['description'] ?? '',
       createdAt: json['created_at'],
+      advanced: RouteAdvancedModel.fromJson(json),
     );
   }
 }

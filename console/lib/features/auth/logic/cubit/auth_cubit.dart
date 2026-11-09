@@ -24,30 +24,9 @@ class AuthCubit extends Cubit<AuthState>
   AuthCubit({required this.repo}) : super(const AuthInitialState());
 
   Future init() async {
-    try {
-      ({String username, String password})? cache = await repo.loadCache();
-      if (cache != null) {
-        //try to login with credentials
-
-        //if this runs without problem, the login is successfully, if something is wrong an exception is thrown
-        await repo.login(
-          username: cache.username,
-          password: cache.password,
-          rememberMe: false,
-        );
-
-        //store in memory credential for later use
-        _currentUser = CredentialsModel(
-          username: cache.username,
-          password: cache.password,
-        );
-      }
-    } on Exception catch (exc) {
-      app.logger.e('Error login user with cache credentials');
-      //only forget the remembered credentials when the server rejects them, not on network errors
-      if (ExceptionConverter.parse(exc).type == GlobalExceptionType.auth) {
-        await logout();
-      }
+    final token = await repo.loadCache();
+    if (token != null) {
+      _currentUser = CredentialsModel(token: token);
     }
   }
 
@@ -66,14 +45,14 @@ class AuthCubit extends Cubit<AuthState>
       emit(AuthLoginInProgressState());
 
       //if this runs without problem, the login is successfully, if something is wrong an exception is thrown
-      await repo.login(
+      final token = await repo.login(
         username: username,
         password: password,
         rememberMe: rememberMe,
       );
 
       //store in memory credential for later use
-      _currentUser = CredentialsModel(username: username, password: password);
+      _currentUser = CredentialsModel(token: token);
 
       emit(AuthLoginOkState());
     } on Exception catch (exc) {

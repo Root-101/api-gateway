@@ -108,6 +108,7 @@ extension RouteRequestParser on RouteFormModel {
     description: description,
     path: path,
     uri: uri,
+    advanced: advanced,
     rewritePath: rewritePath == null
         ? null
         : RewritePathEntity(
@@ -125,6 +126,7 @@ extension RouteModelParser on RouteResponse {
     description: description,
     path: path,
     uri: uri,
+    advanced: advanced,
     rewritePath: rewritePath == null
         ? null
         : RewritePathModel(

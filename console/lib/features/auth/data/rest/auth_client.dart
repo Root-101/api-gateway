@@ -6,13 +6,23 @@ class AuthClient extends BaseClient {
 
   AuthClient(super.dio);
 
-  Future login({required String username, required String password}) async {
-    //if this runs without problem, the login is successfully, if something is wrong an exception is thrown
-    await dio.post(
+  ///returns the session token. `expires_in` is not read: an expired token gets a 401, which logs out
+  Future<String> login({
+    required String username,
+    required String password,
+  }) async {
+    final response = await dio.post(
       '$baseUrl/login', //https://api-gateway.site.com/_admin/auth/login
       options: options(),
       data: {'username': username, 'password': password},
     );
+    final data = response.data;
+    final token = data is Map ? data['token'] : null;
+    //a gateway older than 6.0.0 answers 200 with an empty body
+    if (token is! String || token.isEmpty) {
+      throw const FormatException('Login response without token');
+    }
+    return token;
   }
 
   ///GET /{ADMIN_PATH}/health: no auth, 200 {"status":"UP"}, 503 when the db is down

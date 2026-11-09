@@ -1,11 +1,10 @@
 class CredentialsModel {
-  String username;
-  String password;
+  String token;
 
-  CredentialsModel({required this.username, required this.password});
+  CredentialsModel({required this.token});
 
   @override
   String toString() {
-    return 'CredentialsModel{username: $username}';
+    return 'CredentialsModel{token: ***}';
   }
 }

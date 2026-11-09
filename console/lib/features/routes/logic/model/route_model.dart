@@ -9,6 +9,7 @@ class RouteModel {
   final String uri;
   final RewritePathModel? rewritePath;
   final String description;
+  final RouteAdvancedModel advanced;
 
   final String? gatewayUrl;
 
@@ -26,6 +27,7 @@ class RouteModel {
     required this.createdAt,
     this.rewritePath,
     this.gatewayUrl,
+    this.advanced = const RouteAdvancedModel(),
   });
 
   factory RouteModel.fromJson(Map<String, dynamic> json) {
@@ -37,6 +39,7 @@ class RouteModel {
       rewritePath: RewritePathModel.tryFromJson(json['rewrite_path']),
       description: json['description'] ?? '',
       createdAt: DateTime.parse(json['created_at']),
+      advanced: RouteAdvancedModel.fromJson(json),
     );
   }
 
@@ -49,6 +52,7 @@ class RouteModel {
       'rewrite_path': rewritePath?.toJson(),
       'description': description,
       'created_at': createdAt.toIso8601String(),
+      ...advanced.toJson(),
     };
   }
 }

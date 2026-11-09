@@ -156,6 +156,8 @@ class AppMessages$validations$es implements AppMessages$validations$en {
   String get requiredField => 'Campo requerido';
   @override
   String get validUriField => 'Debe ser una URL válida';
+  @override
+  String get wholeNumberField => 'Debe ser un número entero';
 }
 
 // Path: errors
@@ -230,7 +232,7 @@ class AppMessages$login$es implements AppMessages$login$en {
   String get rememberMe => 'Recordarme';
   @override
   String get rememberMeWarning =>
-      'Su contraseña se guardará en este navegador. Úselo solo en un equipo de confianza.';
+      'Su sesión seguirá abierta en este navegador hasta que caduque. Úselo solo en un equipo de confianza.';
   @override
   String get gatewayReachable => 'Gateway accesible';
   @override
@@ -278,6 +280,46 @@ class AppMessages$routes$es implements AppMessages$routes$en {
   String get descriptionHint => 'Para qué sirve esta ruta (opcional)';
   @override
   String get searchRoutes => 'Buscar por nombre, path o URI';
+  @override
+  String get advancedTitle => 'Avanzado';
+  @override
+  String get orderLabel => 'Orden (el menor se evalúa primero)';
+  @override
+  String get orderHint => '0';
+  @override
+  String get methodsLabel => 'Métodos HTTP (ninguno = cualquier método)';
+  @override
+  String get hostsLabel => 'Hosts (ninguno = cualquier host)';
+  @override
+  String get hostHint => '**.example.com';
+  @override
+  String get addHost => 'Añadir host';
+  @override
+  String get headersLabel =>
+      'Headers requeridos (la petición debe cumplirlos todos)';
+  @override
+  String get headerNameLabel => 'Nombre del header';
+  @override
+  String get headerNameHint => 'X-Tenant';
+  @override
+  String get headerRegexpLabel => 'Regexp del valor (opcional)';
+  @override
+  String get headerRegexpHint => 'acme.*';
+  @override
+  String get addHeader => 'Añadir header';
+  @override
+  String get filtersLabel =>
+      'Filtros (se aplican en orden, después del rewrite)';
+  @override
+  String get filterNameLabel => 'Filtro';
+  @override
+  String get filterNameHint => 'X-From';
+  @override
+  String get filterValueLabel => 'Valor';
+  @override
+  String get filterValueHint => 'gateway';
+  @override
+  String get addFilter => 'Añadir filtro';
 }
 
 // Path: restore
@@ -430,6 +472,7 @@ extension on AppMessagesEs {
       'actions.refresh' => 'Refrescar',
       'validations.requiredField' => 'Campo requerido',
       'validations.validUriField' => 'Debe ser una URL válida',
+      'validations.wholeNumberField' => 'Debe ser un número entero',
       'errors.requestCancelled' => 'Se canceló la petición al servidor',
       'errors.connectionTimeout' => 'Tiempo de conexión agotado con el servidor. Revisa tu conexión a internet',
       'errors.noConnection' =>
@@ -461,7 +504,7 @@ extension on AppMessagesEs {
       'login.passwordHint' => 'admin123**',
       'login.login' => 'Login',
       'login.rememberMe' => 'Recordarme',
-      'login.rememberMeWarning' => 'Su contraseña se guardará en este navegador. Úselo solo en un equipo de confianza.',
+      'login.rememberMeWarning' => 'Su sesión seguirá abierta en este navegador hasta que caduque. Úselo solo en un equipo de confianza.',
       'login.gatewayReachable' => 'Gateway accesible',
       'login.gatewayUnreachable' => 'Gateway no accesible',
       'routes.routes' => 'Rutas',
@@ -481,6 +524,27 @@ extension on AppMessagesEs {
       'routes.descriptionLabel' => 'Descripción',
       'routes.descriptionHint' => 'Para qué sirve esta ruta (opcional)',
       'routes.searchRoutes' => 'Buscar por nombre, path o URI',
+      'routes.advancedTitle' => 'Avanzado',
+      'routes.orderLabel' => 'Orden (el menor se evalúa primero)',
+      'routes.orderHint' => '0',
+      'routes.methodsLabel' => 'Métodos HTTP (ninguno = cualquier método)',
+      'routes.hostsLabel' => 'Hosts (ninguno = cualquier host)',
+      'routes.hostHint' => '**.example.com',
+      'routes.addHost' => 'Añadir host',
+      'routes.headersLabel' =>
+        'Headers requeridos (la petición debe cumplirlos todos)',
+      'routes.headerNameLabel' => 'Nombre del header',
+      'routes.headerNameHint' => 'X-Tenant',
+      'routes.headerRegexpLabel' => 'Regexp del valor (opcional)',
+      'routes.headerRegexpHint' => 'acme.*',
+      'routes.addHeader' => 'Añadir header',
+      'routes.filtersLabel' =>
+        'Filtros (se aplican en orden, después del rewrite)',
+      'routes.filterNameLabel' => 'Filtro',
+      'routes.filterNameHint' => 'X-From',
+      'routes.filterValueLabel' => 'Valor',
+      'routes.filterValueHint' => 'gateway',
+      'routes.addFilter' => 'Añadir filtro',
       'restore.selectFile' => 'Select file',
       'restore.dropFileHere' => 'Arrastre un fichero aquí',
       'restore.errorLoadingFile' => 'Error cargando archivo',
