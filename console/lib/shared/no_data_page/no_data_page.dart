@@ -1,4 +1,4 @@
-import 'package:api_gateway_front/app_exporter.dart';
+import 'package:console/app_exporter.dart';
 import 'package:flutter/material.dart';
 
 class NoDataPage extends StatelessWidget {
@@ -19,7 +19,7 @@ class NoDataPage extends StatelessWidget {
                 horizontal: app.dimensions.padding.xxl,
               ),
               child: Text(
-                app.intl.errors.noData,
+                context.intl.errors.noData,
                 style: app.textTheme.titleLarge,
                 textAlign: TextAlign.center,
               ),

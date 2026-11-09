@@ -1,4 +1,4 @@
-import 'package:api_gateway_front/l10n/messages.g.dart';
+import 'package:console/l10n/messages.g.dart';
 import 'package:flutter/widgets.dart';
 
 /// One instance per language, built once

@@ -1,6 +1,6 @@
 import 'dart:ui';
 
-import 'package:api_gateway_front/app_exporter.dart';
+import 'package:console/app_exporter.dart';
 import 'package:flutter/material.dart';
 import 'package:loader_overlay/loader_overlay.dart';
 

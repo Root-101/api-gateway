@@ -1,4 +1,4 @@
-import 'package:api_gateway_front/app_exporter.dart';
+import 'package:console/app_exporter.dart';
 import 'package:flutter/material.dart';
 
 class ErrorPage extends StatefulWidget {
@@ -33,7 +33,7 @@ class _ErrorPageState extends State<ErrorPage> {
                   horizontal: app.dimensions.padding.xxl,
                 ),
                 child: Text(
-                  widget.errorMessage ?? app.intl.errors.genericError,
+                  widget.errorMessage ?? context.intl.errors.genericError,
                   style: app.textTheme.titleLarge,
                   textAlign: TextAlign.center,
                 ),
@@ -45,7 +45,7 @@ class _ErrorPageState extends State<ErrorPage> {
                     horizontal: 2 * app.dimensions.padding.xxl,
                   ),
                   child: PrimaryButton.primary(
-                    title: widget.buttonText ?? app.intl.actions.tryAgain,
+                    title: widget.buttonText ?? context.intl.actions.tryAgain,
                     onPressed: widget.onPressed ?? () {},
                   ),
                 ),

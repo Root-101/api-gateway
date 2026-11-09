@@ -1,6 +1,6 @@
 import 'dart:convert';
 
-import 'package:api_gateway_front/app_exporter.dart';
+import 'package:console/app_exporter.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 RouteLogModel adminRoute = RouteLogModel(
@@ -171,20 +171,25 @@ class LogsCubit extends Cubit<LogsState>
 
     filters.httpMethod = httpMethod;
 
-    DateTime? safeFromDate = (fromDate ?? requestedAt)?.startOfDay;
-    DateTime? safeToDate = (toDate ?? requestedAt)?.endOfDay;
-    if (safeFromDate != null &&
-        safeToDate != null &&
-        safeFromDate.isAfter(safeToDate) == true) {
-      DateTime tempDate = safeFromDate;
-      safeFromDate = safeToDate;
-      safeToDate = tempDate;
-    }
-    filters.date = (fromDate: safeFromDate, toDate: safeToDate);
+    filters.date = _dayRange(requestedAt, fromDate, toDate);
 
     filters.route = route;
 
     return _executeSearchFilters();
+  }
+
+  ({DateTime? fromDate, DateTime? toDate}) _dayRange(
+    DateTime? requestedAt,
+    DateTime? fromDate,
+    DateTime? toDate,
+  ) {
+    DateTime? from = fromDate ?? requestedAt;
+    DateTime? to = toDate ?? requestedAt;
+    //swap before widening to whole days, otherwise the range loses both edge days
+    if (from != null && to != null && from.isAfter(to)) {
+      (from, to) = (to, from);
+    }
+    return (fromDate: from?.startOfDay, toDate: to?.endOfDay);
   }
 
   Future updateFilter({
@@ -203,16 +208,7 @@ class LogsCubit extends Cubit<LogsState>
     }
 
     if (requestedAt != null || fromDate != null || toDate != null) {
-      DateTime? safeFromDate = (fromDate ?? requestedAt)?.startOfDay;
-      DateTime? safeToDate = (toDate ?? requestedAt)?.endOfDay;
-      if (safeFromDate != null &&
-          safeToDate != null &&
-          safeFromDate.isAfter(safeToDate) == true) {
-        DateTime tempDate = safeFromDate;
-        safeFromDate = safeToDate;
-        safeToDate = tempDate;
-      }
-      filters.date = (fromDate: safeFromDate, toDate: safeToDate);
+      filters.date = _dayRange(requestedAt, fromDate, toDate);
     }
     if (route != null) {
       filters.route = route;

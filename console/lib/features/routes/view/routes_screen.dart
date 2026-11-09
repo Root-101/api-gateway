@@ -1,7 +1,7 @@
 import 'dart:math';
 
-import 'package:api_gateway_front/app_exporter.dart';
-import 'package:api_gateway_front/features/routes/view/form/routes_form_screen.dart';
+import 'package:console/app_exporter.dart';
+import 'package:console/features/routes/view/form/routes_form_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -115,11 +115,11 @@ class _RoutesScreenState extends State<RoutesScreen> {
         } else if (state is RoutesSearchOkState) {
           return Scaffold(
             appBar: CustomAppBar.build(
-              title: app.intl.routes.routes,
+              title: context.intl.routes.routes,
               actions: [
                 PrimaryButton.secondary(
                   onPressed: () => RoutesFormScreen.navigator.create(),
-                  title: app.intl.actions.create,
+                  title: context.intl.actions.create,
                   icon: app.assets.icons.actions.add,
                 ),
                 app.dimensions.padding.m.gap(),
@@ -132,7 +132,7 @@ class _RoutesScreenState extends State<RoutesScreen> {
                 app.dimensions.padding.m.gap(),
                 PrimaryButton.secondary(
                   onPressed: cubit.backup,
-                  title: app.intl.actions.backup,
+                  title: context.intl.actions.backup,
                   icon: app.assets.icons.actions.download,
                 ),
                 app.dimensions.padding.m.gap(),
@@ -140,7 +140,7 @@ class _RoutesScreenState extends State<RoutesScreen> {
                   onPressed: () {
                     RoutesRestoreDialog.show();
                   },
-                  title: app.intl.actions.restore,
+                  title: context.intl.actions.restore,
                   icon: app.assets.icons.actions.upload,
                 ),
                 app.dimensions.padding.xl.gap(),
@@ -159,7 +159,7 @@ class _RoutesScreenState extends State<RoutesScreen> {
                           width: 450,
                           child: EMTextSearchField(
                             controller: _searchCtrl,
-                            hint: app.intl.routes.searchRoutes,
+                            hint: context.intl.routes.searchRoutes,
                             onSearch: (value) => setState(
                               () => _query = value.trim().toLowerCase(),
                             ),
@@ -202,12 +202,12 @@ class _RoutesScreenState extends State<RoutesScreen> {
         } else if (state is RoutesSearchErrorState) {
           return ErrorPage(
             errorMessage: state.exception.message,
-            buttonText: app.intl.actions.tryAgain,
+            buttonText: context.intl.actions.tryAgain,
             onPressed: cubit.search,
           );
         } else {
           return ErrorPage(
-            buttonText: app.intl.actions.tryAgain,
+            buttonText: context.intl.actions.tryAgain,
             onPressed: cubit.search,
           );
         }
@@ -276,14 +276,14 @@ class _RoutesScreenState extends State<RoutesScreen> {
                       mainAxisAlignment: MainAxisAlignment.end,
                       children: [
                         PrimaryButton.svgIcon(
-                          tooltipMessage: app.intl.actions.edit,
+                          tooltipMessage: context.intl.actions.edit,
                           onPressed: () =>
                               RoutesFormScreen.navigator.edit(model: model),
                           icon: app.assets.icons.actions.edit,
                         ),
                         app.dimensions.padding.s.gap(),
                         PrimaryButton.svgIcon(
-                          tooltipMessage: app.intl.actions.duplicate,
+                          tooltipMessage: context.intl.actions.duplicate,
                           onPressed: () => RoutesFormScreen.navigator.duplicate(
                             model: model,
                           ),
@@ -291,7 +291,7 @@ class _RoutesScreenState extends State<RoutesScreen> {
                         ),
                         app.dimensions.padding.s.gap(),
                         PrimaryButton.svgIcon(
-                          tooltipMessage: app.intl.actions.delete,
+                          tooltipMessage: context.intl.actions.delete,
                           onPressed: () => _confirmDelete(model),
                           icon: app.assets.icons.actions.delete,
                         ),
@@ -307,7 +307,7 @@ class _RoutesScreenState extends State<RoutesScreen> {
               ],
               app.dimensions.padding.m.gap(),
               Text(
-                app.intl.routes.requestTo,
+                context.intl.routes.requestTo,
                 style: app.textTheme.bodySmall?.copyWith(
                   color: app.colors.neutral.grey4,
                 ),
@@ -315,7 +315,7 @@ class _RoutesScreenState extends State<RoutesScreen> {
               _buildUrl(model.enterPoint),
               app.dimensions.padding.s.gap(),
               Text(
-                app.intl.routes.redirectedTo,
+                context.intl.routes.redirectedTo,
                 style: app.textTheme.bodySmall?.copyWith(
                   color: app.colors.neutral.grey4,
                 ),
@@ -345,7 +345,7 @@ class _RoutesScreenState extends State<RoutesScreen> {
         ),
         app.dimensions.padding.s.gap(),
         Tooltip(
-          message: app.intl.actions.copy,
+          message: context.intl.actions.copy,
           child: InkWell(
             onTap: () async {
               await Clipboard.setData(ClipboardData(text: url));

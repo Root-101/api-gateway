@@ -1,4 +1,4 @@
-import 'package:api_gateway_front/app_exporter.dart';
+import 'package:console/app_exporter.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -12,6 +12,8 @@ DioException badResponse(int status, dynamic data) {
 }
 
 void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
+
   group('ApiExceptionConverter', () {
     test('404 with ProblemDetail json does not crash and uses detail', () {
       final e = ApiExceptionConverter.parse(

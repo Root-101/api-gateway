@@ -1,4 +1,4 @@
-import 'package:api_gateway_front/app_exporter.dart';
+import 'package:console/app_exporter.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -125,10 +125,10 @@ class _LogsScreenState extends State<LogsScreen> {
 
           return Scaffold(
             appBar: CustomAppBar.build(
-              title: app.intl.logs.logs,
+              title: context.intl.logs.logs,
               actions: [
                 Text(
-                  app.intl.logs.totalLogs(count: cubit.totalElements),
+                  context.intl.logs.totalLogs(count: cubit.totalElements),
                   style: app.textTheme.bodyMedium?.copyWith(
                     color: app.colors.neutral.grey3,
                   ),
@@ -136,13 +136,13 @@ class _LogsScreenState extends State<LogsScreen> {
                 app.dimensions.padding.m.gap(),
                 PrimaryButton.secondary(
                   onPressed: cubit.refresh,
-                  title: app.intl.actions.refresh,
+                  title: context.intl.actions.refresh,
                   icon: app.assets.icons.actions.reload,
                 ),
                 app.dimensions.padding.m.gap(),
                 PrimaryButton.secondary(
                   onPressed: cubit.export,
-                  title: app.intl.logs.export,
+                  title: context.intl.logs.export,
                   icon: app.assets.icons.actions.download,
                 ),
                 app.dimensions.padding.xl.gap(),
@@ -247,7 +247,7 @@ class _LogsScreenState extends State<LogsScreen> {
                                   app.dimensions.padding.s,
                                 ),
                                 child: Text(
-                                  app.intl.logs.columnTimestamp,
+                                  context.intl.logs.columnTimestamp,
                                   style: headerStyle,
                                 ),
                               ),
@@ -261,7 +261,7 @@ class _LogsScreenState extends State<LogsScreen> {
                                   app.dimensions.padding.s,
                                 ),
                                 child: Text(
-                                  app.intl.logs.columnMethod,
+                                  context.intl.logs.columnMethod,
                                   style: headerStyle,
                                 ),
                               ),
@@ -275,7 +275,7 @@ class _LogsScreenState extends State<LogsScreen> {
                                   app.dimensions.padding.s,
                                 ),
                                 child: Text(
-                                  app.intl.logs.columnPath,
+                                  context.intl.logs.columnPath,
                                   style: headerStyle,
                                 ),
                               ),
@@ -289,7 +289,7 @@ class _LogsScreenState extends State<LogsScreen> {
                                   app.dimensions.padding.s,
                                 ),
                                 child: Text(
-                                  app.intl.logs.columnRoute,
+                                  context.intl.logs.columnRoute,
                                   style: headerStyle,
                                 ),
                               ),
@@ -304,7 +304,7 @@ class _LogsScreenState extends State<LogsScreen> {
                                   app.dimensions.padding.s,
                                 ),
                                 child: Text(
-                                  app.intl.logs.columnHttpStatus,
+                                  context.intl.logs.columnHttpStatus,
                                   style: headerStyle,
                                 ),
                               ),
@@ -321,7 +321,7 @@ class _LogsScreenState extends State<LogsScreen> {
                                   app.dimensions.padding.s,
                                 ),
                                 child: Text(
-                                  app.intl.logs.columnRequestDuration,
+                                  context.intl.logs.columnRequestDuration,
                                   style: headerStyle,
                                 ),
                               ),
@@ -339,7 +339,9 @@ class _LogsScreenState extends State<LogsScreen> {
                                         dataSource.loadFailed = false;
                                         loadMoreRows();
                                       },
-                                      child: Text(app.intl.actions.tryAgain),
+                                      child: Text(
+                                        context.intl.actions.tryAgain,
+                                      ),
                                     ),
                                   );
                                 }
@@ -357,12 +359,12 @@ class _LogsScreenState extends State<LogsScreen> {
         } else if (state is LogsSearchErrorState) {
           return ErrorPage(
             errorMessage: state.exception.message,
-            buttonText: app.intl.actions.tryAgain,
+            buttonText: context.intl.actions.tryAgain,
             onPressed: cubit.init,
           );
         } else {
           return ErrorPage(
-            buttonText: app.intl.actions.tryAgain,
+            buttonText: context.intl.actions.tryAgain,
             onPressed: cubit.init,
           );
         }
@@ -419,7 +421,7 @@ class _LogsScreenState extends State<LogsScreen> {
         Expanded(
           child: EMTextSearchField(
             controller: searchController,
-            hint: app.intl.logs.search,
+            hint: context.intl.logs.search,
             onSearch: (value) async {
               cubit.applySearch(query: searchController.text);
             },
@@ -449,7 +451,7 @@ class _LogsScreenState extends State<LogsScreen> {
                               finalDate += 'X';
                             }
                             return _buildSingleFilterTag(
-                              tooltip: app.intl.logs.columnTimestamp,
+                              tooltip: context.intl.logs.columnTimestamp,
                               text: finalDate,
                               onRemoveFilter: () {
                                 cubit.applyFilter(
@@ -466,7 +468,7 @@ class _LogsScreenState extends State<LogsScreen> {
                         ),
                       if (state.filters.hasResponseCode)
                         _buildSingleFilterTag(
-                          tooltip: app.intl.logs.columnHttpStatus,
+                          tooltip: context.intl.logs.columnHttpStatus,
                           text: state.filters.responseCode!.toString(),
                           onRemoveFilter: () {
                             cubit.applyFilter(
@@ -480,7 +482,7 @@ class _LogsScreenState extends State<LogsScreen> {
                         ),
                       if (state.filters.hasHttpMethod)
                         _buildSingleFilterTag(
-                          tooltip: app.intl.logs.columnMethod,
+                          tooltip: context.intl.logs.columnMethod,
                           text: state.filters.httpMethod!,
                           onRemoveFilter: () {
                             cubit.applyFilter(
@@ -494,7 +496,7 @@ class _LogsScreenState extends State<LogsScreen> {
                         ),
                       if (state.filters.hasRoute)
                         _buildSingleFilterTag(
-                          tooltip: app.intl.logs.columnRoute,
+                          tooltip: context.intl.logs.columnRoute,
                           text: state.filters.route!.routeName,
                           onRemoveFilter: () {
                             cubit.applyFilter(
@@ -642,22 +644,25 @@ class LogsDataSource extends DataGridSource {
             );
           case 'route':
             RouteLogModel? route = dataGridCell.value as RouteLogModel?;
-            row = _HoverableClickableText(
-              text: route == null
-                  ? app.intl.logFilters.filterNoRouteName
-                  : route.routeName,
-              color: route == null
-                  ? app.colors.neutral.grey4
-                  : app.colors.neutral.white,
-              onTap: () {
-                if (onRouteTap != null) {
-                  if (currentLog.route == null) {
-                    onRouteTap!(currentLog.copyWith(route: noRoute));
-                  } else {
-                    onRouteTap!(currentLog);
+            //buildRow has no context: the Builder makes the cell follow the language
+            row = Builder(
+              builder: (context) => _HoverableClickableText(
+                text: route == null
+                    ? context.intl.logFilters.filterNoRouteName
+                    : route.routeName,
+                color: route == null
+                    ? app.colors.neutral.grey4
+                    : app.colors.neutral.white,
+                onTap: () {
+                  if (onRouteTap != null) {
+                    if (currentLog.route == null) {
+                      onRouteTap!(currentLog.copyWith(route: noRoute));
+                    } else {
+                      onRouteTap!(currentLog);
+                    }
                   }
-                }
-              },
+                },
+              ),
             );
           case 'responseCode':
             int code = dataGridCell.value as int;

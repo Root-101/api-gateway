@@ -1,5 +1,5 @@
-import 'package:api_gateway_front/app_exporter.dart';
-import 'package:api_gateway_front/features/language/view/language_widget.dart';
+import 'package:console/app_exporter.dart';
+import 'package:console/features/language/view/language_widget.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -50,11 +50,11 @@ class _BaseScreenState extends State<BaseScreen> {
               destinations: [
                 NavigationRailDestination(
                   icon: app.assets.icons.gateway.build(),
-                  label: Text(app.intl.routes.routes),
+                  label: Text(context.intl.routes.routes),
                 ),
                 NavigationRailDestination(
                   icon: app.assets.icons.logs.build(),
-                  label: Text(app.intl.logs.logs),
+                  label: Text(context.intl.logs.logs),
                 ),
               ],
               trailing: Expanded(
@@ -79,7 +79,9 @@ class _BaseScreenState extends State<BaseScreen> {
                         if (version == null) return const SizedBox.shrink();
                         return Text(
                           _isRailExpanded
-                              ? app.intl.app.consoleVersion(version: version)
+                              ? context.intl.app.consoleVersion(
+                                  version: version,
+                                )
                               : 'v$version',
                           style: app.textTheme.bodySmall?.copyWith(
                             color: app.colors.neutral.grey4,

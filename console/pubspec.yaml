@@ -1,4 +1,4 @@
-name: api_gateway_front
+name: console
 description: "Front-End for Api-Gateway project"
 publish_to: 'none'
 

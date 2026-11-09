@@ -1,6 +1,6 @@
 import 'dart:convert';
 
-import 'package:api_gateway_front/app_exporter.dart';
+import 'package:console/app_exporter.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 class RoutesCubit extends Cubit<RoutesState>

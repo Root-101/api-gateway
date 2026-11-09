@@ -15,9 +15,6 @@ Rules:
 
 ## Possible improvements
 
-- [ ] Rename the Dart package `api_gateway_front` (`console/pubspec.yaml` and every `package:` import) to match the `console` folder.
-- [ ] Console: remove `reassembleApplication()` in the language change (`console/lib/features/language/logic/cubit/language_cubit.dart:64`), a hot-reload API. Evaluated and kept for now: widgets read `app.intl` through the global navigator context and wouldn't rebuild without it. Removing it means passing `context.intl` everywhere.
-- [ ] Console: `get` is only used for DI and `firstWhereOrNull` (the latter exists in `package:collection`). Consider `get_it`, as `console/lib/adapter/di.dart` itself suggests.
 - [ ] Gateway: mutation testing with **PIT** on the routes and logs logic, to measure test quality beyond coverage.
 
 ## 6.0.0 release

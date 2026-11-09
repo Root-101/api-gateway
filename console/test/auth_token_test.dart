@@ -1,4 +1,4 @@
-import 'package:api_gateway_front/app_exporter.dart';
+import 'package:console/app_exporter.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -17,6 +17,8 @@ AuthClient clientAnswering(dynamic body) {
 }
 
 void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
+
   const storage = FlutterSecureStorage();
   final tokenBody = {'token': 'abc', 'expires_in': 28800};
 

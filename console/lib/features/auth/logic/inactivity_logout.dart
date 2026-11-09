@@ -1,6 +1,6 @@
 import 'dart:async';
 
-import 'package:api_gateway_front/app_exporter.dart';
+import 'package:console/app_exporter.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/services.dart';
 

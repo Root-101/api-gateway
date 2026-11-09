@@ -1,4 +1,4 @@
-import 'package:api_gateway_front/main.dart';
+import 'package:console/main.dart';
 import 'package:flutter/material.dart';
 
 class GridDotPainter extends CustomPainter {

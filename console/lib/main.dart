@@ -1,6 +1,6 @@
 import 'dart:ui';
 
-import 'package:api_gateway_front/app_exporter.dart';
+import 'package:console/app_exporter.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
@@ -133,7 +133,8 @@ class AppGlobal {
 
   TextTheme get textTheme => theme.textTheme;
 
-  /// Texts of the app's language; without a navigator yet (or in unit tests) the base ones (`en`)
+  /// Texts of the app's language; without a navigator yet (or in unit tests) the base ones (`en`).
+  /// The caller does not rebuild on a language change: use `context.intl` for what is on screen behind the selector
   AppMessages get intl {
     final context = navigatorKey.currentContext;
     return context != null ? context.intl : messagesOf(const Locale('en'));

@@ -1,7 +1,6 @@
-import 'package:api_gateway_front/app_exporter.dart';
+import 'package:console/app_exporter.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:get/get.dart';
 
 class LanguageCubit extends Cubit<LanguageState>
     with GlobalEventBusCommunication<LanguageState> {
@@ -40,9 +39,9 @@ class LanguageCubit extends Cubit<LanguageState>
   }
 
   void changeLanguageKey({required String languageKey}) {
-    LanguageModel? language = languages.firstWhereOrNull(
-      (element) => element.key == languageKey,
-    );
+    LanguageModel? language = languages
+        .where((element) => element.key == languageKey)
+        .firstOrNull;
     changeLanguage(language: language);
   }
 
@@ -59,9 +58,6 @@ class LanguageCubit extends Cubit<LanguageState>
         allLanguages: languages,
       ),
     );
-
-    ///this is the trick that updates the widget tree without rebuilding every class
-    WidgetsBinding.instance.reassembleApplication();
   }
 
   LanguageModel _resolve({required String? key}) {

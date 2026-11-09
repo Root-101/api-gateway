@@ -1,5 +1,5 @@
-import 'package:api_gateway_front/app_exporter.dart';
-import 'package:api_gateway_front/features/language/view/language_widget.dart';
+import 'package:console/app_exporter.dart';
+import 'package:console/features/language/view/language_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -114,7 +114,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             Text(
-                              app.intl.login.login,
+                              context.intl.login.login,
                               style: app.textTheme.headlineSmall,
                             ),
                             app.dimensions.padding.s.gap(),
@@ -136,8 +136,11 @@ class _LoginScreenState extends State<LoginScreen> {
                                     app.dimensions.padding.s.gap(),
                                     Text(
                                       up
-                                          ? app.intl.login.gatewayReachable
-                                          : app.intl.login.gatewayUnreachable,
+                                          ? context.intl.login.gatewayReachable
+                                          : context
+                                                .intl
+                                                .login
+                                                .gatewayUnreachable,
                                       style: app.textTheme.bodySmall,
                                     ),
                                   ],
@@ -147,29 +150,29 @@ class _LoginScreenState extends State<LoginScreen> {
                             app.dimensions.padding.xxl.gap(),
                             AppTextInput.textField(
                               controller: usernameController,
-                              label: '${app.intl.login.usernameLabel} *',
-                              hint: app.intl.login.usernameHint,
+                              label: '${context.intl.login.usernameLabel} *',
+                              hint: context.intl.login.usernameHint,
                               maxLength: validator.username.max,
                               validator: validator.username.validator,
                             ),
                             app.dimensions.padding.l.gap(),
                             AppTextInput.passwordField(
                               controller: passwordController,
-                              label: '${app.intl.login.passwordLabel} *',
-                              hint: app.intl.login.passwordHint,
+                              label: '${context.intl.login.passwordLabel} *',
+                              hint: context.intl.login.passwordHint,
                               validator: validator.password.validator,
                             ),
                             app.dimensions.padding.l.gap(),
                             CheckboxListTile(
                               value: rememberMe,
                               title: Text(
-                                app.intl.login.rememberMe,
+                                context.intl.login.rememberMe,
                                 style: app.textTheme.bodyMedium,
                               ),
                               //"remember me" keeps the session token in browser storage
                               subtitle: rememberMe
                                   ? Text(
-                                      app.intl.login.rememberMeWarning,
+                                      context.intl.login.rememberMeWarning,
                                       style: app.textTheme.bodySmall?.copyWith(
                                         color: app.colors.neutral.grey3,
                                       ),
@@ -185,7 +188,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             (1.5 * app.dimensions.padding.xxl).gap(),
                             PrimaryButton.primary(
                               onPressed: _login,
-                              title: app.intl.login.login,
+                              title: context.intl.login.login,
                             ),
                           ],
                         ),

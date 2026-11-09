@@ -13,6 +13,7 @@
           URL (`/routes/:id/edit`).
         * **Logs** :memo: : Fixes: filter by local day, pagination and retry of failed pages, duplicated logs
           after logout. The export is paginated. Added refresh button, total of results and loading indicator.
+        * **Logs** :memo: : A date filter with the dates reversed now covers both days completely.
         * **Auth** :lock: : A `401`/`403` on any screen logs out and a network error no longer does. Added route
           guard, optional inactivity logout (`SESSION_TIMEOUT_MINUTES`), `Remember me` warning and gateway
           status on login. The password is no longer printed in the logs.
@@ -30,6 +31,10 @@
           `env.js` is generated on container start, so one image serves every environment.
         * **General** :hammer_and_wrench: : Added unit tests and CI job, updated README, console version in the
           side menu and several memory and UI fixes.
+        * **General** :hammer_and_wrench: : Dart package renamed to `console`.
+        * **i18n** :globe_with_meridians: : The language change no longer uses `reassembleApplication()`, a
+          hot-reload API: the screens behind the selector read their texts with `context.intl`.
+        * **General** :hammer_and_wrench: : `get` is only used for dependency injection.
 * 1.x:
     * 1.1.1:
         * **DATE** :date: : 2026-05-17.
