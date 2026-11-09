@@ -13,6 +13,7 @@
         * **Gateway** :hourglass: : New `GATEWAY_CONNECT_TIMEOUT_MS` (default `10000`) and `GATEWAY_RESPONSE_TIMEOUT` (default `60s`, empty = no timeout). :warning: Before there was no response timeout: raise it for services with slower endpoints.
         * **Gateway** :hourglass: : New `CORS_ALLOWED_ORIGINS` (default `*`, same as before). CORS headers sent by an upstream are no longer duplicated.
         * **Ops** :stethoscope: : Health check `GET /{ADMIN_PATH}/health` (no auth, not logged). Server logs with SLF4J. The docker image runs as non-root and has a `.dockerignore`.
+        * **Docker** :whale: : `docker-compose`: the gateway waits for Postgres to be healthy, the new env vars are listed, and the web console gets its config at runtime (`environment:`, one image for every environment). Final image on `debian:trixie-slim`.
         * **Code** :broom: : Dependencies cleanup (test libraries out of the production binary, Lombok only at compile time, Spring Cloud from its BOM) and code cleanup without behavior changes.
         * **Tests** :test_tube: : Unit tests (`./gradlew test`) and integration tests with Testcontainers (`./gradlew integrationTest`, Docker required): 83 tests, 95 % lines / 90.6 % branches, with a coverage gate in `check`.
         * **CI** :construction_worker: : GitHub Actions: tests and coverage gate, web console build and tests, and on `master` the native docker image with a smoke test and the Postman collection.

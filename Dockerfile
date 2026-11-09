@@ -14,12 +14,12 @@ COPY . .
 RUN chmod +x gradlew
 
 # Compile the native binary
-RUN ./gradlew clean nativeCompile --stacktrace --info
+RUN ./gradlew clean nativeCompile --stacktrace
 
 
 #Stage 2: Deploy
 #Final Ultralight Image
-FROM debian:bookworm-slim
+FROM debian:trixie-slim
 
 WORKDIR /app
 

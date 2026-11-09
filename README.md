@@ -4,7 +4,7 @@
 [![Spring Boot](https://img.shields.io/badge/Spring%20Boot-4.1-green)](#)
 [![Java](https://img.shields.io/badge/Java-25-orange)](#)
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-blue)](#)
-[![Flutter](https://img.shields.io/badge/Flutter-3.35-02569B)](#)
+[![Flutter](https://img.shields.io/badge/Flutter-3.47-02569B)](#)
 [![License](https://img.shields.io/badge/license-Apache-green)](#)
 
 A ready-to-deploy **API Gateway** built with **Spring Boot**, **PostgreSQL** and **Flutter**.

@@ -14,6 +14,11 @@ services:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD", "pg_isready", "-U", "postgres", "-d", "api-gateway-local" ]
+      interval: 2s
+      timeout: 3s
+      retries: 30
     networks:
       - api_network
 
@@ -27,7 +32,8 @@ services:
     image: api-gateway-service
     container_name: api_gateway_service
     depends_on:
-      - postgres
+      postgres:
+        condition: service_healthy    #the gateway runs the migrations on start: the db must accept connections
     environment:
       PROFILE: LOCAL
       ADMIN_USERNAME: admin
@@ -43,6 +49,14 @@ services:
       DB_PASSWORD: a123b456**
 
       MAINTAIN_LOGS_FOR_DAYS: 14
+      MAX_LOGS_SEARCH_SIZE: 10000
+
+      ADMIN_MAX_FAILED_ATTEMPTS: 10
+      ADMIN_LOCKOUT_MINUTES: 15
+      CORS_ALLOWED_ORIGINS: "*"
+
+      GATEWAY_CONNECT_TIMEOUT_MS: 10000
+      GATEWAY_RESPONSE_TIMEOUT: 60s
     ports:
       - "8080:8080"
     networks:
@@ -55,11 +69,11 @@ services:
     build:
       context: ./tools/api_gateway_front
       dockerfile: Dockerfile
-      args:
-        GATEWAY_SERVICE_URL: "http://localhost:8080"
-        ADMIN_PATH: "_admin"
     image: flutter-web-service
     container_name: api_gateway_web_ui
+    environment:
+      GATEWAY_SERVICE_URL: "http://localhost:8080"
+      ADMIN_PATH: "_admin"
     depends_on:
       - api-gateway
     ports:
