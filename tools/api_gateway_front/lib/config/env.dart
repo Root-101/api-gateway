@@ -24,7 +24,8 @@ class Environment {
   static String? get configError {
     if (env == null) return 'env.js is missing or does not define window.env';
     final missing = [
-      if ((env!.GATEWAY_SERVICE_URL ?? '').trim().isEmpty) 'GATEWAY_SERVICE_URL',
+      if ((env!.GATEWAY_SERVICE_URL ?? '').trim().isEmpty)
+        'GATEWAY_SERVICE_URL',
       if ((env!.ADMIN_PATH ?? '').trim().isEmpty) 'ADMIN_PATH',
     ];
     return missing.isEmpty ? null : 'env.js: missing ${missing.join(', ')}';
@@ -50,10 +51,8 @@ class Environment {
   }
 
   ///without leading/trailing `/`
-  static String get adminPath => (env?.ADMIN_PATH ?? '').trim().replaceAll(
-    RegExp(r'^/+|/+$'),
-    '',
-  );
+  static String get adminPath =>
+      (env?.ADMIN_PATH ?? '').trim().replaceAll(RegExp(r'^/+|/+$'), '');
 
   static String get baseApiUrl => '$gatewayUrl/$adminPath';
 

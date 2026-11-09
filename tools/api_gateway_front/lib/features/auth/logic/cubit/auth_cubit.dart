@@ -14,7 +14,7 @@ class AuthCubit extends Cubit<AuthState>
       logout();
       throw GlobalException(
         type: GlobalExceptionType.auth,
-        message: app.intl.noAccess,
+        message: app.intl.common.noAccess,
       );
     }
     return _currentUser!;

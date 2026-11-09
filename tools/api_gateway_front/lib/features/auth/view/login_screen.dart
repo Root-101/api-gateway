@@ -114,7 +114,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             Text(
-                              app.intl.login,
+                              app.intl.login.login,
                               style: app.textTheme.headlineSmall,
                             ),
                             app.dimensions.padding.s.gap(),
@@ -136,8 +136,8 @@ class _LoginScreenState extends State<LoginScreen> {
                                     app.dimensions.padding.s.gap(),
                                     Text(
                                       up
-                                          ? app.intl.gatewayReachable
-                                          : app.intl.gatewayUnreachable,
+                                          ? app.intl.login.gatewayReachable
+                                          : app.intl.login.gatewayUnreachable,
                                       style: app.textTheme.bodySmall,
                                     ),
                                   ],
@@ -147,29 +147,29 @@ class _LoginScreenState extends State<LoginScreen> {
                             app.dimensions.padding.xxl.gap(),
                             AppTextInput.textField(
                               controller: usernameController,
-                              label: '${app.intl.usernameLabel} *',
-                              hint: app.intl.usernameHint,
+                              label: '${app.intl.login.usernameLabel} *',
+                              hint: app.intl.login.usernameHint,
                               maxLength: validator.username.max,
                               validator: validator.username.validator,
                             ),
                             app.dimensions.padding.l.gap(),
                             AppTextInput.passwordField(
                               controller: passwordController,
-                              label: '${app.intl.passwordLabel} *',
-                              hint: app.intl.passwordHint,
+                              label: '${app.intl.login.passwordLabel} *',
+                              hint: app.intl.login.passwordHint,
                               validator: validator.password.validator,
                             ),
                             app.dimensions.padding.l.gap(),
                             CheckboxListTile(
                               value: rememberMe,
                               title: Text(
-                                app.intl.rememberMe,
+                                app.intl.login.rememberMe,
                                 style: app.textTheme.bodyMedium,
                               ),
                               //the api only has Basic auth, so "remember me" has to keep the password in browser storage
                               subtitle: rememberMe
                                   ? Text(
-                                      app.intl.rememberMeWarning,
+                                      app.intl.login.rememberMeWarning,
                                       style: app.textTheme.bodySmall?.copyWith(
                                         color: app.colors.neutral.grey3,
                                       ),
@@ -185,7 +185,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             (1.5 * app.dimensions.padding.xxl).gap(),
                             PrimaryButton.primary(
                               onPressed: _login,
-                              title: app.intl.login,
+                              title: app.intl.login.login,
                             ),
                           ],
                         ),
@@ -225,7 +225,7 @@ class LoginNameValidator {
 
   String? validator(String? value) {
     if (value == null || value.isEmpty) {
-      return app.intl.requiredField;
+      return app.intl.validations.requiredField;
     }
     return null;
   }
@@ -236,7 +236,7 @@ class LoginPassValidator {
 
   String? validator(String? value) {
     if (value == null || value.isEmpty) {
-      return app.intl.requiredField;
+      return app.intl.validations.requiredField;
     }
     return null;
   }

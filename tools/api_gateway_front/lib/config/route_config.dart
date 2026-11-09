@@ -1,4 +1,5 @@
 import 'package:api_gateway_front/app_exporter.dart';
+import 'package:api_gateway_front/features/routes/view/form/routes_form_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -33,6 +34,15 @@ class RouteConfig {
                 name: RoutesScreen.navigator.name,
                 path: RoutesScreen.navigator.path,
                 builder: RoutesScreen.navigator.builder,
+                routes: [
+                  ///   /routes/:id/edit (dialog over the whole app, so on the root navigator)
+                  GoRoute(
+                    name: RoutesFormScreen.navigator.editName,
+                    path: RoutesFormScreen.navigator.editPath,
+                    parentNavigatorKey: navigatorKey,
+                    pageBuilder: RoutesFormScreen.navigator.editPageBuilder,
+                  ),
+                ],
               ),
             ],
           ),

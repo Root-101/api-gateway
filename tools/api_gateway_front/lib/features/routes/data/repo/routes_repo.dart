@@ -56,7 +56,7 @@ class RoutesRepo {
     } catch (_) {
       throw GlobalException(
         type: GlobalExceptionType.general,
-        message: app.intl.errorDecodingFile,
+        message: app.intl.restore.errorDecodingFile,
       );
     }
   }
@@ -137,7 +137,6 @@ extension RouteModelParser on RouteResponse {
 
 extension RouteModelListParser on List<RouteResponse> {
   List<RouteModel> toModel({String? gatewayUrl}) =>
-      map(
-        (singleResponse) => singleResponse.toModel(gatewayUrl: gatewayUrl),
-      ).toList();
+      map((singleResponse) => singleResponse.toModel(gatewayUrl: gatewayUrl))
+          .toList();
 }

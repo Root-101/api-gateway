@@ -35,7 +35,8 @@ Legend: **P0** bug that breaks/destroys data · **P1** visible bug or security �
   - Done: `RouteResponse.fromJson` also reads `route_id` and the flat rewrite fields (the entity is serialized as-is).
 - [x] **`search()` called inside `build()`** (`routes_screen.dart:84`). Move to `initState`.
 - [x] **"No-Route" filter doesn't change language.** `noRoute` is top-level and initialized once with `app.intl` (`logs_cubit.dart:13-17`). Make it a getter.
-- [ ] **Untranslated error messages** (partial: `routes_form_cubit.dart` translated and the missing `emit` fixed; pending: `api_exception_converter.dart`/`exception_converter.dart` — they need intl without a `BuildContext`, e.g. `lookupAppLocalizations(locale)`, to stay unit-testable — and `'Need more space'` in `main.dart`) (all `//TODO: intl` in `api_exception_converter.dart`, `exception_converter.dart:11`, `'Need more space'` in `lib/main.dart`, `'Wrong Route id'` and the Spanish `'Accediendo a estado no soportado...'` in `routes_form_cubit.dart:42,73`). Also the `else` in `routes_form_cubit.dart:73` doesn't `emit`.
+- [x] **Untranslated error messages** (partial: `routes_form_cubit.dart` translated and the missing `emit` fixed; pending: `api_exception_converter.dart`/`exception_converter.dart` — they need intl without a `BuildContext`, e.g. `lookupAppLocalizations(locale)`, to stay unit-testable — and `'Need more space'` in `main.dart`) (all `//TODO: intl` in `api_exception_converter.dart`, `exception_converter.dart:11`, `'Need more space'` in `lib/main.dart`, `'Wrong Route id'` and the Spanish `'Accediendo a estado no soportado...'` in `routes_form_cubit.dart:42,73`). Also the `else` in `routes_form_cubit.dart:73` doesn't `emit`.
+  - Done: texts migrated from `gen-l10n` (ARB) to **slang** (`lib/l10n/{en,es}.i18n.yaml`, `slang.yaml`, same setup as Feather console), grouped by screen (`app.intl.routes.nameLabel`). The converters and `'Need more space'` are translated; `app.intl` falls back to English without a navigator (unit tests). After changing a text: `fvm dart run slang` and commit the generated `messages*.g.dart`.
 - [x] **Restore without feedback or pre-validation.** Generic error on invalid JSON; doesn't say how many routes will be created nor warn about duplicates. Show count + confirmation before `multi-add`. "Restore" button enabled with no file.
   - Done: the file is parsed on select (catch-all, `TypeError` used to escape), the dialog shows the count and the names that already exist, and Restore is disabled until a valid file is loaded.
 
@@ -97,6 +98,7 @@ Legend: **P0** bug that breaks/destroys data · **P1** visible bug or security �
 - [x] Add `.dockerignore` (`build/`, `.dart_tool/`, `.idea/`, `.fvm/flutter_sdk`).
 - [x] Local `.gitignore` is empty (everything is in the root one) — fine, but `l10n_errors.txt` is versioned and is a generated artifact.
   - Kept as is: `l10n_errors.txt` is written by `gen-l10n` (`untranslated-messages-file`) and is useful in review (`{}` = nothing untranslated).
+  - Superseded: `gen-l10n` was replaced by slang, the file no longer exists.
 - [x] `web/manifest.json`: `name`/`short_name` = `api_gateway_front`, `orientation: portrait-primary` on a desktop app. `index.html`: `user-scalable=no` meta (accessibility) and `apple-mobile-web-app-title`.
 - [x] README: outdated Flutter version (says 3.35.1, uses 3.41.9); add how to run locally (add a `web/env.example.js`).
   - Done: version, runtime env vars with `docker run -e`, run locally with `web/env.example.js`.
@@ -111,7 +113,8 @@ Legend: **P0** bug that breaks/destroys data · **P1** visible bug or security �
   - Done: optional multi-line field in the form (also used by create/duplicate); in the card it is shown in the name tooltip because the tile has a fixed height.
 - [x] Search/filter on the routes screen.
   - Done: local filter by name, path, URI or description (the API has no route search).
-- [ ] Edit route by URL (`/routes/:id/edit`) (Pending: the `GET /routes/{id}` adapter is ready; needs a route inside the shell that opens the form dialog.) — the code already has "the bases" (`routes_form_screen.dart:32`). Needs the `GET /routes/{id}` adapter (Phase 2).
+- [x] Edit route by URL (`/routes/:id/edit`) (Pending: the `GET /routes/{id}` adapter is ready; needs a route inside the shell that opens the form dialog.) — the code already has "the bases" (`routes_form_screen.dart:32`). Needs the `GET /routes/{id}` adapter (Phase 2).
+  - Done: `/routes/:id/edit` is a child of `/routes` on the root navigator whose page is the form dialog (`DialogPage`). The Edit button pushes it with the model in `extra`; opening the url directly loads the route with `GET /routes/{id}`; closing the dialog goes back to `/routes`.
 - [x] Copy entry/target URL to clipboard from the card.
 - [x] Refresh logs (button / auto-refresh) and show the total (`totalElements`).
   - Done: Refresh button (same search and filters from page 0) and total of the last search. No auto-refresh.

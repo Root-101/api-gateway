@@ -50,11 +50,11 @@ class _BaseScreenState extends State<BaseScreen> {
               destinations: [
                 NavigationRailDestination(
                   icon: app.assets.icons.gateway.build(),
-                  label: Text(app.intl.routes),
+                  label: Text(app.intl.routes.routes),
                 ),
                 NavigationRailDestination(
                   icon: app.assets.icons.logs.build(),
-                  label: Text(app.intl.logs),
+                  label: Text(app.intl.logs.logs),
                 ),
               ],
               trailing: Expanded(
@@ -79,7 +79,7 @@ class _BaseScreenState extends State<BaseScreen> {
                         if (version == null) return const SizedBox.shrink();
                         return Text(
                           _isRailExpanded
-                              ? app.intl.consoleVersion(version)
+                              ? app.intl.app.consoleVersion(version: version)
                               : 'v$version',
                           style: app.textTheme.bodySmall?.copyWith(
                             color: app.colors.neutral.grey4,

@@ -15,9 +15,7 @@ class FeaturesInit {
       ..options.connectTimeout = const Duration(seconds: 10)
       ..options.receiveTimeout = const Duration(seconds: 10)
       ..httpClientAdapter
-      ..options.headers = {
-        Headers.contentTypeHeader: Headers.jsonContentType,
-      };
+      ..options.headers = {Headers.contentTypeHeader: Headers.jsonContentType};
     //any rejected credential on any admin call ends the session (routes, logs, form, restore, export)
     dio.interceptors.add(
       InterceptorsWrapper(

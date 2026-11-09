@@ -115,11 +115,11 @@ class _RoutesScreenState extends State<RoutesScreen> {
         } else if (state is RoutesSearchOkState) {
           return Scaffold(
             appBar: CustomAppBar.build(
-              title: app.intl.routes,
+              title: app.intl.routes.routes,
               actions: [
                 PrimaryButton.secondary(
                   onPressed: () => RoutesFormScreen.navigator.create(),
-                  title: app.intl.create,
+                  title: app.intl.actions.create,
                   icon: app.assets.icons.actions.add,
                 ),
                 app.dimensions.padding.m.gap(),
@@ -132,7 +132,7 @@ class _RoutesScreenState extends State<RoutesScreen> {
                 app.dimensions.padding.m.gap(),
                 PrimaryButton.secondary(
                   onPressed: cubit.backup,
-                  title: app.intl.backup,
+                  title: app.intl.actions.backup,
                   icon: app.assets.icons.actions.download,
                 ),
                 app.dimensions.padding.m.gap(),
@@ -140,7 +140,7 @@ class _RoutesScreenState extends State<RoutesScreen> {
                   onPressed: () {
                     RoutesRestoreDialog.show();
                   },
-                  title: app.intl.restore,
+                  title: app.intl.actions.restore,
                   icon: app.assets.icons.actions.upload,
                 ),
                 app.dimensions.padding.xl.gap(),
@@ -159,7 +159,7 @@ class _RoutesScreenState extends State<RoutesScreen> {
                           width: 450,
                           child: EMTextSearchField(
                             controller: _searchCtrl,
-                            hint: app.intl.searchRoutes,
+                            hint: app.intl.routes.searchRoutes,
                             onSearch: (value) => setState(
                               () => _query = value.trim().toLowerCase(),
                             ),
@@ -168,28 +168,30 @@ class _RoutesScreenState extends State<RoutesScreen> {
                       ),
                       Expanded(
                         child: _filter(state.routes).isEmpty
-                      ? const NoDataPage()
-                      : Padding(
-                          padding: EdgeInsets.symmetric(
-                            horizontal: missing / 2,
-                            vertical: app.dimensions.padding.xxl,
-                          ),
-                          child: GridView(
-                            gridDelegate:
-                                SliverGridDelegateWithFixedCrossAxisCount(
-                                  crossAxisCount: maxTiles,
-                                  childAspectRatio: 2.1,
-                                  crossAxisSpacing: app.dimensions.padding.l,
-                                  mainAxisSpacing: app.dimensions.padding.l,
+                            ? const NoDataPage()
+                            : Padding(
+                                padding: EdgeInsets.symmetric(
+                                  horizontal: missing / 2,
+                                  vertical: app.dimensions.padding.xxl,
                                 ),
-                            children: _filter(state.routes)
-                                .map(
-                                  (model) =>
-                                      _buildSingleRouteTile(model: model),
-                                )
-                                .toList(),
-                          ),
-                        ),
+                                child: GridView(
+                                  gridDelegate:
+                                      SliverGridDelegateWithFixedCrossAxisCount(
+                                        crossAxisCount: maxTiles,
+                                        childAspectRatio: 2.1,
+                                        crossAxisSpacing:
+                                            app.dimensions.padding.l,
+                                        mainAxisSpacing:
+                                            app.dimensions.padding.l,
+                                      ),
+                                  children: _filter(state.routes)
+                                      .map(
+                                        (model) =>
+                                            _buildSingleRouteTile(model: model),
+                                      )
+                                      .toList(),
+                                ),
+                              ),
                       ),
                     ],
                   ),
@@ -200,12 +202,12 @@ class _RoutesScreenState extends State<RoutesScreen> {
         } else if (state is RoutesSearchErrorState) {
           return ErrorPage(
             errorMessage: state.exception.message,
-            buttonText: app.intl.tryAgain,
+            buttonText: app.intl.actions.tryAgain,
             onPressed: cubit.search,
           );
         } else {
           return ErrorPage(
-            buttonText: app.intl.tryAgain,
+            buttonText: app.intl.actions.tryAgain,
             onPressed: cubit.search,
           );
         }
@@ -217,17 +219,17 @@ class _RoutesScreenState extends State<RoutesScreen> {
     final bool? confirmed = await showDialog<bool>(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        title: Text(app.intl.delete),
-        content: Text(app.intl.deleteRouteConfirm(model.name)),
+        title: Text(app.intl.actions.delete),
+        content: Text(app.intl.actions.deleteRouteConfirm(name: model.name)),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(dialogContext).pop(false),
-            child: Text(app.intl.cancel),
+            child: Text(app.intl.actions.cancel),
           ),
           TextButton(
             onPressed: () => Navigator.of(dialogContext).pop(true),
             child: Text(
-              app.intl.delete,
+              app.intl.actions.delete,
               style: TextStyle(color: app.colors.primary.red),
             ),
           ),
@@ -274,14 +276,14 @@ class _RoutesScreenState extends State<RoutesScreen> {
                       mainAxisAlignment: MainAxisAlignment.end,
                       children: [
                         PrimaryButton.svgIcon(
-                          tooltipMessage: app.intl.edit,
+                          tooltipMessage: app.intl.actions.edit,
                           onPressed: () =>
                               RoutesFormScreen.navigator.edit(model: model),
                           icon: app.assets.icons.actions.edit,
                         ),
                         app.dimensions.padding.s.gap(),
                         PrimaryButton.svgIcon(
-                          tooltipMessage: app.intl.duplicate,
+                          tooltipMessage: app.intl.actions.duplicate,
                           onPressed: () => RoutesFormScreen.navigator.duplicate(
                             model: model,
                           ),
@@ -289,7 +291,7 @@ class _RoutesScreenState extends State<RoutesScreen> {
                         ),
                         app.dimensions.padding.s.gap(),
                         PrimaryButton.svgIcon(
-                          tooltipMessage: app.intl.delete,
+                          tooltipMessage: app.intl.actions.delete,
                           onPressed: () => _confirmDelete(model),
                           icon: app.assets.icons.actions.delete,
                         ),
@@ -305,7 +307,7 @@ class _RoutesScreenState extends State<RoutesScreen> {
               ],
               app.dimensions.padding.m.gap(),
               Text(
-                app.intl.requestTo,
+                app.intl.routes.requestTo,
                 style: app.textTheme.bodySmall?.copyWith(
                   color: app.colors.neutral.grey4,
                 ),
@@ -313,7 +315,7 @@ class _RoutesScreenState extends State<RoutesScreen> {
               _buildUrl(model.enterPoint),
               app.dimensions.padding.s.gap(),
               Text(
-                app.intl.redirectedTo,
+                app.intl.routes.redirectedTo,
                 style: app.textTheme.bodySmall?.copyWith(
                   color: app.colors.neutral.grey4,
                 ),
@@ -343,13 +345,13 @@ class _RoutesScreenState extends State<RoutesScreen> {
         ),
         app.dimensions.padding.s.gap(),
         Tooltip(
-          message: app.intl.copy,
+          message: app.intl.actions.copy,
           child: InkWell(
             onTap: () async {
               await Clipboard.setData(ClipboardData(text: url));
               if (!mounted) return;
               app.snack.showSuccess(
-                message: app.intl.copiedToClipboard,
+                message: app.intl.actions.copiedToClipboard,
                 context: context,
               );
             },

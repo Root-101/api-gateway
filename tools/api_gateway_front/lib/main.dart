@@ -3,14 +3,19 @@ import 'dart:ui';
 import 'package:api_gateway_front/app_exporter.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:go_router/go_router.dart';
 import 'package:logger/logger.dart';
 
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
+/// The Material texts (date picker, tooltips...); the app's own come from `context.intl` (slang)
+const List<LocalizationsDelegate<dynamic>> appLocalizationsDelegates =
+    GlobalMaterialLocalizations.delegates;
+
 //generate code
 //fvm flutter pub run build_runner build --delete-conflicting-outputs
-//fvm flutter gen-l10n
+//fvm dart run slang
 
 //versions
 //fvm flutter pub outdated
@@ -50,7 +55,9 @@ void main() {
       MaterialApp(
         debugShowCheckedModeBanner: false,
         home: Scaffold(
-          body: Center(child: SelectableText('Configuration error: $configError')),
+          body: Center(
+            child: SelectableText('Configuration error: $configError'),
+          ),
         ),
       ),
     );
@@ -88,20 +95,21 @@ class App extends StatelessWidget {
               debugShowCheckedModeBanner: false,
               theme: ThemeConfig.theme,
               locale: locale,
-              builder:
-                  (context, child) => const Scaffold(
-                    body: Center(child: Text('Need more space')),
-                  ),
+              localizationsDelegates: appLocalizationsDelegates,
+              supportedLocales: appSupportedLocales,
+              builder: (context, child) => Scaffold(
+                body: Center(child: Text(context.intl.app.needMoreSpace)),
+              ),
             );
           } else {
             return MaterialApp.router(
               debugShowCheckedModeBanner: false,
-              title: 'Api-Gateway',
+              onGenerateTitle: (context) => context.intl.app.name,
               theme: ThemeConfig.theme,
               locale: locale,
               routerConfig: RouteConfig.router,
-              localizationsDelegates: AppLocalizations.localizationsDelegates,
-              supportedLocales: AppLocalizations.supportedLocales,
+              localizationsDelegates: appLocalizationsDelegates,
+              supportedLocales: appSupportedLocales,
             );
           }
         },
@@ -125,7 +133,11 @@ class AppGlobal {
 
   TextTheme get textTheme => theme.textTheme;
 
-  AppLocalizations get intl => context.intl;
+  /// Texts of the app's language; without a navigator yet (or in unit tests) the base ones (`en`)
+  AppMessages get intl {
+    final context = navigatorKey.currentContext;
+    return context != null ? context.intl : messagesOf(const Locale('en'));
+  }
 
   Logger logger = Logger();
 

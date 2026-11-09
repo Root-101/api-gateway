@@ -2,14 +2,13 @@ import 'package:api_gateway_front/app_exporter.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-typedef FilterCallback =
-    Future Function({
-      int? responseCode,
-      String? httpMethod,
-      RouteLogModel? route,
-      DateTime? fromDate,
-      DateTime? toDate,
-    });
+typedef FilterCallback = Future Function({
+  int? responseCode,
+  String? httpMethod,
+  RouteLogModel? route,
+  DateTime? fromDate,
+  DateTime? toDate,
+});
 
 const List<String> httpMethods = [
   'GET',
@@ -29,7 +28,7 @@ class LogsFilterDialog extends StatefulWidget {
     required List<RouteLogModel> routes,
   }) {
     DialogTemplate.open(
-      title: app.intl.filter,
+      title: app.intl.logFilters.filter,
       w: 500,
       child: LogsFilterDialog(
         filters: filters,
@@ -91,8 +90,8 @@ class _LogsFilterDialogState extends State<LogsFilterDialog> {
           children: [
             AppTextInput.textField(
               controller: responseCode,
-              label: app.intl.filterHttpStatusLabel,
-              hint: app.intl.filterHttpStatusHint,
+              label: app.intl.logFilters.filterHttpStatusLabel,
+              hint: app.intl.logFilters.filterHttpStatusHint,
               maxLength: 4,
               keyboardType: TextInputType.number,
               inputFormatters: [FilteringTextInputFormatter.digitsOnly],
@@ -119,7 +118,7 @@ class _LogsFilterDialogState extends State<LogsFilterDialog> {
                   });
                 },
                 child: Text(
-                  app.intl.clearFilters,
+                  app.intl.logFilters.clearFilters,
                   style: app.textTheme.titleSmall?.copyWith(
                     color: app.colors.neutral.white,
                   ),
@@ -143,7 +142,7 @@ class _LogsFilterDialogState extends State<LogsFilterDialog> {
             );
           },
           color: app.colors.primary.purple.brighten(0.15),
-          title: app.intl.applyFilters,
+          title: app.intl.logFilters.applyFilters,
         ),
       ),
     );
@@ -154,13 +153,13 @@ class _LogsFilterDialogState extends State<LogsFilterDialog> {
       color: app.colors.neutral.white,
     );
     return FormComponentTemplate(
-      label: app.intl.filterMethodLabel,
+      label: app.intl.logFilters.filterMethodLabel,
       child: Padding(
         padding: EdgeInsets.symmetric(horizontal: app.dimensions.padding.l),
         child: DropdownButtonFormField<String>(
           initialValue: httpMethod,
           hint: Text(
-            app.intl.filterMethodHint,
+            app.intl.logFilters.filterMethodHint,
             style: app.textTheme.bodyMedium!.copyWith(
               color: app.colors.neutral.grey3,
             ),
@@ -205,12 +204,12 @@ class _LogsFilterDialogState extends State<LogsFilterDialog> {
       color: app.colors.neutral.grey3,
     );
     return FormComponentTemplate(
-      label: app.intl.filterRouteLabel,
+      label: app.intl.logFilters.filterRouteLabel,
       height: 64,
       child: DropdownButtonFormField<RouteLogModel>(
         initialValue: route,
         hint: Text(
-          app.intl.filterRouteHint,
+          app.intl.logFilters.filterRouteHint,
           style: app.textTheme.bodyMedium!.copyWith(
             color: app.colors.neutral.grey3,
           ),
@@ -294,7 +293,7 @@ class _LogsFilterDialogState extends State<LogsFilterDialog> {
                       ),
                       child: Text(
                         selectedDate == null
-                            ? app.intl.filterDateHint
+                            ? app.intl.logFilters.filterDateHint
                             : app.dateFormatter.logsTimeS.format(selectedDate),
                         style: app.textTheme.bodyMedium!.copyWith(
                           color: selectedDate == null
@@ -317,7 +316,7 @@ class _LogsFilterDialogState extends State<LogsFilterDialog> {
         Expanded(
           child: buildDatePicker(
             selectedDate: fromDate,
-            label: app.intl.filterFromDateLabel,
+            label: app.intl.logFilters.filterFromDateLabel,
             onSelected: (selectDate) {
               setState(() {
                 if (selectDate == null ||
@@ -334,7 +333,7 @@ class _LogsFilterDialogState extends State<LogsFilterDialog> {
         Expanded(
           child: buildDatePicker(
             selectedDate: toDate,
-            label: app.intl.filterToDateLabel,
+            label: app.intl.logFilters.filterToDateLabel,
             onSelected: (selectDate) {
               setState(() {
                 if (selectDate == null ||

@@ -39,7 +39,7 @@ class RoutesFormCubit extends Cubit<RoutesFormState>
         action == RoutesFormAction.duplicate) {
       try {
         if (paramRouteId == null) {
-          emit(RoutesFormLoadingErrorState(app.intl.errorWrongRouteId));
+          emit(RoutesFormLoadingErrorState(app.intl.errors.errorWrongRouteId));
           return;
         }
         routeId = paramRouteId!;
@@ -63,14 +63,17 @@ class RoutesFormCubit extends Cubit<RoutesFormState>
       } on GlobalException catch (global) {
         emit(
           RoutesFormLoadingErrorState(
-            app.intl.errorLoadingRoute(routeId, global.message),
+            app.intl.errors.errorLoadingRoute(
+              id: routeId,
+              message: global.message,
+            ),
           ),
         );
       } on Exception {
-        emit(RoutesFormLoadingErrorState(app.intl.genericError));
+        emit(RoutesFormLoadingErrorState(app.intl.errors.genericError));
       }
     } else {
-      emit(RoutesFormLoadingErrorState(app.intl.errorUnsupportedAction));
+      emit(RoutesFormLoadingErrorState(app.intl.errors.errorUnsupportedAction));
     }
   }
 

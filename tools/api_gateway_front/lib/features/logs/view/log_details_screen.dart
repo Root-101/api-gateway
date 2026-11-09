@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 class LogDetailsScreen extends StatelessWidget {
   static void open(HttpLogModel log) {
     DialogTemplate.open(
-      title: app.intl.logDetails,
+      title: app.intl.logDetails.logDetails,
       child: LogDetailsScreen(log: log),
     );
   }
@@ -28,7 +28,8 @@ class LogDetailsScreen extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   Text(
-                    log.route?.routeName ?? app.intl.filterNoRouteName,
+                    log.route?.routeName ??
+                        app.intl.logFilters.filterNoRouteName,
                     style: app.textTheme.headlineMedium?.copyWith(
                       color: log.route != null
                           ? app.colors.neutral.white
@@ -50,7 +51,7 @@ class LogDetailsScreen extends StatelessWidget {
               section(
                 children: [
                   buildItem(
-                    key: app.intl.logsDetailsTimestamp,
+                    key: app.intl.logDetails.logsDetailsTimestamp,
                     value: app.dateFormatter.logsTime.format(
                       log.requestedAtLocal,
                     ),
@@ -59,35 +60,35 @@ class LogDetailsScreen extends StatelessWidget {
 
                   app.dimensions.padding.sm.gap(),
                   buildItem(
-                    key: app.intl.logsDetailsSourceIp,
+                    key: app.intl.logDetails.logsDetailsSourceIp,
                     value: log.sourceIp,
                   ),
                   divider(),
 
                   app.dimensions.padding.sm.gap(),
                   buildItem(
-                    key: app.intl.logsDetailsHttpMethod,
+                    key: app.intl.logDetails.logsDetailsHttpMethod,
                     value: log.httpMethod,
                   ),
                   divider(),
 
                   app.dimensions.padding.sm.gap(),
                   buildItem(
-                    key: app.intl.logsDetailsHttpStatus,
+                    key: app.intl.logDetails.logsDetailsHttpStatus,
                     value: log.responseCode.toString(),
                   ),
                   divider(),
 
                   app.dimensions.padding.sm.gap(),
                   buildItem(
-                    key: app.intl.logsDetailsRequestDuration,
+                    key: app.intl.logDetails.logsDetailsRequestDuration,
                     value: '${log.requestDuration} ms',
                   ),
                   divider(),
 
                   app.dimensions.padding.sm.gap(),
                   buildItem(
-                    key: app.intl.logsDetailsUserAgent,
+                    key: app.intl.logDetails.logsDetailsUserAgent,
                     value: log.userAgent,
                   ),
                 ],
@@ -96,24 +97,24 @@ class LogDetailsScreen extends StatelessWidget {
               app.dimensions.padding.xxl.gap(),
 
               section(
-                label: app.intl.logsDetailsRoute,
+                label: app.intl.logDetails.logsDetailsRoute,
                 children: [
                   buildItem(
-                    key: app.intl.logsDetailsRouteName,
+                    key: app.intl.logDetails.logsDetailsRouteName,
                     value: log.route?.routeName ?? noRoute.routeName,
                   ),
                   divider(),
 
                   app.dimensions.padding.sm.gap(),
                   buildItem(
-                    key: app.intl.logsDetailsRoutePath,
+                    key: app.intl.logDetails.logsDetailsRoutePath,
                     value: log.route?.routePath ?? noRoute.routePath,
                   ),
                   divider(),
 
                   app.dimensions.padding.sm.gap(),
                   buildItem(
-                    key: app.intl.logsDetailsRouteId,
+                    key: app.intl.logDetails.logsDetailsRouteId,
                     value: log.route?.routeId ?? noRoute.routeId,
                   ),
                 ],

@@ -1,56 +1,71 @@
 import 'package:api_gateway_front/app_exporter.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 
 class RoutesFormScreenNavigator {
   void create() {
     DialogTemplate.open(
-      title: app.intl.create,
+      title: app.intl.actions.create,
       child: BlocProvider(
-        create:
-            (BuildContext context) => RoutesFormCubit(
-              auth: app.di.find(),
-              repo: app.di.find(),
-              action: RoutesFormAction.create,
-            ),
+        create: (BuildContext context) => RoutesFormCubit(
+          auth: app.di.find(),
+          repo: app.di.find(),
+          action: RoutesFormAction.create,
+        ),
         lazy: false,
         child: const RoutesFormScreen(),
+      ),
+    );
+  }
+
+  String get editName => 'routeEdit';
+
+  ///child of `/routes`: `/routes/:id/edit`
+  String get editPath => ':id/edit';
+
+  ///opened from the card (model in `extra`) or from the url (only the id: the route is loaded)
+  Page<void> editPageBuilder(BuildContext context, GoRouterState state) {
+    final model = state.extra is RouteModel ? state.extra as RouteModel : null;
+    return DialogPage(
+      key: state.pageKey,
+      dialog: DialogTemplate(
+        title: app.intl.actions.edit,
+        child: BlocProvider(
+          create: (BuildContext context) => RoutesFormCubit(
+            auth: app.di.find(),
+            repo: app.di.find(),
+            action: RoutesFormAction.edit,
+            paramRouteId: state.pathParameters['id'],
+            paramRouteModel: model,
+          ),
+          lazy: false,
+          child: const RoutesFormScreen(),
+        ),
       ),
     );
   }
 
   void edit({required RouteModel model}) {
-    DialogTemplate.open(
-      title: app.intl.edit,
-      child: BlocProvider(
-        create:
-            (BuildContext context) => RoutesFormCubit(
-              auth: app.di.find(),
-              repo: app.di.find(),
-              action: RoutesFormAction.edit,
-              //in a future we will support the edit from url, this are the bases
-              paramRouteId: model.id,
-              paramRouteModel: model,
-            ),
-        lazy: false,
-        child: const RoutesFormScreen(),
-      ),
+    app.navigator.push(
+      editName,
+      pathParameters: {'id': model.id},
+      extra: model,
     );
   }
 
   void duplicate({required RouteModel model}) {
     DialogTemplate.open(
-      title: app.intl.duplicate,
+      title: app.intl.actions.duplicate,
       child: BlocProvider(
-        create:
-            (BuildContext context) => RoutesFormCubit(
-              auth: app.di.find(),
-              repo: app.di.find(),
-              action: RoutesFormAction.duplicate,
-              //in a future we will support the edit from url, this are the bases
-              paramRouteId: model.id,
-              paramRouteModel: model,
-            ),
+        create: (BuildContext context) => RoutesFormCubit(
+          auth: app.di.find(),
+          repo: app.di.find(),
+          action: RoutesFormAction.duplicate,
+          //in a future we will support the edit from url, this are the bases
+          paramRouteId: model.id,
+          paramRouteModel: model,
+        ),
         lazy: false,
         child: const RoutesFormScreen(),
       ),
@@ -102,10 +117,9 @@ class _RoutesFormScreenState extends State<RoutesFormScreen> {
           return const LoadingPage();
         } else if (state is RoutesFormLoadingSuccessState) {
           return RoutesFormWidget(
-            failValidations:
-                (state is RoutesFormValidationErrorState)
-                    ? state.failValidations
-                    : {},
+            failValidations: (state is RoutesFormValidationErrorState)
+                ? state.failValidations
+                : {},
             action: state.action,
             route: state.routeModel,
             gatewayUrl: state.gatewayUrl,
@@ -119,14 +133,14 @@ class _RoutesFormScreenState extends State<RoutesFormScreen> {
         } else if (state is RoutesFormLoadingErrorState) {
           return ErrorPage(
             errorMessage: state.text,
-            buttonText: app.intl.back,
+            buttonText: app.intl.actions.back,
             onPressed: () {
               app.navigator.pop();
             },
           );
         } else {
           return ErrorPage(
-            buttonText: app.intl.back,
+            buttonText: app.intl.actions.back,
             onPressed: () {
               app.navigator.pop();
             },
@@ -215,10 +229,8 @@ class _RoutesFormWidgetState extends State<RoutesFormWidget> {
     String? nameErrorText = _apiErrors['name'];
     String? uriErrorText = _apiErrors['uri'];
     String? pathErrorText = _apiErrors['path'];
-    String? rewriteFromErrorText =
-        _apiErrors['rewrite_path.replace_from'];
-    String? rewriteToErrorText =
-        _apiErrors['rewrite_path.replace_to'];
+    String? rewriteFromErrorText = _apiErrors['rewrite_path.replace_from'];
+    String? rewriteToErrorText = _apiErrors['rewrite_path.replace_to'];
 
     return Scaffold(
       backgroundColor: app.colors.neutral.transparent,
@@ -237,8 +249,8 @@ class _RoutesFormWidgetState extends State<RoutesFormWidget> {
                 AppTextInput.textField(
                   controller: _nameCtrl,
                   errorText: nameErrorText,
-                  label: app.intl.nameLabel,
-                  hint: app.intl.nameHint,
+                  label: app.intl.routes.nameLabel,
+                  hint: app.intl.routes.nameHint,
                   maxLength: validator.required.maxLong,
                   validator: validator.required.validator,
                 ),
@@ -248,8 +260,8 @@ class _RoutesFormWidgetState extends State<RoutesFormWidget> {
                 AppTextInput.textField(
                   controller: _pathCtrl,
                   errorText: pathErrorText,
-                  label: app.intl.pathLabel,
-                  hint: app.intl.pathHint,
+                  label: app.intl.routes.pathLabel,
+                  hint: app.intl.routes.pathHint,
                   maxLength: validator.required.maxLong,
                   validator: validator.required.validator,
                 ),
@@ -259,8 +271,8 @@ class _RoutesFormWidgetState extends State<RoutesFormWidget> {
                 AppTextInput.textField(
                   controller: _uriCtrl,
                   errorText: uriErrorText,
-                  label: app.intl.uriLabel,
-                  hint: app.intl.uriHint,
+                  label: app.intl.routes.uriLabel,
+                  hint: app.intl.routes.uriHint,
                   maxLength: validator.uri.max,
                   validator: validator.uri.validator,
                 ),
@@ -274,14 +286,11 @@ class _RoutesFormWidgetState extends State<RoutesFormWidget> {
                       child: AppTextInput.textField(
                         controller: _rewriteFromCtrl,
                         errorText: rewriteFromErrorText,
-                        label: app.intl.rewritePathFromLabel,
-                        hint: app.intl.rewritePathFromHint,
+                        label: app.intl.routes.rewritePathFromLabel,
+                        hint: app.intl.routes.rewritePathFromHint,
                         maxLength: validator.required.maxShort,
-                        validator: (value) =>
-                            validator.required.pairedValidator(
-                              value,
-                              _rewriteToCtrl.text,
-                            ),
+                        validator: (value) => validator.required
+                            .pairedValidator(value, _rewriteToCtrl.text),
                       ),
                     ),
                     app.dimensions.padding.m.gap(),
@@ -291,14 +300,11 @@ class _RoutesFormWidgetState extends State<RoutesFormWidget> {
                       child: AppTextInput.textField(
                         controller: _rewriteToCtrl,
                         errorText: rewriteToErrorText,
-                        label: app.intl.rewritePathToLabel,
-                        hint: app.intl.rewritePathToHint,
+                        label: app.intl.routes.rewritePathToLabel,
+                        hint: app.intl.routes.rewritePathToHint,
                         maxLength: validator.required.maxShort,
-                        validator: (value) =>
-                            validator.required.pairedValidator(
-                              value,
-                              _rewriteFromCtrl.text,
-                            ),
+                        validator: (value) => validator.required
+                            .pairedValidator(value, _rewriteFromCtrl.text),
                       ),
                     ),
                   ],
@@ -309,14 +315,14 @@ class _RoutesFormWidgetState extends State<RoutesFormWidget> {
                 AppTextInput.textField(
                   controller: _descriptionCtrl,
                   errorText: _apiErrors['description'],
-                  label: app.intl.descriptionLabel,
-                  hint: app.intl.descriptionHint,
+                  label: app.intl.routes.descriptionLabel,
+                  hint: app.intl.routes.descriptionHint,
                   maxLines: 3,
                 ),
                 app.dimensions.padding.xxl.gap(),
 
                 ///-------------- PREVIEW --------------\\\
-                Text(app.intl.preview, style: app.textTheme.labelMedium),
+                Text(app.intl.routes.preview, style: app.textTheme.labelMedium),
                 app.dimensions.padding.xs.gap(),
                 ListenableBuilder(
                   listenable: Listenable.merge([
@@ -396,10 +402,9 @@ class _RoutesFormWidgetState extends State<RoutesFormWidget> {
             }
           },
           color: app.colors.primary.purple.brighten(0.15),
-          title:
-              widget.action == RoutesFormAction.edit
-                  ? app.intl.edit
-                  : app.intl.create,
+          title: widget.action == RoutesFormAction.edit
+              ? app.intl.actions.edit
+              : app.intl.actions.create,
         ),
       ),
     );
@@ -429,7 +434,7 @@ class _RoutesFormWidgetState extends State<RoutesFormWidget> {
               ],
               app.dimensions.padding.s.gap(),
               Text(
-                app.intl.requestTo,
+                app.intl.routes.requestTo,
                 style: app.textTheme.bodySmall?.copyWith(
                   color: app.colors.neutral.grey4,
                 ),
@@ -437,7 +442,7 @@ class _RoutesFormWidgetState extends State<RoutesFormWidget> {
               Text(model.enterPoint, style: app.textTheme.titleSmall),
               app.dimensions.padding.s.gap(),
               Text(
-                app.intl.redirectedTo,
+                app.intl.routes.redirectedTo,
                 style: app.textTheme.bodySmall?.copyWith(
                   color: app.colors.neutral.grey4,
                 ),
@@ -465,14 +470,14 @@ class RoutesFormRequiredFieldValidator {
   ///rewrite path is optional, but if one side is filled the other one is required
   String? pairedValidator(String? value, String other) {
     if ((value == null || value.isEmpty) && other.isNotEmpty) {
-      return app.intl.requiredField;
+      return app.intl.validations.requiredField;
     }
     return null;
   }
 
   String? validator(String? value) {
     if (value == null || value.isEmpty) {
-      return app.intl.requiredField;
+      return app.intl.validations.requiredField;
     }
     return null;
   }
@@ -483,11 +488,11 @@ class RoutesFormUriValidator {
 
   String? validator(String? value) {
     if (value == null || value.isEmpty) {
-      return app.intl.requiredField;
+      return app.intl.validations.requiredField;
     }
     final uri = Uri.tryParse(value);
     if (!(uri != null && (uri.hasScheme && uri.hasAuthority))) {
-      return app.intl.validUriField;
+      return app.intl.validations.validUriField;
     }
     return null;
   }

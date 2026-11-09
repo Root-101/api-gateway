@@ -13,11 +13,9 @@ class LanguageWidget extends CubitView<LanguageCubit> {
           onSelected: (value) {
             cubit.changeLanguageKey(languageKey: value);
           },
-          itemBuilder:
-              (context) =>
-                  state.allLanguages
-                      .map((e) => PopupMenuItem(value: e.key, child: _build(e)))
-                      .toList(),
+          itemBuilder: (context) => state.allLanguages
+              .map((e) => PopupMenuItem(value: e.key, child: _build(e)))
+              .toList(),
           child: _build(state.current),
         );
       },

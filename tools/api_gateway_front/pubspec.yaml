@@ -37,6 +37,8 @@ dependencies:
   #utils
   logger: 2.8.0
   intl: 0.20.3
+  #texts generated from lib/l10n/*.i18n.yaml (`fvm dart run slang`)
+  slang: 4.19.2
   web: 1.1.2
 
 dev_dependencies:
@@ -67,7 +69,6 @@ flutter_icons:
 
 flutter:
   uses-material-design: true
-  generate: true
 
   assets:
     - assets/

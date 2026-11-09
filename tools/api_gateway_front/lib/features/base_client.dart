@@ -11,16 +11,14 @@ abstract class BaseClient {
   BaseClient(this.dio);
 
   Options options({CredentialsModel? credential}) {
-    final credentials =
-        credential != null
-            ? base64Encode(
-              utf8.encode('${credential.username}:${credential.password}'),
-            )
-            : null;
+    final credentials = credential != null
+        ? base64Encode(
+            utf8.encode('${credential.username}:${credential.password}'),
+          )
+        : null;
     return Options(
       headers: <String, dynamic>{
-        if (credentials != null)
-          'authorization': 'Basic $credentials',
+        if (credentials != null) 'authorization': 'Basic $credentials',
       },
     );
   }

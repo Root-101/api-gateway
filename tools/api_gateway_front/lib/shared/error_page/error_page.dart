@@ -33,7 +33,7 @@ class _ErrorPageState extends State<ErrorPage> {
                   horizontal: app.dimensions.padding.xxl,
                 ),
                 child: Text(
-                  widget.errorMessage ?? app.intl.genericError,
+                  widget.errorMessage ?? app.intl.errors.genericError,
                   style: app.textTheme.titleLarge,
                   textAlign: TextAlign.center,
                 ),
@@ -45,7 +45,7 @@ class _ErrorPageState extends State<ErrorPage> {
                     horizontal: 2 * app.dimensions.padding.xxl,
                   ),
                   child: PrimaryButton.primary(
-                    title: widget.buttonText ?? app.intl.tryAgain,
+                    title: widget.buttonText ?? app.intl.actions.tryAgain,
                     onPressed: widget.onPressed ?? () {},
                   ),
                 ),

@@ -8,13 +8,12 @@ import 'package:flutter_dropzone/flutter_dropzone.dart';
 class RoutesRestoreDialog extends StatefulWidget {
   static void show() {
     DialogTemplate.open(
-      title: app.intl.restore,
+      title: app.intl.actions.restore,
       w: 650,
       h: 400,
       child: BlocProvider(
-        create:
-            (BuildContext context) =>
-                RoutesRestoreCubit(auth: app.di.find(), repo: app.di.find()),
+        create: (BuildContext context) =>
+            RoutesRestoreCubit(auth: app.di.find(), repo: app.di.find()),
         lazy: false,
         child: const RoutesRestoreDialog(),
       ),
@@ -79,10 +78,9 @@ class _RoutesRestoreDialogState extends State<RoutesRestoreDialog> {
                 child: Container(
                   decoration: BoxDecoration(
                     borderRadius: app.dimensions.border.borderRadius.l,
-                    color:
-                        highlighted
-                            ? app.colors.primary.background3.brighten(0.1)
-                            : app.colors.primary.background3,
+                    color: highlighted
+                        ? app.colors.primary.background3.brighten(0.1)
+                        : app.colors.primary.background3,
                   ),
                   child: Stack(
                     children: [
@@ -114,7 +112,7 @@ class _RoutesRestoreDialogState extends State<RoutesRestoreDialog> {
                               SelectionArea(
                                 child: Text(
                                   filename == null
-                                      ? app.intl.dropFileHere
+                                      ? app.intl.restore.dropFileHere
                                       : filename!,
                                   style: app.textTheme.titleLarge,
                                   textAlign: TextAlign.center,
@@ -123,13 +121,15 @@ class _RoutesRestoreDialogState extends State<RoutesRestoreDialog> {
                               if (routeNames != null) ...[
                                 app.dimensions.padding.m.gap(),
                                 Text(
-                                  app.intl.restoreSummary(routeNames!.length),
+                                  app.intl.restore.restoreSummary(
+                                    count: routeNames!.length,
+                                  ),
                                   textAlign: TextAlign.center,
                                 ),
                                 if (duplicatedNames.isNotEmpty)
                                   Text(
-                                    app.intl.restoreDuplicates(
-                                      duplicatedNames.join(', '),
+                                    app.intl.restore.restoreDuplicates(
+                                      names: duplicatedNames.join(', '),
                                     ),
                                     style: TextStyle(
                                       color: app.colors.primary.red,
@@ -152,7 +152,7 @@ class _RoutesRestoreDialogState extends State<RoutesRestoreDialog> {
                                   }
                                 },
                                 icon: app.assets.icons.general.folderOpen,
-                                title: app.intl.selectFile,
+                                title: app.intl.restore.selectFile,
                               ),
                             ],
                           ),
@@ -167,8 +167,9 @@ class _RoutesRestoreDialogState extends State<RoutesRestoreDialog> {
               IgnorePointer(
                 ignoring: routeNames == null || duplicatedNames.isNotEmpty,
                 child: Opacity(
-                  opacity:
-                      routeNames == null || duplicatedNames.isNotEmpty ? 0.4 : 1,
+                  opacity: routeNames == null || duplicatedNames.isNotEmpty
+                      ? 0.4
+                      : 1,
                   child: PrimaryButton.primary(
                     onPressed: () {
                       if (rawFileContent != null) {
@@ -176,7 +177,7 @@ class _RoutesRestoreDialogState extends State<RoutesRestoreDialog> {
                       }
                     },
                     icon: app.assets.icons.actions.upload,
-                    title: app.intl.restore,
+                    title: app.intl.actions.restore,
                   ),
                 ),
               ),
@@ -211,7 +212,7 @@ class _RoutesRestoreDialogState extends State<RoutesRestoreDialog> {
       app.snack.showError(
         message: exc is GlobalException
             ? exc.message
-            : app.intl.errorLoadingFile,
+            : app.intl.restore.errorLoadingFile,
         context: context,
       );
       setState(() {});

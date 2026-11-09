@@ -25,10 +25,9 @@ class ExportDocument {
     String safeFilename =
         filename ?? 'backup-${DateTime.now().toString()}.json';
 
-    final anchor =
-        HTMLAnchorElement()
-          ..href = url
-          ..download = safeFilename;
+    final anchor = HTMLAnchorElement()
+      ..href = url
+      ..download = safeFilename;
 
     anchor.click();
     revokeObjectUrl(url);

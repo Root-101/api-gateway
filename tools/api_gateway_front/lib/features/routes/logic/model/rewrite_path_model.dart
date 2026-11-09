@@ -5,10 +5,12 @@ class RewritePathModel {
   RewritePathModel({required this.replaceFrom, required this.replaceTo});
 
   ///api contract: send both values or no rewrite at all (null), never empty strings
-  static RewritePathModel? fromFields({required String from, required String to}) =>
-      from.isEmpty && to.isEmpty
-          ? null
-          : RewritePathModel(replaceFrom: from, replaceTo: to);
+  static RewritePathModel? fromFields({
+    required String from,
+    required String to,
+  }) => from.isEmpty && to.isEmpty
+      ? null
+      : RewritePathModel(replaceFrom: from, replaceTo: to);
 
   static RewritePathModel? tryFromJson(dynamic json) {
     if (json is! Map<String, dynamic>) return null;
@@ -33,7 +35,9 @@ class RewritePathModel {
         RegExp(r'\$\{(\w+)\}|\$(\d+)'),
         (r) => r[1] != null
             ? (_namedGroup(m, r[1]!) ?? '')
-            : (int.parse(r[2]!) <= m.groupCount ? m[int.parse(r[2]!)] ?? '' : ''),
+            : (int.parse(r[2]!) <= m.groupCount
+                  ? m[int.parse(r[2]!)] ?? ''
+                  : ''),
       ),
     );
   }

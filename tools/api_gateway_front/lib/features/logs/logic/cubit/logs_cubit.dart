@@ -13,7 +13,7 @@ final String noRouteId = 'NO-ROUTE';
 //getter so the name follows the current language
 RouteLogModel get noRoute => RouteLogModel(
   routeId: noRouteId,
-  routeName: app.intl.filterNoRouteName,
+  routeName: app.intl.logFilters.filterNoRouteName,
   routePath: noRouteId,
 );
 
@@ -267,7 +267,6 @@ class LogsCubit extends Cubit<LogsState>
         )
         .toList();
     routes.addAll(tempRoutes);
-
 
     routes.add(adminRoute);
     routes.add(noRoute);

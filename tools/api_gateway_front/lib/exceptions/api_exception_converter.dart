@@ -7,46 +7,44 @@ class ApiExceptionConverter {
       case DioExceptionType.cancel:
         return GlobalException(
           type: GlobalExceptionType.general,
-          message: 'Request to API server was cancelled', //TODO: intl
+          message: app.intl.errors.requestCancelled,
         );
       case DioExceptionType.connectionTimeout:
         return GlobalException(
           type: GlobalExceptionType.general,
-          message:
-              'Connection timeout with API server. Revisa el internet', //TODO: intl
+          message: app.intl.errors.connectionTimeout,
         );
       case DioExceptionType.unknown:
         return GlobalException(
           type: GlobalExceptionType.general,
-          message:
-              'Connection to API server failed due to internet connection', //TODO: intl
+          message: app.intl.errors.noConnection,
         );
       case DioExceptionType.receiveTimeout:
         return GlobalException(
           type: GlobalExceptionType.general,
-          message: 'Receive timeout in connection with API server', //TODO: intl
+          message: app.intl.errors.receiveTimeout,
         );
       case DioExceptionType.sendTimeout:
         return GlobalException(
           type: GlobalExceptionType.general,
-          message: 'Send timeout with server', //TODO: intl
+          message: app.intl.errors.sendTimeout,
         );
       case DioExceptionType.transformTimeout:
         return GlobalException(
           type: GlobalExceptionType.general,
-          message: 'Timeout processing the API server response', //TODO: intl
+          message: app.intl.errors.transformTimeout,
         );
       case DioExceptionType.badCertificate:
         return GlobalException(
           type: GlobalExceptionType.general,
-          message: 'Bad Certificate', //TODO: intl
+          message: app.intl.errors.badCertificate,
         );
       case DioExceptionType.connectionError:
         return GlobalException(
           //the gateway now sends CORS headers on 401/403 (next release after 5.0.1), so a connection error is a real network error
           //(before, 401/403 arrived here and it was mapped to auth, logging the user out on any outage)
           type: GlobalExceptionType.general,
-          message: 'Connection Error', //TODO: intl
+          message: app.intl.errors.connection,
         );
       case DioExceptionType.badResponse:
         return _parseBadResponse(error);
@@ -60,7 +58,7 @@ class ApiExceptionConverter {
     if (status == 422 && data is List) {
       return GlobalException(
         type: GlobalExceptionType.validation,
-        message: 'Validation error', //TODO: intl
+        message: app.intl.errors.validation,
         data: data
             .whereType<Map<String, dynamic>>()
             .map(ValidationError.fromJson)
@@ -69,19 +67,19 @@ class ApiExceptionConverter {
     } else if (status == 401 || status == 403) {
       return GlobalException(
         type: GlobalExceptionType.auth,
-        message: 'Auth error',
+        message: app.intl.errors.auth,
         data: data,
       );
     } else if (status >= 500) {
       return GlobalException(
         type: GlobalExceptionType.general,
-        message: 'Server error',
+        message: app.intl.errors.server,
         data: data,
       );
     } else {
       return GlobalException(
         type: GlobalExceptionType.general,
-        message: _messageFrom(data) ?? 'Error $status',
+        message: _messageFrom(data) ?? app.intl.errors.status(status: status),
         data: data,
       );
     }
