@@ -66,7 +66,6 @@ class LogsCubit extends Cubit<LogsState>
   static const int defaultPageSize = 20;
   static const int exportPageSize = 1000;
 
-  final AuthCubit auth;
   final LogsRepo repo;
   final RoutesRepo routesRepo;
 
@@ -83,7 +82,7 @@ class LogsCubit extends Cubit<LogsState>
   final List<RouteLogModel> routes = [];
   final LogsSearchFilters filters = LogsSearchFilters();
 
-  LogsCubit({required this.auth, required this.repo, required this.routesRepo})
+  LogsCubit({required this.repo, required this.routesRepo})
     : super(const LogsInitialState()) {
     onBus<LanguageChangedState>((event) {
       _updateRoutes();
@@ -135,7 +134,6 @@ class LogsCubit extends Cubit<LogsState>
 
   Future<List<HttpLogModel>> fetchNextPage() async {
     HttpLogSearchModel response = await repo.findAll(
-      credential: auth.current,
       page: currentPage,
       size: defaultPageSize,
       query: filters.query,
@@ -230,7 +228,6 @@ class LogsCubit extends Cubit<LogsState>
 
       currentPage = 0;
       HttpLogSearchModel response = await repo.findAll(
-        credential: auth.current,
         page: currentPage,
         size: defaultPageSize,
         query: filters.query,
@@ -253,9 +250,7 @@ class LogsCubit extends Cubit<LogsState>
   }
 
   Future _updateRoutes() async {
-    List<RouteModel> rawRoutes = await routesRepo.findAll(
-      credential: auth.current,
-    );
+    List<RouteModel> rawRoutes = await routesRepo.findAll();
     routes.clear();
     List<RouteLogModel> tempRoutes = rawRoutes
         .map(
@@ -287,7 +282,6 @@ class LogsCubit extends Cubit<LogsState>
       int totalPages = 1;
       while (page < totalPages) {
         HttpLogSearchModel response = await repo.findAll(
-          credential: auth.current,
           page: page,
           size: exportPageSize,
           query: filters.query,

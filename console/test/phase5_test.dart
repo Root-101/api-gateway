@@ -1,14 +1,6 @@
 import 'package:api_gateway_front/app_exporter.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-class FakeAuth implements AuthCubit {
-  @override
-  CredentialsModel get current => CredentialsModel(token: 't');
-
-  @override
-  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
-}
-
 class FakeRoutesRepo implements RoutesRepo {
   @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
@@ -25,7 +17,6 @@ class FakeLogsRepo implements LogsRepo {
 
   @override
   Future<HttpLogSearchModel> findAll({
-    required CredentialsModel credential,
     required int page,
     int? size,
     int? responseCode,
@@ -69,44 +60,58 @@ HttpLogModel log(String id) => HttpLogModel(
 );
 
 LogsCubit cubitWith(FakeLogsRepo repo) =>
-    LogsCubit(auth: FakeAuth(), repo: repo, routesRepo: FakeRoutesRepo());
+    LogsCubit(repo: repo, routesRepo: FakeRoutesRepo());
 
 void main() {
   group('LogsCubit pagination', () {
     test('hasMorePages follows total_pages, not a short page', () async {
-      final repo = FakeLogsRepo(LogsCubit.defaultPageSize * 2); //exactly 2 full pages
+      final repo = FakeLogsRepo(
+        LogsCubit.defaultPageSize * 2,
+      ); //exactly 2 full pages
       final cubit = cubitWith(repo);
 
       await cubit.applySearch(query: '');
       expect(cubit.hasMorePages, isTrue);
 
       await cubit.fetchNextPage();
-      expect(cubit.hasMorePages, isFalse); //old "length < pageSize" check would ask for an empty 3rd page
+      expect(
+        cubit.hasMorePages,
+        isFalse,
+      ); //old "length < pageSize" check would ask for an empty 3rd page
       expect(repo.requestedPages, [0, 1]);
       expect(cubit.items.length, LogsCubit.defaultPageSize * 2);
     });
 
-    test('a failed page is not skipped: retry asks for the same page', () async {
-      final repo = FakeLogsRepo(LogsCubit.defaultPageSize * 3);
-      final cubit = cubitWith(repo);
-      await cubit.applySearch(query: '');
+    test(
+      'a failed page is not skipped: retry asks for the same page',
+      () async {
+        final repo = FakeLogsRepo(LogsCubit.defaultPageSize * 3);
+        final cubit = cubitWith(repo);
+        await cubit.applySearch(query: '');
 
-      repo.failNext = true;
-      await expectLater(cubit.fetchNextPage(), throwsA(isA<GlobalException>()));
-      await cubit.fetchNextPage();
-      expect(repo.requestedPages, [0, 1]);
-    });
+        repo.failNext = true;
+        await expectLater(
+          cubit.fetchNextPage(),
+          throwsA(isA<GlobalException>()),
+        );
+        await cubit.fetchNextPage();
+        expect(repo.requestedPages, [0, 1]);
+      },
+    );
 
-    test('a new search restarts from page 0 without duplicating items', () async {
-      final repo = FakeLogsRepo(LogsCubit.defaultPageSize * 3);
-      final cubit = cubitWith(repo);
-      await cubit.applySearch(query: '');
-      await cubit.fetchNextPage();
+    test(
+      'a new search restarts from page 0 without duplicating items',
+      () async {
+        final repo = FakeLogsRepo(LogsCubit.defaultPageSize * 3);
+        final cubit = cubitWith(repo);
+        await cubit.applySearch(query: '');
+        await cubit.fetchNextPage();
 
-      await cubit.applySearch(query: 'x');
-      expect(repo.requestedPages.last, 0);
-      expect(cubit.items.length, LogsCubit.defaultPageSize);
-    });
+        await cubit.applySearch(query: 'x');
+        expect(repo.requestedPages.last, 0);
+        expect(cubit.items.length, LogsCubit.defaultPageSize);
+      },
+    );
 
     test('reset clears items, page and filters', () async {
       final repo = FakeLogsRepo(LogsCubit.defaultPageSize * 3);
@@ -134,7 +139,10 @@ void main() {
 
       final dates = repo.requestedDates.last;
       expect(dates.from, DateTime(local.year, local.month, local.day));
-      expect(dates.to, DateTime(local.year, local.month, local.day, 23, 59, 59, 999, 999));
+      expect(
+        dates.to,
+        DateTime(local.year, local.month, local.day, 23, 59, 59, 999, 999),
+      );
       expect(dates.from!.isUtc, isFalse);
     });
 

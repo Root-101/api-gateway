@@ -10,7 +10,6 @@ class RoutesFormScreenNavigator {
       title: app.intl.actions.create,
       child: BlocProvider(
         create: (BuildContext context) => RoutesFormCubit(
-          auth: app.di.find(),
           repo: app.di.find(),
           action: RoutesFormAction.create,
         ),
@@ -34,7 +33,6 @@ class RoutesFormScreenNavigator {
         title: app.intl.actions.edit,
         child: BlocProvider(
           create: (BuildContext context) => RoutesFormCubit(
-            auth: app.di.find(),
             repo: app.di.find(),
             action: RoutesFormAction.edit,
             paramRouteId: state.pathParameters['id'],
@@ -60,7 +58,6 @@ class RoutesFormScreenNavigator {
       title: app.intl.actions.duplicate,
       child: BlocProvider(
         create: (BuildContext context) => RoutesFormCubit(
-          auth: app.di.find(),
           repo: app.di.find(),
           action: RoutesFormAction.duplicate,
           paramRouteId: model.id,
@@ -335,9 +332,8 @@ class _RoutesFormWidgetState extends State<RoutesFormWidget> {
                   errors: _apiErrors,
                   expanded: _advancedExpanded,
                   requiredValidator: validator.required.validator,
-                  onToggle: () => setState(
-                    () => _advancedExpanded = !_advancedExpanded,
-                  ),
+                  onToggle: () =>
+                      setState(() => _advancedExpanded = !_advancedExpanded),
                   onChanged: () => setState(
                     () => _apiErrors.removeWhere(
                       (source, _) => isAdvancedRouteError(source),

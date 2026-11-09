@@ -8,12 +8,10 @@ class LogsClient extends BaseClient {
   LogsClient(super.dio);
 
   Future<HttpLogSearchResponse> findAll({
-    required CredentialsModel credential,
     required HttpLogSearchRequest search,
   }) async {
     Response rawResponse = await dio.post(
       '$baseUrl/search',
-      options: options(credential: credential),
       data: search.toJson(),
     );
 

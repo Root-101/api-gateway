@@ -5,29 +5,17 @@ class AuthCubit extends Cubit<AuthState>
     with GlobalEventBusCommunication<AuthState> {
   final AuthRepo repo;
 
-  CredentialsModel? _currentUser;
+  String? _token;
 
-  bool get isLoggedIn => _currentUser != null;
+  String? get token => _token;
 
-  CredentialsModel get current {
-    if (_currentUser == null) {
-      logout();
-      throw GlobalException(
-        type: GlobalExceptionType.auth,
-        message: app.intl.common.noAccess,
-      );
-    }
-    return _currentUser!;
-  }
+  bool get isLoggedIn => _token != null;
 
-  //401/403 logout is done by the Dio interceptor in FeaturesInit
+  //the header and the 401/403 logout are done by AuthInterceptor
   AuthCubit({required this.repo}) : super(const AuthInitialState());
 
   Future init() async {
-    final token = await repo.loadCache();
-    if (token != null) {
-      _currentUser = CredentialsModel(token: token);
-    }
+    _token = await repo.loadCache();
   }
 
   Future<bool> isGatewayUp() => repo.isGatewayUp();
@@ -45,14 +33,12 @@ class AuthCubit extends Cubit<AuthState>
       emit(AuthLoginInProgressState());
 
       //if this runs without problem, the login is successfully, if something is wrong an exception is thrown
-      final token = await repo.login(
+      //store in memory credential for later use
+      _token = await repo.login(
         username: username,
         password: password,
         rememberMe: rememberMe,
       );
-
-      //store in memory credential for later use
-      _currentUser = CredentialsModel(token: token);
 
       emit(AuthLoginOkState());
     } on Exception catch (exc) {
@@ -63,7 +49,7 @@ class AuthCubit extends Cubit<AuthState>
   Future logout() async {
     emit(AuthLogoutInProgressState());
 
-    _currentUser = null; //first, so parallel 401s don't trigger a second logout
+    _token = null; //first, so parallel 401s don't trigger a second logout
     await repo.logout(); //clear cache
 
     emit(AuthLogoutOkState());

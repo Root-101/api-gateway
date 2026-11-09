@@ -6,7 +6,6 @@ class LogsRepo {
   LogsRepo({required this.client});
 
   Future<HttpLogSearchModel> findAll({
-    required CredentialsModel credential,
     required int page,
     int? size,
     int? responseCode,
@@ -18,7 +17,6 @@ class LogsRepo {
   }) async {
     try {
       HttpLogSearchResponse response = await client.findAll(
-        credential: credential,
         search: HttpLogSearchRequest(
           page: page,
           size: size,

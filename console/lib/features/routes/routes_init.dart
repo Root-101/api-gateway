@@ -8,7 +8,7 @@ class RoutesInit {
     RoutesRepo repo = RoutesRepo(client: client);
     app.di.put(repo);
 
-    RoutesCubit cubit = RoutesCubit(repo: repo, auth: app.di.find());
+    RoutesCubit cubit = RoutesCubit(repo: repo);
     app.di.put(cubit);
   }
 }

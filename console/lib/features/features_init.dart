@@ -16,23 +16,10 @@ class FeaturesInit {
       ..options.receiveTimeout = const Duration(seconds: 10)
       ..httpClientAdapter
       ..options.headers = {Headers.contentTypeHeader: Headers.jsonContentType};
-    //any rejected credential on any admin call ends the session (routes, logs, form, restore, export)
-    dio.interceptors.add(
-      InterceptorsWrapper(
-        onError: (error, handler) {
-          final status = error.response?.statusCode;
-          final auth = app.di.find<AuthCubit>();
-          //not logged in = login screen or cached-login check, which handle their own errors
-          if ((status == 401 || status == 403) && auth.isLoggedIn) {
-            auth.logout();
-          }
-          handler.next(error);
-        },
-      ),
-    );
     app.di.put(dio);
 
     await AuthInit.init();
+    dio.interceptors.add(AuthInterceptor(app.di.find<AuthCubit>()));
     final sessionTimeout = Environment.sessionTimeout;
     if (sessionTimeout != null) {
       InactivityLogout.start(

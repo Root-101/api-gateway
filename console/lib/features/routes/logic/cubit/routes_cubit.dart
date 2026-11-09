@@ -5,11 +5,9 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 class RoutesCubit extends Cubit<RoutesState>
     with GlobalEventBusCommunication<RoutesState> {
-  final AuthCubit auth;
   final RoutesRepo repo;
 
-  RoutesCubit({required this.repo, required this.auth})
-    : super(const RoutesInitialState()) {
+  RoutesCubit({required this.repo}) : super(const RoutesInitialState()) {
     //if a new route is added/edited, update
     onBus<RoutesFormProcessingOKState>((event) {
       search(emitLoading: false);
@@ -37,7 +35,7 @@ class RoutesCubit extends Cubit<RoutesState>
         emit(RoutesSearchingState());
       }
 
-      List<RouteModel> routes = await repo.findAll(credential: auth.current);
+      List<RouteModel> routes = await repo.findAll();
 
       emit(RoutesSearchOkState(routes: routes));
     } on Exception catch (exc) {
@@ -49,7 +47,7 @@ class RoutesCubit extends Cubit<RoutesState>
     try {
       emit(RoutesDeleteProcessingState());
 
-      await repo.delete(credential: auth.current, route: route);
+      await repo.delete(route: route);
 
       emit(RoutesDeleteOkState());
     } on Exception catch (exc) {
@@ -61,7 +59,7 @@ class RoutesCubit extends Cubit<RoutesState>
     try {
       emit(RoutesBackupProcessingState());
 
-      List<RouteModel> routes = await repo.findAll(credential: auth.current);
+      List<RouteModel> routes = await repo.findAll();
       final encoder = const JsonEncoder.withIndent('  ');
       String rawData = encoder.convert(routes.map((e) => e.toJson()).toList());
       ExportDocument.downloadDocument(

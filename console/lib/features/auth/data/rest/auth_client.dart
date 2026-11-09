@@ -13,7 +13,6 @@ class AuthClient extends BaseClient {
   }) async {
     final response = await dio.post(
       '$baseUrl/login', //https://api-gateway.site.com/_admin/auth/login
-      options: options(),
       data: {'username': username, 'password': password},
     );
     final data = response.data;
@@ -27,6 +26,6 @@ class AuthClient extends BaseClient {
 
   ///GET /{ADMIN_PATH}/health: no auth, 200 {"status":"UP"}, 503 when the db is down
   Future health() async {
-    await dio.get('${Environment.baseApiUrl}/health', options: options());
+    await dio.get('${Environment.baseApiUrl}/health');
   }
 }

@@ -8,41 +8,26 @@ class RoutesRepo {
 
   RoutesRepo({required this.client});
 
-  Future<List<RouteModel>> findAll({
-    required CredentialsModel credential,
-  }) async {
+  Future<List<RouteModel>> findAll() async {
     try {
-      List<RouteResponse> response = await client.findAll(
-        credential: credential,
-      );
+      List<RouteResponse> response = await client.findAll();
       return response.toModel(gatewayUrl: gatewayUrl);
     } on Exception catch (exc) {
       throw ExceptionConverter.parse(exc);
     }
   }
 
-  Future create({
-    required CredentialsModel credential,
-    required RouteFormModel model,
-  }) async {
+  Future create({required RouteFormModel model}) async {
     try {
-      await client.create(credential: credential, model: model.toRequest());
+      await client.create(model: model.toRequest());
     } on Exception catch (exc) {
       throw ExceptionConverter.parse(exc);
     }
   }
 
-  Future edit({
-    required CredentialsModel credential,
-    required String routeId,
-    required RouteFormModel model,
-  }) async {
+  Future edit({required String routeId, required RouteFormModel model}) async {
     try {
-      await client.edit(
-        credential: credential,
-        model: model.toRequest(),
-        routeId: routeId,
-      );
+      await client.edit(model: model.toRequest(), routeId: routeId);
     } on Exception catch (exc) {
       throw ExceptionConverter.parse(exc);
     }
@@ -61,40 +46,28 @@ class RoutesRepo {
     }
   }
 
-  Future restore({
-    required CredentialsModel credential,
-    required String rawFileContent,
-  }) async {
+  Future restore({required String rawFileContent}) async {
     List<RouteRequest> createModels = parseBackup(rawFileContent);
     if (createModels.isNotEmpty) {
       try {
-        await client.createAll(credential: credential, models: createModels);
+        await client.createAll(models: createModels);
       } on Exception catch (exc) {
         throw ExceptionConverter.parse(exc);
       }
     }
   }
 
-  Future delete({
-    required CredentialsModel credential,
-    required RouteModel route,
-  }) async {
+  Future delete({required RouteModel route}) async {
     try {
-      await client.delete(credential: credential, routeId: route.id);
+      await client.delete(routeId: route.id);
     } on Exception catch (exc) {
       throw ExceptionConverter.parse(exc);
     }
   }
 
-  Future<RouteModel> details({
-    required CredentialsModel credential,
-    required String routeId,
-  }) async {
+  Future<RouteModel> details({required String routeId}) async {
     try {
-      RouteResponse response = await client.details(
-        credential: credential,
-        routeId: routeId,
-      );
+      RouteResponse response = await client.details(routeId: routeId);
       return response.toModel(gatewayUrl: gatewayUrl);
     } on Exception catch (exc) {
       throw ExceptionConverter.parse(exc);

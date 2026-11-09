@@ -18,6 +18,8 @@
           status on login. The password is no longer printed in the logs.
         * **Auth** :lock: : Login now uses the gateway token (`Authorization: Bearer`). `Remember me` stores the
           token instead of the password, and a password stored by an older version is removed on start.
+        * **Auth** :lock: : A Dio interceptor adds the `Authorization` header, so clients, repositories and cubits
+          no longer receive the credential. No change in behaviour.
         * **Routes** :twisted_rightwards_arrows: : `GET /routes/{id}` is parsed with the same shape as the list.
         * **Routes** :twisted_rightwards_arrows: : New `Advanced` section in the route form to set `order`,
           `methods`, `hosts`, `headers` and `filters`. Editing, duplicating, backup and restore keep them.

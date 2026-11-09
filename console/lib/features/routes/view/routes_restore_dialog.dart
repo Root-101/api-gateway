@@ -13,7 +13,7 @@ class RoutesRestoreDialog extends StatefulWidget {
       h: 400,
       child: BlocProvider(
         create: (BuildContext context) =>
-            RoutesRestoreCubit(auth: app.di.find(), repo: app.di.find()),
+            RoutesRestoreCubit(repo: app.di.find()),
         lazy: false,
         child: const RoutesRestoreDialog(),
       ),

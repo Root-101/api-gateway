@@ -7,13 +7,8 @@ class RoutesClient extends BaseClient {
 
   RoutesClient(super.dio);
 
-  Future<List<RouteResponse>> findAll({
-    required CredentialsModel credential,
-  }) async {
-    Response rawResponse = await dio.get(
-      baseUrl,
-      options: options(credential: credential),
-    );
+  Future<List<RouteResponse>> findAll() async {
+    Response rawResponse = await dio.get(baseUrl);
 
     return rawResponse.data!
         .map((dynamic i) => RouteResponse.fromJson(i as Map<String, dynamic>))
@@ -21,58 +16,27 @@ class RoutesClient extends BaseClient {
         .cast<RouteResponse>();
   }
 
-  Future create({
-    required CredentialsModel credential,
-    required RouteRequest model,
-  }) async {
-    await dio.post(
-      baseUrl,
-      options: options(credential: credential),
-      data: model.toJson(),
-    );
+  Future create({required RouteRequest model}) async {
+    await dio.post(baseUrl, data: model.toJson());
   }
 
-  Future createAll({
-    required CredentialsModel credential,
-    required List<RouteRequest> models,
-  }) async {
+  Future createAll({required List<RouteRequest> models}) async {
     await dio.post(
       '$baseUrl/multi-add',
-      options: options(credential: credential),
       data: models.map((e) => e.toJson()).toList(),
     );
   }
 
-  Future edit({
-    required CredentialsModel credential,
-    required String routeId,
-    required RouteRequest model,
-  }) async {
-    await dio.put(
-      '$baseUrl/$routeId',
-      options: options(credential: credential),
-      data: model.toJson(),
-    );
+  Future edit({required String routeId, required RouteRequest model}) async {
+    await dio.put('$baseUrl/$routeId', data: model.toJson());
   }
 
-  Future delete({
-    required CredentialsModel credential,
-    required String routeId,
-  }) async {
-    await dio.delete(
-      '$baseUrl/$routeId',
-      options: options(credential: credential),
-    );
+  Future delete({required String routeId}) async {
+    await dio.delete('$baseUrl/$routeId');
   }
 
-  Future details({
-    required CredentialsModel credential,
-    required String routeId,
-  }) async {
-    Response rawResponse = await dio.get(
-      '$baseUrl/$routeId',
-      options: options(credential: credential),
-    );
+  Future details({required String routeId}) async {
+    Response rawResponse = await dio.get('$baseUrl/$routeId');
     return RouteResponse.fromJson(rawResponse.data! as Map<String, dynamic>);
   }
 }

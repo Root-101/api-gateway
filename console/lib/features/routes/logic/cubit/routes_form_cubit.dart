@@ -5,7 +5,6 @@ enum RoutesFormAction { create, edit, duplicate }
 
 class RoutesFormCubit extends Cubit<RoutesFormState>
     with GlobalEventBusCommunication<RoutesFormState> {
-  final AuthCubit auth;
   final RoutesRepo repo;
 
   final RoutesFormAction action;
@@ -19,7 +18,6 @@ class RoutesFormCubit extends Cubit<RoutesFormState>
 
   RoutesFormCubit({
     required this.action,
-    required this.auth,
     required this.repo,
     this.paramRouteId,
     this.paramRouteModel,
@@ -45,10 +43,7 @@ class RoutesFormCubit extends Cubit<RoutesFormState>
         routeId = paramRouteId!;
 
         if (paramRouteModel == null || paramRouteModel!.id != routeId) {
-          routeModel = await repo.details(
-            credential: auth.current,
-            routeId: routeId,
-          );
+          routeModel = await repo.details(routeId: routeId);
         } else {
           routeModel = paramRouteModel!;
         }
@@ -80,7 +75,7 @@ class RoutesFormCubit extends Cubit<RoutesFormState>
   Future create({required RouteFormModel model}) async {
     emit(RoutesFormProcessInProgressState());
     try {
-      await repo.create(credential: auth.current, model: model);
+      await repo.create(model: model);
 
       emit(RoutesFormProcessingOKState());
     } on GlobalException catch (global) {
@@ -102,7 +97,7 @@ class RoutesFormCubit extends Cubit<RoutesFormState>
   Future edit({required RouteFormModel model}) async {
     emit(RoutesFormProcessInProgressState());
     try {
-      await repo.edit(credential: auth.current, routeId: routeId, model: model);
+      await repo.edit(routeId: routeId, model: model);
 
       emit(RoutesFormProcessingOKState());
     } on GlobalException catch (global) {

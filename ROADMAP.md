@@ -11,7 +11,6 @@ Rules:
 
 ## Console
 
-- [ ] **Dio interceptor for the auth header.** Each client receives `credential` and builds the `Bearer` header (`console/lib/features/base_client.dart`). An interceptor simplifies this and removes `auth.current` throwing from a getter (`console/lib/features/auth/logic/cubit/auth_cubit.dart:12`). It refactors every client and repo signature with no behaviour change.
 - [ ] **Full block below 800×400** (`console/lib/main.dart:93`). Needs a responsive layout for the rail, logs table and form; not a small change. At least allow login and list on medium screens.
 - [ ] ⚠️ The tests have never been executed: on the dev machine `flutter test --platform chrome` fails even for a trivial test ("Connection closed before test suite loaded", Chrome and Edge). First real run will be the CI.
 

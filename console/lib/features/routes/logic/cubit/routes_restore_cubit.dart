@@ -3,20 +3,16 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 class RoutesRestoreCubit extends Cubit<RoutesRestoreState>
     with GlobalEventBusCommunication<RoutesRestoreState> {
-  final AuthCubit auth;
   final RoutesRepo repo;
 
-  RoutesRestoreCubit({required this.repo, required this.auth})
+  RoutesRestoreCubit({required this.repo})
     : super(const RoutesRestoreInitialState());
 
   Future restore({required String rawFileContent}) async {
     try {
       emit(RoutesRestoreProcessingState());
 
-      await repo.restore(
-        credential: auth.current,
-        rawFileContent: rawFileContent,
-      );
+      await repo.restore(rawFileContent: rawFileContent);
 
       emit(RoutesRestoreOkState());
     } on Exception catch (exc) {
