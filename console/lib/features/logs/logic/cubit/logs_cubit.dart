@@ -17,9 +17,13 @@ RouteLogModel get noRoute => RouteLogModel(
   routePath: noRouteId,
 );
 
+enum LogFilterKind { status, method, route, date }
+
 class LogsSearchFilters {
   String? query;
-  int? responseCode;
+
+  ///status prefix: `4` = 4xx, `478` = that exact code
+  String? responseCode;
   String? httpMethod;
 
   ({DateTime? fromDate, DateTime? toDate})? date;
@@ -49,12 +53,17 @@ class LogsSearchFilters {
 
   bool get hasRoute => route != null;
 
+  bool get isEmpty => (query ?? '').isEmpty && filterCount == 0;
+
   Map<String, dynamic> toJson() {
     return {
-      'query': query,
+      'query': query ?? '',
       'responseCode': responseCode,
       'httpMethod': httpMethod,
-      'date': {'fromDate': date?.fromDate, 'toDate': date?.toDate},
+      'date': {
+        'fromDate': date?.fromDate?.toUtc().toIso8601String(),
+        'toDate': date?.toDate?.toUtc().toIso8601String(),
+      },
       'route': route?.toJson(),
     };
   }
@@ -63,19 +72,27 @@ class LogsSearchFilters {
 class LogsCubit extends Cubit<LogsState>
     with GlobalEventBusCommunication<LogsState> {
   static const int defaultPage = 0;
-  static const int defaultPageSize = 20;
+  static const int defaultPageSize = 10;
   static const int exportPageSize = 1000;
 
   final LogsRepo repo;
   final RoutesRepo routesRepo;
 
-  int currentPage = 0;
-
-  //from the last response's total_pages, not from "page came back short"
-  bool hasMorePages = true;
+  int currentPage = defaultPage;
+  int pageSize = defaultPageSize;
+  int totalPages = 0;
 
   //total_elements of the last search (with the active filters)
   int totalElements = 0;
+
+  //total_elements of the last search without any filter
+  int capturedTotal = 0;
+
+  ///false until the first page arrives: first load shows the skeleton
+  bool loaded = false;
+
+  //only the newest request may publish its result: a slow old search must not overwrite it
+  int _lastSearch = 0;
 
   final List<HttpLogModel> items = [];
 
@@ -104,18 +121,26 @@ class LogsCubit extends Cubit<LogsState>
 
   //called on logout: nothing from the previous session must survive
   void reset() {
+    _lastSearch++;
     items.clear();
     routes.clear();
+    loaded = false;
     currentPage = defaultPage;
-    hasMorePages = true;
+    pageSize = defaultPageSize;
+    totalPages = 0;
     totalElements = 0;
+    capturedTotal = 0;
+    _clearFilters();
+    emit(const LogsInitialState());
+  }
+
+  void _clearFilters() {
     filters
       ..query = null
       ..responseCode = null
       ..httpMethod = null
       ..date = null
       ..route = null;
-    emit(const LogsInitialState());
   }
 
   Future<void> init() async {
@@ -128,104 +153,18 @@ class LogsCubit extends Cubit<LogsState>
       return;
     }
 
-    //always restart from page 0 with the active filters, so "try again" doesn't duplicate items
-    return _executeSearchFilters();
+    return search();
   }
 
-  Future<List<HttpLogModel>> fetchNextPage() async {
-    HttpLogSearchModel response = await repo.findAll(
-      page: currentPage,
-      size: defaultPageSize,
-      query: filters.query,
-      method: filters.httpMethod,
-      responseCode: filters.responseCode,
-      fromDate: filters.date?.fromDate,
-      toDate: filters.date?.toDate,
-      routeId: filters.route?.routeId,
-    );
-    currentPage++;
-    hasMorePages = currentPage < response.totalPages;
-
-    items.addAll(response.pageContent);
-
-    return response.pageContent;
-  }
-
-  ///same search and filters from page 0 (logs are written in ~1 s batches, so the newest may take a moment)
-  Future refresh() => _executeSearchFilters();
-
-  Future applySearch({required String query}) async {
-    filters.query = query;
-    return _executeSearchFilters();
-  }
-
-  Future applyFilter({
-    int? responseCode,
-    String? httpMethod,
-    DateTime? requestedAt,
-    DateTime? fromDate,
-    DateTime? toDate,
-    RouteLogModel? route,
-  }) async {
-    filters.responseCode = responseCode;
-
-    filters.httpMethod = httpMethod;
-
-    filters.date = _dayRange(requestedAt, fromDate, toDate);
-
-    filters.route = route;
-
-    return _executeSearchFilters();
-  }
-
-  ({DateTime? fromDate, DateTime? toDate}) _dayRange(
-    DateTime? requestedAt,
-    DateTime? fromDate,
-    DateTime? toDate,
-  ) {
-    DateTime? from = fromDate ?? requestedAt;
-    DateTime? to = toDate ?? requestedAt;
-    //swap before widening to whole days, otherwise the range loses both edge days
-    if (from != null && to != null && from.isAfter(to)) {
-      (from, to) = (to, from);
-    }
-    return (fromDate: from?.startOfDay, toDate: to?.endOfDay);
-  }
-
-  Future updateFilter({
-    int? responseCode,
-    String? httpMethod,
-    DateTime? requestedAt,
-    DateTime? fromDate,
-    DateTime? toDate,
-    RouteLogModel? route,
-  }) async {
-    if (responseCode != null) {
-      filters.responseCode = responseCode;
-    }
-    if (httpMethod != null) {
-      filters.httpMethod = httpMethod;
-    }
-
-    if (requestedAt != null || fromDate != null || toDate != null) {
-      filters.date = _dayRange(requestedAt, fromDate, toDate);
-    }
-    if (route != null) {
-      filters.route = route;
-    }
-
-    return _executeSearchFilters();
-  }
-
-  Future _executeSearchFilters() async {
+  ///same page, search and filters
+  Future<void> search() async {
+    final id = ++_lastSearch;
     try {
       emit(LogsFilteringState());
-      items.clear();
 
-      currentPage = 0;
       HttpLogSearchModel response = await repo.findAll(
         page: currentPage,
-        size: defaultPageSize,
+        size: pageSize,
         query: filters.query,
         method: filters.httpMethod,
         responseCode: filters.responseCode,
@@ -233,16 +172,93 @@ class LogsCubit extends Cubit<LogsState>
         toDate: filters.date?.toDate,
         routeId: filters.route?.routeId,
       );
-      currentPage++;
-      hasMorePages = currentPage < response.totalPages;
-      totalElements = response.totalElements;
+      if (id != _lastSearch) return;
 
-      items.addAll(response.pageContent);
+      totalPages = response.totalPages;
+      totalElements = response.totalElements;
+      if (filters.isEmpty) capturedTotal = totalElements;
+      items
+        ..clear()
+        ..addAll(response.pageContent);
+      loaded = true;
 
       emit(LogsSearchOkState(items: items, filters: filters, routes: routes));
     } on Exception catch (exc) {
+      if (id != _lastSearch) return;
       emit(LogsSearchErrorState(ExceptionConverter.parse(exc)));
     }
+  }
+
+  Future<void> _searchFirstPage() {
+    currentPage = defaultPage;
+    return search();
+  }
+
+  ///back to the newest logs (written in ~1 s batches, so the very last may take a moment);
+  ///returns how many arrived since the last search
+  Future<int> refresh() async {
+    final before = totalElements;
+    await _searchFirstPage();
+    return totalElements - before;
+  }
+
+  Future<void> goToPage(int page) {
+    currentPage = page;
+    return search();
+  }
+
+  Future<void> setPageSize(int size) {
+    pageSize = size;
+    return _searchFirstPage();
+  }
+
+  Future<void> applySearch({required String query}) {
+    filters.query = query;
+    return _searchFirstPage();
+  }
+
+  Future<void> applyFilter({
+    String? responseCode,
+    String? httpMethod,
+    DateTime? fromDate,
+    DateTime? toDate,
+    RouteLogModel? route,
+  }) {
+    filters.responseCode = responseCode;
+    filters.httpMethod = httpMethod;
+    filters.date = _dayRange(fromDate, toDate);
+    filters.route = route;
+    return _searchFirstPage();
+  }
+
+  Future<void> removeFilter(LogFilterKind kind) {
+    switch (kind) {
+      case LogFilterKind.status:
+        filters.responseCode = null;
+      case LogFilterKind.method:
+        filters.httpMethod = null;
+      case LogFilterKind.route:
+        filters.route = null;
+      case LogFilterKind.date:
+        filters.date = null;
+    }
+    return _searchFirstPage();
+  }
+
+  Future<void> clearSearchAndFilters() {
+    _clearFilters();
+    return _searchFirstPage();
+  }
+
+  ({DateTime? fromDate, DateTime? toDate}) _dayRange(
+    DateTime? from,
+    DateTime? to,
+  ) {
+    //swap before widening to whole days, otherwise the range loses both edge days
+    if (from != null && to != null && from.isAfter(to)) {
+      (from, to) = (to, from);
+    }
+    return (fromDate: from?.startOfDay, toDate: to?.endOfDay);
   }
 
   Future _updateRoutes() async {
@@ -304,12 +320,13 @@ class LogsCubit extends Cubit<LogsState>
           pageContent: all,
         ).toJson(),
       });
+      final stamp = app.dateFormatter.fileStamp.format(DateTime.now());
       ExportDocument.downloadDocument(
         rawData,
-        filename: 'logs-export-${DateTime.now().toString()}.json',
+        filename: 'logs-export-$stamp.json',
       );
 
-      emit(LogsBackupOkState());
+      emit(LogsBackupOkState(all.length));
     } on Exception catch (exc) {
       emit(LogsBackupErrorState(ExceptionConverter.parse(exc)));
     }
@@ -352,8 +369,8 @@ class LogsSearchErrorState extends LogsSearchState {
   LogsSearchErrorState(this.exception);
 }
 
-//not a LogsSearchState: the screen keeps the current table and only shows the loading overlay
-class LogsFilteringState extends LogsState {
+//the screen keeps the current table, dimmed, under the loading bar
+class LogsFilteringState extends LogsSearchState {
   LogsFilteringState();
 }
 
@@ -367,7 +384,9 @@ class LogsBackupProcessingState extends LogsBackupState {
 }
 
 class LogsBackupOkState extends LogsBackupState {
-  LogsBackupOkState();
+  final int count;
+
+  LogsBackupOkState(this.count);
 }
 
 class LogsBackupErrorState extends LogsBackupState {

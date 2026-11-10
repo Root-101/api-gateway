@@ -1,6 +1,20 @@
 * 6.x:
     * 6.0.0 (in progress):
         * **DATE** :date: : not released yet (started 2026-11-02).
+        * **Redesign** :art: : New visual identity and rebuilt screens: login, side menu with notch, route cards,
+          route form with live preview, logs table and filter dialog. New tokens, line icons and DM Mono font.
+        * **Routes** :twisted_rightwards_arrows: : Restore has two steps and now replaces every route atomically
+          (`PUT /routes`, needs the gateway `6.0.0`). Duplicate opens a pre-filled form named `<name>-copy`.
+          The form validates a unique name, a path starting with `/` and an http(s) URL on save.
+        * **Logs** :memo: : Numbered pagination (10, 25 or 50 rows) replaces the infinite scroll. Search is automatic
+          with a 400 ms debounce. Status filter by family (`2xx`...) or exact code, and a date range calendar.
+          Filters are shown as chips in the search box. Fixed the export failing with a date filter.
+        * **Auth** :lock: : An expired session asks for the password in a dialog over the current screen instead of
+          logging out.
+        * **States** :traffic_light: : Added first-load skeletons, toasts, a 404 page inside the app and an offline
+          banner that retries every 10 s. Errors and warnings are now printed in the browser console of release
+          builds (the logger was silent there).
+        * **Dependencies** :package: : Removed `syncfusion_flutter_datagrid` and `top_snackbar_flutter`.
         * **Version** :bookmark: : The console now shares the version of the API Gateway, so both projects are
           released with the same number. It jumps from `1.1.1` to `6.0.0` for that reason.
         * **Deploy** :warning: : Deploy together with the gateway `6.0.0`: with an older gateway a `401`

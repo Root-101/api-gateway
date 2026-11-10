@@ -8,7 +8,7 @@ class LogsRepo {
   Future<HttpLogSearchModel> findAll({
     required int page,
     int? size,
-    int? responseCode,
+    String? responseCode,
     String? method,
     String? query,
     String? routeId,

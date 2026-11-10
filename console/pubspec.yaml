@@ -29,9 +29,7 @@ dependencies:
   gap: 3.1.0    #sizebox with auto with and height in columns and rows
   loader_overlay: 5.0.0   #loading
   flutter_svg: 2.3.2    #to show icons in svg format
-  top_snackbar_flutter: 3.5.0     #snackbars
   flutter_dropzone: 4.2.1       #for drop files in restore routes
-  syncfusion_flutter_datagrid: 35.1.43       #Logs table
   flutter_secure_storage: 11.2.0       #for the remember-me in login
 
   #utils
@@ -56,7 +54,7 @@ dev_dependencies:
 
 #configuration of splash screen, if something change, run: `fvm flutter pub run flutter_native_splash:create`
 flutter_native_splash:
-  color: "#ffffff"
+  color: "#121019"
   web: true
 
 #configuration of flutter_icons, if something change, run: `fvm flutter pub run flutter_launcher_icons`
@@ -64,8 +62,8 @@ flutter_icons:
   web:
     generate: true
     image_path: "assets/app/app_icon.png"
-    background_color: "#00000000"
-    theme_color: "#00000000"
+    background_color: "#121019"
+    theme_color: "#121019"
 
 flutter:
   uses-material-design: true
@@ -73,11 +71,13 @@ flutter:
   assets:
     - assets/
     - assets/app/
-    - assets/icons/
-    - assets/icons/actions/
-    - assets/icons/general/
-    - assets/icons/languages/
   fonts:
+    - family: DMMono
+      fonts:
+        - asset: assets/fonts/DMMono/DMMono-Regular.ttf
+          weight: 400
+        - asset: assets/fonts/DMMono/DMMono-Medium.ttf
+          weight: 500
     - family: DMSans
       fonts:
         - asset: assets/fonts/DMSans/DMSans-Thin.ttf

@@ -6,46 +6,74 @@ class SplashScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = app.colors;
+    //no navigator or intl yet: plain English text
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       theme: ThemeConfig.theme,
-      builder: (context, child) => Scaffold(
-        body: SizedBox.expand(
-          child: Stack(
-            children: [
-              Positioned(
-                left: 0,
-                right: 0,
-                bottom: 0,
-                top: 0,
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.center,
+      home: Scaffold(
+        body: GridBackground(
+          child: SizedBox.expand(
+            child: Stack(
+              alignment: Alignment.center,
+              children: [
+                Column(
+                  mainAxisSize: MainAxisSize.min,
                   children: [
-                    app.assets.icons.gateway.build(
-                      color: app.colors.neutral.white,
-                      size: 148,
+                    const AppLogo(width: 120),
+                    const SizedBox(height: 28),
+                    const AppWordmark(size: 52, letterSpacing: -2),
+                    const SizedBox(height: 12),
+                    Text.rich(
+                      TextSpan(
+                        text: 'One route to ',
+                        children: [
+                          TextSpan(
+                            text: 'rule them all',
+                            style: TextStyle(color: c.lilac),
+                          ),
+                        ],
+                      ),
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w500,
+                        color: c.lilacText,
+                      ),
                     ),
-                    app.dimensions.padding.xxl.gap(),
+                    const SizedBox(height: 36),
+                    SizedBox(
+                      width: 220,
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(2),
+                        child: LinearProgressIndicator(
+                          minHeight: 4,
+                          color: c.lilac,
+                          backgroundColor: c.brandBorder,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
                     Text(
-                      'Api-Gateway',
-                      style: TextTheme.of(context).headlineLarge,
+                      'Connecting to the gateway…',
+                      style: TextStyle(fontSize: 14, color: c.textTertiary),
                     ),
                   ],
                 ),
-              ),
-              Positioned(
-                left: 0,
-                right: 0,
-                bottom: 20,
-                child: Center(
-                  child: Text(
-                    'With ♥ from Maple',
-                    style: TextTheme.of(context).titleSmall,
+                Positioned(
+                  bottom: 24,
+                  child: FutureBuilder<String?>(
+                    future: appVersion,
+                    builder: (context, snapshot) => Text(
+                      snapshot.data == null ? '' : 'v${snapshot.data}',
+                      style: monoStyle(
+                        size: 12,
+                        color: const Color(0xff6f6c7b),
+                      ),
+                    ),
                   ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),

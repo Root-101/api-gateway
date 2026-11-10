@@ -22,7 +22,9 @@ class LogsClient extends BaseClient {
 class HttpLogSearchRequest {
   final int page;
   final int? size;
-  final int? responseCode;
+
+  ///a status prefix: `4` = 4xx, `478` = that exact code
+  final String? responseCode;
   final String? method;
   final String? query;
   final String? routeId;

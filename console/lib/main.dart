@@ -108,6 +108,7 @@ class App extends StatelessWidget {
               theme: ThemeConfig.theme,
               locale: locale,
               routerConfig: RouteConfig.router,
+              builder: (context, child) => ToastHost(child: child!),
               localizationsDelegates: appLocalizationsDelegates,
               supportedLocales: appSupportedLocales,
             );
@@ -140,7 +141,8 @@ class AppGlobal {
     return context != null ? context.intl : messagesOf(const Locale('en'));
   }
 
-  Logger logger = Logger();
+  //the default filter is silent in release builds, where errors must still reach the console
+  Logger logger = Logger(filter: ProductionFilter(), level: Level.warning);
 
   LoadingOverlay loading = LoadingOverlay();
 

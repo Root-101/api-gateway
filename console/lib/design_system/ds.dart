@@ -1,13 +1,6 @@
 export 'assets/app_assets.dart';
 export 'assets/app_icons.dart';
-export 'buttons/primary_button.dart';
 export 'colors/app_colors.dart';
-export 'colors/darken_extension.dart';
-export 'colors/theme_adapter.dart';
-export 'customs/custom_appbar.dart';
-export 'customs/grid_dot_painter.dart';
+export 'components/app_components.dart';
 export 'dimensions.dart';
 export 'templates/dialog_template.dart';
-export 'templates/form_component_template.dart';
-export 'text_input/em_text_input.dart';
-export 'text_input/em_text_search_field.dart';

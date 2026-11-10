@@ -14,7 +14,7 @@ class RoutesRestoreCubit extends Cubit<RoutesRestoreState>
 
       await repo.restore(rawFileContent: rawFileContent);
 
-      emit(RoutesRestoreOkState());
+      emit(RoutesRestoreOkState(repo.parseBackup(rawFileContent).length));
     } on Exception catch (exc) {
       emit(RoutesRestoreErrorState(ExceptionConverter.parse(exc)));
     }
@@ -34,7 +34,9 @@ class RoutesRestoreProcessingState extends RoutesRestoreState {
 }
 
 class RoutesRestoreOkState extends RoutesRestoreState {
-  RoutesRestoreOkState();
+  final int count;
+
+  RoutesRestoreOkState(this.count);
 }
 
 class RoutesRestoreErrorState extends RoutesRestoreState {

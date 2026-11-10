@@ -6,16 +6,25 @@ class AuthCubit extends Cubit<AuthState>
   final AuthRepo repo;
 
   String? _token;
+  String? _username;
+  bool _rememberMe = false;
+  bool _sessionExpired = false;
 
   String? get token => _token;
 
   bool get isLoggedIn => _token != null;
+
+  ///only known after a login in this tab: a remembered token doesn't say who it belongs to
+  String? get username => _username;
+
+  bool get sessionExpired => _sessionExpired;
 
   //the header and the 401/403 logout are done by AuthInterceptor
   AuthCubit({required this.repo}) : super(const AuthInitialState());
 
   Future init() async {
     _token = await repo.loadCache();
+    _rememberMe = _token != null;
   }
 
   Future<bool> isGatewayUp() => repo.isGatewayUp();
@@ -39,6 +48,9 @@ class AuthCubit extends Cubit<AuthState>
         password: password,
         rememberMe: rememberMe,
       );
+      _username = username;
+      _rememberMe = rememberMe;
+      _sessionExpired = false;
 
       emit(AuthLoginOkState());
     } on Exception catch (exc) {
@@ -46,10 +58,41 @@ class AuthCubit extends Cubit<AuthState>
     }
   }
 
+  ///the token stopped being valid: keep the user on the screen and ask for the password again
+  void expireSession() {
+    if (_token == null || _sessionExpired) return; //parallel 401s ask only once
+    _sessionExpired = true;
+    emit(AuthSessionExpiredState());
+  }
+
+  Future reauthenticate({
+    required String username,
+    required String password,
+  }) async {
+    try {
+      emit(AuthReauthInProgressState());
+
+      _token = await repo.login(
+        username: username,
+        password: password,
+        rememberMe: _rememberMe,
+      );
+      _username = username;
+      _sessionExpired = false;
+
+      emit(AuthReauthOkState());
+    } on Exception catch (exc) {
+      emit(AuthReauthErrorState(ExceptionConverter.parse(exc)));
+    }
+  }
+
   Future logout() async {
     emit(AuthLogoutInProgressState());
 
     _token = null; //first, so parallel 401s don't trigger a second logout
+    _username = null;
+    _rememberMe = false;
+    _sessionExpired = false;
     await repo.logout(); //clear cache
 
     emit(AuthLogoutOkState());
@@ -82,6 +125,25 @@ class AuthLoginErrorState extends AuthLoginState {
   GlobalException exception;
 
   AuthLoginErrorState(this.exception);
+}
+
+//------------------------- SESSION -------------------------\\
+class AuthSessionExpiredState extends AuthState {
+  AuthSessionExpiredState();
+}
+
+class AuthReauthInProgressState extends AuthState {
+  AuthReauthInProgressState();
+}
+
+class AuthReauthOkState extends AuthState {
+  AuthReauthOkState();
+}
+
+class AuthReauthErrorState extends AuthState {
+  GlobalException exception;
+
+  AuthReauthErrorState(this.exception);
 }
 
 //------------------------- LOGOUT -------------------------\\

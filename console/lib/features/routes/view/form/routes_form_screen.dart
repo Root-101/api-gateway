@@ -4,18 +4,23 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 class RoutesFormScreenNavigator {
+  Widget _dialog(
+    RoutesFormAction action, {
+    String? routeId,
+    RouteModel? model,
+  }) => BlocProvider(
+    create: (BuildContext context) => RoutesFormCubit(
+      repo: app.di.find(),
+      action: action,
+      paramRouteId: routeId,
+      paramRouteModel: model,
+    ),
+    lazy: false,
+    child: const RoutesFormScreen(),
+  );
+
   void create() {
-    DialogTemplate.open(
-      title: app.intl.actions.create,
-      child: BlocProvider(
-        create: (BuildContext context) => RoutesFormCubit(
-          repo: app.di.find(),
-          action: RoutesFormAction.create,
-        ),
-        lazy: false,
-        child: const RoutesFormScreen(),
-      ),
-    );
+    app.dialog.open(dialog: _dialog(RoutesFormAction.create));
   }
 
   String get editName => 'routeEdit';
@@ -28,18 +33,10 @@ class RoutesFormScreenNavigator {
     final model = state.extra is RouteModel ? state.extra as RouteModel : null;
     return DialogPage(
       key: state.pageKey,
-      dialog: DialogTemplate(
-        title: app.intl.actions.edit,
-        child: BlocProvider(
-          create: (BuildContext context) => RoutesFormCubit(
-            repo: app.di.find(),
-            action: RoutesFormAction.edit,
-            paramRouteId: state.pathParameters['id'],
-            paramRouteModel: model,
-          ),
-          lazy: false,
-          child: const RoutesFormScreen(),
-        ),
+      dialog: _dialog(
+        RoutesFormAction.edit,
+        routeId: state.pathParameters['id'],
+        model: model,
       ),
     );
   }
@@ -53,17 +50,11 @@ class RoutesFormScreenNavigator {
   }
 
   void duplicate({required RouteModel model}) {
-    DialogTemplate.open(
-      title: app.intl.actions.duplicate,
-      child: BlocProvider(
-        create: (BuildContext context) => RoutesFormCubit(
-          repo: app.di.find(),
-          action: RoutesFormAction.duplicate,
-          paramRouteId: model.id,
-          paramRouteModel: model,
-        ),
-        lazy: false,
-        child: const RoutesFormScreen(),
+    app.dialog.open(
+      dialog: _dialog(
+        RoutesFormAction.duplicate,
+        routeId: model.id,
+        model: model,
       ),
     );
   }
@@ -88,30 +79,33 @@ class _RoutesFormScreenState extends State<RoutesFormScreen> {
     cubit = context.read<RoutesFormCubit>();
   }
 
+  void _onState(BuildContext context, RoutesFormState state) {
+    final intl = context.intl;
+    if (state is RoutesFormProcessInProgressState) {
+      app.loading.show();
+    } else if (state is RoutesFormProcessingErrorState) {
+      app.loading.hide();
+      app.snack.showError(message: state.exception.message);
+    } else if (state is RoutesFormValidationErrorState) {
+      app.loading.hide();
+    } else if (state is RoutesFormProcessingOKState) {
+      app.loading.hide();
+      app.snack.showSuccess(
+        message: state.created
+            ? intl.routes.created(name: state.name)
+            : intl.routes.updated(name: state.name),
+      );
+      Navigator.of(context).pop();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return BlocConsumer<RoutesFormCubit, RoutesFormState>(
-      listener: (context, state) {
-        if (state is RoutesFormProcessInProgressState) {
-          app.loading.show();
-        } else if (state is RoutesFormProcessingErrorState) {
-          app.loading.hide();
-          app.snack.showError(
-            message: state.exception.message,
-            context: context,
-          );
-        } else if (state is RoutesFormValidationErrorState) {
-          app.loading.hide();
-        } else if (state is RoutesFormProcessingOKState) {
-          app.loading.hide();
-          app.navigator.pop();
-        }
-      },
+      listener: _onState,
       buildWhen: (previous, current) => current is RoutesFormLoadingState,
       builder: (context, state) {
-        if (state is RoutesFormLoadingInProgressState) {
-          return const LoadingPage();
-        } else if (state is RoutesFormLoadingSuccessState) {
+        if (state is RoutesFormLoadingSuccessState) {
           return RoutesFormWidget(
             failValidations: (state is RoutesFormValidationErrorState)
                 ? state.failValidations
@@ -119,32 +113,34 @@ class _RoutesFormScreenState extends State<RoutesFormScreen> {
             action: state.action,
             route: state.routeModel,
             gatewayUrl: state.gatewayUrl,
-            onCreate: (create) {
-              cubit.create(model: create);
-            },
-            onEdit: (edit) {
-              cubit.edit(model: edit);
-            },
-          );
-        } else if (state is RoutesFormLoadingErrorState) {
-          return ErrorPage(
-            errorMessage: state.text,
-            buttonText: app.intl.actions.back,
-            onPressed: () {
-              app.navigator.pop();
-            },
-          );
-        } else {
-          return ErrorPage(
-            buttonText: app.intl.actions.back,
-            onPressed: () {
-              app.navigator.pop();
-            },
+            onSave: (model) => state.action == RoutesFormAction.edit
+                ? cubit.edit(model: model)
+                : cubit.create(model: model),
           );
         }
+        return DialogTemplate(
+          title: context.intl.routes.routes,
+          width: 420,
+          alignment: Alignment.center,
+          body: Center(
+            child: state is RoutesFormLoadingErrorState
+                ? Text(state.text, textAlign: TextAlign.center)
+                : SmallSpinner(color: app.colors.lilac, size: 24),
+          ),
+        );
       },
     );
   }
+}
+
+///`<name>-copy`, or `-copy-2` and up when that one is taken (ignoring case)
+String duplicateRouteName(String name, Iterable<String> existing) {
+  final taken = existing.map((e) => e.toLowerCase()).toSet();
+  var candidate = '$name-copy';
+  for (var i = 2; taken.contains(candidate.toLowerCase()); i++) {
+    candidate = '$name-copy-$i';
+  }
+  return candidate;
 }
 
 class RoutesFormWidget extends StatefulWidget {
@@ -153,13 +149,11 @@ class RoutesFormWidget extends StatefulWidget {
   final RoutesFormAction action;
 
   final RouteModel? route;
-  final void Function(RouteFormModel create) onCreate;
-  final void Function(RouteFormModel edit) onEdit;
+  final void Function(RouteFormModel model) onSave;
   final Map<String, String>? failValidations;
 
   const RoutesFormWidget({
-    required this.onCreate,
-    required this.onEdit,
+    required this.onSave,
     required this.action,
     required this.gatewayUrl,
     this.route,
@@ -172,9 +166,12 @@ class RoutesFormWidget extends StatefulWidget {
 }
 
 class _RoutesFormWidgetState extends State<RoutesFormWidget> {
-  final RoutesFormValidator validator = RoutesFormValidator();
-
-  final _formKey = GlobalKey<FormState>();
+  static const _name = 'name';
+  static const _path = 'path';
+  static const _uri = 'uri';
+  static const _rewriteFrom = 'rewrite_path.replace_from';
+  static const _rewriteTo = 'rewrite_path.replace_to';
+  static const _description = 'description';
 
   final _nameCtrl = TextEditingController();
   final _uriCtrl = TextEditingController();
@@ -184,20 +181,29 @@ class _RoutesFormWidgetState extends State<RoutesFormWidget> {
   final _descriptionCtrl = TextEditingController();
 
   //local copy: clearing it must not mutate the cubit state's map
-  Map<String, String> _apiErrors = {};
+  Map<String, String> _errors = {};
+
+  List<RouteModel> get _routes => app.di.find<RoutesCubit>().routes;
+
+  bool get _isEdit => widget.action == RoutesFormAction.edit;
+
+  bool get _isDuplicate => widget.action == RoutesFormAction.duplicate;
 
   @override
   void initState() {
     super.initState();
-    _apiErrors = {...?widget.failValidations};
+    _errors = {...?widget.failValidations};
 
-    if (widget.route != null) {
-      _nameCtrl.text = widget.route!.name;
-      _uriCtrl.text = widget.route!.uri;
-      _pathCtrl.text = widget.route!.path;
-      _rewriteFromCtrl.text = widget.route!.rewritePath?.replaceFrom ?? '';
-      _rewriteToCtrl.text = widget.route!.rewritePath?.replaceTo ?? '';
-      _descriptionCtrl.text = widget.route!.description;
+    final route = widget.route;
+    if (route != null) {
+      _nameCtrl.text = _isDuplicate
+          ? duplicateRouteName(route.name, _routes.map((r) => r.name))
+          : route.name;
+      _uriCtrl.text = route.uri;
+      _pathCtrl.text = route.path;
+      _rewriteFromCtrl.text = route.rewritePath?.replaceFrom ?? '';
+      _rewriteToCtrl.text = route.rewritePath?.replaceTo ?? '';
+      _descriptionCtrl.text = route.description;
     }
   }
 
@@ -205,7 +211,7 @@ class _RoutesFormWidgetState extends State<RoutesFormWidget> {
   void didUpdateWidget(covariant RoutesFormWidget oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (widget.failValidations != oldWidget.failValidations) {
-      _apiErrors = {...?widget.failValidations};
+      setState(() => _errors = {...?widget.failValidations});
     }
   }
 
@@ -220,278 +226,267 @@ class _RoutesFormWidgetState extends State<RoutesFormWidget> {
     super.dispose();
   }
 
+  RouteFormModel _model() => RouteFormModel(
+    gatewayUrl: widget.gatewayUrl,
+    name: _nameCtrl.text.trim(),
+    uri: _uriCtrl.text.trim(),
+    path: _pathCtrl.text.trim(),
+    description: _descriptionCtrl.text.trim(),
+    rewritePath: RewritePathModel.fromFields(
+      from: _rewriteFromCtrl.text.trim(),
+      to: _rewriteToCtrl.text.trim(),
+    ),
+  );
+
+  Map<String, String> _validate(RouteFormModel model) {
+    final form = app.intl.form;
+    final currentId = _isEdit ? widget.route?.id : null;
+    final nameTaken = _routes.any(
+      (r) =>
+          r.id != currentId && r.name.toLowerCase() == model.name.toLowerCase(),
+    );
+    return {
+      if (model.name.isEmpty)
+        _name: form.nameRequired
+      else if (nameTaken)
+        _name: form.nameTaken,
+      if (!model.path.startsWith('/')) _path: form.pathInvalid,
+      if (!RegExp(r'^https?://\S+$').hasMatch(model.uri)) _uri: form.uriInvalid,
+    };
+  }
+
+  void _save() {
+    final model = _model();
+    final errors = _validate(model);
+    setState(() => _errors = errors);
+    if (errors.isEmpty) widget.onSave(model);
+  }
+
+  void _clearError(String key) {
+    if (_errors.containsKey(key)) setState(() => _errors.remove(key));
+  }
+
+  Widget _field(
+    String key, {
+    required String label,
+    required TextEditingController controller,
+    String? hint,
+    bool required = false,
+    bool mono = false,
+    bool autofocus = false,
+    int maxLength = 255,
+  }) => AppField(
+    label: label,
+    controller: controller,
+    required: required,
+    hint: hint,
+    mono: mono,
+    autofocus: autofocus,
+    maxLength: maxLength,
+    errorText: _errors[key],
+    onChanged: (_) => _clearError(key),
+    onSubmitted: (_) => _save(),
+  );
+
   @override
   Widget build(BuildContext context) {
-    String? nameErrorText = _apiErrors['name'];
-    String? uriErrorText = _apiErrors['uri'];
-    String? pathErrorText = _apiErrors['path'];
-    String? rewriteFromErrorText = _apiErrors['rewrite_path.replace_from'];
-    String? rewriteToErrorText = _apiErrors['rewrite_path.replace_to'];
-
-    return Scaffold(
-      backgroundColor: app.colors.neutral.transparent,
-      body: Form(
-        key: _formKey,
-        child: Padding(
-          padding: EdgeInsets.symmetric(
-            horizontal: app.dimensions.padding.l,
-            vertical: app.dimensions.padding.m,
+    final intl = context.intl;
+    final form = intl.form;
+    return DialogTemplate(
+      title: _isEdit
+          ? intl.routes.editRoute
+          : _isDuplicate
+          ? intl.routes.duplicateRoute
+          : intl.routes.createRoute,
+      subtitle: _isEdit
+          ? form.editSubtitle
+          : _isDuplicate
+          ? form.duplicateSubtitle
+          : form.createSubtitle,
+      footer: Row(
+        mainAxisAlignment: MainAxisAlignment.end,
+        children: [
+          AppButton(
+            label: intl.actions.cancel,
+            kind: AppButtonKind.outlined,
+            height: 44,
+            onPressed: () => Navigator.of(context).pop(),
           ),
-          child: SingleChildScrollView(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                ///-------------- NAME --------------\\\
-                AppTextInput.textField(
-                  controller: _nameCtrl,
-                  errorText: nameErrorText,
-                  label: app.intl.routes.nameLabel,
-                  hint: app.intl.routes.nameHint,
-                  maxLength: validator.required.maxLong,
-                  validator: validator.required.validator,
-                ),
-                app.dimensions.padding.m.gap(),
-
-                ///-------------- PATH --------------\\\
-                AppTextInput.textField(
-                  controller: _pathCtrl,
-                  errorText: pathErrorText,
-                  label: app.intl.routes.pathLabel,
-                  hint: app.intl.routes.pathHint,
-                  maxLength: validator.required.maxLong,
-                  validator: validator.required.validator,
-                ),
-                app.dimensions.padding.m.gap(),
-
-                ///-------------- URI --------------\\\
-                AppTextInput.textField(
-                  controller: _uriCtrl,
-                  errorText: uriErrorText,
-                  label: app.intl.routes.uriLabel,
-                  hint: app.intl.routes.uriHint,
-                  maxLength: validator.uri.max,
-                  validator: validator.uri.validator,
-                ),
-                app.dimensions.padding.m.gap(),
-
-                ///-------------- Rewrite: FROM - TO --------------\\\
-                Row(
-                  children: [
-                    ///-------------- FROM--------------\\\
-                    Expanded(
-                      child: AppTextInput.textField(
-                        controller: _rewriteFromCtrl,
-                        errorText: rewriteFromErrorText,
-                        label: app.intl.routes.rewritePathFromLabel,
-                        hint: app.intl.routes.rewritePathFromHint,
-                        maxLength: validator.required.maxShort,
-                        validator: (value) => validator.required
-                            .pairedValidator(value, _rewriteToCtrl.text),
-                      ),
-                    ),
-                    app.dimensions.padding.m.gap(),
-
-                    ///-------------- TO--------------\\\
-                    Expanded(
-                      child: AppTextInput.textField(
-                        controller: _rewriteToCtrl,
-                        errorText: rewriteToErrorText,
-                        label: app.intl.routes.rewritePathToLabel,
-                        hint: app.intl.routes.rewritePathToHint,
-                        maxLength: validator.required.maxShort,
-                        validator: (value) => validator.required
-                            .pairedValidator(value, _rewriteFromCtrl.text),
-                      ),
-                    ),
-                  ],
-                ),
-                app.dimensions.padding.m.gap(),
-
-                ///-------------- DESCRIPTION --------------\                //optional in the api (text column, no length limit)
-                AppTextInput.textField(
-                  controller: _descriptionCtrl,
-                  errorText: _apiErrors['description'],
-                  label: app.intl.routes.descriptionLabel,
-                  hint: app.intl.routes.descriptionHint,
-                  maxLines: 3,
-                ),
-                app.dimensions.padding.m.gap(),
-
-                app.dimensions.padding.m.gap(),
-
-                ///-------------- PREVIEW --------------\\\
-                Text(app.intl.routes.preview, style: app.textTheme.labelMedium),
-                app.dimensions.padding.xs.gap(),
-                ListenableBuilder(
-                  listenable: Listenable.merge([
-                    _nameCtrl,
-                    _uriCtrl,
-                    _pathCtrl,
-                    _rewriteFromCtrl,
-                    _rewriteToCtrl,
-                  ]),
-                  builder: (context, _) {
-                    return _buildSingleRouteTile(
-                      model: RouteFormModel(
-                        gatewayUrl: widget.gatewayUrl,
-                        name: _nameCtrl.text,
-                        uri: _uriCtrl.text,
-                        path: _pathCtrl.text,
-                        description: _descriptionCtrl.text,
-                        rewritePath: RewritePathModel.fromFields(
-                          from: _rewriteFromCtrl.text,
-                          to: _rewriteToCtrl.text,
-                        ),
-                      ),
-                    );
-                  },
-                ),
-
-                ///-------------- FINAL GAP --------------\\\
-                80.gap(),
-              ],
+          const SizedBox(width: 8),
+          AppButton(
+            label: _isEdit ? form.saveChanges : intl.routes.createRoute,
+            height: 44,
+            onPressed: _save,
+          ),
+        ],
+      ),
+      body: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          if (_isDuplicate && widget.route != null) ...[
+            _DuplicateNote(name: widget.route!.name),
+            const SizedBox(height: 16),
+          ],
+          _field(
+            _name,
+            label: form.nameLabel,
+            controller: _nameCtrl,
+            hint: form.nameHint,
+            required: true,
+            autofocus: true,
+          ),
+          const SizedBox(height: 16),
+          _pair(
+            _field(
+              _path,
+              label: form.pathLabel,
+              controller: _pathCtrl,
+              hint: form.pathHint,
+              required: true,
+              mono: true,
+            ),
+            _field(
+              _uri,
+              label: form.uriLabel,
+              controller: _uriCtrl,
+              hint: form.uriHint,
+              required: true,
+              mono: true,
             ),
           ),
-        ),
-      ),
-      bottomSheet: Padding(
-        padding: EdgeInsets.all(app.dimensions.padding.l),
-        child: PrimaryButton.primary(
-          onPressed: () {
-            if (!_formKey.currentState!.validate()) {
-              return;
-            } else {
-              //remove focus from the text field to hide the keyboard
-              FocusManager.instance.primaryFocus?.unfocus();
-
-              //clear old api validation errors
-              setState(() => _apiErrors = {});
-
-              if (widget.action == RoutesFormAction.create ||
-                  widget.action == RoutesFormAction.duplicate) {
-                widget.onCreate(
-                  RouteFormModel(
-                    name: _nameCtrl.text,
-                    uri: _uriCtrl.text,
-                    path: _pathCtrl.text,
-                    description: _descriptionCtrl.text,
-                    rewritePath: RewritePathModel.fromFields(
-                      from: _rewriteFromCtrl.text,
-                      to: _rewriteToCtrl.text,
-                    ),
-                  ),
-                );
-              } else if (widget.action == RoutesFormAction.edit) {
-                widget.onEdit(
-                  RouteFormModel(
-                    name: _nameCtrl.text,
-                    uri: _uriCtrl.text,
-                    path: _pathCtrl.text,
-                    description: _descriptionCtrl.text,
-                    rewritePath: RewritePathModel.fromFields(
-                      from: _rewriteFromCtrl.text,
-                      to: _rewriteToCtrl.text,
-                    ),
-                  ),
-                );
-              } else {
-                app.logger.i('Unsupported action');
-              }
-            }
-          },
-          color: app.colors.primary.purple.brighten(0.15),
-          title: widget.action == RoutesFormAction.edit
-              ? app.intl.actions.edit
-              : app.intl.actions.create,
-        ),
-      ),
-    );
-  }
-
-  Widget _buildSingleRouteTile({required RouteFormModel model}) {
-    return SelectionArea(
-      child: Container(
-        decoration: BoxDecoration(
-          color: app.colors.primary.background2,
-          borderRadius: app.dimensions.border.borderRadius.m,
-          border: Border.all(color: app.colors.neutral.grey5),
-        ),
-        child: Padding(
-          padding: EdgeInsets.all(app.dimensions.padding.s),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.start,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              ...[
-                Text(model.name, style: app.textTheme.titleMedium),
-                app.dimensions.padding.s.gap(),
-                Divider(
-                  height: 0.5,
-                  color: app.colors.neutral.grey5.withValues(alpha: 0.5),
-                ),
-              ],
-              app.dimensions.padding.s.gap(),
-              Text(
-                app.intl.routes.requestTo,
-                style: app.textTheme.bodySmall?.copyWith(
-                  color: app.colors.neutral.grey4,
-                ),
-              ),
-              Text(model.enterPoint, style: app.textTheme.titleSmall),
-              app.dimensions.padding.s.gap(),
-              Text(
-                app.intl.routes.redirectedTo,
-                style: app.textTheme.bodySmall?.copyWith(
-                  color: app.colors.neutral.grey4,
-                ),
-              ),
-              Text(model.redirectTo, style: app.textTheme.titleSmall),
-            ],
+          const SizedBox(height: 16),
+          _pair(
+            _field(
+              _rewriteFrom,
+              label: form.rewritePathFromLabel,
+              controller: _rewriteFromCtrl,
+              hint: form.rewritePathFromHint,
+              mono: true,
+              maxLength: 155,
+            ),
+            _field(
+              _rewriteTo,
+              label: form.rewritePathToLabel,
+              controller: _rewriteToCtrl,
+              hint: form.rewritePathToHint,
+              mono: true,
+              maxLength: 155,
+            ),
           ),
-        ),
+          const SizedBox(height: 16),
+          _field(
+            _description,
+            label: form.descriptionLabel,
+            controller: _descriptionCtrl,
+            hint: form.descriptionHint,
+            maxLength: 1024,
+          ),
+          const SizedBox(height: 16),
+          FieldLabel(form.preview),
+          const SizedBox(height: 8),
+          ListenableBuilder(
+            listenable: Listenable.merge([
+              _nameCtrl,
+              _uriCtrl,
+              _pathCtrl,
+              _rewriteFromCtrl,
+              _rewriteToCtrl,
+            ]),
+            builder: (context, _) => _buildPreview(context),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _pair(Widget left, Widget right) => Row(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      Expanded(child: left),
+      const SizedBox(width: 16),
+      Expanded(child: right),
+    ],
+  );
+
+  Widget _buildPreview(BuildContext context) {
+    final c = app.colors;
+    final intl = context.intl;
+    final model = _model();
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      decoration: BoxDecoration(
+        color: c.card,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: c.outlineCard),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            model.name.isEmpty ? intl.form.previewName : model.name,
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w500,
+              color: c.text,
+            ),
+          ),
+          const SizedBox(height: 8),
+          RouteUrlBlock(
+            caption: intl.routes.from,
+            url: model.path.isEmpty
+                ? '${widget.gatewayUrl}…'
+                : model.enterPoint,
+          ),
+          const SizedBox(height: 8),
+          RouteUrlBlock(
+            caption: intl.routes.to,
+            url: model.uri.isEmpty ? 'https://…' : model.redirectTo,
+            accent: true,
+          ),
+        ],
       ),
     );
   }
 }
 
-class RoutesFormValidator {
-  RoutesFormRequiredFieldValidator required =
-      RoutesFormRequiredFieldValidator();
-  RoutesFormUriValidator uri = RoutesFormUriValidator();
-}
+class _DuplicateNote extends StatelessWidget {
+  final String name;
 
-class RoutesFormRequiredFieldValidator {
-  int get maxLong => 255;
+  const _DuplicateNote({required this.name});
 
-  int get maxShort => 155;
-
-  ///rewrite path is optional, but if one side is filled the other one is required
-  String? pairedValidator(String? value, String other) {
-    if ((value == null || value.isEmpty) && other.isNotEmpty) {
-      return app.intl.validations.requiredField;
-    }
-    return null;
-  }
-
-  String? validator(String? value) {
-    if (value == null || value.isEmpty) {
-      return app.intl.validations.requiredField;
-    }
-    return null;
-  }
-}
-
-class RoutesFormUriValidator {
-  int get max => 255;
-
-  String? validator(String? value) {
-    if (value == null || value.isEmpty) {
-      return app.intl.validations.requiredField;
-    }
-    final uri = Uri.tryParse(value);
-    if (!(uri != null && (uri.hasScheme && uri.hasAuthority))) {
-      return app.intl.validations.validUriField;
-    }
-    return null;
+  @override
+  Widget build(BuildContext context) {
+    final c = app.colors;
+    final form = context.intl.form;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      decoration: BoxDecoration(
+        color: c.lilac.withValues(alpha: 0.10),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: c.lilac.withValues(alpha: 0.35)),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          app.assets.icons.actions.duplicate.build(size: 18, color: c.lilac),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text.rich(
+              TextSpan(
+                text: '${form.duplicatingStart} ',
+                children: [
+                  TextSpan(
+                    text: name,
+                    style: monoStyle(color: c.lilac, weight: FontWeight.w500),
+                  ),
+                  TextSpan(text: form.duplicatingEnd),
+                ],
+              ),
+              style: TextStyle(fontSize: 13, height: 19 / 13, color: c.text),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }

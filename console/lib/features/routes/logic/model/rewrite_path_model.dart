@@ -1,16 +1,26 @@
+///final url of a route: the uri + the (rewritten) path, joined by exactly one slash
+String routeRedirectUrl({
+  required String uri,
+  required String path,
+  RewritePathModel? rewrite,
+}) {
+  final target = rewrite?.apply(path) ?? path;
+  return '${uri.replaceFirst(RegExp(r'/+$'), '')}/${target.replaceFirst(RegExp(r'^/+'), '')}';
+}
+
 class RewritePathModel {
   final String replaceFrom;
   final String replaceTo;
 
   RewritePathModel({required this.replaceFrom, required this.replaceTo});
 
-  ///api contract: send both values or no rewrite at all (null), never empty strings
+  ///api contract: send both values or no rewrite at all (null), never empty strings; an empty "to" means `/`
   static RewritePathModel? fromFields({
     required String from,
     required String to,
-  }) => from.isEmpty && to.isEmpty
+  }) => from.isEmpty
       ? null
-      : RewritePathModel(replaceFrom: from, replaceTo: to);
+      : RewritePathModel(replaceFrom: from, replaceTo: to.isEmpty ? '/' : to);
 
   static RewritePathModel? tryFromJson(dynamic json) {
     if (json is! Map<String, dynamic>) return null;

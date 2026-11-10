@@ -1,8 +1,11 @@
+import 'dart:async';
+import 'dart:math';
+
 import 'package:console/app_exporter.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
-import 'package:syncfusion_flutter_datagrid/datagrid.dart';
+import 'package:intl/intl.dart';
 
 class LogsScreenNavigator {
   String get name => 'logs';
@@ -20,6 +23,12 @@ class LogsScreenNavigator {
   }
 }
 
+///up to 3 page numbers around the current one (1-based)
+List<int> visiblePages({required int page, required int pageCount}) {
+  final start = (page - 1).clamp(1, max(1, pageCount - 2)).toInt();
+  return [for (var n = start; n < start + 3 && n <= pageCount; n++) n];
+}
+
 class LogsScreen extends StatefulWidget {
   static final LogsScreenNavigator navigator = LogsScreenNavigator();
 
@@ -30,21 +39,12 @@ class LogsScreen extends StatefulWidget {
 }
 
 class _LogsScreenState extends State<LogsScreen> {
-  final TextEditingController searchController = TextEditingController();
+  static const Duration _debounce = Duration(milliseconds: 400);
+  static final NumberFormat _number = NumberFormat.decimalPattern('en_US');
 
+  final TextEditingController _search = TextEditingController();
   late final LogsCubit cubit;
-  late LogsDataSource dataSource;
-  //the grid source is rebuilt only for a new search result, not on every build (column resize), so it keeps its paging state
-  LogsSearchOkState? _dataSourceState;
-
-  Map<String, double?> columnWidths = {
-    'requestedAt': null,
-    'httpMethod': null,
-    'route': null,
-    'responseCode': null,
-    'requestDuration': null,
-    'path': null,
-  };
+  Timer? _debounceTimer;
 
   @override
   void initState() {
@@ -55,359 +55,325 @@ class _LogsScreenState extends State<LogsScreen> {
 
   @override
   void dispose() {
-    searchController.dispose();
+    _debounceTimer?.cancel();
+    _search.dispose();
     super.dispose();
+  }
+
+  void _searchNow() {
+    _debounceTimer?.cancel();
+    cubit.applySearch(query: _search.text);
+  }
+
+  void _clearText() {
+    _search.clear();
+    _searchNow();
+  }
+
+  void _clearAll() {
+    _debounceTimer?.cancel();
+    _search.clear();
+    cubit.clearSearchAndFilters();
+  }
+
+  Future<void> _refresh() async {
+    final intl = context.intl;
+    final added = await cubit.refresh();
+    if (cubit.state is! LogsSearchOkState) return;
+    app.snack.showSuccess(
+      message: added <= 0
+          ? intl.logs.noNewRequests
+          : added == 1
+          ? intl.logs.oneNewRequest
+          : intl.logs.manyNewRequests(count: added),
+    );
+  }
+
+  void _onState(BuildContext context, LogsState state) {
+    if (state is LogsBackupProcessingState) {
+      app.loading.show();
+    } else if (state is LogsBackupOkState) {
+      app.loading.hide();
+      app.snack.showSuccess(
+        message: context.intl.logs.exported(count: _number.format(state.count)),
+      );
+    } else if (state is LogsBackupErrorState) {
+      app.loading.hide();
+      app.snack.showError(message: state.exception.message);
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return BlocConsumer<LogsCubit, LogsState>(
-      listener: (context, state) {
-        if (state is LogsFilteringState) {
-          app.loading.show();
-        } else if (state is LogsSearchOkState ||
-            state is LogsSearchErrorState) {
-          app.loading.hide();
-        }
-        if (state is LogsBackupState) {
-          if (state is LogsBackupProcessingState) {
-            app.loading.show();
-          } else if (state is LogsBackupOkState) {
-            app.loading.hide();
-          } else if (state is LogsBackupErrorState) {
-            app.loading.hide();
-            app.snack.showError(
-              message: state.exception.message,
-              context: context,
-            );
-          }
-        }
-      },
+      listener: _onState,
       buildWhen: (previous, current) => current is LogsSearchState,
       builder: (context, state) {
-        if (state is LogsInitialState) {
-          return const LoadingPage();
-        } else if (state is LogsSearchingState) {
-          return const LoadingPage();
-        } else if (state is LogsSearchOkState) {
-          if (!identical(_dataSourceState, state)) {
-            _dataSourceState = state;
-            dataSource = LogsDataSource(
-              logs: state.items,
-              fetchNextPage: cubit.fetchNextPage,
-              hasMorePages: () => cubit.hasMorePages,
-              onLoadError: (exception) => app.snack.showError(
-                message: exception.message,
-                context: context,
-              ),
-              onRequestedAtTap: (log) async {
-                cubit.updateFilter(requestedAt: log.requestedAtLocal);
-              },
-              onHttpMethodTap: (log) async {
-                cubit.updateFilter(httpMethod: log.httpMethod);
-              },
-              onPathTap: (log) async {
-                searchController.text = log.path;
-                cubit.applySearch(query: searchController.text);
-              },
-              onRouteTap: (log) async {
-                cubit.updateFilter(route: log.route);
-              },
-              onResponseCodeTap: (log) async {
-                cubit.updateFilter(responseCode: log.responseCode);
-              },
-            );
-          }
-
-          final TextStyle headerStyle = app.textTheme.bodyLarge!.copyWith(
-            color: app.colors.neutral.grey3,
-          );
-
-          return Scaffold(
-            appBar: CustomAppBar.build(
-              title: context.intl.logs.logs,
-              actions: [
-                Text(
-                  context.intl.logs.totalLogs(count: cubit.totalElements),
-                  style: app.textTheme.bodyMedium?.copyWith(
-                    color: app.colors.neutral.grey3,
-                  ),
-                ),
-                app.dimensions.padding.m.gap(),
-                PrimaryButton.secondary(
-                  onPressed: cubit.refresh,
-                  title: context.intl.actions.refresh,
-                  icon: app.assets.icons.actions.reload,
-                ),
-                app.dimensions.padding.m.gap(),
-                PrimaryButton.secondary(
-                  onPressed: cubit.export,
-                  title: context.intl.logs.export,
-                  icon: app.assets.icons.actions.download,
-                ),
-                app.dimensions.padding.xl.gap(),
-              ],
-            ),
-            body: Padding(
-              padding: EdgeInsets.only(
-                left: app.dimensions.padding.l,
-                right: app.dimensions.padding.l,
-                top: app.dimensions.padding.l,
-              ),
-              child: Column(
-                children: [
-                  Container(
-                    decoration: BoxDecoration(
-                      color: app.colors.primary.background2,
-                      borderRadius: BorderRadius.only(
-                        topLeft: app.dimensions.border.radius.m,
-                        topRight: app.dimensions.border.radius.m,
-                      ),
-                      border: Border.all(color: app.colors.neutral.grey5),
-                    ),
-                    child: Padding(
-                      padding: EdgeInsets.all(app.dimensions.padding.l),
-                      child: _buildFilterSection(state),
-                    ),
-                  ),
-                  Expanded(
-                    child: LayoutBuilder(
-                      builder: (context, constraints) {
-                        final totalWidth = constraints.maxWidth;
-
-                        final requestedAtWidth = totalWidth * 0.165;
-                        final methodWidth = totalWidth * 0.10;
-                        final pathWidth = totalWidth * 0.425;
-                        final routeWidth = totalWidth * 0.15;
-                        final statusWidth = totalWidth * 0.08;
-                        double durationWidth = totalWidth * 0.08;
-
-                        return SfDataGrid(
-                          source: dataSource,
-                          allowColumnsResizing: true,
-                          allowPullToRefresh: true,
-                          headerRowHeight: 42,
-                          rowHeight: 42,
-                          onCellTap: (DataGridCellTapDetails details) {
-                            if (details.rowColumnIndex.rowIndex > 0) {
-                              final int rowIndex =
-                                  details.rowColumnIndex.rowIndex - 1;
-                              final DataGridRow row = dataSource.rows[rowIndex];
-
-                              final HttpLogModel log =
-                                  row
-                                          .getCells()
-                                          .firstWhere(
-                                            (cell) => cell.columnName == 'data',
-                                          )
-                                          .value
-                                      as HttpLogModel;
-
-                              LogDetailsScreen.open(log);
-                            }
-                          },
-                          onColumnResizeUpdate: (details) {
-                            setState(() {
-                              columnWidths[details.column.columnName] =
-                                  details.width;
-
-                              final sum = columnWidths.values.fold(
-                                0.0,
-                                (previousValue, element) =>
-                                    previousValue + (element ?? 0),
-                              );
-
-                              final dif = totalWidth - sum;
-                              if (columnWidths['requestDuration'] == null) {
-                                columnWidths['requestDuration'] =
-                                    durationWidth + dif;
-                              } else {
-                                columnWidths['requestDuration'] =
-                                    columnWidths['requestDuration']! + dif;
-                              }
-                            });
-                            return true;
-                          },
-                          columns: <GridColumn>[
-                            GridColumn(
-                              columnName: 'data',
-                              width: 0,
-                              minimumWidth: 0,
-                              maximumWidth: 0,
-                              label: Text('', style: headerStyle),
-                            ),
-                            GridColumn(
-                              columnName: 'requestedAt',
-                              width:
-                                  columnWidths['requestedAt'] ??
-                                  requestedAtWidth,
-                              minimumWidth: 130,
-                              label: Padding(
-                                padding: EdgeInsets.all(
-                                  app.dimensions.padding.s,
-                                ),
-                                child: Text(
-                                  context.intl.logs.columnTimestamp,
-                                  style: headerStyle,
-                                ),
-                              ),
-                            ),
-                            GridColumn(
-                              columnName: 'httpMethod',
-                              width: columnWidths['httpMethod'] ?? methodWidth,
-                              minimumWidth: 80,
-                              label: Padding(
-                                padding: EdgeInsets.all(
-                                  app.dimensions.padding.s,
-                                ),
-                                child: Text(
-                                  context.intl.logs.columnMethod,
-                                  style: headerStyle,
-                                ),
-                              ),
-                            ),
-                            GridColumn(
-                              columnName: 'path',
-                              width: columnWidths['path'] ?? pathWidth,
-                              minimumWidth: 250,
-                              label: Padding(
-                                padding: EdgeInsets.all(
-                                  app.dimensions.padding.s,
-                                ),
-                                child: Text(
-                                  context.intl.logs.columnPath,
-                                  style: headerStyle,
-                                ),
-                              ),
-                            ),
-                            GridColumn(
-                              columnName: 'route',
-                              width: columnWidths['route'] ?? routeWidth,
-                              minimumWidth: 180,
-                              label: Padding(
-                                padding: EdgeInsets.all(
-                                  app.dimensions.padding.s,
-                                ),
-                                child: Text(
-                                  context.intl.logs.columnRoute,
-                                  style: headerStyle,
-                                ),
-                              ),
-                            ),
-                            GridColumn(
-                              columnName: 'responseCode',
-                              width:
-                                  columnWidths['responseCode'] ?? statusWidth,
-                              minimumWidth: 80,
-                              label: Padding(
-                                padding: EdgeInsets.all(
-                                  app.dimensions.padding.s,
-                                ),
-                                child: Text(
-                                  context.intl.logs.columnHttpStatus,
-                                  style: headerStyle,
-                                ),
-                              ),
-                            ),
-                            GridColumn(
-                              columnName: 'requestDuration',
-                              width:
-                                  columnWidths['requestDuration'] ??
-                                  durationWidth,
-                              minimumWidth: 80,
-                              columnWidthMode: ColumnWidthMode.lastColumnFill,
-                              label: Padding(
-                                padding: EdgeInsets.all(
-                                  app.dimensions.padding.s,
-                                ),
-                                child: Text(
-                                  context.intl.logs.columnRequestDuration,
-                                  style: headerStyle,
-                                ),
-                              ),
-                            ),
-                          ],
-                          loadMoreViewBuilder:
-                              (
-                                BuildContext context,
-                                LoadMoreRows loadMoreRows,
-                              ) {
-                                if (dataSource.loadFailed) {
-                                  return Center(
-                                    child: TextButton(
-                                      onPressed: () {
-                                        dataSource.loadFailed = false;
-                                        loadMoreRows();
-                                      },
-                                      child: Text(
-                                        context.intl.actions.tryAgain,
-                                      ),
-                                    ),
-                                  );
-                                }
-                                loadMoreRows();
-                                return const SizedBox.shrink();
-                              },
-                        );
-                      },
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          );
-        } else if (state is LogsSearchErrorState) {
+        if (state is LogsSearchErrorState && !cubit.loaded) {
           return ErrorPage(
             errorMessage: state.exception.message,
             buttonText: context.intl.actions.tryAgain,
             onPressed: cubit.init,
           );
-        } else {
-          return ErrorPage(
-            buttonText: context.intl.actions.tryAgain,
-            onPressed: cubit.init,
-          );
         }
+        return SingleChildScrollView(
+          padding: const EdgeInsets.fromLTRB(24, 24, 24, 32),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              _buildHeader(context),
+              const SizedBox(height: 16),
+              _buildPanel(context, filtering: state is LogsFilteringState),
+            ],
+          ),
+        );
       },
     );
   }
 
-  Widget _buildFilterButton({
-    required LogsSearchFilters filters,
-    required List<RouteLogModel> routes,
-  }) {
-    return Badge(
-      label: Text(filters.filterCount.toString()),
-      textColor: app.colors.neutral.white,
-      backgroundColor: app.colors.primary.purple,
-      child: GestureDetector(
-        onTap: () {
-          LogsFilterDialog.show(
-            filters: filters,
-            routes: routes,
-            callback:
-                ({responseCode, httpMethod, route, fromDate, toDate}) async {
-                  app.navigator.pop();
-                  return cubit.applyFilter(
-                    responseCode: responseCode,
-                    httpMethod: httpMethod,
-                    route: route,
-                    fromDate: fromDate,
-                    toDate: toDate,
-                  );
-                },
-          );
-        },
-        child: MouseRegion(
-          cursor: SystemMouseCursors.click,
-          child: FormComponentTemplate(
-            borderColor: app.colors.neutral.grey3,
-            height: 42,
-            width: 42,
-            borderRadius: app.dimensions.border.borderRadius.s,
-            child: Padding(
-              padding: EdgeInsets.all(app.dimensions.padding.s),
-              child: app.assets.icons.general.filter.build(size: 16),
+  Widget _buildHeader(BuildContext context) {
+    final c = app.colors;
+    final intl = context.intl;
+    return Wrap(
+      alignment: WrapAlignment.spaceBetween,
+      crossAxisAlignment: WrapCrossAlignment.end,
+      spacing: 16,
+      runSpacing: 16,
+      children: [
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              intl.logs.logs,
+              style: TextStyle(
+                fontSize: 26,
+                height: 32 / 26,
+                fontWeight: FontWeight.w500,
+                color: c.text,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              intl.logs.captured(count: _number.format(cubit.capturedTotal)),
+              style: TextStyle(fontSize: 13, color: c.textSecondary),
+            ),
+          ],
+        ),
+        Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            AppButton(
+              label: intl.actions.refresh,
+              icon: app.assets.icons.actions.reload,
+              kind: AppButtonKind.outlined,
+              onPressed: _refresh,
+            ),
+            const SizedBox(width: 8),
+            AppButton(
+              label: intl.logs.export,
+              icon: app.assets.icons.actions.download,
+              kind: AppButtonKind.outlined,
+              onPressed: cubit.export,
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildPanel(BuildContext context, {required bool filtering}) {
+    final c = app.colors;
+    final booting = !cubit.loaded;
+    final noLogs = !booting && !filtering && cubit.items.isEmpty;
+    return Container(
+      clipBehavior: Clip.antiAlias,
+      decoration: BoxDecoration(
+        color: c.card,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: c.outlineCard),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(
+              border: Border(bottom: BorderSide(color: c.raised)),
+            ),
+            child: Row(
+              children: [
+                Expanded(child: _buildSearch(context)),
+                const SizedBox(width: 10),
+                _buildFilterButton(context),
+              ],
+            ),
+          ),
+          SizedBox(
+            height: 3,
+            child: filtering && !booting
+                ? LinearProgressIndicator(
+                    color: c.lilac,
+                    backgroundColor: c.outlineSoft,
+                  )
+                : null,
+          ),
+          AnimatedOpacity(
+            opacity: filtering && !booting ? 0.35 : 1,
+            duration: motion(context, const Duration(milliseconds: 180)),
+            child: _buildTable(context, booting: booting),
+          ),
+          if (noLogs) _buildNoLogs(context),
+          _buildFooter(context, booting: booting, filtering: filtering),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSearch(BuildContext context) {
+    final intl = context.intl;
+    return AppSearchField(
+      controller: _search,
+      hint: intl.logs.search,
+      clearLabel: intl.actions.clearSearch,
+      height: 44,
+      fontSize: 14,
+      onChanged: (_) {
+        _debounceTimer?.cancel();
+        _debounceTimer = Timer(_debounce, _searchNow);
+      },
+      onSubmitted: (_) => _searchNow(),
+      onClear: _clearText,
+      chips: _buildActiveChips(context),
+    );
+  }
+
+  ///in this order: method, route, status, date
+  List<Widget> _buildActiveChips(BuildContext context) {
+    final filters = cubit.filters;
+    final format = app.dateFormatter.logsTimeS.format;
+    final from = filters.date?.fromDate;
+    final to = filters.date?.toDate;
+    final status = filters.responseCode;
+    return [
+      if (filters.hasHttpMethod)
+        _chip(filters.httpMethod!, LogFilterKind.method),
+      if (filters.hasRoute)
+        _chip(filters.route!.routeName, LogFilterKind.route),
+      if (status != null)
+        _chip(
+          status.length == 1 ? '${status}xx' : status,
+          LogFilterKind.status,
+        ),
+      if (filters.hasDate)
+        _chip(
+          from != null && to != null
+              ? '${format(from)} - ${format(to)}'
+              : from != null
+              ? context.intl.logFilters.chipFrom(date: format(from))
+              : context.intl.logFilters.chipUntil(date: format(to!)),
+          LogFilterKind.date,
+        ),
+    ];
+  }
+
+  Widget _chip(String label, LogFilterKind kind) {
+    final c = app.colors;
+    return Container(
+      height: 28,
+      padding: const EdgeInsets.only(left: 10, right: 2),
+      decoration: BoxDecoration(
+        color: c.raised,
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w500,
+              color: c.text,
+            ),
+          ),
+          const SizedBox(width: 2),
+          AppIconButton(
+            icon: app.assets.icons.actions.close,
+            tooltip: context.intl.logs.removeFilter(label: label),
+            size: 24,
+            iconSize: 13,
+            radius: 6,
+            onPressed: () => cubit.removeFilter(kind),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildFilterButton(BuildContext context) {
+    final c = app.colors;
+    final intl = context.intl;
+    final count = cubit.filters.filterCount;
+    final active = count > 0;
+    void open() => LogsFilterDialog.show(
+      filters: cubit.filters,
+      routes: cubit.routes,
+      callback: cubit.applyFilter,
+    );
+    //the semantics node replaces the child's, so it carries the tap itself
+    return Semantics(
+      button: true,
+      label: intl.logs.filtersActive(count: count),
+      excludeSemantics: true,
+      onTap: open,
+      child: Material(
+        color: active ? c.lilac.withValues(alpha: 0.12) : Colors.transparent,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+          side: BorderSide(
+            color: active ? c.lilac.withValues(alpha: 0.5) : c.outline,
+          ),
+        ),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(12),
+          onTap: open,
+          child: Container(
+            height: 44,
+            padding: const EdgeInsets.only(left: 14, right: 12),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                app.assets.icons.general.filter.build(size: 17, color: c.text),
+                const SizedBox(width: 8),
+                Text(
+                  intl.logs.filters,
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500,
+                    color: c.text,
+                  ),
+                ),
+                if (active) ...[
+                  const SizedBox(width: 8),
+                  Container(
+                    width: 20,
+                    height: 20,
+                    alignment: Alignment.center,
+                    decoration: BoxDecoration(
+                      color: c.lilac,
+                      shape: BoxShape.circle,
+                    ),
+                    child: Text(
+                      '$count',
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700,
+                        color: c.onLilac,
+                      ),
+                    ),
+                  ),
+                ],
+              ],
             ),
           ),
         ),
@@ -415,142 +381,177 @@ class _LogsScreenState extends State<LogsScreen> {
     );
   }
 
-  Widget _buildFilterSection(LogsSearchOkState state) {
+  Widget _buildTable(BuildContext context, {required bool booting}) {
+    final c = app.colors;
+    final intl = context.intl;
+    const skeletonWidths = [
+      240.0,
+      180.0,
+      280.0,
+      210.0,
+      260.0,
+      150.0,
+      220.0,
+      190.0,
+    ];
+    return LayoutBuilder(
+      builder: (context, constraints) => SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        child: SizedBox(
+          width: max(860, constraints.maxWidth),
+          child: Column(
+            children: [
+              Container(
+                height: 40,
+                color: c.surface,
+                child: _cells(
+                  CaptionText(
+                    intl.logs.columnTimestamp,
+                    size: 11,
+                    color: c.textSecondary,
+                  ),
+                  CaptionText(
+                    intl.logs.columnMethod,
+                    size: 11,
+                    color: c.textSecondary,
+                  ),
+                  CaptionText(
+                    intl.logs.columnPath,
+                    size: 11,
+                    color: c.textSecondary,
+                  ),
+                  CaptionText(
+                    intl.logs.columnRoute,
+                    size: 11,
+                    color: c.textSecondary,
+                  ),
+                  CaptionText(
+                    intl.logs.columnHttpStatus,
+                    size: 11,
+                    color: c.textSecondary,
+                  ),
+                  CaptionText(
+                    intl.logs.columnRequestDuration,
+                    size: 11,
+                    color: c.textSecondary,
+                  ),
+                ),
+              ),
+              if (booting)
+                for (final width in skeletonWidths)
+                  _rowFrame(
+                    _cells(
+                      const AppSkeleton(width: 130),
+                      const AppSkeleton(width: 40),
+                      AppSkeleton(width: width),
+                      const AppSkeleton(width: 90),
+                      const AppSkeleton(width: 52, height: 22, radius: 11),
+                      const AppSkeleton(width: 44),
+                    ),
+                  )
+              else
+                for (final log in cubit.items) _buildRow(context, log),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _rowFrame(Widget child) => Container(
+    height: 48,
+    decoration: BoxDecoration(
+      border: Border(top: BorderSide(color: app.colors.outlineSoft)),
+    ),
+    child: child,
+  );
+
+  Widget _cells(
+    Widget timestamp,
+    Widget method,
+    Widget path,
+    Widget route,
+    Widget status,
+    Widget duration,
+  ) {
+    Widget cell(
+      Widget child, {
+      double? width,
+      Alignment align = Alignment.centerLeft,
+    }) {
+      final padded = Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 14),
+        child: Align(alignment: align, child: child),
+      );
+      return width == null
+          ? Expanded(child: padded)
+          : SizedBox(width: width, child: padded);
+    }
+
     return Row(
       children: [
-        Expanded(
-          child: EMTextSearchField(
-            controller: searchController,
-            hint: context.intl.logs.search,
-            onSearch: (value) async {
-              cubit.applySearch(query: searchController.text);
-            },
-            extraSuffix: state.filters.filterCount == 0
-                ? null
-                : Row(
-                    children: [
-                      if (state.filters.hasDate)
-                        Builder(
-                          builder: (context) {
-                            DateTime? fromDate = state.filters.date?.fromDate;
-                            DateTime? toDate = state.filters.date?.toDate;
-                            String finalDate = '';
-                            if (fromDate != null) {
-                              finalDate += app.dateFormatter.logsTimeS.format(
-                                fromDate,
-                              );
-                            } else {
-                              finalDate += 'X';
-                            }
-                            finalDate += ' - ';
-                            if (toDate != null) {
-                              finalDate += app.dateFormatter.logsTimeS.format(
-                                toDate,
-                              );
-                            } else {
-                              finalDate += 'X';
-                            }
-                            return _buildSingleFilterTag(
-                              tooltip: context.intl.logs.columnTimestamp,
-                              text: finalDate,
-                              onRemoveFilter: () {
-                                cubit.applyFilter(
-                                  httpMethod: state.filters.httpMethod,
-                                  route: state.filters.route,
-                                  responseCode: state.filters.responseCode,
-                                  requestedAt: null,
-                                  fromDate: null,
-                                  toDate: null,
-                                );
-                              },
-                            );
-                          },
-                        ),
-                      if (state.filters.hasResponseCode)
-                        _buildSingleFilterTag(
-                          tooltip: context.intl.logs.columnHttpStatus,
-                          text: state.filters.responseCode!.toString(),
-                          onRemoveFilter: () {
-                            cubit.applyFilter(
-                              httpMethod: state.filters.httpMethod,
-                              route: state.filters.route,
-                              responseCode: null,
-                              fromDate: state.filters.date?.fromDate,
-                              toDate: state.filters.date?.toDate,
-                            );
-                          },
-                        ),
-                      if (state.filters.hasHttpMethod)
-                        _buildSingleFilterTag(
-                          tooltip: context.intl.logs.columnMethod,
-                          text: state.filters.httpMethod!,
-                          onRemoveFilter: () {
-                            cubit.applyFilter(
-                              httpMethod: null,
-                              route: state.filters.route,
-                              responseCode: state.filters.responseCode,
-                              fromDate: state.filters.date?.fromDate,
-                              toDate: state.filters.date?.toDate,
-                            );
-                          },
-                        ),
-                      if (state.filters.hasRoute)
-                        _buildSingleFilterTag(
-                          tooltip: context.intl.logs.columnRoute,
-                          text: state.filters.route!.routeName,
-                          onRemoveFilter: () {
-                            cubit.applyFilter(
-                              httpMethod: state.filters.httpMethod,
-                              route: null,
-                              responseCode: state.filters.responseCode,
-                              fromDate: state.filters.date?.fromDate,
-                              toDate: state.filters.date?.toDate,
-                            );
-                          },
-                        ),
-                    ],
-                  ),
-          ),
-        ),
-        app.dimensions.padding.l.gap(),
-        _buildFilterButton(filters: state.filters, routes: state.routes),
+        cell(timestamp, width: 200),
+        cell(method, width: 100),
+        cell(path),
+        cell(route, width: 190),
+        cell(status, width: 110),
+        cell(duration, width: 110, align: Alignment.centerRight),
       ],
     );
   }
 
-  Widget _buildSingleFilterTag({
-    required String text,
-    required VoidCallback onRemoveFilter,
-    required String tooltip,
-  }) {
-    final int maxTextSize = 25;
-    String safeText = text.length > maxTextSize
-        ? '${text.substring(0, maxTextSize)}...'
-        : text;
-    return Tooltip(
-      message: tooltip,
-      child: Padding(
-        padding: const EdgeInsets.only(right: 8.0, top: 4.0, bottom: 4.0),
-        child: MouseRegion(
-          cursor: SystemMouseCursors.click,
-          child: GestureDetector(
-            onTap: onRemoveFilter,
-            child: Container(
-              decoration: BoxDecoration(
-                color: app.colors.primary.background3,
-                borderRadius: app.dimensions.border.borderRadius.xs,
+  Widget _buildRow(BuildContext context, HttpLogModel log) {
+    final c = app.colors;
+    final intl = context.intl;
+    const tabular = [FontFeature.tabularFigures()];
+    return _rowFrame(
+      Semantics(
+        button: true,
+        label: '${log.httpMethod} ${log.path}',
+        child: InkWell(
+          hoverColor: c.surface,
+          onTap: () => LogDetailsScreen.open(log),
+          child: _cells(
+            Text(
+              app.dateFormatter.logsTime.format(log.requestedAtLocal),
+              maxLines: 1,
+              style: TextStyle(
+                fontSize: 14,
+                color: c.textSecondary,
+                fontFeatures: tabular,
               ),
-              child: Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 8.0,
-                  vertical: 4.0,
-                ),
-                child: Text(
-                  safeText,
-                  style: app.textTheme.bodyLarge?.copyWith(
-                    color: app.colors.neutral.white,
-                  ),
-                ),
+            ),
+            Text(
+              log.httpMethod,
+              style: monoStyle(
+                size: 12,
+                weight: FontWeight.w500,
+                letterSpacing: 0.4,
+                color: c.methodColor(log.httpMethod),
+              ),
+            ),
+            Text(
+              log.path,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: monoStyle(color: c.text),
+            ),
+            Text(
+              log.route?.routeName ?? intl.logFilters.filterNoRouteName,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                fontSize: 14,
+                color: log.route == null ? c.textTertiary : c.text,
+              ),
+            ),
+            StatusPill(log.responseCode),
+            Text(
+              intl.logs.durationMs(ms: log.requestDuration),
+              style: TextStyle(
+                fontSize: 14,
+                color: c.textSecondary,
+                fontFeatures: tabular,
               ),
             ),
           ),
@@ -558,243 +559,172 @@ class _LogsScreenState extends State<LogsScreen> {
       ),
     );
   }
-}
 
-typedef OnColumnTap = Future Function(HttpLogModel log);
+  Widget _buildNoLogs(BuildContext context) {
+    final intl = context.intl;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 48),
+      decoration: BoxDecoration(
+        border: Border(top: BorderSide(color: app.colors.outlineSoft)),
+      ),
+      child: EmptyState(
+        icon: app.assets.icons.general.inbox,
+        title: intl.logs.noMatches,
+        action: AppButton(
+          label: intl.logs.clearAll,
+          kind: AppButtonKind.outlined,
+          onPressed: _clearAll,
+        ),
+      ),
+    );
+  }
 
-class LogsDataSource extends DataGridSource {
-  final Future<List<HttpLogModel>> Function() fetchNextPage;
-  final bool Function() hasMorePages;
-  final void Function(GlobalException exception) onLoadError;
-
-  final OnColumnTap? onRequestedAtTap;
-  final OnColumnTap? onHttpMethodTap;
-  final OnColumnTap? onPathTap;
-  final OnColumnTap? onRouteTap;
-  final OnColumnTap? onResponseCodeTap;
-
-  List<DataGridRow> _logs = [];
-  bool isLoading = false;
-
-  //set when a page fails, so the grid shows a retry button instead of re-requesting in a loop
-  bool loadFailed = false;
-
-  LogsDataSource({
-    required List<HttpLogModel> logs,
-    required this.fetchNextPage,
-    required this.hasMorePages,
-    required this.onLoadError,
-    this.onRequestedAtTap,
-    this.onHttpMethodTap,
-    this.onPathTap,
-    this.onRouteTap,
-    this.onResponseCodeTap,
+  String _statusText(
+    BuildContext context, {
+    required bool booting,
+    required bool filtering,
   }) {
-    _logs = logs.map<DataGridRow>((e) => _buildRow(e)).toList();
+    final logs = context.intl.logs;
+    if (booting) return logs.loading;
+    if (filtering) return logs.filtering;
+    final total = cubit.totalElements;
+    final count = total == 1
+        ? logs.oneRequest
+        : logs.manyRequests(count: _number.format(total));
+    return '$count${cubit.filters.isEmpty ? '' : logs.matchSuffix}${logs.rowHint}';
   }
 
-  @override
-  List<DataGridRow> get rows => _logs;
-
-  @override
-  DataGridRowAdapter? buildRow(DataGridRow row) {
-    HttpLogModel currentLog =
-        row
-                .getCells()
-                .firstWhere((element) => element.columnName == 'data')
-                .value
-            as HttpLogModel;
-
-    return DataGridRowAdapter(
-      cells: row.getCells().map<Widget>((dataGridCell) {
-        late Widget row;
-        switch (dataGridCell.columnName) {
-          case 'data':
-            row = const Text('', overflow: TextOverflow.ellipsis);
-          case 'requestedAt':
-            DateTime time = dataGridCell.value as DateTime;
-            row = _HoverableClickableText(
-              text: app.dateFormatter.logsTime.format(time.toLocal()),
-              color: app.colors.neutral.grey3,
-              onTap: () {
-                if (onRequestedAtTap != null) {
-                  onRequestedAtTap!(currentLog);
-                }
-              },
-            );
-          case 'httpMethod':
-            row = _HoverableClickableText(
-              text: dataGridCell.value.toString(),
-              color: app.colors.neutral.grey3,
-              onTap: () {
-                if (onHttpMethodTap != null) {
-                  onHttpMethodTap!(currentLog);
-                }
-              },
-            );
-          case 'path':
-            row = _HoverableClickableText(
-              text: dataGridCell.value.toString(),
-              color: app.colors.neutral.white,
-              onTap: () {
-                if (onPathTap != null) {
-                  onPathTap!(currentLog);
-                }
-              },
-            );
-          case 'route':
-            RouteLogModel? route = dataGridCell.value as RouteLogModel?;
-            //buildRow has no context: the Builder makes the cell follow the language
-            row = Builder(
-              builder: (context) => _HoverableClickableText(
-                text: route == null
-                    ? context.intl.logFilters.filterNoRouteName
-                    : route.routeName,
-                color: route == null
-                    ? app.colors.neutral.grey4
-                    : app.colors.neutral.white,
-                onTap: () {
-                  if (onRouteTap != null) {
-                    if (currentLog.route == null) {
-                      onRouteTap!(currentLog.copyWith(route: noRoute));
-                    } else {
-                      onRouteTap!(currentLog);
-                    }
-                  }
-                },
+  Widget _buildFooter(
+    BuildContext context, {
+    required bool booting,
+    required bool filtering,
+  }) {
+    final c = app.colors;
+    final intl = context.intl;
+    final page = cubit.currentPage + 1;
+    final pageCount = max(1, cubit.totalPages);
+    final start = cubit.currentPage * cubit.pageSize;
+    final total = cubit.totalElements;
+    return Container(
+      padding: const EdgeInsets.fromLTRB(14, 8, 10, 8),
+      decoration: BoxDecoration(
+        border: Border(top: BorderSide(color: c.outlineSoft)),
+      ),
+      child: DefaultTextStyle.merge(
+        style: TextStyle(fontSize: 12, height: 16 / 12, color: c.textTertiary),
+        child: Row(
+          children: [
+            Expanded(
+              child: Text(
+                _statusText(context, booting: booting, filtering: filtering),
               ),
-            );
-          case 'responseCode':
-            int code = dataGridCell.value as int;
-            Color color = app.colors.neutral.white;
-            if (code >= 200 && code < 300) {
-              color = Colors.green;
-            } else if (code >= 300 && code < 400) {
-              color = Colors.purple;
-            } else if (code >= 400 && code < 500) {
-              color = Colors.yellow;
-            } else if (code >= 500 && code < 600) {
-              color = Colors.red;
-            } else {
-              color = Colors.blue;
-            }
-            row = _HoverableClickableText(
-              text: code.toString(),
-              color: color,
-              onTap: () {
-                if (onResponseCodeTap != null) {
-                  onResponseCodeTap!(currentLog);
-                }
-              },
-            );
-          case 'requestDuration':
-            row = _HoverableClickableText(
-              text: dataGridCell.value.toString(),
-              color: app.colors.neutral.grey3,
-              enableHover: false,
-              onTap: () {},
-            );
-          default:
-            row = Text(
-              dataGridCell.value.toString(),
-              overflow: TextOverflow.ellipsis,
-            );
-        }
-        return Padding(
-          padding: EdgeInsets.all(app.dimensions.padding.s),
-          child: row,
-        );
-      }).toList(),
-    );
-  }
-
-  @override
-  Future<void> handleLoadMoreRows() async {
-    if (isLoading || loadFailed || !hasMorePages()) return;
-    isLoading = true;
-
-    try {
-      final moreLogs = await fetchNextPage();
-
-      if (moreLogs.isNotEmpty) {
-        final newRows = moreLogs.map<DataGridRow>((e) => _buildRow(e)).toList();
-
-        _logs.addAll(newRows);
-
-        notifyListeners(); // Refresh data-grid
-      }
-    } on Exception catch (exc) {
-      loadFailed = true;
-      onLoadError(ExceptionConverter.parse(exc));
-      notifyListeners();
-    } finally {
-      isLoading = false;
-    }
-  }
-
-  DataGridRow _buildRow(HttpLogModel log) {
-    return DataGridRow(
-      cells: [
-        DataGridCell<HttpLogModel>(columnName: 'data', value: log),
-        DataGridCell<DateTime>(
-          columnName: 'requestedAt',
-          value: log.requestedAtLocal,
+            ),
+            const SizedBox(width: 12),
+            Text(intl.logs.rowsPerPage),
+            const SizedBox(width: 8),
+            Container(
+              height: 32,
+              padding: const EdgeInsets.symmetric(horizontal: 6),
+              decoration: BoxDecoration(
+                color: c.surface,
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: c.outline),
+              ),
+              child: DropdownButtonHideUnderline(
+                child: DropdownButton<int>(
+                  value: cubit.pageSize,
+                  isDense: true,
+                  dropdownColor: c.popup,
+                  borderRadius: BorderRadius.circular(8),
+                  style: TextStyle(fontSize: 12, color: c.text),
+                  iconSize: 16,
+                  items: [
+                    for (final size in const [10, 25, 50])
+                      DropdownMenuItem(value: size, child: Text('$size')),
+                  ],
+                  onChanged: (size) {
+                    if (size != null && size != cubit.pageSize)
+                      cubit.setPageSize(size);
+                  },
+                ),
+              ),
+            ),
+            const SizedBox(width: 12),
+            Text(
+              total == 0
+                  ? intl.logs.emptyRange
+                  : intl.logs.range(
+                      start: '${start + 1}',
+                      end: '${start + cubit.items.length}',
+                      total: _number.format(total),
+                    ),
+              style: TextStyle(
+                color: c.label,
+                fontFeatures: const [FontFeature.tabularFigures()],
+              ),
+            ),
+            const SizedBox(width: 12),
+            AppIconButton(
+              icon: app.assets.icons.general.chevronLeft,
+              tooltip: intl.logs.previousPage,
+              size: 32,
+              iconSize: 16,
+              radius: 8,
+              onPressed: page <= 1
+                  ? null
+                  : () => cubit.goToPage(cubit.currentPage - 1),
+            ),
+            for (final number in visiblePages(page: page, pageCount: pageCount))
+              _pageButton(context, number, current: number == page),
+            AppIconButton(
+              icon: app.assets.icons.general.chevronRight,
+              tooltip: intl.logs.nextPage,
+              size: 32,
+              iconSize: 16,
+              radius: 8,
+              onPressed: page >= pageCount
+                  ? null
+                  : () => cubit.goToPage(cubit.currentPage + 1),
+            ),
+          ],
         ),
-        DataGridCell<String>(columnName: 'httpMethod', value: log.httpMethod),
-        DataGridCell<String>(columnName: 'path', value: log.path),
-        DataGridCell<RouteLogModel?>(columnName: 'route', value: log.route),
-        DataGridCell<int>(columnName: 'responseCode', value: log.responseCode),
-        DataGridCell<String>(
-          columnName: 'requestDuration',
-          value: '${log.requestDuration} ms',
-        ),
-      ],
+      ),
     );
   }
-}
 
-class _HoverableClickableText extends StatefulWidget {
-  final String text;
-  final Color? color;
-  final VoidCallback? onTap;
-  final bool enableHover;
-
-  const _HoverableClickableText({
-    required this.text,
-    required this.onTap,
-    this.color,
-    this.enableHover = true,
-  });
-
-  @override
-  State<_HoverableClickableText> createState() =>
-      _HoverableClickableTextState();
-}
-
-class _HoverableClickableTextState extends State<_HoverableClickableText> {
-  bool _isHovering = false;
-
-  @override
-  Widget build(BuildContext context) {
-    final style = app.textTheme.bodyLarge!.copyWith(
-      color: widget.color,
-      decoration: widget.enableHover && _isHovering
-          ? TextDecoration.underline
-          : TextDecoration.none,
-      decorationColor: widget.color,
-      overflow: TextOverflow.ellipsis,
-    );
-
-    return Align(
-      alignment: Alignment.centerLeft,
-      widthFactor: 1.0,
-      child: MouseRegion(
-        cursor: SystemMouseCursors.click,
-        onEnter: (_) => setState(() => _isHovering = true),
-        onExit: (_) => setState(() => _isHovering = false),
-        child: GestureDetector(
-          onTap: widget.onTap,
-          child: Text(widget.text, style: style),
+  Widget _pageButton(
+    BuildContext context,
+    int number, {
+    required bool current,
+  }) {
+    final c = app.colors;
+    return Semantics(
+      button: true,
+      selected: current,
+      label: context.intl.logs.page(page: number),
+      excludeSemantics: true,
+      onTap: current ? null : () => cubit.goToPage(number - 1),
+      child: Material(
+        color: current ? c.selected : Colors.transparent,
+        borderRadius: BorderRadius.circular(8),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(8),
+          onTap: current ? null : () => cubit.goToPage(number - 1),
+          child: Container(
+            constraints: const BoxConstraints(minWidth: 32),
+            height: 32,
+            padding: const EdgeInsets.symmetric(horizontal: 6),
+            alignment: Alignment.center,
+            child: Text(
+              '$number',
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                color: current ? c.onSelected : c.label,
+                fontFeatures: const [FontFeature.tabularFigures()],
+              ),
+            ),
+          ),
         ),
       ),
     );

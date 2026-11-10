@@ -1,5 +1,5 @@
 import 'package:console/app_exporter.dart';
-import 'package:flutter/cupertino.dart';
+import 'package:flutter/material.dart';
 
 class DialogHelper {
   static final DialogHelper _instance = DialogHelper._internal();
@@ -10,27 +10,39 @@ class DialogHelper {
 
   static const Duration _transitionDuration = Duration(milliseconds: 200);
 
-  static Widget _transition(Animation<double> animation, Widget dialog) =>
-      Transform.scale(
-        scale: animation.value,
-        child: Opacity(opacity: animation.value, child: dialog),
-      );
+  static Widget _transition(
+    BuildContext context,
+    Animation<double> animation,
+    Widget dialog,
+  ) {
+    if (MediaQuery.disableAnimationsOf(context)) return dialog;
+    final t = appEase.transform(animation.value);
+    return Opacity(
+      opacity: animation.value,
+      child: Transform.translate(
+        offset: Offset(0, 8 * (1 - t)),
+        child: Transform.scale(scale: 0.98 + 0.02 * t, child: dialog),
+      ),
+    );
+  }
 
-  Future open({
+  Future<T?> open<T>({
     required Widget dialog,
     BuildContext? context,
     bool barrierDismissible = true,
+    Color? barrierColor,
   }) {
-    return showGeneralDialog(
+    return showGeneralDialog<T>(
       context: context ?? app.context,
       barrierDismissible: barrierDismissible,
+      barrierColor: barrierColor ?? app.colors.barrier,
       barrierLabel: '',
       pageBuilder: (context, animation, secondaryAnimation) {
         return const SizedBox.shrink();
       },
       transitionDuration: _transitionDuration,
       transitionBuilder: (context, animation, secondaryAnimation, _) =>
-          _transition(animation, dialog),
+          _transition(context, animation, dialog),
     );
   }
 }
@@ -46,11 +58,12 @@ class DialogPage<T> extends Page<T> {
   Route<T> createRoute(BuildContext context) => RawDialogRoute<T>(
     settings: this,
     barrierDismissible: true,
+    barrierColor: app.colors.barrier,
     barrierLabel: '',
     transitionDuration: DialogHelper._transitionDuration,
     pageBuilder: (context, animation, secondaryAnimation) =>
         const SizedBox.shrink(),
     transitionBuilder: (context, animation, secondaryAnimation, _) =>
-        DialogHelper._transition(animation, dialog),
+        DialogHelper._transition(context, animation, dialog),
   );
 }

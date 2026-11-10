@@ -1,12 +1,9 @@
 import 'package:console/app_exporter.dart';
 import 'package:flutter/material.dart';
 
-class LogDetailsScreen extends StatelessWidget {
+class LogDetailsScreen extends StatefulWidget {
   static void open(HttpLogModel log) {
-    DialogTemplate.open(
-      title: app.intl.logDetails.logDetails,
-      child: LogDetailsScreen(log: log),
-    );
+    app.dialog.open(dialog: LogDetailsScreen(log: log));
   }
 
   final HttpLogModel log;
@@ -14,185 +11,206 @@ class LogDetailsScreen extends StatelessWidget {
   const LogDetailsScreen({required this.log, super.key});
 
   @override
+  State<LogDetailsScreen> createState() => _LogDetailsScreenState();
+}
+
+class _LogDetailsScreenState extends State<LogDetailsScreen> {
+  final FocusNode _close = FocusNode();
+
+  @override
+  void dispose() {
+    _close.dispose();
+    super.dispose();
+  }
+
+  void _openRoute(String name) {
+    final routes = app.di.find<RoutesCubit>();
+    routes.query.value = name;
+    Navigator.of(context).pop();
+    app.navigator.go(RoutesScreen.navigator.name);
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: EdgeInsets.all(app.dimensions.padding.l),
-      child: Center(
-        child: SingleChildScrollView(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.center,
+    final c = app.colors;
+    final intl = context.intl;
+    final log = widget.log;
+    final route = log.route;
+    //"Admin" is logged as a route but can't be opened: only routes that exist in the list can
+    final exists =
+        route != null &&
+        app.di.find<RoutesCubit>().routes.any((r) => r.id == route.routeId);
+    return DialogTemplate(
+      title: intl.logDetails.title,
+      closeFocusNode: _close,
+      footer: exists
+          ? Align(
+              alignment: Alignment.centerRight,
+              child: AppButton(
+                label: intl.logDetails.openRoute(name: route.routeName),
+                height: 44,
+                onPressed: () => _openRoute(route.routeName),
+              ),
+            )
+          : null,
+      body: SelectionArea(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: c.card,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: c.outlineCard),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    log.route?.routeName ??
-                        app.intl.logFilters.filterNoRouteName,
-                    style: app.textTheme.headlineMedium?.copyWith(
-                      color: log.route != null
-                          ? app.colors.neutral.white
-                          : app.colors.neutral.grey4,
-                    ),
-                    overflow: TextOverflow.ellipsis,
+                  Row(
+                    children: [
+                      Container(
+                        height: 26,
+                        padding: const EdgeInsets.symmetric(horizontal: 10),
+                        alignment: Alignment.center,
+                        decoration: BoxDecoration(
+                          color: c.raised,
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Text(
+                          log.httpMethod,
+                          style: monoStyle(
+                            size: 12,
+                            weight: FontWeight.w500,
+                            color: c.methodColor(log.httpMethod),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      StatusPill(log.responseCode, height: 26),
+                      const Spacer(),
+                      Text(
+                        intl.logs.durationMs(ms: log.requestDuration),
+                        style: TextStyle(fontSize: 12, color: c.textSecondary),
+                      ),
+                    ],
                   ),
+                  const SizedBox(height: 10),
                   Text(
                     log.path,
-                    style: app.textTheme.bodyMedium?.copyWith(
-                      color: app.colors.neutral.white,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                  app.dimensions.padding.xxl.gap(),
-                ],
-              ),
-
-              section(
-                children: [
-                  buildItem(
-                    key: app.intl.logDetails.logsDetailsTimestamp,
-                    value: app.dateFormatter.logsTime.format(
-                      log.requestedAtLocal,
-                    ),
-                  ),
-                  divider(),
-
-                  app.dimensions.padding.sm.gap(),
-                  buildItem(
-                    key: app.intl.logDetails.logsDetailsSourceIp,
-                    value: log.sourceIp,
-                  ),
-                  divider(),
-
-                  app.dimensions.padding.sm.gap(),
-                  buildItem(
-                    key: app.intl.logDetails.logsDetailsHttpMethod,
-                    value: log.httpMethod,
-                  ),
-                  divider(),
-
-                  app.dimensions.padding.sm.gap(),
-                  buildItem(
-                    key: app.intl.logDetails.logsDetailsHttpStatus,
-                    value: log.responseCode.toString(),
-                  ),
-                  divider(),
-
-                  app.dimensions.padding.sm.gap(),
-                  buildItem(
-                    key: app.intl.logDetails.logsDetailsRequestDuration,
-                    value: '${log.requestDuration} ms',
-                  ),
-                  divider(),
-
-                  app.dimensions.padding.sm.gap(),
-                  buildItem(
-                    key: app.intl.logDetails.logsDetailsUserAgent,
-                    value: log.userAgent,
+                    style: monoStyle(size: 15, height: 22 / 15, color: c.text),
                   ),
                 ],
               ),
-
-              app.dimensions.padding.xxl.gap(),
-
-              section(
-                label: app.intl.logDetails.logsDetailsRoute,
-                children: [
-                  buildItem(
-                    key: app.intl.logDetails.logsDetailsRouteName,
-                    value: log.route?.routeName ?? noRoute.routeName,
-                  ),
-                  divider(),
-
-                  app.dimensions.padding.sm.gap(),
-                  buildItem(
-                    key: app.intl.logDetails.logsDetailsRoutePath,
-                    value: log.route?.routePath ?? noRoute.routePath,
-                  ),
-                  divider(),
-
-                  app.dimensions.padding.sm.gap(),
-                  buildItem(
-                    key: app.intl.logDetails.logsDetailsRouteId,
-                    value: log.route?.routeId ?? noRoute.routeId,
-                  ),
-                ],
+            ),
+            const SizedBox(height: 18),
+            _section(intl.logDetails.request, [
+              _Item(
+                intl.logDetails.timestamp,
+                app.dateFormatter.logsTime.format(log.requestedAtLocal),
               ),
-            ],
-          ),
+              _Item(intl.logDetails.sourceIp, log.sourceIp),
+              _Item(intl.logDetails.userAgent, log.userAgent),
+            ]),
+            const SizedBox(height: 18),
+            _section(
+              intl.logDetails.route,
+              route == null
+                  ? [
+                      _Item(
+                        intl.logDetails.routeName,
+                        noRouteId,
+                        mono: true,
+                        muted: true,
+                      ),
+                    ]
+                  : [
+                      _Item(
+                        intl.logDetails.routeName,
+                        route.routeName,
+                        mono: true,
+                      ),
+                      _Item(
+                        intl.logDetails.routePath,
+                        route.routePath,
+                        mono: true,
+                      ),
+                      _Item(intl.logDetails.routeId, route.routeId, mono: true),
+                    ],
+            ),
+          ],
         ),
       ),
     );
   }
 
-  Widget section({required List<Widget> children, String? label}) {
+  Widget _section(String title, List<_Item> items) {
+    final c = app.colors;
     return Column(
-      mainAxisAlignment: MainAxisAlignment.start,
-      crossAxisAlignment: CrossAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        if (label != null) ...[
-          Padding(
-            padding: EdgeInsets.only(left: app.dimensions.padding.s),
-            child: Text(
-              label,
-              style: app.textTheme.titleSmall?.copyWith(
-                color: app.colors.neutral.grey2,
-              ),
-            ),
-          ),
-          app.dimensions.padding.s.gap(),
-        ],
+        CaptionText(title, color: c.textSecondary, size: 12),
+        const SizedBox(height: 8),
         Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
           decoration: BoxDecoration(
-            color: app.colors.primary.background1.brighten(0.015),
-            borderRadius: app.dimensions.border.borderRadius.m,
+            color: c.field,
+            borderRadius: BorderRadius.circular(14),
           ),
-          child: Padding(
-            padding: EdgeInsets.all(app.dimensions.padding.l),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.start,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [...children],
-            ),
+          child: Column(
+            children: [
+              for (var i = 0; i < items.length; i++)
+                Container(
+                  padding: const EdgeInsets.symmetric(vertical: 10),
+                  decoration: BoxDecoration(
+                    border: i == items.length - 1
+                        ? null
+                        : Border(bottom: BorderSide(color: c.outlineSoft)),
+                  ),
+                  child: items[i],
+                ),
+            ],
           ),
         ),
       ],
     );
   }
+}
 
-  Widget divider() {
-    return Divider(color: app.colors.neutral.grey4);
-  }
+class _Item extends StatelessWidget {
+  final String label;
+  final String value;
+  final bool mono;
+  final bool muted;
 
-  Widget buildItem({required String key, required String value}) {
+  const _Item(this.label, this.value, {this.mono = false, this.muted = false});
+
+  @override
+  Widget build(BuildContext context) {
+    final c = app.colors;
+    final color = muted ? c.textTertiary : c.text;
     return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         SizedBox(
-          width: 120,
+          width: 110,
           child: Text(
-            key,
-            style: app.textTheme.bodyMedium?.copyWith(
-              color: app.colors.neutral.grey3,
+            label,
+            style: TextStyle(
+              fontSize: 13,
+              height: 20 / 13,
+              color: c.textSecondary,
             ),
           ),
         ),
+        const SizedBox(width: 16),
         Expanded(
-          child: Align(
-            alignment: Alignment.centerRight,
-            child: SelectionArea(
-              child: Text(
-                value,
-                style: app.textTheme.bodyMedium?.copyWith(
-                  color: app.colors.neutral.white,
-                ),
-                softWrap: true,
-                maxLines: null,
-                textAlign: TextAlign.right,
-              ),
-            ),
+          child: Text(
+            value,
+            textAlign: TextAlign.right,
+            style: mono
+                ? monoStyle(height: 20 / 13, color: color)
+                : TextStyle(fontSize: 13, height: 20 / 13, color: color),
           ),
         ),
       ],

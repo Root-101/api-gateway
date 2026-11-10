@@ -77,7 +77,7 @@ class RoutesFormCubit extends Cubit<RoutesFormState>
     try {
       await repo.create(model: model);
 
-      emit(RoutesFormProcessingOKState());
+      emit(RoutesFormProcessingOKState(model.name, created: true));
     } on GlobalException catch (global) {
       if (global.type == GlobalExceptionType.validation &&
           global.data is List<ValidationError>) {
@@ -99,7 +99,7 @@ class RoutesFormCubit extends Cubit<RoutesFormState>
     try {
       await repo.edit(routeId: routeId, model: model);
 
-      emit(RoutesFormProcessingOKState());
+      emit(RoutesFormProcessingOKState(model.name, created: false));
     } on GlobalException catch (global) {
       if (global.type == GlobalExceptionType.validation &&
           global.data is List<ValidationError>) {
@@ -172,7 +172,10 @@ class RoutesFormProcessInProgressState extends RoutesFormProcessState {
 }
 
 class RoutesFormProcessingOKState extends RoutesFormProcessState {
-  RoutesFormProcessingOKState();
+  final String name;
+  final bool created;
+
+  RoutesFormProcessingOKState(this.name, {required this.created});
 }
 
 class RoutesFormProcessingErrorState extends RoutesFormProcessState {

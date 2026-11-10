@@ -882,22 +882,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.4.1"
-  syncfusion_flutter_core:
-    dependency: transitive
-    description:
-      name: syncfusion_flutter_core
-      sha256: "8134debe4523ef329e4e62f9167d1853b2af4779219e7bb1dc03cf3a26ac571f"
-      url: "https://pub.dev"
-    source: hosted
-    version: "35.1.43"
-  syncfusion_flutter_datagrid:
-    dependency: "direct main"
-    description:
-      name: syncfusion_flutter_datagrid
-      sha256: bd40fc3420ecc79977a1755452d672085e68f4333085334273dcf0a4a33d7111
-      url: "https://pub.dev"
-    source: hosted
-    version: "35.1.43"
   term_glyph:
     dependency: transitive
     description:
@@ -914,14 +898,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "0.7.12"
-  top_snackbar_flutter:
-    dependency: "direct main"
-    description:
-      name: top_snackbar_flutter
-      sha256: "345dda30b21961da85974c08bab93649fd4689e206b46643a144f0716798d6cd"
-      url: "https://pub.dev"
-    source: hosted
-    version: "3.5.0"
   typed_data:
     dependency: transitive
     description:

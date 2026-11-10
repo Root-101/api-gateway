@@ -1,11 +1,19 @@
 import 'dart:convert';
 
 import 'package:console/app_exporter.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 class RoutesCubit extends Cubit<RoutesState>
     with GlobalEventBusCommunication<RoutesState> {
   final RoutesRepo repo;
+
+  ///last list loaded: survives the action states and a failed reload
+  final List<RouteModel> routes = [];
+  bool loaded = false;
+
+  ///text of the search box, also set from outside ("Open route x" in the log details)
+  final ValueNotifier<String> query = ValueNotifier('');
 
   RoutesCubit({required this.repo}) : super(const RoutesInitialState()) {
     //if a new route is added/edited, update
@@ -25,6 +33,9 @@ class RoutesCubit extends Cubit<RoutesState>
   }
 
   void reset() {
+    routes.clear();
+    loaded = false;
+    query.value = '';
     emit(const RoutesInitialState());
   }
 
@@ -35,7 +46,11 @@ class RoutesCubit extends Cubit<RoutesState>
         emit(RoutesSearchingState());
       }
 
-      List<RouteModel> routes = await repo.findAll();
+      final found = await repo.findAll();
+      routes
+        ..clear()
+        ..addAll(found);
+      loaded = true;
 
       emit(RoutesSearchOkState(routes: routes));
     } on Exception catch (exc) {
@@ -49,7 +64,7 @@ class RoutesCubit extends Cubit<RoutesState>
 
       await repo.delete(route: route);
 
-      emit(RoutesDeleteOkState());
+      emit(RoutesDeleteOkState(route.name));
     } on Exception catch (exc) {
       emit(RoutesDeleteErrorState(ExceptionConverter.parse(exc)));
     }
@@ -60,14 +75,15 @@ class RoutesCubit extends Cubit<RoutesState>
       emit(RoutesBackupProcessingState());
 
       List<RouteModel> routes = await repo.findAll();
+      final stamp = app.dateFormatter.fileStamp.format(DateTime.now());
       final encoder = const JsonEncoder.withIndent('  ');
       String rawData = encoder.convert(routes.map((e) => e.toJson()).toList());
       ExportDocument.downloadDocument(
         rawData,
-        filename: 'routes-backup-${DateTime.now().toString()}.json',
+        filename: 'routes-backup-$stamp.json',
       );
 
-      emit(RoutesBackupOkState());
+      emit(RoutesBackupOkState(routes.length));
     } on Exception catch (exc) {
       emit(RoutesBackupErrorState(ExceptionConverter.parse(exc)));
     }
@@ -113,7 +129,9 @@ class RoutesBackupProcessingState extends RoutesBackupState {
 }
 
 class RoutesBackupOkState extends RoutesBackupState {
-  RoutesBackupOkState();
+  final int count;
+
+  RoutesBackupOkState(this.count);
 }
 
 class RoutesBackupErrorState extends RoutesBackupState {
@@ -132,7 +150,9 @@ class RoutesDeleteProcessingState extends RoutesDeleteState {
 }
 
 class RoutesDeleteOkState extends RoutesDeleteState {
-  RoutesDeleteOkState();
+  final String name;
+
+  RoutesDeleteOkState(this.name);
 }
 
 class RoutesDeleteErrorState extends RoutesDeleteState {

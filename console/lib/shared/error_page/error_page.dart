@@ -1,7 +1,7 @@
 import 'package:console/app_exporter.dart';
 import 'package:flutter/material.dart';
 
-class ErrorPage extends StatefulWidget {
+class ErrorPage extends StatelessWidget {
   final String? errorMessage;
   final VoidCallback? onPressed;
   final String? buttonText;
@@ -14,44 +14,19 @@ class ErrorPage extends StatefulWidget {
   });
 
   @override
-  State<ErrorPage> createState() => _ErrorPageState();
-}
-
-class _ErrorPageState extends State<ErrorPage> {
-  @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: Center(
-        child: SingleChildScrollView(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.center,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Padding(
-                padding: EdgeInsets.symmetric(
-                  horizontal: app.dimensions.padding.xxl,
+    return Center(
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.all(24),
+        child: EmptyState(
+          icon: app.assets.icons.general.alertTriangle,
+          title: errorMessage ?? context.intl.errors.genericError,
+          action: onPressed == null
+              ? null
+              : AppButton(
+                  label: buttonText ?? context.intl.actions.tryAgain,
+                  onPressed: onPressed,
                 ),
-                child: Text(
-                  widget.errorMessage ?? context.intl.errors.genericError,
-                  style: app.textTheme.titleLarge,
-                  textAlign: TextAlign.center,
-                ),
-              ),
-              if (widget.onPressed != null) ...[
-                (2 * app.dimensions.padding.xxl).gap(),
-                Padding(
-                  padding: EdgeInsets.symmetric(
-                    horizontal: 2 * app.dimensions.padding.xxl,
-                  ),
-                  child: PrimaryButton.primary(
-                    title: widget.buttonText ?? context.intl.actions.tryAgain,
-                    onPressed: widget.onPressed ?? () {},
-                  ),
-                ),
-              ],
-            ],
-          ),
         ),
       ),
     );

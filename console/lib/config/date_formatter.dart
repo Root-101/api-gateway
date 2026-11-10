@@ -24,8 +24,17 @@ class DateFormatter {
   ///yyyy-MM-dd
   final DateFormat api = DateFormat('yyyy-MM-dd');
 
-  ///dd MMM yyyy HH:mm:ss (24 h)
-  final DateFormat logsTime = DateFormat('dd MMM yyyy HH:mm:ss');
+  ///dd MMM yyyy, HH:mm:ss (24 h)
+  final DateFormat logsTime = DateFormat('dd MMM yyyy, HH:mm:ss');
+
+  ///HH:mm
+  final DateFormat clock = DateFormat('HH:mm');
+
+  ///January 2026
+  final DateFormat month = DateFormat('MMMM yyyy');
+
+  ///yyyy-MM-dd_HH_mm_ss.SSS, the timestamp in the backup and export file names
+  final DateFormat fileStamp = DateFormat('yyyy-MM-dd_HH_mm_ss.SSS');
 
   ///dd MMM yyyy
   final DateFormat logsTimeS = DateFormat('dd MMM yyyy');

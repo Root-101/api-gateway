@@ -18,9 +18,9 @@ class RouteConfig {
       if (loggedIn && atLogin) return RoutesScreen.navigator.path;
       return null;
     },
-    //unknown url: go home (the guard sends it to login when logged out)
+    //unknown url: 404 inside the shell (the guard sends it to login when logged out)
     onException: (context, state, router) =>
-        router.go(RoutesScreen.navigator.path),
+        router.go(NotFoundScreen.location(state.uri.toString())),
     routes: [
       StatefulShellRoute.indexedStack(
         builder: (context, state, navigationShell) {
@@ -53,6 +53,17 @@ class RouteConfig {
                 name: LogsScreen.navigator.name,
                 path: LogsScreen.navigator.path,
                 builder: LogsScreen.navigator.builder,
+              ),
+            ],
+          ),
+          StatefulShellBranch(
+            routes: <RouteBase>[
+              ///   /not-found
+              GoRoute(
+                path: NotFoundScreen.path,
+                builder: (context, state) => NotFoundScreen(
+                  requested: state.uri.queryParameters['path'] ?? '',
+                ),
               ),
             ],
           ),

@@ -33,27 +33,33 @@ class RoutesRepo {
     }
   }
 
-  ///parses a backup file; wrong shapes throw TypeError (not Exception), so catch everything
+  ///parses a backup file (a non-empty list of routes with name, path and uri);
+  ///wrong shapes throw TypeError (not Exception), so catch everything
   List<RouteRequest> parseBackup(String rawFileContent) {
     try {
       List<dynamic> rawList = jsonDecode(rawFileContent) as List<dynamic>;
-      return rawList.map((e) => RouteRequest.fromJson(e)).toList();
+      final routes = rawList.map((e) => RouteRequest.fromJson(e)).toList();
+      if (routes.isEmpty ||
+          routes.any(
+            (r) => r.name.isEmpty || r.path.isEmpty || r.uri.isEmpty,
+          )) {
+        throw const FormatException();
+      }
+      return routes;
     } catch (_) {
       throw GlobalException(
         type: GlobalExceptionType.general,
-        message: app.intl.restore.errorDecodingFile,
+        message: app.intl.restore.invalidFile,
       );
     }
   }
 
   Future restore({required String rawFileContent}) async {
-    List<RouteRequest> createModels = parseBackup(rawFileContent);
-    if (createModels.isNotEmpty) {
-      try {
-        await client.createAll(models: createModels);
-      } on Exception catch (exc) {
-        throw ExceptionConverter.parse(exc);
-      }
+    List<RouteRequest> models = parseBackup(rawFileContent);
+    try {
+      await client.replaceAll(models: models);
+    } on Exception catch (exc) {
+      throw ExceptionConverter.parse(exc);
     }
   }
 

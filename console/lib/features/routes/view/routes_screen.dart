@@ -33,332 +33,589 @@ class RoutesScreen extends StatefulWidget {
 }
 
 class _RoutesScreenState extends State<RoutesScreen> {
-  late final RoutesCubit cubit;
+  static const double _minCardWidth = 400;
+  static const double _gap = 16;
 
+  late final RoutesCubit cubit;
   final TextEditingController _searchCtrl = TextEditingController();
-  String _query = '';
 
   //local filter: the api has no search for routes and the list is small
-  List<RouteModel> _filter(List<RouteModel> routes) => _query.isEmpty
-      ? routes
-      : routes
-            .where(
-              (r) => [
-                r.name,
-                r.path,
-                r.uri,
-                r.description,
-              ].any((field) => field.toLowerCase().contains(_query)),
-            )
-            .toList();
+  List<RouteModel> get _visible {
+    final query = cubit.query.value.trim().toLowerCase();
+    if (query.isEmpty) return cubit.routes;
+    return cubit.routes
+        .where(
+          (r) => [
+            r.name,
+            r.path,
+            r.uri,
+            r.description,
+          ].any((field) => field.toLowerCase().contains(query)),
+        )
+        .toList();
+  }
 
-  @override
-  void dispose() {
-    _searchCtrl.dispose();
-    super.dispose();
+  void _syncSearch() {
+    if (_searchCtrl.text != cubit.query.value) {
+      _searchCtrl.text = cubit.query.value;
+    }
+    setState(() {});
   }
 
   @override
   void initState() {
     super.initState();
     cubit = app.di.find();
+    cubit.query.addListener(_syncSearch);
+    _searchCtrl.text = cubit.query.value;
     if (cubit.state is RoutesInitialState) {
       cubit.search();
     }
   }
 
   @override
-  Widget build(BuildContext context) {
-    Size size = MediaQuery.of(context).size;
-    //same tile width in both calculations; at least one column
-    int maxTiles = max(1, size.width ~/ 500);
-    int realOccupied = maxTiles * 500;
-    double missing = max(
-      size.width - realOccupied - 50,
-      app.dimensions.padding.xxl,
-    );
+  void dispose() {
+    cubit.query.removeListener(_syncSearch);
+    _searchCtrl.dispose();
+    super.dispose();
+  }
 
+  void _onState(BuildContext context, RoutesState state) {
+    final intl = context.intl;
+    if (state is RoutesBackupProcessingState ||
+        state is RoutesDeleteProcessingState) {
+      app.loading.show();
+    } else if (state is RoutesBackupOkState) {
+      app.loading.hide();
+      app.snack.showSuccess(
+        message: intl.routes.backupSaved(count: state.count),
+      );
+    } else if (state is RoutesDeleteOkState) {
+      app.loading.hide();
+      app.snack.showSuccess(message: intl.routes.deleted(name: state.name));
+    } else if (state is RoutesBackupErrorState) {
+      app.loading.hide();
+      app.snack.showError(message: state.exception.message);
+    } else if (state is RoutesDeleteErrorState) {
+      app.loading.hide();
+      app.snack.showError(message: state.exception.message);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
     return BlocConsumer<RoutesCubit, RoutesState>(
-      listener: (context, state) {
-        if (state is RoutesBackupState) {
-          if (state is RoutesBackupProcessingState) {
-            app.loading.show();
-          } else if (state is RoutesBackupOkState) {
-            app.loading.hide();
-          } else if (state is RoutesBackupErrorState) {
-            app.loading.hide();
-            app.snack.showError(
-              message: state.exception.message,
-              context: context,
-            );
-          }
-        } else if (state is RoutesDeleteState) {
-          if (state is RoutesDeleteProcessingState) {
-            app.loading.show();
-          } else if (state is RoutesDeleteOkState) {
-            app.loading.hide();
-          } else if (state is RoutesDeleteErrorState) {
-            app.loading.hide();
-            app.snack.showError(
-              message: state.exception.message,
-              context: context,
-            );
-          }
-        }
-      },
+      listener: _onState,
       buildWhen: (previous, current) => current is RoutesSearchState,
       builder: (context, state) {
-        if (state is RoutesInitialState) {
-          return const LoadingPage();
-        } else if (state is RoutesSearchingState) {
-          return const LoadingPage();
-        } else if (state is RoutesSearchOkState) {
-          return Scaffold(
-            appBar: CustomAppBar.build(
-              title: context.intl.routes.routes,
-              actions: [
-                PrimaryButton.secondary(
-                  onPressed: () => RoutesFormScreen.navigator.create(),
-                  title: context.intl.actions.create,
-                  icon: app.assets.icons.actions.add,
-                ),
-                app.dimensions.padding.m.gap(),
-                Padding(
-                  padding: EdgeInsets.symmetric(
-                    vertical: app.dimensions.padding.m,
-                  ),
-                  child: VerticalDivider(color: app.colors.neutral.grey5),
-                ),
-                app.dimensions.padding.m.gap(),
-                PrimaryButton.secondary(
-                  onPressed: cubit.backup,
-                  title: context.intl.actions.backup,
-                  icon: app.assets.icons.actions.download,
-                ),
-                app.dimensions.padding.m.gap(),
-                PrimaryButton.secondary(
-                  onPressed: () {
-                    RoutesRestoreDialog.show();
-                  },
-                  title: context.intl.actions.restore,
-                  icon: app.assets.icons.actions.upload,
-                ),
-                app.dimensions.padding.xl.gap(),
-              ],
+        if (state is RoutesSearchErrorState && !cubit.loaded) {
+          return ErrorPage(
+            errorMessage: state.exception.message,
+            buttonText: context.intl.actions.tryAgain,
+            onPressed: cubit.search,
+          );
+        }
+        final loading = !cubit.loaded;
+        return SingleChildScrollView(
+          padding: const EdgeInsets.fromLTRB(24, 24, 24, 32),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              _buildHeader(context),
+              const SizedBox(height: 16),
+              AppSearchField(
+                controller: _searchCtrl,
+                hint: context.intl.routes.search,
+                clearLabel: context.intl.actions.clearSearch,
+                onChanged: (value) => cubit.query.value = value,
+                onClear: () => cubit.query.value = '',
+              ),
+              const SizedBox(height: 20),
+              if (loading)
+                _buildGrid(List.generate(4, (_) => const _RouteCardSkeleton()))
+              else
+                _buildBody(context),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildHeader(BuildContext context) {
+    final c = app.colors;
+    final intl = context.intl;
+    final count = cubit.routes.length;
+    return Wrap(
+      alignment: WrapAlignment.spaceBetween,
+      crossAxisAlignment: WrapCrossAlignment.end,
+      spacing: 16,
+      runSpacing: 16,
+      children: [
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              intl.routes.routes,
+              style: TextStyle(
+                fontSize: 26,
+                height: 32 / 26,
+                fontWeight: FontWeight.w500,
+                color: c.text,
+              ),
             ),
-            body: SizedBox.expand(
-              child: CustomPaint(
-                painter: GridDotPainter(),
-                child: Padding(
-                  padding: EdgeInsets.all(app.dimensions.padding.l),
-                  child: Column(
+            const SizedBox(height: 4),
+            Text(
+              count == 1
+                  ? intl.routes.oneRoute
+                  : intl.routes.manyRoutes(count: count),
+              style: TextStyle(fontSize: 13, color: c.textSecondary),
+            ),
+          ],
+        ),
+        Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            AppButton(
+              label: intl.routes.backup,
+              icon: app.assets.icons.actions.download,
+              kind: AppButtonKind.outlined,
+              onPressed: cubit.backup,
+            ),
+            const SizedBox(width: 8),
+            AppButton(
+              label: intl.routes.restore,
+              icon: app.assets.icons.actions.upload,
+              kind: AppButtonKind.outlined,
+              onPressed: RoutesRestoreDialog.show,
+            ),
+            Container(
+              width: 1,
+              height: 28,
+              margin: const EdgeInsets.symmetric(horizontal: 12),
+              color: c.outlineField,
+            ),
+            AppButton(
+              label: intl.routes.createRoute,
+              icon: app.assets.icons.actions.add,
+              onPressed: RoutesFormScreen.navigator.create,
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildBody(BuildContext context) {
+    final intl = context.intl;
+    final visible = _visible;
+    if (visible.isEmpty) {
+      final noRoutes = cubit.routes.isEmpty;
+      return Padding(
+        padding: const EdgeInsets.only(top: 44),
+        child: Center(
+          child: EmptyState(
+            icon: app.assets.icons.general.search,
+            title: noRoutes
+                ? intl.routes.noRoutesYet
+                : intl.routes.noMatches(query: cubit.query.value),
+            subtitle: intl.routes.noMatchesHint,
+            action: AppButton(
+              label: intl.routes.createRoute,
+              onPressed: RoutesFormScreen.navigator.create,
+            ),
+          ),
+        ),
+      );
+    }
+    return _buildGrid([
+      for (final route in visible)
+        _RouteCard(route: route, onDelete: () => _confirmDelete(route)),
+    ]);
+  }
+
+  ///like a css auto-fill grid: as many 400 px+ columns as fit, cards of a row share their height
+  Widget _buildGrid(List<Widget> cards) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final columns = max(
+          1,
+          ((constraints.maxWidth + _gap) / (_minCardWidth + _gap)).floor(),
+        );
+        return Column(
+          children: [
+            for (var i = 0; i < cards.length; i += columns)
+              Padding(
+                padding: EdgeInsets.only(top: i == 0 ? 0 : _gap),
+                child: IntrinsicHeight(
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      Align(
-                        alignment: Alignment.centerLeft,
-                        child: SizedBox(
-                          width: 450,
-                          child: EMTextSearchField(
-                            controller: _searchCtrl,
-                            hint: context.intl.routes.searchRoutes,
-                            onSearch: (value) => setState(
-                              () => _query = value.trim().toLowerCase(),
-                            ),
-                          ),
+                      for (var col = 0; col < columns; col++) ...[
+                        if (col > 0) const SizedBox(width: _gap),
+                        Expanded(
+                          child: i + col < cards.length
+                              ? cards[i + col]
+                              : const SizedBox.shrink(),
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+              ),
+          ],
+        );
+      },
+    );
+  }
+
+  Future<void> _confirmDelete(RouteModel route) async {
+    final confirmed = await app.dialog.open<bool>(
+      dialog: _DeleteRouteDialog(route: route),
+    );
+    if (confirmed == true) cubit.delete(route: route);
+  }
+}
+
+class _RouteCard extends StatefulWidget {
+  final RouteModel route;
+  final VoidCallback onDelete;
+
+  const _RouteCard({required this.route, required this.onDelete});
+
+  @override
+  State<_RouteCard> createState() => _RouteCardState();
+}
+
+class _RouteCardState extends State<_RouteCard> {
+  bool _hovered = false;
+
+  Future<void> _copy(String url) async {
+    await Clipboard.setData(ClipboardData(text: url));
+    app.snack.showSuccess(message: app.intl.actions.copiedToClipboard);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final c = app.colors;
+    final intl = context.intl;
+    final route = widget.route;
+    return MouseRegion(
+      onEnter: (_) => setState(() => _hovered = true),
+      onExit: (_) => setState(() => _hovered = false),
+      child: AnimatedContainer(
+        duration: motion(context, const Duration(milliseconds: 150)),
+        padding: const EdgeInsets.fromLTRB(18, 18, 18, 16),
+        decoration: BoxDecoration(
+          color: c.card,
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(color: _hovered ? c.textTertiary : c.outlineCard),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        route.name,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontSize: 19,
+                          height: 26 / 19,
+                          fontWeight: FontWeight.w500,
+                          color: c.text,
                         ),
                       ),
-                      Expanded(
-                        child: _filter(state.routes).isEmpty
-                            ? const NoDataPage()
-                            : Padding(
-                                padding: EdgeInsets.symmetric(
-                                  horizontal: missing / 2,
-                                  vertical: app.dimensions.padding.xxl,
-                                ),
-                                child: GridView(
-                                  gridDelegate:
-                                      SliverGridDelegateWithFixedCrossAxisCount(
-                                        crossAxisCount: maxTiles,
-                                        childAspectRatio: 2.1,
-                                        crossAxisSpacing:
-                                            app.dimensions.padding.l,
-                                        mainAxisSpacing:
-                                            app.dimensions.padding.l,
-                                      ),
-                                  children: _filter(state.routes)
-                                      .map(
-                                        (model) =>
-                                            _buildSingleRouteTile(model: model),
-                                      )
-                                      .toList(),
-                                ),
-                              ),
+                      const SizedBox(height: 2),
+                      Text(
+                        route.description.isEmpty
+                            ? intl.routes.noDescription
+                            : route.description,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontSize: 13,
+                          height: 18 / 13,
+                          color: c.textSecondary,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 12),
+                AppIconButton(
+                  icon: app.assets.icons.actions.edit,
+                  tooltip: intl.routes.edit,
+                  onPressed: () =>
+                      RoutesFormScreen.navigator.edit(model: route),
+                ),
+                AppIconButton(
+                  icon: app.assets.icons.actions.duplicate,
+                  tooltip: intl.routes.duplicate,
+                  onPressed: () =>
+                      RoutesFormScreen.navigator.duplicate(model: route),
+                ),
+                AppIconButton(
+                  icon: app.assets.icons.actions.delete,
+                  tooltip: intl.routes.delete,
+                  hoverColor: c.softRed,
+                  onPressed: widget.onDelete,
+                ),
+              ],
+            ),
+            const SizedBox(height: 14),
+            Expanded(
+              child: Container(
+                width: double.infinity,
+                padding: const EdgeInsets.fromLTRB(12, 8, 6, 12),
+                decoration: BoxDecoration(
+                  color: c.night,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: c.outlineSoft),
+                ),
+                child: SelectionArea(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _urlRow(
+                        intl.routes.from,
+                        route.enterPoint,
+                        intl.routes.copyFrom,
+                        false,
+                      ),
+                      Container(
+                        height: 1,
+                        margin: const EdgeInsets.fromLTRB(0, 10, 6, 2),
+                        color: c.outlineSoft,
+                      ),
+                      _urlRow(
+                        intl.routes.to,
+                        route.redirectTo,
+                        intl.routes.copyTo,
+                        true,
                       ),
                     ],
                   ),
                 ),
               ),
             ),
-          );
-        } else if (state is RoutesSearchErrorState) {
-          return ErrorPage(
-            errorMessage: state.exception.message,
-            buttonText: context.intl.actions.tryAgain,
-            onPressed: cubit.search,
-          );
-        } else {
-          return ErrorPage(
-            buttonText: context.intl.actions.tryAgain,
-            onPressed: cubit.search,
-          );
-        }
-      },
+          ],
+        ),
+      ),
     );
   }
 
-  Future<void> _confirmDelete(RouteModel model) async {
-    final bool? confirmed = await showDialog<bool>(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: Text(app.intl.actions.delete),
-        content: Text(app.intl.actions.deleteRouteConfirm(name: model.name)),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(dialogContext).pop(false),
-            child: Text(app.intl.actions.cancel),
+  Widget _urlRow(String caption, String url, String copyLabel, bool accent) {
+    final c = app.colors;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            CaptionText(caption, color: accent ? c.lilac : c.textTertiary),
+            AppIconButton(
+              icon: app.assets.icons.actions.duplicate,
+              tooltip: copyLabel,
+              size: 32,
+              iconSize: 15,
+              radius: 8,
+              color: c.textTertiary,
+              onPressed: () => _copy(url),
+            ),
+          ],
+        ),
+        Padding(
+          padding: const EdgeInsets.only(right: 6),
+          child: Text(
+            url,
+            style: monoStyle(size: 13, height: 20 / 13, color: c.text),
           ),
-          TextButton(
-            onPressed: () => Navigator.of(dialogContext).pop(true),
-            child: Text(
-              app.intl.actions.delete,
-              style: TextStyle(color: app.colors.primary.red),
+        ),
+      ],
+    );
+  }
+}
+
+class _RouteCardSkeleton extends StatelessWidget {
+  const _RouteCardSkeleton();
+
+  @override
+  Widget build(BuildContext context) {
+    final c = app.colors;
+    return Container(
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        color: c.card,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: c.raised),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              AppSkeleton(width: 140, height: 20),
+              AppSkeleton(width: 110, height: 32, radius: 10),
+            ],
+          ),
+          const SizedBox(height: 14),
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: c.outlineSoft),
+            ),
+            child: const Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                AppSkeleton(width: 40, height: 10, radius: 4),
+                SizedBox(height: 8),
+                AppSkeleton(width: double.infinity, height: 14),
+                SizedBox(height: 14),
+                AppSkeleton(width: 28, height: 10, radius: 4),
+                SizedBox(height: 8),
+                AppSkeleton(width: 260, height: 14),
+              ],
             ),
           ),
         ],
       ),
     );
-    if (confirmed == true) {
-      cubit.delete(route: model);
-    }
   }
+}
 
-  Widget _buildSingleRouteTile({required RouteModel model}) {
-    return SelectionArea(
-      child: Container(
-        decoration: BoxDecoration(
-          color: app.colors.primary.background2,
-          borderRadius: app.dimensions.border.borderRadius.m,
-          border: Border.all(color: app.colors.neutral.grey5),
-        ),
-        child: Padding(
-          padding: EdgeInsets.all(app.dimensions.padding.xl),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.start,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              ...[
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Flexible(
-                      child: Tooltip(
-                        //the card has a fixed height: the description lives in the tooltip
-                        message: model.description.isEmpty
-                            ? model.name
-                            : [model.name, model.description].join('\n'),
-                        child: Text(
-                          model.name,
-                          style: app.textTheme.headlineSmall,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
+class _DeleteRouteDialog extends StatelessWidget {
+  final RouteModel route;
+
+  const _DeleteRouteDialog({required this.route});
+
+  @override
+  Widget build(BuildContext context) {
+    final c = app.colors;
+    final intl = context.intl;
+    return DialogFrame(
+      width: 420,
+      radius: 28,
+      color: c.toast,
+      borderColor: c.outlineCard,
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.fromLTRB(24, 28, 24, 24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 56,
+              height: 56,
+              alignment: Alignment.center,
+              decoration: const BoxDecoration(
+                color: Color(0xff8c1d18),
+                shape: BoxShape.circle,
+              ),
+              child: app.assets.icons.actions.delete.build(
+                size: 26,
+                color: const Color(0xfff9dedc),
+              ),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              intl.delete.title,
+              style: TextStyle(
+                fontSize: 22,
+                height: 28 / 22,
+                fontWeight: FontWeight.w500,
+                color: c.text,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text.rich(
+              TextSpan(
+                text: '${intl.delete.descriptionStart} ',
+                children: [
+                  TextSpan(
+                    text: route.path,
+                    style: monoStyle(size: 14, color: c.text),
+                  ),
+                  TextSpan(text: ' ${intl.delete.descriptionEnd}'),
+                ],
+              ),
+              textAlign: TextAlign.center,
+              style: TextStyle(fontSize: 14, height: 20 / 14, color: c.label),
+            ),
+            const SizedBox(height: 18),
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+              decoration: BoxDecoration(
+                color: c.surface,
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(color: c.outlineCard),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    route.name,
+                    style: TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w500,
+                      color: c.text,
                     ),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.end,
-                      children: [
-                        PrimaryButton.svgIcon(
-                          tooltipMessage: context.intl.actions.edit,
-                          onPressed: () =>
-                              RoutesFormScreen.navigator.edit(model: model),
-                          icon: app.assets.icons.actions.edit,
-                        ),
-                        app.dimensions.padding.s.gap(),
-                        PrimaryButton.svgIcon(
-                          tooltipMessage: context.intl.actions.duplicate,
-                          onPressed: () => RoutesFormScreen.navigator.duplicate(
-                            model: model,
-                          ),
-                          icon: app.assets.icons.actions.duplicate,
-                        ),
-                        app.dimensions.padding.s.gap(),
-                        PrimaryButton.svgIcon(
-                          tooltipMessage: context.intl.actions.delete,
-                          onPressed: () => _confirmDelete(model),
-                          icon: app.assets.icons.actions.delete,
-                        ),
-                      ],
-                    ),
-                  ],
+                  ),
+                  const SizedBox(height: 6),
+                  RouteUrlBlock(
+                    caption: intl.routes.from,
+                    url: route.enterPoint,
+                    fontSize: 12,
+                    urlColor: c.label,
+                  ),
+                  const SizedBox(height: 6),
+                  RouteUrlBlock(
+                    caption: intl.routes.to,
+                    url: route.redirectTo,
+                    accent: true,
+                    fontSize: 12,
+                    urlColor: c.label,
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 24),
+            Row(
+              children: [
+                Expanded(
+                  child: AppButton(
+                    label: intl.actions.cancel,
+                    kind: AppButtonKind.outlined,
+                    height: 46,
+                    radius: 23,
+                    autofocus: true, //so Enter doesn't delete by accident
+                    onPressed: () => Navigator.of(context).pop(false),
+                  ),
                 ),
-                app.dimensions.padding.m.gap(),
-                Divider(
-                  height: 0.5,
-                  color: app.colors.neutral.grey5.withValues(alpha: 0.5),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: AppButton(
+                    label: intl.delete.confirm,
+                    icon: app.assets.icons.actions.delete,
+                    kind: AppButtonKind.softDanger,
+                    height: 46,
+                    radius: 23,
+                    onPressed: () => Navigator.of(context).pop(true),
+                  ),
                 ),
               ],
-              app.dimensions.padding.m.gap(),
-              Text(
-                context.intl.routes.requestTo,
-                style: app.textTheme.bodySmall?.copyWith(
-                  color: app.colors.neutral.grey4,
-                ),
-              ),
-              _buildUrl(model.enterPoint),
-              app.dimensions.padding.s.gap(),
-              Text(
-                context.intl.routes.redirectedTo,
-                style: app.textTheme.bodySmall?.copyWith(
-                  color: app.colors.neutral.grey4,
-                ),
-              ),
-              _buildUrl(model.redirectTo),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
-    );
-  }
-
-  //fixed-height card: one line, full url on hover, copy button
-  Widget _buildUrl(String url) {
-    return Row(
-      children: [
-        Flexible(
-          child: Tooltip(
-            message: url,
-            child: Text(
-              url,
-              style: app.textTheme.titleSmall,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-            ),
-          ),
-        ),
-        app.dimensions.padding.s.gap(),
-        Tooltip(
-          message: context.intl.actions.copy,
-          child: InkWell(
-            onTap: () async {
-              await Clipboard.setData(ClipboardData(text: url));
-              if (!mounted) return;
-              app.snack.showSuccess(
-                message: app.intl.actions.copiedToClipboard,
-                context: context,
-              );
-            },
-            child: Icon(Icons.copy, size: 14, color: app.colors.neutral.grey4),
-          ),
-        ),
-      ],
     );
   }
 }

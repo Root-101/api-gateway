@@ -19,7 +19,13 @@ class FeaturesInit {
     app.di.put(dio);
 
     await AuthInit.init();
-    dio.interceptors.add(AuthInterceptor(app.di.find<AuthCubit>()));
+    final auth = app.di.find<AuthCubit>();
+    final gatewayStatus = GatewayStatusCubit(ping: auth.isGatewayUp);
+    app.di.put(gatewayStatus);
+    dio.interceptors.addAll([
+      AuthInterceptor(auth),
+      GatewayStatusInterceptor(status: gatewayStatus, auth: auth),
+    ]);
     final sessionTimeout = Environment.sessionTimeout;
     if (sessionTimeout != null) {
       InactivityLogout.start(
@@ -32,6 +38,9 @@ class FeaturesInit {
       if (event is AuthLogoutOkState) {
         FeaturesInit.reset();
         LoginScreen.navigator.neglectGo();
+        app.snack.showSuccess(message: app.intl.login.signedOut);
+      } else if (event is AuthSessionExpiredState) {
+        SessionExpiredDialog.show();
       }
     });
     await LanguageInit.init();
@@ -44,6 +53,7 @@ class FeaturesInit {
     app.di.find<AuthCubit>().reset();
     app.di.find<RoutesCubit>().reset();
     app.di.find<LogsCubit>().reset();
+    app.di.find<GatewayStatusCubit>().reset();
   }
 
   static List<BlocProvider> blocProviders = [
@@ -53,6 +63,10 @@ class FeaturesInit {
     BlocProvider<RoutesCubit>(create: (context) => app.di.find<RoutesCubit>()),
     //LOGS
     BlocProvider<LogsCubit>(create: (context) => app.di.find<LogsCubit>()),
+    //GATEWAY STATUS
+    BlocProvider<GatewayStatusCubit>(
+      create: (context) => app.di.find<GatewayStatusCubit>(),
+    ),
     //LANGUAGE
     BlocProvider<LanguageCubit>(
       create: (context) => app.di.find<LanguageCubit>(),

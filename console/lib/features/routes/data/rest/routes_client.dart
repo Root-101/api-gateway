@@ -20,11 +20,9 @@ class RoutesClient extends BaseClient {
     await dio.post(baseUrl, data: model.toJson());
   }
 
-  Future createAll({required List<RouteRequest> models}) async {
-    await dio.post(
-      '$baseUrl/multi-add',
-      data: models.map((e) => e.toJson()).toList(),
-    );
+  ///atomic: every current route is replaced by [models], or nothing changes
+  Future replaceAll({required List<RouteRequest> models}) async {
+    await dio.put(baseUrl, data: models.map((e) => e.toJson()).toList());
   }
 
   Future edit({required String routeId, required RouteRequest model}) async {

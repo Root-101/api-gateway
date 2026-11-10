@@ -77,12 +77,12 @@ void main() {
       expect(sent.single.headers.containsKey('authorization'), isFalse);
     });
 
-    test('parallel 401s log out only once', () async {
+    test('parallel 401s expire the session only once', () async {
       final auth = await loggedIn();
-      final logouts = <AuthState>[];
+      final expired = <AuthState>[];
       final subscription = auth.stream
-          .where((state) => state is AuthLogoutOkState)
-          .listen(logouts.add);
+          .where((state) => state is AuthSessionExpiredState)
+          .listen(expired.add);
       final dio = dioAnswering(auth, 401);
 
       await Future.wait([
@@ -93,8 +93,9 @@ void main() {
       ]);
       await pumpEventQueue();
 
-      expect(auth.isLoggedIn, isFalse);
-      expect(logouts, hasLength(1));
+      expect(auth.sessionExpired, isTrue);
+      expect(auth.isLoggedIn, isTrue); //stays on the screen behind the dialog
+      expect(expired, hasLength(1));
       await subscription.cancel();
     });
 

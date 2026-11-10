@@ -19,7 +19,7 @@ class FakeLogsRepo implements LogsRepo {
   Future<HttpLogSearchModel> findAll({
     required int page,
     int? size,
-    int? responseCode,
+    String? responseCode,
     String? method,
     String? query,
     String? routeId,
@@ -64,86 +64,89 @@ LogsCubit cubitWith(FakeLogsRepo repo) =>
 
 void main() {
   group('LogsCubit pagination', () {
-    test('hasMorePages follows total_pages, not a short page', () async {
-      final repo = FakeLogsRepo(
-        LogsCubit.defaultPageSize * 2,
-      ); //exactly 2 full pages
+    test('goToPage asks for that page and replaces the rows', () async {
+      final repo = FakeLogsRepo(25);
       final cubit = cubitWith(repo);
 
       await cubit.applySearch(query: '');
-      expect(cubit.hasMorePages, isTrue);
+      await cubit.goToPage(2);
 
-      await cubit.fetchNextPage();
-      expect(
-        cubit.hasMorePages,
-        isFalse,
-      ); //old "length < pageSize" check would ask for an empty 3rd page
-      expect(repo.requestedPages, [0, 1]);
-      expect(cubit.items.length, LogsCubit.defaultPageSize * 2);
+      expect(repo.requestedPages, [0, 2]);
+      expect(cubit.totalPages, 3);
+      expect(cubit.items.map((l) => l.id), ['20', '21', '22', '23', '24']);
     });
 
-    test(
-      'a failed page is not skipped: retry asks for the same page',
-      () async {
-        final repo = FakeLogsRepo(LogsCubit.defaultPageSize * 3);
-        final cubit = cubitWith(repo);
-        await cubit.applySearch(query: '');
+    test('searching, filtering or resizing goes back to page 1', () async {
+      final repo = FakeLogsRepo(100);
+      final cubit = cubitWith(repo);
 
-        repo.failNext = true;
-        await expectLater(
-          cubit.fetchNextPage(),
-          throwsA(isA<GlobalException>()),
-        );
-        await cubit.fetchNextPage();
-        expect(repo.requestedPages, [0, 1]);
-      },
-    );
+      await cubit.goToPage(3);
+      await cubit.applySearch(query: 'x');
+      expect(repo.requestedPages.last, 0);
 
-    test(
-      'a new search restarts from page 0 without duplicating items',
-      () async {
-        final repo = FakeLogsRepo(LogsCubit.defaultPageSize * 3);
-        final cubit = cubitWith(repo);
-        await cubit.applySearch(query: '');
-        await cubit.fetchNextPage();
+      await cubit.goToPage(3);
+      await cubit.applyFilter(responseCode: '4');
+      expect(repo.requestedPages.last, 0);
 
-        await cubit.applySearch(query: 'x');
-        expect(repo.requestedPages.last, 0);
-        expect(cubit.items.length, LogsCubit.defaultPageSize);
-      },
-    );
+      await cubit.goToPage(3);
+      await cubit.setPageSize(25);
+      expect(repo.requestedPages.last, 0);
+      expect(cubit.items, hasLength(25));
+    });
+
+    test('a failed page keeps the last rows and page to retry', () async {
+      final repo = FakeLogsRepo(30);
+      final cubit = cubitWith(repo);
+      await cubit.applySearch(query: '');
+
+      repo.failNext = true;
+      await cubit.goToPage(1);
+
+      expect(cubit.state, isA<LogsSearchErrorState>());
+      expect(cubit.loaded, isTrue);
+      expect(cubit.items.first.id, '0');
+      await cubit.search();
+      expect(repo.requestedPages.last, 1);
+    });
 
     test('reset clears items, page and filters', () async {
-      final repo = FakeLogsRepo(LogsCubit.defaultPageSize * 3);
+      final repo = FakeLogsRepo(30);
       final cubit = cubitWith(repo);
-      await cubit.applyFilter(responseCode: 500, httpMethod: 'GET');
-      await cubit.fetchNextPage();
+      await cubit.applyFilter(responseCode: '500', httpMethod: 'GET');
+      await cubit.goToPage(1);
 
       cubit.reset();
       expect(cubit.items, isEmpty);
       expect(cubit.currentPage, LogsCubit.defaultPage);
-      expect(cubit.hasMorePages, isTrue);
+      expect(cubit.loaded, isFalse);
       expect(cubit.filters.filterCount, 0);
       expect(cubit.state, isA<LogsInitialState>());
+    });
+
+    test('export filters are JSON encodable with a date range', () {
+      final filters = LogsSearchFilters(
+        date: (fromDate: DateTime.utc(2026, 1, 1), toDate: null),
+      );
+      expect(filters.toJson()['date'], {
+        'fromDate': '2026-01-01T00:00:00.000Z',
+        'toDate': null,
+      });
     });
   });
 
   group('LogsCubit date filters', () {
-    test('clicking a timestamp filters the whole local day', () async {
+    test('a range covers its whole local days', () async {
       final repo = FakeLogsRepo(1);
       final cubit = cubitWith(repo);
-      //what the screen passes now: requestedAtLocal
-      final local = DateTime.utc(2026, 3, 10, 23, 30).toLocal();
 
-      await cubit.updateFilter(requestedAt: local);
+      await cubit.applyFilter(
+        fromDate: DateTime(2026, 3, 10, 9),
+        toDate: DateTime(2026, 3, 10, 9),
+      );
 
       final dates = repo.requestedDates.last;
-      expect(dates.from, DateTime(local.year, local.month, local.day));
-      expect(
-        dates.to,
-        DateTime(local.year, local.month, local.day, 23, 59, 59, 999, 999),
-      );
-      expect(dates.from!.isUtc, isFalse);
+      expect(dates.from, DateTime(2026, 3, 10));
+      expect(dates.to, DateTime(2026, 3, 10, 23, 59, 59, 999, 999));
     });
 
     test('from/to are swapped when reversed', () async {
