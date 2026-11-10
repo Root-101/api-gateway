@@ -318,7 +318,8 @@ class RoutesIT extends IntegrationTest {
         //it ends with the JVM
         var secondInstance = new SpringApplicationBuilder(App.class)
                 .properties(
-                        "server.port=0",
+                        //PORT, not server.port: application.yml sets server.port from it and wins over these defaults
+                        "PORT=0",
                         "DB_HOST=" + POSTGRES.getHost(),
                         "DB_PORT=" + POSTGRES.getMappedPort(PostgreSQLContainer.POSTGRESQL_PORT),
                         "DB_NAME=" + POSTGRES.getDatabaseName(),
