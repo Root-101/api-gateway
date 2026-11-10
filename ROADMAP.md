@@ -16,6 +16,4 @@ Rules:
 
 ## 6.0.0 release
 
-- [ ] Review the deployments: from the repository they need the new root directories (Railway: `/gateway` and `/console`).
-- [ ] Set `version = '6.0.0'` in `gateway/build.gradle` and the release date in `CHANGELOG.md`.
 - [ ] **Last step:** migrate to images on **GHCR** (`ghcr.io`): `.github/workflows/release.yml` publishes them with each version tag. After the first tag, check they are public and use them in `docker-compose.yml` and the deploy docs instead of building locally.

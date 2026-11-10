@@ -1,6 +1,6 @@
 * 6.x:
-    * 6.0.0 (in progress):
-        * **DATE** :date: : not released yet (started 2026-11-02).
+    * 6.0.0:
+        * **DATE** :date: : 2026-11-10.
         * **Deploy** :warning: : Deploy together with the web console (`console`) of this same release: it relies on the `401`/`403` with CORS headers to log out. Building now needs a **JDK 25** (Gradle finds the installed ones).
         * **Structure** :file_folder: : Repository split in two folders: `gateway` (backend, with its Gradle build and `Dockerfile`) and `console` (web console, was `tools/api_gateway_front`). :warning: Deploys from the repository need the new root directories (Railway: `/gateway` and `/console`). Run `./gradlew` from `gateway`. A single `ROADMAP.md` in the root for both.
         * **Versions** :arrow_up: : Upgrade to the latest versions: Java `21` → `25` (LTS), GraalVM CE `25` for the native image, Spring Boot `3.5.14` → `4.1.2` (Spring Framework `7.0.10`, Spring Security `7.1.2`, Jackson `3.1.7`), Spring Cloud `2025.0.2` → `2025.1.4` (Gateway `4.3.4` → `5.0.4`), Gradle `8.14.2` → `9.8.2`, native build tools `0.11.3` → `1.1.18`, `dev.root101.commons` `5.5.3`, Flutter `3.47.9`, GitHub Actions to their latest majors. From the Spring Boot BOM (no hardcoded versions): Flyway `12.4.0`, Postgres driver `42.7.14`, r2dbc-postgresql `1.1.3`, Lombok `1.18.48`, Testcontainers `2.0.5`, JUnit `6.0.3`. Same API contract: the json mapper keeps the Jackson 2 defaults.
