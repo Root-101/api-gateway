@@ -4,6 +4,9 @@ import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
+  //app.intl (the rejection message) reads the navigator key, which needs the binding
+  TestWidgetsFlutterBinding.ensureInitialized();
+
   group('FROM -> TO', () {
     test('rewrites the prefix and joins with one slash', () {
       expect(
