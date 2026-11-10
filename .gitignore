@@ -22,3 +22,6 @@ console/.fvm/versions/
 #env
 console/web/env.js
 console/.metadata
+
+#local scratch (screenshots, temp files)
+.temp/
