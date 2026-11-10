@@ -128,6 +128,8 @@ graalvmNative {
         main {
             imageName = 'graalvm'
             mainClass = 'dev.root101.api_gateway.App'
+            // Netty's TLS client allocates with Arena.ofShared (FFM); without this every HTTPS upstream fails
+            buildArgs.add('-H:+SharedArenaSupport')
         }
     }
 }
