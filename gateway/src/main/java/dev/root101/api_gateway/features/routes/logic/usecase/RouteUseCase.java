@@ -26,6 +26,13 @@ public interface RouteUseCase {
      */
     Mono<Void> addAllRoutes(List<RouteConfigRequest> requests);
 
+    /**
+     * Replace every route with the given ones, all or nothing. The new routes get new ids.
+     *
+     * @param requests The routes that will exist after the call
+     * @return Void
+     */
+    Mono<Void> replaceAllRoutes(List<RouteConfigRequest> requests);
 
     /**
      * Edit a route. Since the edit is not allowed in `RouteDefinitionWriter` this logic

@@ -464,6 +464,50 @@
           ]
         },
         {
+          "name": "replace-all-duplicated",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{gateway-url}}/{{gateway-admin-path}}/routes",
+              "host": [
+                "{{gateway-url}}"
+              ],
+              "path": [
+                "{{gateway-admin-path}}",
+                "routes"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "[\n    {\n        \"name\": \"test-dup-{{run}}\",\n        \"path\": \"/test-dup-1-{{run}}/**\",\n        \"uri\": \"http://localhost:8081\"\n    },\n    {\n        \"name\": \"test-dup-{{run}}\",\n        \"path\": \"/test-dup-2-{{run}}/**\",\n        \"uri\": \"http://localhost:8082\"\n    }\n]",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "`PUT /routes` replaces every route. Only its rejected case is here: a successful call would wipe the routes of the gateway the collection runs against."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 409', () => pm.response.to.have.status(409));"
+                ]
+              }
+            }
+          ]
+        },
+        {
           "name": "all",
           "request": {
             "method": "GET",

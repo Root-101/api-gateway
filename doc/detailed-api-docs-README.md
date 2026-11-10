@@ -398,6 +398,19 @@ Same body (as a list) as int the create route endpoint, full description [HERE](
 * **Success:** `200 OK` → Routes created successfully
 * **Response Body:** Empty
 
+#### Replace all the routes
+
+`PUT /_admin/routes`, with the same body as [**Multi Create**](#3.6), deletes **every** current route and creates the
+given ones, all or nothing: if anything fails, the current routes stay untouched. An empty list deletes every route.
+
+The new routes get a new `id` and `created_at`. A name that already exists is not a conflict, since that route is being
+replaced, but two routes with the same name in the body → `409 Conflict`.
+
+* **Success:** `200 OK`
+* **Response Body:** Empty
+
+---
+
 ### Backup Routes<a name="3.7"></a>
 
 This feature **does not have a dedicated endpoint** since it reuses the data retrieved from [**View Routes**](#3.1).
@@ -412,7 +425,7 @@ Clicking it **converts the currently loaded routes** (from [**View Routes**](#3.
 
 ### Restore Routes<a name="3.8"></a>
 
-This feature **does not have a dedicated endpoint** since it reuses the [**Multi Create**](#3.6) functionality.
+This feature uses [**Replace all the routes**](#3.6) (`PUT /_admin/routes`): the routes in the file **replace every current route**, all or nothing. An empty file is rejected by the console.
 
 In the **top-right corner** of the routes view, click the `⬆️ Restore` button to open a dialog where you can **drop or
 select a JSON file** to restore the routes.
@@ -488,7 +501,7 @@ Logs filter dialog example:
 | query         | Free-text search. Matches against: `user_agent`, `path`, `route_name`. |                      | Useful for searching by partial URL, route name, or client (e.g., `"Postman"`).                                            |
 | from_date     | Start date (inclusive). Loads logs with `requested_at` >= this value.  |                      | Must use **ISO-8601** format with timezone. Example: `2025-08-01T00:00:00Z`.                                               |
 | to_date       | End date (inclusive). Loads logs with `requested_at` <= this value.    |                      | Useful for generating reports for specific time ranges.                                                                    |
-| response_code | Filters by exact HTTP response code.                                   |                      | Example: `500` for server errors, `404` for not found requests.                                                            |
+| response_code | Filters by HTTP response code. Fewer than 3 digits is a prefix.        |                      | Example: `500` for server errors, `5` for any `5xx`, `47` for `470` to `479`. Not a number → `400`.                        |
 | method        | Filters by exact HTTP method.                                          |                      | Example: `GET`, `POST`, `PUT`, `DELETE`.                                                                                   |
 | route_id      | Filters by associated route, exact match. `400` if it's not a UUID or `NO-ROUTE`. |                      | Use:<br/>- `00000000-0000-0000-0000-000000000000` for the **admin route**<br/>- `NO-ROUTE` for logs with no resolved route |
 

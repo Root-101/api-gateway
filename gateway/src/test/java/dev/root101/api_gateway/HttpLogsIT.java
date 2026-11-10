@@ -147,6 +147,10 @@ class HttpLogsIT extends IntegrationTest {
         //each filter
         assertThat(totalLogs(Map.of("page", 0, "query", "/se-" + id, "response_code", 200))).isEqualTo(3);
         assertThat(totalLogs(Map.of("page", 0, "query", "/se-" + id, "response_code", "500"))).isEqualTo(1);
+        //fewer than 3 digits is a prefix
+        assertThat(totalLogs(Map.of("page", 0, "query", "/se-" + id, "response_code", "2"))).isEqualTo(3);
+        assertThat(totalLogs(Map.of("page", 0, "query", "/se-" + id, "response_code", "50"))).isEqualTo(1);
+        assertThat(totalLogs(Map.of("page", 0, "query", "/se-" + id, "response_code", "4"))).isZero();
         assertThat(totalLogs(Map.of("page", 0, "query", "/se-" + id, "method", "POST"))).isEqualTo(1);
         assertThat(totalLogs(Map.of("page", 0, "route_id", routeId))).isEqualTo(4);
         assertThat(totalLogs(Map.of("page", 0, "query", id, "route_id", "NO-ROUTE"))).isEqualTo(1);

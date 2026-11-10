@@ -52,6 +52,19 @@ public class RoutesController {
     }
 
     /**
+     * Replace every route with the given ones, all or nothing
+     *
+     * @param routeDefinition The routes that will exist after the call
+     * @return Void
+     */
+    @PutMapping
+    public Mono<Void> replaceAllRoutes(@RequestBody List<RouteConfigRequest> routeDefinition) {
+        this.validationService.validate(routeDefinition);
+
+        return routeUseCase.replaceAllRoutes(routeDefinition);
+    }
+
+    /**
      * Add a single route
      *
      * @param routeDefinition The route to add

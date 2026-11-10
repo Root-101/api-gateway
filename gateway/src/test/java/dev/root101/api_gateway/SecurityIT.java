@@ -23,6 +23,7 @@ class SecurityIT extends IntegrationTest {
             "GET, /routes/00000000-0000-0000-0000-000000000001",
             "POST, /routes",
             "POST, /routes/multi-add",
+            "PUT, /routes",
             "PUT, /routes/00000000-0000-0000-0000-000000000001",
             "DELETE, /routes/00000000-0000-0000-0000-000000000001",
             "POST, /http-log/search",

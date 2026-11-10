@@ -143,18 +143,7 @@ class RouteUseCaseImpl implements RouteUseCase, SmartInitializingSingleton {
      * @return Void
      */
     public Mono<Void> addAllRoutes(List<RouteConfigRequest> requests) {
-        // Convert list into flux
-        return Flux.fromIterable(requests)
-                // Check for duplicated values within the input list
-                .collectMultimap(RouteConfigRequest::getName)
-                .flatMapMany(frequencyMap -> {
-                    for (Map.Entry<String, Collection<RouteConfigRequest>> entry : frequencyMap.entrySet()) {
-                        if (entry.getValue().size() > 1) {
-                            return Mono.error(new ConflictException("Duplicated route: %s".formatted(entry.getKey())));
-                        }
-                    }
-                    return Flux.fromIterable(requests);
-                })
+        return withoutDuplicatedNames(requests)
                 // Check for duplicates in the database
                 .flatMap(
                         request -> routeRepo.findByName(request.getName())
@@ -189,6 +178,56 @@ class RouteUseCaseImpl implements RouteUseCase, SmartInitializingSingleton {
                 .then(Mono.defer(routeUpdater::updateRoutes));
     }
 
+    /**
+     * Replace every route with the given ones, all or nothing. The new routes get new ids.
+     *
+     * @param requests The routes that will exist after the call
+     * @return Void
+     */
+    public Mono<Void> replaceAllRoutes(List<RouteConfigRequest> requests) {
+        return withoutDuplicatedNames(requests)
+                .map(this::buildEntity)
+                .collectList()
+                .flatMap(
+                        entities -> Mono.fromRunnable(() -> vs.validate(entities))
+                                .then(
+                                        //in one transaction: a failure leaves the current routes untouched
+                                        routeRepo.deleteAll()
+                                                .thenMany(routeRepo.saveAll(entities))
+                                                .collectList()
+                                                .as(tx::transactional)
+                                )
+                )
+                .flatMap(savedEntities -> {
+                    //what the writer holds: same keys as the cache
+                    List<String> oldIds = List.copyOf(cache.keySet());
+                    oldIds.forEach(cache::remove);
+                    savedEntities.forEach(entity -> cache.put(entity.getRouteId().toString(), entity));
+
+                    return Flux.fromIterable(savedEntities)
+                            .map(this::buildDefinition)
+                            .concatMap(route -> routeDefinitionWriter.save(Mono.just(route)))
+                            .thenMany(Flux.fromIterable(oldIds))
+                            .concatMap(id -> routeDefinitionWriter.delete(Mono.just(id)))
+                            .then(Mono.defer(routeUpdater::updateRoutes));
+                });
+    }
+
+    /**
+     * The given routes, or a `ConflictException` if two of them have the same name
+     */
+    private Flux<RouteConfigRequest> withoutDuplicatedNames(List<RouteConfigRequest> requests) {
+        return Flux.fromIterable(requests)
+                .collectMultimap(RouteConfigRequest::getName)
+                .flatMapMany(frequencyMap -> {
+                    for (Map.Entry<String, Collection<RouteConfigRequest>> entry : frequencyMap.entrySet()) {
+                        if (entry.getValue().size() > 1) {
+                            return Mono.error(new ConflictException("Duplicated route: %s".formatted(entry.getKey())));
+                        }
+                    }
+                    return Flux.fromIterable(requests);
+                });
+    }
 
     /**
      * Edit a route. Since the edit is not allowed in `RouteDefinitionWriter` this logic

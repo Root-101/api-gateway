@@ -33,7 +33,11 @@ public class HttpLogSearchRepo {
         }
         if (request.getResponseCode() != null && !request.getResponseCode().isBlank()) {
             try {
-                criteria = criteria.and("responseCode").is(Integer.parseInt(request.getResponseCode().trim()));
+                int[] range = responseCodeRange(request.getResponseCode().trim());
+                criteria = criteria.and("responseCode")
+                        .greaterThanOrEquals(range[0])
+                        .and("responseCode")
+                        .lessThanOrEquals(range[1]);
             } catch (NumberFormatException e) {
                 throw new BadRequestException("response_code must be a number");
             }
@@ -86,6 +90,17 @@ public class HttpLogSearchRepo {
                 .zipWith(count, (list, total) ->
                         new PageImpl<>(list, pageRequest, total)
                 );
+    }
+
+    /**
+     * `[from, to]` of the codes matching the value: fewer than 3 digits is a prefix ("4" = 400..499, "47" = 470..479)
+     *
+     * @throws NumberFormatException if the value is not a number
+     */
+    static int[] responseCodeRange(String code) {
+        int value = Integer.parseInt(code);
+        int span = code.length() >= 3 ? 1 : (int) Math.pow(10, 3 - code.length());
+        return new int[]{value * span, value * span + span - 1};
     }
 
     /**

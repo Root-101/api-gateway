@@ -267,6 +267,7 @@ Each route defines how incoming requests are redirected to internal services.
 | GET    | /**_admin**/routes/{route-id} | Get details of a single route                                                   |
 | POST   | /**_admin**/routes            | Create a new route to redirect                                                  |
 | POST   | /**_admin**/routes/multi-add  | Create multiple routes in same request                                          |
+| PUT    | /**_admin**/routes            | Replace every route with the ones in the body, all or nothing                   |
 | PUT    | /**_admin**/routes/{route-id} | Edit the route with id = route-id, replace it with route in body of the request |
 | DELETE | /**_admin**/routes/{route-id} | Delete the route with id = route-id                                             |
 

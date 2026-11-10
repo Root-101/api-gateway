@@ -150,6 +150,16 @@ class RoutesIT extends IntegrationTest {
     @Test
     void multiAddFailingHalfwayRollsBack() {
         String id = unique();
+        whileBoomRoutesFailToInsert(() -> admin(HttpMethod.POST, "/routes/multi-add")
+                .bodyValue(List.of(route("ok-" + id, "ok-" + id), route("boom-" + id, "boom-" + id)))
+                .exchange()
+                .expectStatus().isEqualTo(HttpStatus.CONFLICT));
+
+        assertThat(routeRepo.findByName("ok-" + id).block()).isNull();
+        webTestClient.get().uri("/ok-%s/x".formatted(id)).exchange().expectStatus().isNotFound();
+    }
+
+    private void whileBoomRoutesFailToInsert(Runnable action) {
         db.sql("""
                 CREATE OR REPLACE FUNCTION fail_route_insert() RETURNS trigger AS $$
                 BEGIN
@@ -162,15 +172,66 @@ class RoutesIT extends IntegrationTest {
         db.sql("DROP TRIGGER IF EXISTS fail_route_insert ON route").then().block();
         db.sql("CREATE TRIGGER fail_route_insert BEFORE INSERT ON route FOR EACH ROW EXECUTE FUNCTION fail_route_insert()").then().block();
         try {
-            admin(HttpMethod.POST, "/routes/multi-add")
-                    .bodyValue(List.of(route("ok-" + id, "ok-" + id), route("boom-" + id, "boom-" + id)))
-                    .exchange()
-                    .expectStatus().isEqualTo(HttpStatus.CONFLICT);
+            action.run();
         } finally {
             db.sql("DROP TRIGGER IF EXISTS fail_route_insert ON route").then().block();
         }
+    }
 
+    /**
+     * A name that already exists is not a conflict, that route is being replaced.
+     */
+    @Test
+    void replaceSwapsAllTheRoutes() {
+        String id = unique();
+        createRoute(route("gone-" + id, "gone-" + id));
+        createRoute(route("kept-" + id, "before-" + id));
+        String oldId = routeId("kept-" + id);
+
+        admin(HttpMethod.PUT, "/routes")
+                .bodyValue(List.of(route("kept-" + id, "after-" + id), route("fresh-" + id, "fresh-" + id)))
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody().isEmpty();
+
+        webTestClient.get().uri("/gone-%s/x".formatted(id)).exchange().expectStatus().isNotFound();
+        webTestClient.get().uri("/before-%s/x".formatted(id)).exchange().expectStatus().isNotFound();
+        webTestClient.get().uri("/after-%s/x".formatted(id)).exchange().expectStatus().isOk();
+        webTestClient.get().uri("/fresh-%s/x".formatted(id)).exchange().expectStatus().isOk();
+        assertThat(routeRepo.count().block()).isEqualTo(2);
+        assertThat(routeId("kept-" + id)).isNotEqualTo(oldId);
+    }
+
+    @Test
+    void replaceWithDuplicatedNamesIs409AndChangesNothing() {
+        String id = unique();
+        createRoute(route("stay-" + id, "stay-" + id));
+
+        admin(HttpMethod.PUT, "/routes")
+                .bodyValue(List.of(route("r-" + id, "r1-" + id), route("r-" + id, "r2-" + id)))
+                .exchange()
+                .expectStatus().isEqualTo(HttpStatus.CONFLICT);
+
+        assertThat(routeRepo.findByName("stay-" + id).block()).isNotNull();
+        webTestClient.get().uri("/stay-%s/x".formatted(id)).exchange().expectStatus().isOk();
+    }
+
+    /**
+     * A db error in the middle of a replace must undo the delete of the current routes too.
+     */
+    @Test
+    void replaceFailingHalfwayRollsBack() {
+        String id = unique();
+        createRoute(route("stay-" + id, "stay-" + id));
+
+        whileBoomRoutesFailToInsert(() -> admin(HttpMethod.PUT, "/routes")
+                .bodyValue(List.of(route("ok-" + id, "ok-" + id), route("boom-" + id, "boom-" + id)))
+                .exchange()
+                .expectStatus().isEqualTo(HttpStatus.CONFLICT));
+
+        assertThat(routeRepo.findByName("stay-" + id).block()).isNotNull();
         assertThat(routeRepo.findByName("ok-" + id).block()).isNull();
+        webTestClient.get().uri("/stay-%s/x".formatted(id)).exchange().expectStatus().isOk();
         webTestClient.get().uri("/ok-%s/x".formatted(id)).exchange().expectStatus().isNotFound();
     }
 
