@@ -284,7 +284,7 @@ class AppMessages$session$es implements AppMessages$session$en {
   String get title => 'Tu sesión expiró';
   @override
   String get description =>
-      'Tu sesión terminó tras 12 horas. Entra de nuevo para continuar donde lo dejaste.';
+      'Tu sesión ha terminado. Entra de nuevo para continuar donde lo dejaste.';
   @override
   String get passwordHint => 'Escribe tu contraseña';
   @override
@@ -777,7 +777,7 @@ extension on AppMessagesEs {
       'login.featureLogs' => 'Logs HTTP',
       'login.featureBackup' => 'Backup y restore',
       'session.title' => 'Tu sesión expiró',
-      'session.description' => 'Tu sesión terminó tras 12 horas. Entra de nuevo para continuar donde lo dejaste.',
+      'session.description' => 'Tu sesión ha terminado. Entra de nuevo para continuar donde lo dejaste.',
       'session.passwordHint' => 'Escribe tu contraseña',
       'session.wrongPassword' => 'Contraseña incorrecta, inténtalo de nuevo.',
       'session.signIn' => 'Entrar',

@@ -67,7 +67,7 @@ login:
   featureBackup: 'Backup & restore'
 session:
   title: 'Your session expired'
-  description: 'Your session ended after 12 hours. Sign in again to continue where you left off.'
+  description: 'Your session has ended. Sign in again to continue where you left off.'
   passwordHint: 'Enter your password'
   wrongPassword: 'Wrong password, try again.'
   signIn: 'Sign in'

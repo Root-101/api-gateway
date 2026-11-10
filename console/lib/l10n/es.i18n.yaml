@@ -65,7 +65,7 @@ login:
   featureBackup: 'Backup y restore'
 session:
   title: 'Tu sesión expiró'
-  description: 'Tu sesión terminó tras 12 horas. Entra de nuevo para continuar donde lo dejaste.'
+  description: 'Tu sesión ha terminado. Entra de nuevo para continuar donde lo dejaste.'
   passwordHint: 'Escribe tu contraseña'
   wrongPassword: 'Contraseña incorrecta, inténtalo de nuevo.'
   signIn: 'Entrar'

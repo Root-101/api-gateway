@@ -318,9 +318,9 @@ class AppMessages$session$en {
   /// en: 'Your session expired'
   String get title => 'Your session expired';
 
-  /// en: 'Your session ended after 12 hours. Sign in again to continue where you left off.'
+  /// en: 'Your session has ended. Sign in again to continue where you left off.'
   String get description =>
-      'Your session ended after 12 hours. Sign in again to continue where you left off.';
+      'Your session has ended. Sign in again to continue where you left off.';
 
   /// en: 'Enter your password'
   String get passwordHint => 'Enter your password';
@@ -959,7 +959,8 @@ extension on AppMessages {
       'login.featureLogs' => 'HTTP logs',
       'login.featureBackup' => 'Backup & restore',
       'session.title' => 'Your session expired',
-      'session.description' => 'Your session ended after 12 hours. Sign in again to continue where you left off.',
+      'session.description' =>
+        'Your session has ended. Sign in again to continue where you left off.',
       'session.passwordHint' => 'Enter your password',
       'session.wrongPassword' => 'Wrong password, try again.',
       'session.signIn' => 'Sign in',
