@@ -46,6 +46,8 @@
         * **Errors** :hammer_and_wrench: : API errors are parsed safely whatever their format and clear error screen
           when `env.js` is invalid.
         * **i18n** :globe_with_meridians: : Texts migrated to `slang` and all the error messages translated.
+        * **i18n** :globe_with_meridians: : Dates (calendar month, log timestamps) and numbers follow the selected
+          language; they were always in English.
         * **Docker** :whale: : Reproducible build, `nginx` 1.28 with security headers and no stale files after a deploy.
           `env.js` is generated on container start, so one image serves every environment.
         * **General** :hammer_and_wrench: : Added unit tests and CI job, updated README, console version in the

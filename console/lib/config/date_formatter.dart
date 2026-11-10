@@ -1,43 +1,66 @@
+import 'package:intl/date_symbol_data_local.dart';
 import 'package:intl/intl.dart';
 
 class DateFormatter {
   static final DateFormatter _instance = DateFormatter._internal();
 
-  DateFormatter._internal();
+  DateFormatter._internal() {
+    _build();
+  }
 
   factory DateFormatter() => _instance;
 
-  //created once: the app never changes Intl.defaultLocale, and the logs grid formats every visible cell
+  //created once per language: the logs grid formats every visible cell
 
   ///dd/M/yy
-  final DateFormat xs = DateFormat('dd/M/yy');
+  late DateFormat xs;
 
   ///dd/MM/yy
-  final DateFormat xss = DateFormat('dd/MM/yy');
+  late DateFormat xss;
 
   ///dd/MM/yyyy
-  final DateFormat s = DateFormat('dd/MM/yyyy');
+  late DateFormat s;
 
   ///dd/MMM/yyyy
-  final DateFormat m = DateFormat('dd/MMM/yyyy');
+  late DateFormat m;
 
   ///yyyy-MM-dd
-  final DateFormat api = DateFormat('yyyy-MM-dd');
+  late DateFormat api;
 
   ///dd MMM yyyy, HH:mm:ss (24 h)
-  final DateFormat logsTime = DateFormat('dd MMM yyyy, HH:mm:ss');
+  late DateFormat logsTime;
 
   ///HH:mm
-  final DateFormat clock = DateFormat('HH:mm');
+  late DateFormat clock;
 
   ///January 2026
-  final DateFormat month = DateFormat('MMMM yyyy');
+  late DateFormat month;
 
   ///yyyy-MM-dd_HH_mm_ss.SSS, the timestamp in the backup and export file names
-  final DateFormat fileStamp = DateFormat('yyyy-MM-dd_HH_mm_ss.SSS');
+  late DateFormat fileStamp;
 
   ///dd MMM yyyy
-  final DateFormat logsTimeS = DateFormat('dd MMM yyyy');
+  late DateFormat logsTimeS;
+
+  ///month and day names, and number separators, follow the language of the app
+  Future<void> setLocale(String languageKey) async {
+    await initializeDateFormatting(languageKey);
+    Intl.defaultLocale = languageKey;
+    _build();
+  }
+
+  void _build() {
+    xs = DateFormat('dd/M/yy');
+    xss = DateFormat('dd/MM/yy');
+    s = DateFormat('dd/MM/yyyy');
+    m = DateFormat('dd/MMM/yyyy');
+    api = DateFormat('yyyy-MM-dd', 'en');
+    logsTime = DateFormat('dd MMM yyyy, HH:mm:ss');
+    clock = DateFormat('HH:mm');
+    month = DateFormat('MMMM yyyy');
+    fileStamp = DateFormat('yyyy-MM-dd_HH_mm_ss.SSS', 'en');
+    logsTimeS = DateFormat('dd MMM yyyy');
+  }
 }
 
 extension DateOnlyCompare on DateTime {

@@ -29,6 +29,7 @@ class LanguageCubit extends Cubit<LanguageState>
   Future init() async {
     String? key = await repo.loadKey();
     currentSelectedLanguage = _resolve(key: key);
+    await app.dateFormatter.setLocale(currentSelectedLanguage.key);
 
     emit(
       LanguageChangedState(
@@ -45,12 +46,13 @@ class LanguageCubit extends Cubit<LanguageState>
     changeLanguage(language: language);
   }
 
-  void changeLanguage({LanguageModel? language}) {
+  Future<void> changeLanguage({LanguageModel? language}) async {
     if (language == null) {
       return;
     }
     currentSelectedLanguage = language;
     repo.save(model: currentSelectedLanguage);
+    await app.dateFormatter.setLocale(language.key);
 
     emit(
       LanguageChangedState(

@@ -40,7 +40,9 @@ class LogsScreen extends StatefulWidget {
 
 class _LogsScreenState extends State<LogsScreen> {
   static const Duration _debounce = Duration(milliseconds: 400);
-  static final NumberFormat _number = NumberFormat.decimalPattern('en_US');
+
+  //follows Intl.defaultLocale, set by the language: 1,555 or 1.555
+  NumberFormat get _number => NumberFormat.decimalPattern();
 
   final TextEditingController _search = TextEditingController();
   late final LogsCubit cubit;
