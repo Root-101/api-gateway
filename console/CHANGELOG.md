@@ -50,8 +50,8 @@
           language; they were always in English.
         * **Docker** :whale: : Reproducible build, `nginx` 1.28 with security headers and no stale files after a deploy.
           `env.js` is generated on container start, so one image serves every environment.
-        * **General** :hammer_and_wrench: : Added unit tests and CI job, updated README, console version in the
-          side menu and several memory and UI fixes.
+        * **General** :hammer_and_wrench: : Added CI job (analyze and build), updated README, console version in
+          the side menu and several memory and UI fixes. The unit tests were removed.
         * **General** :hammer_and_wrench: : Dart package renamed to `console`.
         * **i18n** :globe_with_meridians: : The language change no longer uses `reassembleApplication()`, a
           hot-reload API: the screens behind the selector read their texts with `context.intl`.

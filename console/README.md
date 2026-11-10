@@ -60,8 +60,6 @@ fvm flutter pub get
 fvm flutter run -d chrome
 ```
 
-Tests run in a browser (the app is web-only): `fvm flutter test --platform chrome`.
-
 ---
 
 ## Flutter<a name="3"></a>

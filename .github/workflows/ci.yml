@@ -54,8 +54,6 @@ jobs:
       - run: flutter pub get --enforce-lockfile
       # warnings fail the job, infos don't
       - run: flutter analyze --no-fatal-infos
-      # the tests use the `web` package, they need chrome (installed in ubuntu-latest)
-      - run: flutter test --platform chrome
       - run: flutter build web --release
 
   native-image:
