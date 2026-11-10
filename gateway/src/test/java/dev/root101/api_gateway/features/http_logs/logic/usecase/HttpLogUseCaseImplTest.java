@@ -23,7 +23,7 @@ class HttpLogUseCaseImplTest {
             "http://host, /other/(?<segment>.*), /${segment}, /svc/a, http://host/svc/a",
     })
     void buildFinalRoute(String uri, String from, String to, String path, String expected) {
-        RouteEntity route = new RouteEntity(UUID.randomUUID(), "n", "/svc/**", uri, from, to, null, OffsetDateTime.now(), 0, "{}");
+        RouteEntity route = new RouteEntity(UUID.randomUUID(), "n", "/svc/**", uri, from, to, null, OffsetDateTime.now());
 
         assertThat(HttpLogUseCaseImpl.buildFinalRoute(route, path)).isEqualTo(expected);
     }

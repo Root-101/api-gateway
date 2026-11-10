@@ -442,7 +442,7 @@
             },
             "body": {
               "mode": "raw",
-              "raw": "[\n    {\n        \"name\": \"test-dev-a-{{run}}\",\n        \"path\": \"/test-service-a-{{run}}/**\",\n        \"uri\": \"http://localhost:8081\",\n        \"rewrite_path\": {\n            \"replace_from\": \"/test-service-a-{{run}}/\",\n            \"replace_to\": \"/\"\n        }\n    },\n    {\n        \"name\": \"test-dev-b-{{run}}\",\n        \"path\": \"/test-service-b-{{run}}/**\",\n        \"uri\": \"http://localhost:8082\",\n        \"order\": 5,\n        \"methods\": [\"GET\"],\n        \"hosts\": [\"**\"],\n        \"headers\": [{\"name\": \"X-Probe\", \"regexp\": \"[0-9]+\"}, {\"name\": \"X-Present\"}],\n        \"filters\": [\n            {\"name\": \"AddRequestHeader\", \"args\": [\"X-A\", \"1\"]},\n            {\"name\": \"AddResponseHeader\", \"args\": [\"X-B\", \"1\"]},\n            {\"name\": \"SetRequestHeader\", \"args\": [\"X-C\", \"1\"]},\n            {\"name\": \"SetResponseHeader\", \"args\": [\"X-D\", \"1\"]},\n            {\"name\": \"RemoveRequestHeader\", \"args\": [\"X-E\"]},\n            {\"name\": \"RemoveResponseHeader\", \"args\": [\"X-F\"]}\n        ]\n    }\n]",
+              "raw": "[\n    {\n        \"name\": \"test-dev-a-{{run}}\",\n        \"path\": \"/test-service-a-{{run}}/**\",\n        \"uri\": \"http://localhost:8081\",\n        \"rewrite_path\": {\n            \"replace_from\": \"/test-service-a-{{run}}/\",\n            \"replace_to\": \"/\"\n        }\n    },\n    {\n        \"name\": \"test-dev-b-{{run}}\",\n        \"path\": \"/test-service-b-{{run}}/**\",\n        \"uri\": \"http://localhost:8082\"\n    }\n]",
               "options": {
                 "raw": {
                   "language": "json"
@@ -458,48 +458,6 @@
                 "type": "text/javascript",
                 "exec": [
                   "pm.test('status is 200', () => pm.response.to.have.status(200));"
-                ]
-              }
-            }
-          ]
-        },
-        {
-          "name": "proxy - route with every predicate and filter",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "X-Probe",
-                "value": "1"
-              },
-              {
-                "key": "X-Present",
-                "value": "1"
-              }
-            ],
-            "url": {
-              "raw": "{{gateway-url}}/test-service-b-{{run}}/x",
-              "host": [
-                "{{gateway-url}}"
-              ],
-              "path": [
-                "test-service-b-{{run}}",
-                "x"
-              ]
-            },
-            "auth": {
-              "type": "noauth"
-            }
-          },
-          "response": [],
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "//the route is built when it's saved: in the native image a missing reflection hint leaves it inactive (404), any other status means it matched",
-                  "pm.test('route is active', () => pm.expect(pm.response.code).to.not.eql(404));"
                 ]
               }
             }
@@ -531,7 +489,7 @@
                 "exec": [
                   "pm.test('status is 200', () => pm.response.to.have.status(200));",
                   "const isRoute = (r) => {",
-                  "    pm.expect(r).to.have.all.keys('id', 'name', 'path', 'uri', 'rewrite_path', 'description', 'created_at', 'order', 'methods', 'hosts', 'headers', 'filters');",
+                  "    pm.expect(r).to.have.all.keys('id', 'name', 'path', 'uri', 'rewrite_path', 'description', 'created_at');",
                   "    pm.expect(r.id).to.match(/^[0-9a-f-]{36}$/);",
                   "};",
                   "",

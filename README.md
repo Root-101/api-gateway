@@ -270,8 +270,8 @@ Each route defines how incoming requests are redirected to internal services.
 | PUT    | /**_admin**/routes/{route-id} | Edit the route with id = route-id, replace it with route in body of the request |
 | DELETE | /**_admin**/routes/{route-id} | Delete the route with id = route-id                                             |
 
-> ⚠️ WARNING: routes with overlapping paths (ej: `/svc/**` and `/svc/admin/**`) need a different `order` (lower is
-> evaluated first). With the same `order` the one created first wins, and after a restart it depends on the db.
+> ⚠️ WARNING: avoid routes with overlapping paths (ej: `/svc/**` and `/svc/admin/**`): all routes have the same
+> priority, the one created first wins, and after a restart the order depends on the db.
 
 > ⚠️ WARNING: if the value of env `ADMIN_PATH` changes, the endpoints will change. These tables are based on the default
 > value of this variable (`_admin`).

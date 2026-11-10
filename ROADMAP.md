@@ -9,17 +9,13 @@ Rules:
 
 ---
 
-## Console
-
-- [ ] ⚠️ The tests have never been executed: on the dev machine `flutter test --platform chrome` fails even for a trivial test ("Connection closed before test suite loaded", Chrome and Edge). First real run will be the CI.
-
 ## Possible improvements
 
+- [ ] Routes: `order`, multiple predicates (`methods`, `hosts`, `headers`) and extra header filters, all optional, in the admin API and the console form. Needs its own migration and the GraalVM reflection hints of each predicate and filter.
 - [ ] Gateway: mutation testing with **PIT** on the routes and logs logic, to measure test quality beyond coverage.
 
 ## 6.0.0 release
 
-- [ ] Review the CI on GitHub, after all the changes above.
 - [ ] Review the deployments: from the repository they need the new root directories (Railway: `/gateway` and `/console`).
 - [ ] Set `version = '6.0.0'` in `gateway/build.gradle` and the release date in `CHANGELOG.md`.
 - [ ] **Last step:** migrate to images on **GHCR** (`ghcr.io`): `.github/workflows/release.yml` publishes them with each version tag. After the first tag, check they are public and use them in `docker-compose.yml` and the deploy docs instead of building locally.

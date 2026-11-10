@@ -200,22 +200,7 @@ Screen example:
       "replace_to": "/"
     },
     "description": "",
-    "created_at": "2025-08-22T14:44:53.902031-06:00",
-    "order": 0,
-    "methods": ["GET", "POST"],
-    "hosts": ["**.example.com"],
-    "headers": [
-      {
-        "name": "X-Tenant",
-        "regexp": "acme.*"
-      }
-    ],
-    "filters": [
-      {
-        "name": "AddRequestHeader",
-        "args": ["X-From", "gateway"]
-      }
-    ]
+    "created_at": "2025-08-22T14:44:53.902031-06:00"
   }
 ]
 ```
@@ -229,11 +214,6 @@ Screen example:
 | description  | Text          | Additional description of the route                                                                                       |
 | create_at    | Timestamp     | Date when the route was created                                                                                           |
 | rewrite_path | Custom Object | 'Filter' to rewrite the final path to which the request is made (replace in final URL the *replace_from* => *replace_to*) |
-| order        | Integer       | Routes with a lower order are evaluated first                                                                             |
-| methods      | List of text  | Http methods the route accepts, empty means all                                                                           |
-| hosts        | List of text  | Host patterns (ant style) the route accepts, empty means all                                                              |
-| headers      | List          | Headers the request must have (*name*, and *regexp* the value must match, null if it only has to be present)              |
-| filters      | List          | Extra filters (*name* and *args*), applied in order after *rewrite_path*                                                  |
 
 ---
 
@@ -262,22 +242,7 @@ Clicking it opens the following creation dialog:
   "rewrite_path": {
     "replace_from": "/service-a/",
     "replace_to": "/"
-  },
-  "order": 0,
-  "methods": ["GET", "POST"],
-  "hosts": ["**.example.com"],
-  "headers": [
-    {
-      "name": "X-Tenant",
-      "regexp": "acme.*"
-    }
-  ],
-  "filters": [
-    {
-      "name": "AddRequestHeader",
-      "args": ["X-From", "gateway"]
-    }
-  ]
+  }
 }
 ```
 
@@ -288,16 +253,6 @@ Clicking it opens the following creation dialog:
 | uri          | true     | URL of the service to which you are going to redirect                                                                     | - Not null<br/>-Not Empty<br/>-URL | Use same base URL of the service (preferably a private URL without internet access, which can only be accessed through the gateway)                                                                                                                                                                |
 | description  | false    | Additional description of the route                                                                                       |                                    | Use it for some basic descriptive description of the route                                                                                                                                                                                                                                         |
 | rewrite_path | false    | 'Filter' to rewrite the final path to which the request is made (replace in final URL the *replace_from* => *replace_to*) | - Not null<br/>-Not Empty<br/>     | Use to fix the extra path added by path property. With example, a request made to:  https://gateway/abcd/users/search, by default will be redirected to: http://localhost:8081/abcd/users/search, but with rewrite (like  `/abcd/` → `/`) will be redirected to http://localhost:8081/users/search |
-
-Optional fields, a `PUT` without them resets them:
-
-| Field   | Default | Validations                                                                 |
-|---------|---------|-----------------------------------------------------------------------------|
-| order   | 0       | Integer, can be negative                                                    |
-| methods | all     | Uppercase: GET, HEAD, POST, PUT, PATCH, DELETE, OPTIONS, TRACE              |
-| hosts   | all     | Not blank, max 255                                                          |
-| headers | none    | *name* not blank, *regexp* a valid regular expression                       |
-| filters | none    | `AddRequestHeader`, `AddResponseHeader`, `SetRequestHeader`, `SetResponseHeader` with *args* `[name, value]`; `RemoveRequestHeader`, `RemoveResponseHeader` with *args* `[name]` |
 
 #### Response
 
@@ -391,22 +346,7 @@ the details of a single route**.
     "replace_to": "/"
   },
   "description": "",
-  "created_at": "2025-08-22T14:44:53.902031-06:00",
-  "order": 0,
-  "methods": ["GET", "POST"],
-  "hosts": ["**.example.com"],
-  "headers": [
-    {
-      "name": "X-Tenant",
-      "regexp": "acme.*"
-    }
-  ],
-  "filters": [
-    {
-      "name": "AddRequestHeader",
-      "args": ["X-From", "gateway"]
-    }
-  ]
+  "created_at": "2025-08-22T14:44:53.902031-06:00"
 }
 ```
 
