@@ -160,9 +160,6 @@ class AppMessages$validations$en {
 
   /// en: 'Must be a valid URI'
   String get validUriField => 'Must be a valid URI';
-
-  /// en: 'Must be a whole number'
-  String get wholeNumberField => 'Must be a whole number';
 }
 
 // Path: errors
@@ -326,64 +323,6 @@ class AppMessages$routes$en {
 
   /// en: 'Search by name, path or URI'
   String get searchRoutes => 'Search by name, path or URI';
-
-  /// en: 'Advanced'
-  String get advancedTitle => 'Advanced';
-
-  /// en: 'Order (the lowest is evaluated first)'
-  String get orderLabel => 'Order (the lowest is evaluated first)';
-
-  /// en: '0'
-  String get orderHint => '0';
-
-  /// en: 'HTTP methods (none = any method)'
-  String get methodsLabel => 'HTTP methods (none = any method)';
-
-  /// en: 'Hosts (none = any host)'
-  String get hostsLabel => 'Hosts (none = any host)';
-
-  /// en: '**.example.com'
-  String get hostHint => '**.example.com';
-
-  /// en: 'Add host'
-  String get addHost => 'Add host';
-
-  /// en: 'Required headers (the request must match all of them)'
-  String get headersLabel =>
-      'Required headers (the request must match all of them)';
-
-  /// en: 'Header name'
-  String get headerNameLabel => 'Header name';
-
-  /// en: 'X-Tenant'
-  String get headerNameHint => 'X-Tenant';
-
-  /// en: 'Value regexp (optional)'
-  String get headerRegexpLabel => 'Value regexp (optional)';
-
-  /// en: 'acme.*'
-  String get headerRegexpHint => 'acme.*';
-
-  /// en: 'Add header'
-  String get addHeader => 'Add header';
-
-  /// en: 'Filters (applied in order, after the rewrite)'
-  String get filtersLabel => 'Filters (applied in order, after the rewrite)';
-
-  /// en: 'Filter'
-  String get filterNameLabel => 'Filter';
-
-  /// en: 'X-From'
-  String get filterNameHint => 'X-From';
-
-  /// en: 'Value'
-  String get filterValueLabel => 'Value';
-
-  /// en: 'gateway'
-  String get filterValueHint => 'gateway';
-
-  /// en: 'Add filter'
-  String get addFilter => 'Add filter';
 }
 
 // Path: restore
@@ -577,7 +516,6 @@ extension on AppMessages {
       'actions.refresh' => 'Refresh',
       'validations.requiredField' => 'Required field',
       'validations.validUriField' => 'Must be a valid URI',
-      'validations.wholeNumberField' => 'Must be a whole number',
       'errors.requestCancelled' => 'Request to API server was cancelled',
       'errors.connectionTimeout' =>
         'Connection timeout with API server. Check your internet connection',
@@ -628,26 +566,6 @@ extension on AppMessages {
       'routes.descriptionLabel' => 'Description',
       'routes.descriptionHint' => 'What this route is for (optional)',
       'routes.searchRoutes' => 'Search by name, path or URI',
-      'routes.advancedTitle' => 'Advanced',
-      'routes.orderLabel' => 'Order (the lowest is evaluated first)',
-      'routes.orderHint' => '0',
-      'routes.methodsLabel' => 'HTTP methods (none = any method)',
-      'routes.hostsLabel' => 'Hosts (none = any host)',
-      'routes.hostHint' => '**.example.com',
-      'routes.addHost' => 'Add host',
-      'routes.headersLabel' =>
-        'Required headers (the request must match all of them)',
-      'routes.headerNameLabel' => 'Header name',
-      'routes.headerNameHint' => 'X-Tenant',
-      'routes.headerRegexpLabel' => 'Value regexp (optional)',
-      'routes.headerRegexpHint' => 'acme.*',
-      'routes.addHeader' => 'Add header',
-      'routes.filtersLabel' => 'Filters (applied in order, after the rewrite)',
-      'routes.filterNameLabel' => 'Filter',
-      'routes.filterNameHint' => 'X-From',
-      'routes.filterValueLabel' => 'Value',
-      'routes.filterValueHint' => 'gateway',
-      'routes.addFilter' => 'Add filter',
       'restore.selectFile' => 'Select file',
       'restore.dropFileHere' => 'Drop file here',
       'restore.errorLoadingFile' => 'Error loading file',

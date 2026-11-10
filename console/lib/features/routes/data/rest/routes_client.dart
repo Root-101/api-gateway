@@ -48,7 +48,6 @@ class RouteRequest {
   //optional in the api: null = no rewrite filter
   final RewritePathEntity? rewritePath;
   final String description;
-  final RouteAdvancedModel advanced;
 
   RouteRequest({
     required this.name,
@@ -56,7 +55,6 @@ class RouteRequest {
     required this.uri,
     required this.description,
     this.rewritePath,
-    this.advanced = const RouteAdvancedModel(),
   });
 
   Map<String, dynamic> toJson() {
@@ -66,7 +64,6 @@ class RouteRequest {
       'uri': uri,
       'description': description,
       'rewrite_path': rewritePath?.toJson(),
-      ...advanced.toJson(),
     };
   }
 
@@ -77,7 +74,6 @@ class RouteRequest {
       uri: json['uri'],
       rewritePath: RewritePathEntity.tryFromJson(json['rewrite_path']),
       description: json['description'] ?? '',
-      advanced: RouteAdvancedModel.fromJson(json),
     );
   }
 }
@@ -91,7 +87,6 @@ class RouteResponse {
   final String uri;
   final RewritePathEntity? rewritePath;
   final String description;
-  final RouteAdvancedModel advanced;
 
   RouteResponse({
     required this.name,
@@ -101,7 +96,6 @@ class RouteResponse {
     required this.id,
     required this.createdAt,
     this.rewritePath,
-    this.advanced = const RouteAdvancedModel(),
   });
 
   factory RouteResponse.fromJson(Map<String, dynamic> json) {
@@ -113,7 +107,6 @@ class RouteResponse {
       rewritePath: RewritePathEntity.tryFromJson(json['rewrite_path']),
       description: json['description'] ?? '',
       createdAt: json['created_at'],
-      advanced: RouteAdvancedModel.fromJson(json),
     );
   }
 }

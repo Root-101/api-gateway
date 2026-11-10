@@ -24,6 +24,9 @@
         * **Routes** :twisted_rightwards_arrows: : `GET /routes/{id}` is parsed with the same shape as the list.
         * **Routes** :twisted_rightwards_arrows: : New `Advanced` section in the route form to set `order`,
           `methods`, `hosts`, `headers` and `filters`. Editing, duplicating, backup and restore keep them.
+        * **Routes** :twisted_rightwards_arrows: : `order`, `methods`, `hosts`, `headers` and `filters` are removed,
+          following the gateway: the `Advanced` section of the form and the fields in requests, responses and
+          backups. A backup that still has them restores without them.
         * **Errors** :hammer_and_wrench: : API errors are parsed safely whatever their format and clear error screen
           when `env.js` is invalid.
         * **i18n** :globe_with_meridians: : Texts migrated to `slang` and all the error messages translated.

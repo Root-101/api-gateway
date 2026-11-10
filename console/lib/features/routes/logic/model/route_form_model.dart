@@ -6,7 +6,6 @@ class RouteFormModel {
   final String uri;
   final RewritePathModel? rewritePath;
   final String description;
-  final RouteAdvancedModel advanced;
 
   final String? gatewayUrl;
 
@@ -22,6 +21,5 @@ class RouteFormModel {
     required this.description,
     this.rewritePath,
     this.gatewayUrl,
-    this.advanced = const RouteAdvancedModel(),
   });
 }

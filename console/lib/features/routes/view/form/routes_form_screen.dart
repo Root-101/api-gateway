@@ -1,5 +1,4 @@
 import 'package:console/app_exporter.dart';
-import 'package:console/features/routes/view/form/routes_advanced_section.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -187,18 +186,12 @@ class _RoutesFormWidgetState extends State<RoutesFormWidget> {
   //local copy: clearing it must not mutate the cubit state's map
   Map<String, String> _apiErrors = {};
 
-  //filled once like the text fields: the state after a 422 on duplicate has no route
-  final _advanced = RouteAdvancedFormController();
-  bool _advancedExpanded = false;
-
   @override
   void initState() {
     super.initState();
     _apiErrors = {...?widget.failValidations};
 
     if (widget.route != null) {
-      _advanced.load(widget.route!.advanced);
-      _advancedExpanded = !widget.route!.advanced.isDefault;
       _nameCtrl.text = widget.route!.name;
       _uriCtrl.text = widget.route!.uri;
       _pathCtrl.text = widget.route!.path;
@@ -213,7 +206,6 @@ class _RoutesFormWidgetState extends State<RoutesFormWidget> {
     super.didUpdateWidget(oldWidget);
     if (widget.failValidations != oldWidget.failValidations) {
       _apiErrors = {...?widget.failValidations};
-      _advancedExpanded |= _apiErrors.keys.any(isAdvancedRouteError);
     }
   }
 
@@ -225,7 +217,6 @@ class _RoutesFormWidgetState extends State<RoutesFormWidget> {
     _rewriteFromCtrl.dispose();
     _rewriteToCtrl.dispose();
     _descriptionCtrl.dispose();
-    _advanced.dispose();
     super.dispose();
   }
 
@@ -326,21 +317,7 @@ class _RoutesFormWidgetState extends State<RoutesFormWidget> {
                 ),
                 app.dimensions.padding.m.gap(),
 
-                ///-------------- ADVANCED --------------\\\
-                RoutesAdvancedSection(
-                  controller: _advanced,
-                  errors: _apiErrors,
-                  expanded: _advancedExpanded,
-                  requiredValidator: validator.required.validator,
-                  onToggle: () =>
-                      setState(() => _advancedExpanded = !_advancedExpanded),
-                  onChanged: () => setState(
-                    () => _apiErrors.removeWhere(
-                      (source, _) => isAdvancedRouteError(source),
-                    ),
-                  ),
-                ),
-                app.dimensions.padding.xxl.gap(),
+                app.dimensions.padding.m.gap(),
 
                 ///-------------- PREVIEW --------------\\\
                 Text(app.intl.routes.preview, style: app.textTheme.labelMedium),
@@ -382,10 +359,6 @@ class _RoutesFormWidgetState extends State<RoutesFormWidget> {
         child: PrimaryButton.primary(
           onPressed: () {
             if (!_formKey.currentState!.validate()) {
-              //the invalid field can be inside the collapsed section
-              if (_advanced.hasValues) {
-                setState(() => _advancedExpanded = true);
-              }
               return;
             } else {
               //remove focus from the text field to hide the keyboard
@@ -398,7 +371,6 @@ class _RoutesFormWidgetState extends State<RoutesFormWidget> {
                   widget.action == RoutesFormAction.duplicate) {
                 widget.onCreate(
                   RouteFormModel(
-                    advanced: _advanced.toModel(),
                     name: _nameCtrl.text,
                     uri: _uriCtrl.text,
                     path: _pathCtrl.text,
@@ -412,7 +384,6 @@ class _RoutesFormWidgetState extends State<RoutesFormWidget> {
               } else if (widget.action == RoutesFormAction.edit) {
                 widget.onEdit(
                   RouteFormModel(
-                    advanced: _advanced.toModel(),
                     name: _nameCtrl.text,
                     uri: _uriCtrl.text,
                     path: _pathCtrl.text,
