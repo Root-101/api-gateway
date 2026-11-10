@@ -591,8 +591,7 @@
                   "    pm.expect(r.uri).to.eql('http://localhost:8081');",
                   "    pm.expect(r.rewrite_path.replace_from).to.eql(`/test-service-${run}/`);",
                   "    pm.expect(r.rewrite_path.replace_to).to.eql('/');",
-                  "    pm.expect(r.order).to.eql(0);",
-                  "    pm.expect(r.methods).to.eql([]);",
+                  "    pm.expect(r).to.not.have.any.keys('order', 'methods', 'hosts', 'headers', 'filters');",
                   "    pm.expect(r.description).to.eql('A test route');",
                   "    pm.expect(new Date(r.created_at).getTime()).to.not.be.NaN;",
                   "});"
