@@ -91,6 +91,19 @@ void main() {
     expect(visiblePages(page: 10, pageCount: 10), [8, 9, 10]);
   });
 
+  test('dates follow the language, file names do not', () async {
+    final dates = DateFormatter();
+    final day = DateTime(2026, 1, 5, 9, 30);
+    expect(dates.month.format(day), 'January 2026');
+
+    await dates.setLocale('es');
+    expect(dates.month.format(day), 'enero 2026');
+    expect(dates.fileStamp.format(day), '2026-01-05_09_30_00.000');
+
+    await dates.setLocale('en');
+    expect(dates.month.format(day), 'January 2026');
+  });
+
   group('gateway status', () {
     test('offline until a retry reaches the gateway', () async {
       var up = false;

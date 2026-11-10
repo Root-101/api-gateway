@@ -54,11 +54,11 @@ class DateFormatter {
     xss = DateFormat('dd/MM/yy');
     s = DateFormat('dd/MM/yyyy');
     m = DateFormat('dd/MMM/yyyy');
-    api = DateFormat('yyyy-MM-dd', 'en');
+    api = DateFormat('yyyy-MM-dd', 'en_US');
     logsTime = DateFormat('dd MMM yyyy, HH:mm:ss');
     clock = DateFormat('HH:mm');
     month = DateFormat('MMMM yyyy');
-    fileStamp = DateFormat('yyyy-MM-dd_HH_mm_ss.SSS', 'en');
+    fileStamp = DateFormat('yyyy-MM-dd_HH_mm_ss.SSS', 'en_US');
     logsTimeS = DateFormat('dd MMM yyyy');
   }
 }
