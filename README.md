@@ -35,6 +35,8 @@ It centralizes client requests, routes them to internal services, logs traffic, 
     - [6.1 - Version Overview](#6.1)
     - [6.2 - Notes & Recommendations](#6.2)
     - [6.3 - Extra / Interesting Tips](#6.3)
+- [7 - Documentation improvements](#7)
+    - [7.1 - Supported protocols](#7.1)
 
 ## **Overview**  <a name="1"></a>
 
@@ -414,3 +416,24 @@ Here are some useful insights and performance notes about the project:
 * Current focus is on **bug fixes, stability, and performance improvements**.
 
 > 🟡 Status: **Maintenance Mode** — stable and polished for production use.
+
+## **Documentation improvements** <a name="7"></a>
+
+Topics the documentation should cover better. Each one starts here and moves to its own section once it is complete.
+
+### **Supported protocols** <a name="7.1"></a>
+
+The gateway routes **HTTP traffic**. Anything that starts as an HTTP request works, anything else does not.
+
+| Traffic                                | Works | Notes                                                                                                                                                                                                                              |
+|----------------------------------------|-------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| HTTP / HTTPS                           | ✅     | The main use case. HTTPS upstreams need the native image built with `-H:+SharedArenaSupport` (already in `build.gradle`).                                                                                                          |
+| SSE (Server-Sent Events)               | ✅     | Events are streamed as they arrive, nothing is buffered. `GATEWAY_RESPONSE_TIMEOUT` only limits the wait until the upstream starts the response: once open, the gateway does not close a silent stream. Proxies in front of it may have their own idle limit, so a heartbeat (a `:` comment line every 15–30 s) is still a good idea. |
+| WebSocket (`ws` / `wss`)               | ✅     | Configure the route with an `http://` or `https://` uri as usual: the gateway switches to `ws://` / `wss://` when the client asks for the upgrade. A `ws://` uri in the route is rejected by the validation.                       |
+| HTTP/2 / gRPC                          | ❌     | The gateway talks HTTP/1.1 to the upstreams.                                                                                                                                                                                       |
+| Raw TCP / UDP (databases, MQTT, etc.)  | ❌     | Not HTTP. Use a layer 4 proxy (nginx `stream`, HAProxy, Traefik TCP).                                                                                                                                                              |
+
+> **📌 Http logs of SSE and WebSocket**
+>
+> Each connection is logged as **one request** when it opens: the duration is the time until the upstream answers, not
+> how long the connection stayed open, and a WebSocket shows `200`. The individual events or messages are not logged.
