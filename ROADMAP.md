@@ -12,6 +12,7 @@ Rules:
 ## Possible improvements
 
 - [ ] Routes: `order`, multiple predicates (`methods`, `hosts`, `headers`) and extra header filters, all optional, in the admin API and the console form. Needs its own migration and the GraalVM reflection hints of each predicate and filter.
+- [ ] Gateway: **HTTP/2 and gRPC** support, for a later version (not 6.0.0). gRPC needs HTTP/2 end to end (trailers, multiplexed streams): enable it on the gateway server (`server.http2.enabled`) and on the client to the upstreams, check the Railway edge forwards HTTP/2 to the container, and check the http logs filter with long-lived streams. Then update README section 7.1.
 - [ ] Gateway: mutation testing with **PIT** on the routes and logs logic, to measure test quality beyond coverage.
 
 ## 6.0.0 release
