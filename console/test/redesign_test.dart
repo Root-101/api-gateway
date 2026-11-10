@@ -1,19 +1,7 @@
 import 'package:console/app_exporter.dart';
 import 'package:console/features/routes/view/form/routes_form_screen.dart';
+import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
-
-class _RepoWithoutClient implements RoutesRepo {
-  final _real = RoutesRepo(client: RoutesClient(_noDio()));
-
-  static dynamic _noDio() => null;
-
-  @override
-  List<RouteRequest> parseBackup(String rawFileContent) =>
-      _real.parseBackup(rawFileContent);
-
-  @override
-  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
-}
 
 void main() {
   group('FROM -> TO', () {
@@ -44,7 +32,8 @@ void main() {
   });
 
   group('backup validation', () {
-    final repo = _RepoWithoutClient();
+    //parseBackup never calls the api
+    final repo = RoutesRepo(client: RoutesClient(Dio()));
 
     test('accepts a list of complete routes', () {
       expect(
