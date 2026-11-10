@@ -14,6 +14,8 @@
         * **States** :traffic_light: : Added first-load skeletons, toasts, a 404 page inside the app and an offline
           banner that retries every 10 s. Errors and warnings are now printed in the browser console of release
           builds (the logger was silent there).
+        * **Splash** :art: : The splash of the design is now in `index.html`, so it shows while the app downloads
+          instead of a blank page, and it is removed on the first frame.
         * **Dependencies** :package: : Removed `syncfusion_flutter_datagrid` and `top_snackbar_flutter`.
         * **Version** :bookmark: : The console now shares the version of the API Gateway, so both projects are
           released with the same number. It jumps from `1.1.1` to `6.0.0` for that reason.

@@ -19,62 +19,50 @@
     <title>Api Gateway</title>
     <link rel="manifest" href="manifest.json">
     <style id="splash-screen-style">
-        html {
-          height: 100%
-        }
+        /* same splash as the canvas (Splash), shown while main.dart.js downloads; removed on Flutter's first frame */
+        @font-face { font-family: 'SplashMono'; src: url('assets/assets/fonts/DMMono/DMMono-Medium.ttf'); font-weight: 500; }
+        @font-face { font-family: 'SplashSans'; src: url('assets/assets/fonts/DMSans/DMSans-Medium.ttf'); font-weight: 500; }
+        @font-face { font-family: 'SplashSans'; src: url('assets/assets/fonts/DMSans/DMSans-Regular.ttf'); font-weight: 400; }
+
+        html { height: 100% }
 
         body {
           margin: 0;
           min-height: 100%;
           background-color: #121019;
-              background-size: 100% 100%;
         }
 
-        .center {
-          margin: 0;
-          position: absolute;
-          top: 50%;
-          left: 50%;
-          -ms-transform: translate(-50%, -50%);
-          transform: translate(-50%, -50%);
+        #splash {
+          position: fixed;
+          inset: 0;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          overflow: hidden;
+          color: #ffffff;
+          font-family: 'SplashSans', system-ui, sans-serif;
+          background-color: #121019;
+          background-image: linear-gradient(rgba(208, 188, 255, 0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(208, 188, 255, 0.05) 1px, transparent 1px);
+          background-size: 48px 48px;
+          background-position: -1px -1px;
         }
-
-        .contain {
-          display:block;
-          width:100%; height:100%;
-          object-fit: contain;
+        #splash .glow {
+          position: absolute; left: 50%; top: 50%; width: 760px; height: 760px;
+          transform: translate(-50%, -50%); border-radius: 50%;
+          background: radial-gradient(circle, rgba(93, 73, 153, 0.30) 0%, rgba(93, 73, 153, 0.10) 38%, rgba(93, 73, 153, 0) 70%);
         }
-
-        .stretch {
-          display:block;
-          width:100%; height:100%;
-        }
-
-        .cover {
-          display:block;
-          width:100%; height:100%;
-          object-fit: cover;
-        }
-
-        .bottom {
-          position: absolute;
-          bottom: 0;
-          left: 50%;
-          -ms-transform: translate(-50%, 0);
-          transform: translate(-50%, 0);
-        }
-
-        .bottomLeft {
-          position: absolute;
-          bottom: 0;
-          left: 0;
-        }
-
-        .bottomRight {
-          position: absolute;
-          bottom: 0;
-          right: 0;
-        }
+        #splash .content { position: relative; display: flex; flex-direction: column; align-items: center; text-align: center; animation: spIn .5s cubic-bezier(.2, 0, 0, 1) both }
+        #splash .logo { display: block; filter: drop-shadow(0 16px 32px rgba(0, 0, 0, 0.45)) }
+        #splash .wordmark { margin-top: 28px; font-family: 'SplashMono', monospace; font-size: 52px; line-height: 1; font-weight: 500; letter-spacing: -2px }
+        #splash .tagline { margin-top: 12px; font-size: 18px; line-height: 24px; font-weight: 500; color: #d9d2f2 }
+        #splash .lilac { color: #d0bcff }
+        #splash .track { position: relative; width: 220px; height: 4px; margin-top: 36px; border-radius: 2px; background: #2c2939; overflow: hidden }
+        #splash .bar { position: absolute; left: 0; top: 0; width: 40%; height: 100%; border-radius: 2px; background: #d0bcff; animation: spRun 1.4s ease-in-out infinite }
+        #splash .version { position: absolute; left: 0; right: 0; bottom: 24px; text-align: center; font-family: 'SplashMono', monospace; font-size: 12px; color: #6f6c7b }
+        #splash .message { margin: 16px 0 0; font-size: 14px; line-height: 20px; font-weight: 400; color: #8f8e9b }
+        @keyframes spRun { 0% { transform: translateX(-100%) } 100% { transform: translateX(250%) } }
+        @keyframes spIn { from { opacity: 0; transform: translateY(6px) } to { opacity: 1; transform: none } }
+        @media (prefers-reduced-motion: reduce) { #splash .bar { animation: none; transform: translateX(75%) } #splash .content { animation: none } }
     </style>
     <!-- external file (not inline) so the CSP in nginx.conf doesn't need script-src 'unsafe-inline' -->
     <script id="splash-screen-script" src="splash.js"></script>
@@ -82,6 +70,17 @@
           name="viewport">
 </head>
 <body>
+<main id="splash" aria-busy="true" aria-label="api-gateway is starting">
+    <div class="glow" aria-hidden="true"></div>
+    <div class="content">
+        <svg class="logo" aria-hidden="true" width="120" height="115" viewBox="0 0 24 23" fill="none" stroke="#d0bcff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 6v10.5"/><path d="M12 9c0 2.2-8.5 1.3-8.5 4.2v3.3"/><path d="M12 9c0 2.2 8.5 1.3 8.5 4.2v3.3"/><circle cx="12" cy="3.5" r="2.5" fill="#d0bcff"/><circle cx="3.5" cy="19" r="2.5"/><circle cx="12" cy="19" r="2.5"/><circle cx="20.5" cy="19" r="2.5"/></svg>
+        <span class="wordmark"><span class="lilac">api</span>-gateway</span>
+        <span class="tagline">One route to <span class="lilac">rule them all</span></span>
+        <div class="track" role="progressbar" aria-label="Loading"><span class="bar"></span></div>
+        <p class="message">Connecting to the gateway…</p>
+    </div>
+    <span id="splash-version" class="version"></span>
+</main>
 <script src="env.js"></script>
 <script src="flutter_bootstrap.js" async=""></script>
 

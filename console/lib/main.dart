@@ -1,3 +1,4 @@
+import 'dart:js_interop';
 import 'dart:ui';
 
 import 'package:console/app_exporter.dart';
@@ -6,6 +7,9 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:go_router/go_router.dart';
 import 'package:logger/logger.dart';
+
+@JS('removeSplashFromWeb')
+external void _removeWebSplash();
 
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
@@ -35,6 +39,8 @@ void main() {
   GoRouter.optionURLReflectsImperativeAPIs = true;
 
   WidgetsFlutterBinding.ensureInitialized();
+  //the html splash (web/index.html) covers the download of the app; Flutter's SplashScreen looks the same
+  WidgetsBinding.instance.addPostFrameCallback((_) => _removeWebSplash());
 
   //error handling
   FlutterError.onError = (errorDetails) {
