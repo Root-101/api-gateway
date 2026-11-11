@@ -26,7 +26,6 @@ class Environment {
     final missing = [
       if ((env!.GATEWAY_SERVICE_URL ?? '').trim().isEmpty)
         'GATEWAY_SERVICE_URL',
-      if ((env!.ADMIN_PATH ?? '').trim().isEmpty) 'ADMIN_PATH',
     ];
     return missing.isEmpty ? null : 'env.js: missing ${missing.join(', ')}';
   }
@@ -50,9 +49,14 @@ class Environment {
     return url.startsWith('http') ? url : 'https://$url';
   }
 
-  ///without leading/trailing `/`
-  static String get adminPath =>
-      (env?.ADMIN_PATH ?? '').trim().replaceAll(RegExp(r'^/+|/+$'), '');
+  ///without leading/trailing `/`; `_admin` when missing, the same default as the gateway
+  static String get adminPath {
+    final path = (env?.ADMIN_PATH ?? '').trim().replaceAll(
+      RegExp(r'^/+|/+$'),
+      '',
+    );
+    return path.isEmpty ? '_admin' : path;
+  }
 
   static String get baseApiUrl => '$gatewayUrl/$adminPath';
 

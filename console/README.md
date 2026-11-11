@@ -24,8 +24,8 @@ It allows administrators to:
 * 📜 **View HTTP logs** — Filter, search, and inspect requests passing through the gateway.
 * 🔐 **Authenticate safely** — Login using the same credentials as the gateway admin endpoints.
 
-> ⚡ **Note:** This version is tied to the corresponding v5.x API Gateway endpoints. Future UI versions will update
-> automatically to remain compatible with the latest gateway releases.
+> ⚡ **Note:** The console shares its version number with the API Gateway. Console `6.0.0` needs gateway `6.0.0` or
+> later (restore uses `PUT /routes`, and older gateways send a `401` as a connection error).
 
 ---
 
@@ -36,8 +36,8 @@ The client can be customized using the following **environment variables**:
 | Env Variable        | Description                                                                    | Expected | Default value (example)                              | Added in version |
 |---------------------|--------------------------------------------------------------------------------|----------|------------------------------------------------------|------------------|
 | GATEWAY_SERVICE_URL | Base URL of the API Gateway service                                            | text     | [https://gateway-url.test](https://gateway-url.test) | 1.0.0            |
-| ADMIN_PATH          | Admin path of the gateway service (must match `ADMIN_PATH` in the API Gateway) | text     | \_admin                                              | 1.0.0            |
-| SESSION_TIMEOUT_MINUTES | Optional. Minutes without mouse/keyboard activity before the console logs out. `0` or missing = disabled | number | 0 | next |
+| ADMIN_PATH          | Optional. Admin path of the gateway service (must match `ADMIN_PATH` in the API Gateway) | text     | \_admin                                              | 1.0.0            |
+| SESSION_TIMEOUT_MINUTES | Optional. Minutes without mouse/keyboard activity before the console logs out. `0` or missing = disabled | number | 0 | 6.0.0 |
 
 > ⚡ **Tip:** Ensure that the `ADMIN_PATH` matches the API Gateway configuration to allow proper authentication and
 > routing of admin requests.
@@ -71,46 +71,17 @@ This project is developed using **Flutter**, currently version `3.47.9` (pinned 
 
 ## Screenshots<a name="4"></a>
 
-#### Login screen
+[docs/console.md](../docs/console.md) describes every screen, its URL and the endpoints it calls. All 20 screens of
+the design are in [docs/design/screens](../docs/design/screens).
 
-![screenshot-1](../doc/images/web-client-1.png)
+#### Login
 
-#### Routes screen
+![Login](../docs/design/screens/02-login.png)
 
-![screenshot-2](../doc/images/web-client-2.png)
+#### Routes
 
-#### Create route dialog
+![Routes](../docs/design/screens/04-routes.png)
 
-![screenshot-3](../doc/images/web-client-3.png)
+#### Logs
 
-#### Edit route dialog
-
-![screenshot-4](../doc/images/web-client-4.png)
-
-#### Delete route
-
-![screenshot-5](../doc/images/web-client-5.png)
-
-#### Backup routes
-
-![screenshot-6](../doc/images/web-client-6.png)
-
-#### Restore routes
-
-![screenshot-7](../doc/images/web-client-7.png)
-
-#### Logs Screen
-
-![screenshot-8](../doc/images/web-client-8.png)
-
-#### Logs Filter Dialog
-
-![screenshot-9](../doc/images/web-client-9.png)
-
-#### Change Language
-
-![screenshot-10](../doc/images/web-client-10.png)
-
-#### Logout
-
-![screenshot-11](../doc/images/web-client-11.png)
+![Logs](../docs/design/screens/12-logs.png)

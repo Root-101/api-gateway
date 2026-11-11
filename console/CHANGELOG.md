@@ -50,6 +50,9 @@
           language; they were always in English.
         * **Docker** :whale: : Reproducible build, `nginx` 1.28 with security headers and no stale files after a deploy.
           `env.js` is generated on container start, so one image serves every environment.
+        * **Config** :wrench: : `ADMIN_PATH` is optional and defaults to `_admin`, the same default as the gateway.
+          Before, a missing value stopped the console with a configuration error.
+        * **Docs** :books: : README screenshots now come from `docs/design/screens` and link to `docs/console.md`.
         * **General** :hammer_and_wrench: : Added CI job (analyze and build), updated README, console version in
           the side menu and several memory and UI fixes. The unit tests were removed.
         * **General** :hammer_and_wrench: : Dart package renamed to `console`.
