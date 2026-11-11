@@ -274,19 +274,11 @@ class _RoutesFormWidgetState extends State<RoutesFormWidget> {
 
   ///shows [errors] (api names) and goes to the first step with one
   void _showErrors(Map<String, String>? errors) {
-    _errors = _translated(errors ?? const {});
+    _errors = {...?errors};
     if (_errors.isNotEmpty) {
       _step = _errors.keys.map(_stepOf).reduce((a, b) => a < b ? a : b);
     }
   }
-
-  ///the only api message worth translating: the rest name the rule itself
-  Map<String, String> _translated(Map<String, String> errors) => {
-    for (final e in errors.entries)
-      e.key: e.value == 'must not be blank'
-          ? app.intl.validations.requiredField
-          : e.value,
-  };
 
   ///the rules are the api's (`POST /routes/validate`); only the taken name is checked here, against the list
   Future<Map<String, String>?> _check(RouteFormModel model) async {
@@ -301,7 +293,7 @@ class _RoutesFormWidgetState extends State<RoutesFormWidget> {
               r.name.toLowerCase() == model.name.toLowerCase(),
         );
     return {
-      ..._translated(errors),
+      ...errors,
       if (nameTaken && !errors.containsKey(_name.key))
         _name.key: app.intl.form.nameTaken,
     };
