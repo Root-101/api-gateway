@@ -10,6 +10,7 @@ import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.builder.SpringApplicationBuilder;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -20,6 +21,7 @@ import reactor.test.StepVerifier;
 
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import java.util.stream.Stream;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -165,7 +167,7 @@ class RoutesIT extends IntegrationTest {
                 .expectStatus().isEqualTo(HttpStatus.UNPROCESSABLE_CONTENT)
                 .expectBody()
                 .jsonPath("$.violations[0].fieldName").isEqualTo("rewrite_path.replace_from")
-                .jsonPath("$.violations[0].message").isEqualTo("must be a valid regular expression");
+                .jsonPath("$.violations[0].message").isEqualTo("Must be a valid regular expression");
 
         admin(HttpMethod.POST, "/routes")
                 .bodyValue(new RouteConfigRequest("pp-" + id, "/pp-" + id + "/{x", upstreamUrl(), null, null))
@@ -179,11 +181,51 @@ class RoutesIT extends IntegrationTest {
                 .expectStatus().isEqualTo(HttpStatus.UNPROCESSABLE_CONTENT)
                 .expectBody()
                 .jsonPath("$.violations[0].fieldName").isEqualTo("[0].uri")
-                .jsonPath("$.violations[0].message").isEqualTo("must not have a path, use rewrite_path to add a prefix");
+                .jsonPath("$.violations[0].message").isEqualTo("Must not have a path, use rewrite_path to add a prefix");
 
         assertThat(routeRepo.findByName("re-" + id).block()).isNull();
         //a uri ending in `/` is fine
         createRoute(new RouteConfigRequest("slash-" + id, "/slash-" + id + "/**", upstreamUrl() + "/", null, null));
+    }
+
+    /**
+     * The texts follow `Accept-Language` (English without it); the fields and the shape don't change
+     */
+    @Test
+    void errorsInTheLanguageOfTheRequest() {
+        admin(HttpMethod.POST, "/routes/validate")
+                .header(HttpHeaders.ACCEPT_LANGUAGE, "es")
+                .bodyValue(new RouteConfigRequest("", "/es/**", upstreamUrl(), null, null))
+                .exchange()
+                .expectStatus().isEqualTo(HttpStatus.UNPROCESSABLE_CONTENT)
+                .expectBody()
+                .jsonPath("$.title").isEqualTo("Contenido no procesable")
+                .jsonPath("$.detail").isEqualTo("La petición tiene campos inválidos")
+                .jsonPath("$.violations[0].fieldName").isEqualTo("name")
+                .jsonPath("$.violations[0].message").isEqualTo("No puede estar vacío");
+
+        //the route rules (checked once the fields are valid)
+        admin(HttpMethod.POST, "/routes/validate")
+                .header(HttpHeaders.ACCEPT_LANGUAGE, "es")
+                .bodyValue(new RouteConfigRequest("es", "/es/**", upstreamUrl() + "/api", null, null))
+                .exchange()
+                .expectStatus().isEqualTo(HttpStatus.UNPROCESSABLE_CONTENT)
+                .expectBody()
+                .jsonPath("$.violations[0].fieldName").isEqualTo("uri")
+                .jsonPath("$.violations[0].message").isEqualTo("No debe tener ruta, usa rewrite_path para agregar un prefijo");
+
+        String routeId = UUID.randomUUID().toString();
+        admin(HttpMethod.GET, "/routes/" + routeId)
+                .header(HttpHeaders.ACCEPT_LANGUAGE, "es-ES,es;q=0.9")
+                .exchange()
+                .expectStatus().isNotFound()
+                .expectBody().jsonPath("$.detail").isEqualTo("La ruta no existe: " + routeId);
+
+        admin(HttpMethod.GET, "/routes/" + routeId)
+                .header(HttpHeaders.ACCEPT_LANGUAGE, "fr")
+                .exchange()
+                .expectStatus().isNotFound()
+                .expectBody().jsonPath("$.detail").isEqualTo("Route does not exist: " + routeId);
     }
 
     /**

@@ -10,8 +10,11 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.event.EventListener;
+import org.hibernate.validator.messageinterpolation.ResourceBundleMessageInterpolator;
+import org.springframework.context.MessageSource;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.validation.beanvalidation.MessageSourceResourceBundleLocator;
 
 
 /**
@@ -56,9 +59,12 @@ public class ServiceConfig {
     }
 
     @Bean
-    public ValidationService validationService(PropertyNamingStrategies.NamingBase namingStrategy) {
+    public ValidationService validationService(PropertyNamingStrategies.NamingBase namingStrategy, MessageSource messageSource) {
+        //constraint messages from messages*.properties, in every language (see I18n)
         return ValidationService.builder()
                 .namingStrategy(namingStrategy)
+                .messageInterpolator(I18n.everyLanguage(
+                        new ResourceBundleMessageInterpolator(new MessageSourceResourceBundleLocator(messageSource))))
                 .build();
     }
 

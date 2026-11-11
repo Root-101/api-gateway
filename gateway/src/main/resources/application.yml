@@ -8,6 +8,9 @@ spring:
     default: ${PROFILE:default}
   application:
     name: ${APPLICATION_NAME:Api-Gateway}
+  messages:
+    #a language without its file (or English, which is messages.properties) falls back to English, never to the server's own language
+    fallback-to-system-locale: false
   r2dbc:
     #Variables must be available at compile time (since we started using the native image in v4.1.0), so they are set by default and then overridden with the real values
     url: r2dbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:api-gateway}          #r2dbc:postgresql:/host:port/db-name

@@ -90,9 +90,26 @@ Content-Type: application/problem+json
 | `type`       | string  | Always `about:blank`: the status says what kind of error it is  |
 | `title`      | string  | The name of the status (`Not Found`, `Conflict`…)               |
 | `status`     | integer | The HTTP status, again                                          |
-| `detail`     | string  | What went wrong, in English, for people                         |
+| `detail`     | string  | What went wrong, for people                                     |
 | `instance`   | string  | The path of the request                                         |
 | `violations` | array   | Only in a `422`: one entry per broken rule                      |
+
+**Language.** `title`, `detail` and each violation's `message` follow the request's
+`Accept-Language`: `es` (or `es-ES`…) answers in Spanish, anything else, or no header, in English.
+Only the texts change: the statuses, the keys and the `fieldName`s are the same in every language.
+
+```http
+GET /_admin/routes/00000000-0000-0000-0000-000000000001
+Accept-Language: es
+
+HTTP/1.1 404 Not Found
+Content-Type: application/problem+json
+
+{"type":"about:blank","title":"No encontrado","status":404,"detail":"La ruta no existe: 00000000-0000-0000-0000-000000000001","instance":"/_admin/routes/00000000-0000-0000-0000-000000000001"}
+```
+
+The texts are in `gateway/src/main/resources/messages.properties` (English) and
+`messages_es.properties` (Spanish).
 
 A body that breaks a rule is a `422` with `violations`. A field that breaks two rules comes twice;
 the order of the entries is not fixed:
@@ -105,9 +122,9 @@ the order of the entries is not fixed:
   "detail": "The request has invalid fields",
   "instance": "/_admin/routes",
   "violations": [
-    {"fieldName": "name", "message": "must not be blank"},
-    {"fieldName": "uri", "message": "must be a valid URL"},
-    {"fieldName": "rewrite_path.replace_from", "message": "must not be blank"}
+    {"fieldName": "name", "message": "Must not be blank"},
+    {"fieldName": "uri", "message": "Must be a valid URL"},
+    {"fieldName": "rewrite_path.replace_from", "message": "Must not be blank"}
   ]
 }
 ```
@@ -115,7 +132,7 @@ the order of the entries is not fixed:
 | Field       | Type   | Description                                                                          |
 |-------------|--------|--------------------------------------------------------------------------------------|
 | `fieldName` | string | The field, as a JSON path: `rewrite_path.replace_from`, or `[1].name` in a list body |
-| `message`   | string | What is wrong, in English (`must not be blank`, `size must be between 0 and 255`…)   |
+| `message`   | string | What is wrong (`Must not be blank`, `Size must be between 0 and 255`…)               |
 
 A body that can't be read is a `400` that names the field when it can, never the Java types:
 `"detail":"Invalid value for name"` (a list where a text goes), or `"The body is not valid JSON"`.
@@ -198,8 +215,8 @@ A blank or missing field is a `422`:
   "detail": "The request has invalid fields",
   "instance": "/_admin/auth/login",
   "violations": [
-    {"fieldName": "password", "message": "must not be blank"},
-    {"fieldName": "username", "message": "must not be blank"}
+    {"fieldName": "password", "message": "Must not be blank"},
+    {"fieldName": "username", "message": "Must not be blank"}
   ]
 }
 ```
@@ -354,7 +371,7 @@ step of its route form with it, so the rules live only in the gateway. Not logge
 HTTP/1.1 422 Unprocessable Content
 Content-Type: application/problem+json
 
-{"type":"about:blank","title":"Unprocessable Content","status":422,"detail":"The request has invalid fields","instance":"/_admin/routes/validate","violations":[{"fieldName":"path","message":"must be a valid path pattern"}]}
+{"type":"about:blank","title":"Unprocessable Content","status":422,"detail":"The request has invalid fields","instance":"/_admin/routes/validate","violations":[{"fieldName":"path","message":"Must be a valid path pattern"}]}
 ```
 
 ## Create several routes
@@ -416,7 +433,7 @@ The violations of a list name the item by its index:
   "status": 422,
   "detail": "The request has invalid fields",
   "instance": "/_admin/routes/batch",
-  "violations": [{"fieldName": "[1].name", "message": "must not be blank"}]
+  "violations": [{"fieldName": "[1].name", "message": "Must not be blank"}]
 }
 ```
 

@@ -44,10 +44,10 @@ public class HttpLogController {
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) OffsetDateTime to
     ) {
         if (page < 0) {
-            throw new BadRequestException("page must be 0 or more");
+            throw new BadRequestException("logs.page.invalid");
         }
         if (size != null && size < 1) {
-            throw new BadRequestException("size must be 1 or more");
+            throw new BadRequestException("logs.size.invalid");
         }
         return httpLogUseCase.search(new HttpLogSearchRequest(page, size, query, method, status, routeId, from, to));
     }

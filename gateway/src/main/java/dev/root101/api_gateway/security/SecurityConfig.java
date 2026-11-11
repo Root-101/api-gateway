@@ -35,8 +35,8 @@ public class SecurityConfig {
                 .cors(Customizer.withDefaults())                                                  // Uses the CorsConfigurationSource bean, so 401/403 also get CORS headers
                 .exceptionHandling(exc -> exc
                         // Problem Details, and no `WWW-Authenticate: Basic` header: it makes browsers open the native login popup
-                        .authenticationEntryPoint((exchange, e) -> errorHandler.writeProblem(exchange, HttpStatus.UNAUTHORIZED, "Authentication required"))
-                        .accessDeniedHandler((exchange, e) -> errorHandler.writeProblem(exchange, HttpStatus.FORBIDDEN, "Not allowed"))
+                        .authenticationEntryPoint((exchange, e) -> errorHandler.writeProblem(exchange, HttpStatus.UNAUTHORIZED, "auth.required"))
+                        .accessDeniedHandler((exchange, e) -> errorHandler.writeProblem(exchange, HttpStatus.FORBIDDEN, "auth.forbidden"))
                 )
                 .authorizeExchange(
                         exchange -> exchange

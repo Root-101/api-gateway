@@ -70,7 +70,7 @@ public class AdminAuthenticationWebFilter implements WebFilter {
             long seconds = loginAttemptsGuard.retryAfterSeconds(clientIp);
             exchange.getResponse().getHeaders().set(HttpHeaders.RETRY_AFTER, String.valueOf(seconds));
             return errorHandler.writeProblem(exchange, HttpStatus.TOO_MANY_REQUESTS,
-                    "Too many failed attempts, try again in %d s".formatted(seconds));
+                    "auth.locked", String.valueOf(seconds));
         }
 
         Mono<Void> result;

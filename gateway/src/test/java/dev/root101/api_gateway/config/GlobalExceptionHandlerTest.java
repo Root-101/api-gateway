@@ -8,7 +8,13 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
+import dev.root101.api_gateway.features.routes.logic.model.RouteConfigRequest;
+import dev.root101.commons.validation.ValidationService;
+import org.hibernate.validator.messageinterpolation.ResourceBundleMessageInterpolator;
+import org.springframework.context.support.ResourceBundleMessageSource;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.validation.beanvalidation.MessageSourceResourceBundleLocator;
+import tools.jackson.databind.PropertyNamingStrategies;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.net.ConnectException;
@@ -24,13 +30,29 @@ import reactor.test.StepVerifier;
 import java.io.IOException;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.catchThrowableOfType;
 
 class GlobalExceptionHandlerTest {
 
-    private final GlobalExceptionHandler handler = new GlobalExceptionHandler(JsonMapper.builderWithJackson2Defaults().build());
+    //as Spring Boot sets it up (spring.messages.*)
+    static final ResourceBundleMessageSource MESSAGES = new ResourceBundleMessageSource();
+
+    static {
+        MESSAGES.setBasename("messages");
+        MESSAGES.setDefaultEncoding("UTF-8");
+        MESSAGES.setFallbackToSystemLocale(false);
+    }
+
+    private final GlobalExceptionHandler handler = new GlobalExceptionHandler(JsonMapper.builderWithJackson2Defaults().build(), MESSAGES);
 
     private MockServerWebExchange exchange() {
         return MockServerWebExchange.from(MockServerHttpRequest.get("/any"));
+    }
+
+    private String body(Throwable error, String acceptLanguage) {
+        MockServerWebExchange exchange = MockServerWebExchange.from(MockServerHttpRequest.get("/any").header("Accept-Language", acceptLanguage));
+        handler.handle(exchange, error).block();
+        return exchange.getResponse().getBodyAsString().block();
     }
 
     @Test
@@ -100,6 +122,37 @@ class GlobalExceptionHandlerTest {
 
         assertThat(exchange.getResponse().getStatusCode()).isEqualTo(HttpStatus.CONFLICT);
         assertThat(exchange.getResponse().getBodyAsString().block()).contains("\"detail\":\"name already used: ñ\"");
+    }
+
+    @Test
+    void textsInTheLanguageOfTheRequest() {
+        LocalizedException notFound = new LocalizedException(HttpStatus.NOT_FOUND, "route.not_found", "x");
+
+        assertThat(body(notFound, "es")).contains("\"title\":\"No encontrado\"", "\"detail\":\"La ruta no existe: x\"");
+        assertThat(body(notFound, "es-ES,es;q=0.9")).contains("La ruta no existe: x");
+        assertThat(body(notFound, "en")).contains("\"title\":\"Not Found\"", "\"detail\":\"Route does not exist: x\"");
+        //a language without its file, or no header: English
+        assertThat(body(notFound, "fr")).contains("Route does not exist: x");
+        assertThat(handled(notFound).getResponse().getBodyAsString().block()).contains("Route does not exist: x");
+    }
+
+    @Test
+    void validationMessagesInTheLanguageOfTheRequest() {
+        //the validation service as ServiceConfig builds it
+        ValidationService validation = ValidationService.builder()
+                .namingStrategy(new PropertyNamingStrategies.SnakeCaseStrategy())
+                .messageInterpolator(I18n.everyLanguage(new ResourceBundleMessageInterpolator(new MessageSourceResourceBundleLocator(MESSAGES))))
+                .build();
+        ValidationException error = catchThrowableOfType(ValidationException.class,
+                () -> validation.validate(new RouteConfigRequest("", "/a/**", "http://a" + "a".repeat(255), null, null)));
+
+        assertThat(body(error, "es")).contains(
+                "\"detail\":\"La petición tiene campos inválidos\"",
+                "{\"fieldName\":\"name\",\"message\":\"No puede estar vacío\"}",
+                "{\"fieldName\":\"uri\",\"message\":\"Debe tener entre 0 y 255 caracteres\"}");
+        assertThat(body(error, "en")).contains(
+                "{\"fieldName\":\"name\",\"message\":\"Must not be blank\"}",
+                "{\"fieldName\":\"uri\",\"message\":\"Size must be between 0 and 255\"}");
     }
 
     @Test

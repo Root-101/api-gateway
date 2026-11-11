@@ -50,6 +50,20 @@ class SecurityIT extends IntegrationTest {
     }
 
     /**
+     * The security layer's errors follow `Accept-Language` too
+     */
+    @Test
+    void unauthorizedInTheLanguageOfTheRequest() {
+        webTestClient.get().uri("/%s/routes".formatted(ADMIN_PATH))
+                .header(HttpHeaders.ACCEPT_LANGUAGE, "es")
+                .exchange()
+                .expectStatus().isUnauthorized()
+                .expectBody()
+                .jsonPath("$.title").isEqualTo("No autorizado")
+                .jsonPath("$.detail").isEqualTo("Se requiere autenticación");
+    }
+
+    /**
      * Malformed Basic and wrong credentials → 401, both with CORS and a Problem Details body.
      */
     @Test

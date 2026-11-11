@@ -47,7 +47,7 @@ public class HttpLogSearchRepo {
                         .and("responseCode")
                         .lessThanOrEquals(range[1]);
             } catch (NumberFormatException e) {
-                throw new BadRequestException("status must be a number");
+                throw new BadRequestException("logs.status.invalid");
             }
         }
         if (request.getQuery() != null && !request.getQuery().isBlank()) {
@@ -67,7 +67,7 @@ public class HttpLogSearchRepo {
                 try {
                     criteria = criteria.and("routeId").is(UUID.fromString(request.getRouteId().trim()));
                 } catch (IllegalArgumentException e) {
-                    throw new BadRequestException("route_id must be a uuid or NO-ROUTE");
+                    throw new BadRequestException("logs.route_id.invalid");
                 }
             }
         }

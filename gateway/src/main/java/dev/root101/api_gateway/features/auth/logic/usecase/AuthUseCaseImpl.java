@@ -42,7 +42,7 @@ class AuthUseCaseImpl implements AuthUseCase {
                                 String token = adminTokens.issue();
                                 return Mono.just(new LoginResponse(token, adminTokens.ttlMillis(), adminTokens.expireAt(token)));
                             } else {
-                                return Mono.error(new UnauthorizedException("Wrong username or password"));
+                                return Mono.error(new UnauthorizedException("auth.wrong_credentials"));
                             }
                         })
                 );

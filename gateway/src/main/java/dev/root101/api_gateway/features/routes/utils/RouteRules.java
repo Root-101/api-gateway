@@ -43,7 +43,7 @@ public final class RouteRules {
                 //the parser of the gateway's Path predicate
                 PathPatternParser.defaultInstance.parse(route.getPath());
             } catch (RuntimeException e) {
-                errors.add(new ValidationErrorMessage(prefix + "path", route.getPath(), "must be a valid path pattern"));
+                errors.add(new ValidationErrorMessage(prefix + "path", route.getPath(), "route.path.invalid"));
             }
         }
         if (route.getUri() != null) {
@@ -51,7 +51,7 @@ public final class RouteRules {
                 String uriPath = URI.create(route.getUri()).getPath();
                 //the gateway only takes scheme, host and port from the uri
                 if (uriPath != null && !uriPath.isEmpty() && !uriPath.equals("/")) {
-                    errors.add(new ValidationErrorMessage(prefix + "uri", route.getUri(), "must not have a path, use rewrite_path to add a prefix"));
+                    errors.add(new ValidationErrorMessage(prefix + "uri", route.getUri(), "route.uri.has_path"));
                 }
             } catch (IllegalArgumentException e) {
                 //not a URI at all: the @URL validation already reports it
@@ -61,7 +61,7 @@ public final class RouteRules {
             try {
                 Pattern.compile(route.getRewritePath().getReplaceFrom());
             } catch (RuntimeException e) {
-                errors.add(new ValidationErrorMessage(prefix + "rewrite_path.replace_from", route.getRewritePath().getReplaceFrom(), "must be a valid regular expression"));
+                errors.add(new ValidationErrorMessage(prefix + "rewrite_path.replace_from", route.getRewritePath().getReplaceFrom(), "route.replace_from.invalid"));
             }
         }
         return errors;

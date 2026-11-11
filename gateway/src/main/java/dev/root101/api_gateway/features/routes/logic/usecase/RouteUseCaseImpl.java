@@ -7,9 +7,7 @@ import dev.root101.api_gateway.features.routes.logic.model.RouteConfigRequest;
 import dev.root101.api_gateway.features.routes.logic.model.RouteConfigResponse;
 import dev.root101.api_gateway.features.routes.utils.RouteDefinitionMapper;
 import dev.root101.api_gateway.features.routes.utils.RouteUpdater;
-import dev.root101.commons.exceptions.BadRequestException;
-import dev.root101.commons.exceptions.ConflictException;
-import dev.root101.commons.exceptions.NotFoundException;
+import dev.root101.api_gateway.config.LocalizedException;
 import dev.root101.commons.validation.ValidationService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -17,6 +15,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.SmartInitializingSingleton;
 import org.springframework.cloud.gateway.route.RouteDefinition;
 import org.springframework.cloud.gateway.route.RouteDefinitionWriter;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.reactive.TransactionalOperator;
 import reactor.core.publisher.Flux;
@@ -109,7 +108,7 @@ class RouteUseCaseImpl implements RouteUseCase, SmartInitializingSingleton {
                 // Check for duplicates in the database
                 .concatMap(
                         request -> routeRepo.findByName(request.getName())
-                                .flatMap(existing -> Mono.<RouteConfigRequest>error(new ConflictException("Route already exists: %s".formatted(request.getName()))))
+                                .flatMap(existing -> Mono.<RouteConfigRequest>error(new LocalizedException(HttpStatus.CONFLICT, "route.exists", request.getName())))
                                 .switchIfEmpty(Mono.just(request))
                 )
                 .map(this::buildEntity)
@@ -173,7 +172,7 @@ class RouteUseCaseImpl implements RouteUseCase, SmartInitializingSingleton {
     }
 
     /**
-     * The given routes, or a `ConflictException` if two of them have the same name
+     * The given routes, or a `409` if two of them have the same name
      */
     private Flux<RouteConfigRequest> withoutDuplicatedNames(List<RouteConfigRequest> requests) {
         return Flux.fromIterable(requests)
@@ -181,7 +180,7 @@ class RouteUseCaseImpl implements RouteUseCase, SmartInitializingSingleton {
                 .flatMapMany(frequencyMap -> {
                     for (Map.Entry<String, Collection<RouteConfigRequest>> entry : frequencyMap.entrySet()) {
                         if (entry.getValue().size() > 1) {
-                            return Mono.error(new ConflictException("Duplicated route: %s".formatted(entry.getKey())));
+                            return Mono.error(new LocalizedException(HttpStatus.CONFLICT, "route.duplicated", entry.getKey()));
                         }
                     }
                     return Flux.fromIterable(requests);
@@ -200,7 +199,7 @@ class RouteUseCaseImpl implements RouteUseCase, SmartInitializingSingleton {
                 //the new name can't be used by another route
                 .flatMap(oldRoute -> routeRepo.findByName(request.getName())
                         .filter(existing -> !existing.getRouteId().equals(oldRoute.getRouteId()))
-                        .flatMap(existing -> Mono.<RouteEntity>error(new ConflictException("Route already exists: %s".formatted(request.getName()))))
+                        .flatMap(existing -> Mono.<RouteEntity>error(new LocalizedException(HttpStatus.CONFLICT, "route.exists", request.getName())))
                         .defaultIfEmpty(oldRoute)
                 )
                 .flatMap(oldRoute -> {
@@ -233,10 +232,10 @@ class RouteUseCaseImpl implements RouteUseCase, SmartInitializingSingleton {
         try {
             id = UUID.fromString(routeId);
         } catch (IllegalArgumentException e) {
-            return Mono.error(new BadRequestException("Route id must be a UUID: %s".formatted(routeId)));
+            return Mono.error(new LocalizedException(HttpStatus.BAD_REQUEST, "route.id.invalid", routeId));
         }
         return routeRepo.findById(id)
-                .switchIfEmpty(Mono.error(new NotFoundException("Route does not exist: %s".formatted(routeId))));
+                .switchIfEmpty(Mono.error(new LocalizedException(HttpStatus.NOT_FOUND, "route.not_found", routeId)));
     }
 
     /**
