@@ -177,6 +177,9 @@ class _Field {
   final TextEditingController ctrl = TextEditingController();
   final FocusNode focus = FocusNode();
 
+  ///the whole field (label, input and error), to scroll it into view
+  final GlobalKey box = GlobalKey();
+
   _Field(this.key, this.step);
 
   void dispose() {
@@ -349,6 +352,16 @@ class _RoutesFormWidgetState extends State<RoutesFormWidget> {
         baseOffset: 0,
         extentOffset: target.ctrl.text.length,
       );
+      //focus only scrolls to the input; this also brings its error text into view
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        final box = target.box.currentContext;
+        if (box == null || !box.mounted) return;
+        Scrollable.ensureVisible(
+          box,
+          duration: const Duration(milliseconds: 150),
+          alignmentPolicy: ScrollPositionAlignmentPolicy.keepVisibleAtEnd,
+        );
+      });
     });
   }
 
@@ -372,6 +385,7 @@ class _RoutesFormWidgetState extends State<RoutesFormWidget> {
     bool mono = false,
     int maxLength = 255,
   }) => AppField(
+    key: field.box,
     label: label,
     controller: field.ctrl,
     focusNode: field.focus,
