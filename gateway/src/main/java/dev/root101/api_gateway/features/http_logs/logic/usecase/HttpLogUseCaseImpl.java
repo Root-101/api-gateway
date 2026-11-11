@@ -118,8 +118,10 @@ public class HttpLogUseCaseImpl implements HttpLogUseCase {
                 .map(page -> new HttpLogSearchResponse(
                         page.getNumber(),                // current page
                         page.getSize(),                  // page size
-                        page.getTotalPages(),            // total pages
-                        page.getTotalElements(),         // total elements
+                        //the count stops one past the cap: report the cap and flag it
+                        (int) Math.ceil((double) Math.min(page.getTotalElements(), HttpLogSearchRepo.COUNT_CAP) / page.getSize()),
+                        Math.min(page.getTotalElements(), HttpLogSearchRepo.COUNT_CAP),
+                        page.getTotalElements() > HttpLogSearchRepo.COUNT_CAP,
                         page                             // page content
                                 .getContent()
                                 .stream()

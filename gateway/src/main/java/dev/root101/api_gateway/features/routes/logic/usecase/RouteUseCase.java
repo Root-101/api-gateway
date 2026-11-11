@@ -44,7 +44,7 @@ public interface RouteUseCase {
     Mono<RouteConfigResponse> editRoute(String routeId, RouteConfigRequest request);
 
     /**
-     * Find a route by its id, or null if it's not found
+     * Find a route by its id: `400` if it is not a UUID, `404` if there is none
      *
      * @param routeId The id the route to find
      */
@@ -72,12 +72,4 @@ public interface RouteUseCase {
      * @param routeId The id of the route to find.
      */
     RouteEntity findCachedById(String routeId);
-
-    /**
-     * Get the routes as saved in cache... in theory this should have the same result as `getRoutes`.
-     * We still provide both methods... maybe a change was made direct to db....
-     * <p>
-     * This method DON'T make a DB request.
-     */
-    List<RouteEntity> getCacheRoutes();
 }

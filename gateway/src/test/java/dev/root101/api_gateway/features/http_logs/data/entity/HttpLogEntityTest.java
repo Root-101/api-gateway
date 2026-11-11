@@ -24,8 +24,6 @@ class HttpLogEntityTest {
         HttpLogEntity entity = new HttpLogEntity(null, "ip", OffsetDateTime.now(), null, "GET", "/x", 200, 1, null);
         assertThat(entity.getRoute()).isNull();
 
-        entity.setRawRoute(null);
-        assertThat(entity.getRoute()).isNull();
         assertThat(HttpLogEntity.RouteLog.fromStringJson(null)).isNull();
     }
 

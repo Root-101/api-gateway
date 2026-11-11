@@ -11,7 +11,7 @@ services:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: a123b456**
     ports:
-      - "5432:5432"
+      - "127.0.0.1:5432:5432"    #local only: the gateway reaches it on the compose network
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
@@ -59,7 +59,7 @@ services:
       GATEWAY_CONNECT_TIMEOUT_MS: 10000
       GATEWAY_RESPONSE_TIMEOUT: 60s
     ports:
-      - "8080:8080"
+      - "127.0.0.1:8080:8080"
     networks:
       - api_network
 
@@ -78,7 +78,7 @@ services:
     depends_on:
       - api-gateway
     ports:
-      - "80:80"
+      - "127.0.0.1:80:80"
     networks:
       - api_network
 

@@ -8,6 +8,10 @@ on:
   workflow_call:
 
 # a new push to the same branch or PR replaces the run in progress
+# read-only token by default: nothing here writes to the repo or the registry
+permissions:
+  contents: read
+
 concurrency:
   group: ci-${{ github.ref }}
   cancel-in-progress: true
@@ -19,16 +23,16 @@ jobs:
       run:
         working-directory: gateway
     steps:
-      - uses: actions/checkout@v7
-      - uses: actions/setup-java@v6
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - uses: actions/setup-java@b843ebf9b913146b38da2eaa7aeddf76074ae1ad # v6
         with:
           distribution: temurin
           java-version: 25
-      - uses: gradle/actions/setup-gradle@v6
+      - uses: gradle/actions/setup-gradle@8da46b539cd8fe6ab27ca75128919a18d757604c # v6
       # unit + integration tests (Testcontainers uses the docker of the runner) + coverage gate + AOT
       # gradlew is not executable in git
       - run: chmod +x gradlew && ./gradlew check jacocoTestReport processAot
-      - uses: actions/upload-artifact@v7
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         if: always()
         with:
           name: test-and-coverage-reports
@@ -42,11 +46,11 @@ jobs:
       run:
         working-directory: console
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
       - name: Flutter version from .fvmrc
         id: fvm
         run: echo "version=$(jq -r .flutter .fvmrc)" >> "$GITHUB_OUTPUT"
-      - uses: subosito/flutter-action@v2
+      - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2
         with:
           flutter-version: ${{ steps.fvm.outputs.version }}
           channel: stable
@@ -61,7 +65,7 @@ jobs:
     needs: test
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
       - run: docker build -t api-gateway gateway
       # smoke test of the native binary: catches GraalVM reflection problems the JVM tests can't see
       - name: Smoke test
@@ -78,9 +82,9 @@ jobs:
           curl -sf -u "$AUTH" -X POST localhost:8080/_admin/routes -H 'Content-Type: application/json' \
             -d '{"name":"self","path":"/self/**","uri":"http://localhost:8080","rewrite_path":{"replace_from":"/self/(?<segment>.*)","replace_to":"/_admin/${segment}"}}'
           curl -sf -u "$AUTH" localhost:8080/_admin/routes | grep -q '"name":"self"'
-          curl -sf localhost:8080/self/health | grep -q UP
+          curl -sf localhost:8080/self/health | grep -q '"status":"up"'
           sleep 3
-          curl -sf -u "$AUTH" -X POST localhost:8080/_admin/http-log/search -H 'Content-Type: application/json' -d '{"page":0,"size":10}' | grep -q '/self/health'
+          curl -sf -u "$AUTH" "localhost:8080/_admin/http-logs?size=10" | grep -q '/self/health'
       # contract of the admin API for external clients: the documented collection, with its assertions, against the native image
       - name: Postman collection
         run: |

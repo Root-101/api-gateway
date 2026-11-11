@@ -9,6 +9,9 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.r2dbc.core.R2dbcEntityTemplate;
+import org.springframework.data.r2dbc.core.StatementMapper;
+import org.springframework.data.relational.core.sql.SqlIdentifier;
+import org.springframework.r2dbc.core.PreparedOperation;
 import org.springframework.data.relational.core.query.Criteria;
 import org.springframework.data.relational.core.query.Query;
 import org.springframework.stereotype.Repository;
@@ -20,6 +23,11 @@ import java.util.UUID;
 @Repository
 @AllArgsConstructor
 public class HttpLogSearchRepo {
+
+    /**
+     * Above this many matching logs, the total of a search is reported as capped
+     */
+    public static final int COUNT_CAP = 100_000;
 
     private final R2dbcEntityTemplate template;
 
@@ -79,13 +87,27 @@ public class HttpLogSearchRepo {
         Query query = Query.query(criteria)
                 .with(pageRequest);
 
-        Mono<Long> count = template.count(Query.query(criteria), HttpLogEntity.class);
         Flux<HttpLogEntity> users = template.select(query, HttpLogEntity.class);
 
         return users.collectList()
-                .zipWith(count, (list, total) ->
+                .zipWith(cappedCount(criteria), (list, total) ->
                         new PageImpl<>(list, pageRequest, total)
                 );
+    }
+
+    /**
+     * Matching rows, counted up to `COUNT_CAP + 1` (more than the cap means "at least that many"): a plain
+     * `count(*)` scans every matching row of a table that can hold millions, on every page
+     */
+    private Mono<Long> cappedCount(Criteria criteria) {
+        StatementMapper mapper = template.getDataAccessStrategy().getStatementMapper().forType(HttpLogEntity.class);
+        SqlIdentifier table = template.getConverter().getMappingContext()
+                .getRequiredPersistentEntity(HttpLogEntity.class).getQualifiedTableName();
+        PreparedOperation<?> select = mapper.getMappedObject(mapper.createSelect(table)
+                .withProjection(SqlIdentifier.unquoted("http_log_id"))
+                .withCriteria(criteria)
+                .limit(COUNT_CAP + 1));
+        return template.getDatabaseClient().sql(select).map((row, meta) -> 1).all().count();
     }
 
     /**

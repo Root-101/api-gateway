@@ -9,6 +9,7 @@ import org.junit.jupiter.params.provider.CsvSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 
 import java.time.Duration;
@@ -86,8 +87,8 @@ class HttpLogsIT extends IntegrationTest {
     }
 
     /**
-     * NOT logged: admin `GET /routes*`, `/http-logs`, `OPTIONS` and the health check.
-     * Logged: the rest of the admin requests (as the "Admin" route).
+     * NOT logged: admin `GET /routes*`, `/http-logs`, CORS preflights and the health check.
+     * Logged: the rest of the admin requests (as the "Admin" route), and an OPTIONS that is not a preflight.
      */
     @Test
     void whatIsAndIsNotLogged() {
@@ -98,11 +99,16 @@ class HttpLogsIT extends IntegrationTest {
         admin(HttpMethod.GET, "/http-logs").exchange().expectStatus().isOk();
         webTestClient.get().uri("/%s/health".formatted(ADMIN_PATH)).exchange().expectStatus().isOk();
         admin(HttpMethod.GET, marker.substring(ADMIN_PATH.length() + 1)).exchange().expectStatus().isNotFound();
-        webTestClient.options().uri("/opt-%s/x".formatted(id)).exchange();
+        webTestClient.options().uri("/opt-%s/x".formatted(id))
+                .header(HttpHeaders.ORIGIN, "http://console.example.com")
+                .header(HttpHeaders.ACCESS_CONTROL_REQUEST_METHOD, "POST")
+                .exchange();
+        webTestClient.options().uri("/plain-opt-%s/x".formatted(id)).exchange();
         //logged: a DELETE to the admin
         admin(HttpMethod.DELETE, marker.substring(ADMIN_PATH.length() + 1)).exchange().expectStatus().isNotFound();
 
         HttpLogEntity adminLog = awaitLog(log -> log.getPath().equals(marker) && log.getHttpMethod().equals("DELETE"));
+        assertThat(awaitLog("/plain-opt-" + id + "/x").getHttpMethod()).isEqualTo("OPTIONS");
         assertThat(adminLog.getRoute().routeName()).isEqualTo("Admin");
         assertThat(adminLog.getRoute().routeId()).isEqualTo("00000000-0000-0000-0000-000000000000");
 
@@ -113,6 +119,34 @@ class HttpLogsIT extends IntegrationTest {
         assertThat(logs).noneMatch(log -> log.getPath().equals("/opt-%s/x".formatted(id)));
         assertThat(logs).noneMatch(log -> log.getPath().startsWith("/" + ADMIN_PATH + "/http-logs"));
         assertThat(logs).noneMatch(log -> log.getPath().equals("/" + ADMIN_PATH + "/health"));
+    }
+
+    /**
+     * Admin requests the security layer rejects are logged too: no credentials (401), wrong Basic (401) and
+     * the lockout (429). Otherwise guessing the password over Basic would leave no trace.
+     */
+    @Test
+    void rejectedAdminRequestsAreLogged() {
+        String id = unique();
+        String ip = "192.0.2." + (int) (Math.random() * 200);
+        String noAuth = "/" + ADMIN_PATH + "/unknown-noauth-" + id;
+        String wrongBasic = "/" + ADMIN_PATH + "/unknown-basic-" + id;
+        String wrong = "Basic " + HttpHeaders.encodeBasicAuth("admin", "wrong-" + id, null);
+
+        webTestClient.get().uri(noAuth).exchange().expectStatus().isUnauthorized();
+        for (int i = 0; i < 5; i++) {
+            webTestClient.get().uri(wrongBasic).header("X-Forwarded-For", ip).header(HttpHeaders.AUTHORIZATION, wrong)
+                    .exchange().expectStatus().isUnauthorized();
+        }
+        webTestClient.get().uri(wrongBasic).header("X-Forwarded-For", ip).header(HttpHeaders.AUTHORIZATION, wrong)
+                .exchange().expectStatus().isEqualTo(HttpStatus.TOO_MANY_REQUESTS);
+
+        assertThat(awaitLog(noAuth).getResponseCode()).isEqualTo(401);
+        await().atMost(Duration.ofSeconds(10)).untilAsserted(() -> {
+            List<HttpLogEntity> logs = httpLogRepo.findAll().filter(log -> log.getPath().equals(wrongBasic)).collectList().block();
+            assertThat(logs).extracting(HttpLogEntity::getResponseCode).containsExactlyInAnyOrder(401, 401, 401, 401, 401, 429);
+            assertThat(logs).allMatch(log -> ip.equals(log.getSourceIp()));
+        });
     }
 
     /**
@@ -139,6 +173,7 @@ class HttpLogsIT extends IntegrationTest {
         Map<String, Object> page = searchLogs(Map.of("query", "/se-" + id));
         assertThat(((Number) page.get("total_elements")).longValue()).isEqualTo(4);
         assertThat(page.get("total_pages")).isEqualTo(2);
+        assertThat(page.get("total_capped")).isEqualTo(false);
         assertThat(page.get("page")).isEqualTo(0);
         assertThat(page.get("size")).isEqualTo(2);
         List<Map<String, Object>> items = (List<Map<String, Object>>) page.get("items");

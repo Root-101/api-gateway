@@ -74,20 +74,29 @@ class GatewayProxyIT extends IntegrationTest {
     }
 
     /**
-     * When the upstream also sends CORS headers, the client gets a single value (the gateway one).
+     * Proxied responses keep the CORS policy of their own service: the gateway adds none and doesn't
+     * replace the upstream's (it used to reflect any origin with credentials on every route).
      */
     @Test
-    void corsHeadersNotDuplicated() {
+    void proxiedResponsesKeepTheUpstreamCors() {
         String id = unique();
-        String origin = "http://console.example.com";
+        String origin = "http://evil.example.com";
         createRoute(route("cors-" + id, "cors-" + id));
 
         webTestClient.get().uri("/cors-%s/x".formatted(id))
                 .header(HttpHeaders.ORIGIN, origin)
                 .exchange()
                 .expectStatus().isOk()
-                .expectHeader().valuesMatch(HttpHeaders.ACCESS_CONTROL_ALLOW_ORIGIN, origin)
-                .expectHeader().valuesMatch(HttpHeaders.ACCESS_CONTROL_ALLOW_CREDENTIALS, "true");
+                .expectHeader().valueEquals(HttpHeaders.ACCESS_CONTROL_ALLOW_ORIGIN, "http://upstream.example.com");
+
+        //an upstream without CORS stays without CORS
+        createRoute(route("nocors-" + id, "nocors-" + id));
+        webTestClient.get().uri("/nocors-%s/x".formatted(id))
+                .header(HttpHeaders.ORIGIN, origin)
+                .exchange()
+                .expectStatus().isOk()
+                .expectHeader().doesNotExist(HttpHeaders.ACCESS_CONTROL_ALLOW_ORIGIN)
+                .expectHeader().doesNotExist(HttpHeaders.ACCESS_CONTROL_ALLOW_CREDENTIALS);
     }
 
     /**

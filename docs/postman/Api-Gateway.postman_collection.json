@@ -1138,7 +1138,7 @@
                   "pm.test('status is 200', () => pm.response.to.have.status(200));",
                   "const page = pm.response.json();",
                   "pm.test('page shape', () => {",
-                  "    pm.expect(page).to.have.all.keys('page', 'size', 'total_pages', 'total_elements', 'items');",
+                  "    pm.expect(page).to.have.all.keys('page', 'size', 'total_pages', 'total_elements', 'total_capped', 'items');",
                   "    pm.expect(page.page).to.eql(0);",
                   "    pm.expect(page.items.length).to.be.at.most(20);",
                   "});",

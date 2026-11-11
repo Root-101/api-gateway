@@ -4,7 +4,6 @@ import dev.root101.api_gateway.features.auth.logic.model.LoginRequest;
 import dev.root101.api_gateway.features.auth.logic.model.LoginResponse;
 import dev.root101.api_gateway.features.http_logs.data.entity.HttpLogEntity;
 import dev.root101.api_gateway.features.http_logs.logic.model.HttpLogResponse;
-import dev.root101.api_gateway.features.http_logs.logic.model.HttpLogSearchRequest;
 import dev.root101.api_gateway.features.http_logs.logic.model.HttpLogSearchResponse;
 import dev.root101.api_gateway.features.routes.logic.model.RewritePathModel;
 import dev.root101.api_gateway.features.routes.logic.model.RouteConfigRequest;
@@ -31,11 +30,9 @@ import java.time.OffsetDateTime;
         //--------- AUTH ---------\\
         LoginRequest.class, LoginResponse.class,
         //--------- HTTP LOGS ---------\\
-        HttpLogSearchRequest.class, HttpLogSearchResponse.class, HttpLogResponse.class, HttpLogEntity.RouteLog.class,
+        HttpLogSearchResponse.class, HttpLogResponse.class, HttpLogEntity.RouteLog.class,
         //--------- Flyway ---------\\
         org.flywaydb.database.postgresql.TransactionalModel.class,
-        //--------- CLOUD ---------\\
-        org.springframework.cloud.client.loadbalancer.reactive.ReactiveLoadBalancer.class,
 })
 public class ReflectionConfig {
 }

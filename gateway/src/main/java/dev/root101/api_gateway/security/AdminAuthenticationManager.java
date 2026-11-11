@@ -41,8 +41,9 @@ public class AdminAuthenticationManager implements ReactiveAuthenticationManager
         this.adminPassword = adminPassword;
         this.adminRole = adminRole;
 
-        if (adminUsername.equals(defaultUsername) && adminPassword.equals(defaultPassword)) {
-            log.warn("Server starting with the DEFAULT admin username and password. Set the ADMIN_USERNAME and ADMIN_PASSWORD environment variables for any real environment");
+        //the password alone is what matters: a custom username with the public password is just as open
+        if (adminPassword.equals(defaultPassword)) {
+            log.warn("Server starting with the DEFAULT admin password. Set the ADMIN_PASSWORD environment variable for any real environment");
         }
     }
 

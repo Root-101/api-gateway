@@ -153,6 +153,40 @@ class RoutesIT extends IntegrationTest {
     }
 
     /**
+     * Values the gateway can't use are rejected before saving: a broken regex or path pattern used to be saved
+     * and then fail the refresh of every route; a path in the uri used to be silently dropped.
+     */
+    @Test
+    void unusableRoutesAre422() {
+        String id = unique();
+        admin(HttpMethod.POST, "/routes")
+                .bodyValue(new RouteConfigRequest("re-" + id, "/re-" + id + "/**", upstreamUrl(), new RewritePathModel("/a/(?<x.*)", "/"), null))
+                .exchange()
+                .expectStatus().isEqualTo(HttpStatus.UNPROCESSABLE_CONTENT)
+                .expectBody()
+                .jsonPath("$.violations[0].fieldName").isEqualTo("rewrite_path.replace_from")
+                .jsonPath("$.violations[0].message").isEqualTo("must be a valid regular expression");
+
+        admin(HttpMethod.POST, "/routes")
+                .bodyValue(new RouteConfigRequest("pp-" + id, "/pp-" + id + "/{x", upstreamUrl(), null, null))
+                .exchange()
+                .expectStatus().isEqualTo(HttpStatus.UNPROCESSABLE_CONTENT)
+                .expectBody().jsonPath("$.violations[0].fieldName").isEqualTo("path");
+
+        admin(HttpMethod.PUT, "/routes")
+                .bodyValue(List.of(new RouteConfigRequest("up-" + id, "/up-" + id + "/**", upstreamUrl() + "/api", null, null)))
+                .exchange()
+                .expectStatus().isEqualTo(HttpStatus.UNPROCESSABLE_CONTENT)
+                .expectBody()
+                .jsonPath("$.violations[0].fieldName").isEqualTo("[0].uri")
+                .jsonPath("$.violations[0].message").isEqualTo("must not have a path, use rewrite_path to add a prefix");
+
+        assertThat(routeRepo.findByName("re-" + id).block()).isNull();
+        //a uri ending in `/` is fine
+        createRoute(new RouteConfigRequest("slash-" + id, "/slash-" + id + "/**", upstreamUrl() + "/", null, null));
+    }
+
+    /**
      * A body that can't be read is a 400 naming the field, never the Java types
      */
     @Test

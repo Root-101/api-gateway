@@ -13,7 +13,12 @@ public class HttpLogSearchResponse {
     private int page;
     private int size;
     private int totalPages;
+    /**
+     * Capped at `HttpLogSearchRepo.COUNT_CAP` (then `totalCapped` is true and there are more)
+     */
     private long totalElements;
+
+    private boolean totalCapped;
 
     private List<HttpLogResponse> items;
 }

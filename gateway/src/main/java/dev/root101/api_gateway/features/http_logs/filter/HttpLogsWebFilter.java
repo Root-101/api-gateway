@@ -5,9 +5,12 @@ import dev.root101.api_gateway.features.http_logs.logic.usecase.HttpLogUseCase;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cloud.gateway.route.Route;
 import org.springframework.cloud.gateway.support.ServerWebExchangeUtils;
+import dev.root101.api_gateway.config.GlobalExceptionHandler;
+import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.stereotype.Component;
+import org.springframework.web.cors.reactive.CorsUtils;
 import org.springframework.web.server.ServerWebExchange;
 import org.springframework.web.server.WebFilter;
 import org.springframework.web.server.WebFilterChain;
@@ -15,20 +18,29 @@ import reactor.core.publisher.Mono;
 
 import java.time.OffsetDateTime;
 
+/**
+ * Saves every request in the http logs. Runs before the security chain (order -100), so the admin
+ * requests that security rejects (401, wrong Basic, the 429 of the lockout) are logged too.
+ */
 @Component
+@Order(-101)
 public class HttpLogsWebFilter implements WebFilter {
 
     private final HttpLogUseCase httpLogUseCase;
 
     private final String adminBasePath;
 
+    private final GlobalExceptionHandler errorHandler;
+
     public HttpLogsWebFilter(
             HttpLogUseCase httpLogUseCase,
             @Value("${app.admin.base-path}")
-            String adminBasePath
+            String adminBasePath,
+            GlobalExceptionHandler errorHandler
     ) {
         this.httpLogUseCase = httpLogUseCase;
         this.adminBasePath = adminBasePath;
+        this.errorHandler = errorHandler;
     }
 
     @Override
@@ -43,8 +55,8 @@ public class HttpLogsWebFilter implements WebFilter {
                         //is admin and it's a get
                         (requestedPath.startsWith("/%s/routes".formatted(adminBasePath))
                                 && httpMethod == HttpMethod.GET)
-                        //it's an options
-                        || (httpMethod == HttpMethod.OPTIONS)
+                        //a CORS preflight (any other OPTIONS reaches a handler or an upstream: logged)
+                        || CorsUtils.isPreFlightRequest(exchange.getRequest())
                         //health checks (would fill the table)
                         || requestedPath.equals("/%s/health".formatted(adminBasePath))
         ) {
@@ -58,6 +70,8 @@ public class HttpLogsWebFilter implements WebFilter {
 
         long startTime = System.nanoTime();
         return chain.filter(exchange)
+                //errors answered here, so their status is already set when the log is saved
+                .onErrorResume(error -> errorHandler.handle(exchange, error))
                 .doFinally(
                         signalType -> {
                             int duration = (int) ((System.nanoTime() - startTime) / 1_000_000);//millis, monotonic clock

@@ -188,19 +188,69 @@ class SecurityIT extends IntegrationTest {
     }
 
     /**
-     * Preflight requests answer with CORS and no auth, for the admin and for proxied routes.
+     * Preflight requests to the admin answer with CORS and no auth, without credentials (the console sends
+     * a header, never a cookie). Proxied paths get no CORS from the gateway: that is each service's policy.
      */
-    @ParameterizedTest
-    @CsvSource({"/" + ADMIN_PATH + "/routes", "/any-proxied/path"})
-    void preflightWithoutAuth(String path) {
-        webTestClient.options().uri(path)
+    @Test
+    void preflightWithoutAuth() {
+        webTestClient.options().uri("/%s/routes".formatted(ADMIN_PATH))
                 .header(HttpHeaders.ORIGIN, ORIGIN)
                 .header(HttpHeaders.ACCESS_CONTROL_REQUEST_METHOD, "POST")
                 .header(HttpHeaders.ACCESS_CONTROL_REQUEST_HEADERS, "authorization,content-type")
                 .exchange()
                 .expectStatus().isOk()
                 .expectHeader().valueEquals(HttpHeaders.ACCESS_CONTROL_ALLOW_ORIGIN, ORIGIN)
-                .expectHeader().exists(HttpHeaders.ACCESS_CONTROL_ALLOW_METHODS);
+                .expectHeader().exists(HttpHeaders.ACCESS_CONTROL_ALLOW_METHODS)
+                .expectHeader().doesNotExist(HttpHeaders.ACCESS_CONTROL_ALLOW_CREDENTIALS);
+
+        webTestClient.options().uri("/any-proxied/path")
+                .header(HttpHeaders.ORIGIN, ORIGIN)
+                .header(HttpHeaders.ACCESS_CONTROL_REQUEST_METHOD, "POST")
+                .exchange()
+                .expectHeader().doesNotExist(HttpHeaders.ACCESS_CONTROL_ALLOW_ORIGIN);
+    }
+
+    /**
+     * Only a POST to the login is a try of the credentials: a plain OPTIONS (answered 200 by the framework)
+     * used to clear the failed count, allowing unlimited guesses.
+     */
+    @Test
+    void optionsToLoginDoesNotResetTheLockout() {
+        String ip = "198.51.100." + (int) (Math.random() * 200);
+        for (int round = 0; round < 2; round++) {
+            for (int i = 0; i < (round == 0 ? 4 : 1); i++) {
+                webTestClient.post().uri("/%s/auth/login".formatted(ADMIN_PATH))
+                        .header("X-Forwarded-For", ip)
+                        .bodyValue(Map.of("username", "admin", "password", "wrong-" + i))
+                        .exchange()
+                        .expectStatus().isUnauthorized();
+            }
+            webTestClient.options().uri("/%s/auth/login".formatted(ADMIN_PATH))
+                    .header("X-Forwarded-For", ip)
+                    .exchange()
+                    .expectStatus().isOk();
+        }
+        webTestClient.post().uri("/%s/auth/login".formatted(ADMIN_PATH))
+                .header("X-Forwarded-For", ip)
+                .bodyValue(Map.of("username", "admin", "password", "wrong-again"))
+                .exchange()
+                .expectStatus().isEqualTo(HttpStatus.TOO_MANY_REQUESTS);
+    }
+
+    /**
+     * A stray Authorization header on the public health check is ignored: it does not count as a try.
+     */
+    @Test
+    void basicOnHealthDoesNotCount() {
+        String ip = "198.51.100." + (int) (Math.random() * 200);
+        for (int i = 0; i < 8; i++) {
+            webTestClient.get().uri("/%s/health".formatted(ADMIN_PATH))
+                    .header("X-Forwarded-For", ip)
+                    .header(HttpHeaders.AUTHORIZATION, "Basic " + HttpHeaders.encodeBasicAuth("admin", "wrong", null))
+                    .exchange()
+                    .expectStatus().isOk();
+        }
+        loginToken(ip);
     }
 
     /**

@@ -3,6 +3,7 @@ package dev.root101.api_gateway.features.routes.rest;
 import dev.root101.api_gateway.features.routes.logic.model.RouteConfigRequest;
 import dev.root101.api_gateway.features.routes.logic.model.RouteConfigResponse;
 import dev.root101.api_gateway.features.routes.logic.usecase.RouteUseCase;
+import dev.root101.api_gateway.features.routes.utils.RouteRules;
 import dev.root101.commons.validation.ValidationService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -49,6 +50,7 @@ public class RoutesController {
     @ResponseStatus(HttpStatus.CREATED)
     public Mono<List<RouteConfigResponse>> addAllRoutes(@RequestBody List<RouteConfigRequest> routeDefinition) {
         this.validationService.validate(routeDefinition);
+        RouteRules.check(routeDefinition);
 
         return routeUseCase.addAllRoutes(routeDefinition);
     }
@@ -62,6 +64,7 @@ public class RoutesController {
     @PutMapping
     public Mono<List<RouteConfigResponse>> replaceAllRoutes(@RequestBody List<RouteConfigRequest> routeDefinition) {
         this.validationService.validate(routeDefinition);
+        RouteRules.check(routeDefinition);
 
         return routeUseCase.replaceAllRoutes(routeDefinition);
     }
@@ -76,6 +79,7 @@ public class RoutesController {
     @ResponseStatus(HttpStatus.CREATED)
     public Mono<RouteConfigResponse> addRoute(@RequestBody RouteConfigRequest routeDefinition) {
         this.validationService.validate(routeDefinition);
+        RouteRules.check(routeDefinition);
 
         return routeUseCase.addRoute(routeDefinition);
     }
@@ -101,6 +105,7 @@ public class RoutesController {
     @PutMapping("/{route-id}")
     public Mono<RouteConfigResponse> editRoute(@PathVariable("route-id") String routeId, @RequestBody RouteConfigRequest routeDefinition) {
         this.validationService.validate(routeDefinition);
+        RouteRules.check(routeDefinition);
 
         return routeUseCase.editRoute(routeId, routeDefinition);
     }

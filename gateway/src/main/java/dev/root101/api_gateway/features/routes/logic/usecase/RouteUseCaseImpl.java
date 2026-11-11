@@ -217,7 +217,7 @@ class RouteUseCaseImpl implements RouteUseCase, SmartInitializingSingleton {
     }
 
     /**
-     * Find a route by its id, or null if it's not found.
+     * Find a route by its id: `400` if it is not a UUID, `404` if there is none.
      *
      * @param routeId The id of the route to find.
      */
@@ -281,17 +281,6 @@ class RouteUseCaseImpl implements RouteUseCase, SmartInitializingSingleton {
      */
     public Flux<RouteConfigResponse> getRoutes() {
         return routeRepo.findAll().map(this::buildResponse);
-    }
-
-    /**
-     * Get the routes as saved in cache... in theory this should have the same result as `getRoutes`.
-     * We still provide both methods... maybe a change was made direct to db....
-     * <p>
-     * This method DON'T make a DB request.
-     */
-    @Override
-    public List<RouteEntity> getCacheRoutes() {
-        return cache.values().stream().toList();
     }
 
     /**

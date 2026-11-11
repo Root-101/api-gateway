@@ -20,12 +20,11 @@ spring:
     gateway:
       server:
         webflux:
+          #a stored route that can't be built (only possible from a db edited by hand: the api validates them) skips itself, not every route
+          fail-on-route-definition-error: false
           httpclient:
             connect-timeout: ${GATEWAY_CONNECT_TIMEOUT_MS:10000}                                 #millis to open the connection to the upstream
             response-timeout: ${GATEWAY_RESPONSE_TIMEOUT:60s}                                   #max wait for the upstream response, empty = no timeout
-          default-filters:
-            #the gateway already adds the CORS headers, drop the ones the upstream may also send (browsers reject duplicated values)
-            - DedupeResponseHeader=Access-Control-Allow-Origin Access-Control-Allow-Credentials Access-Control-Expose-Headers, RETAIN_FIRST
 
   flyway:
     enabled: true                                                                                #To enable disable the use of railway

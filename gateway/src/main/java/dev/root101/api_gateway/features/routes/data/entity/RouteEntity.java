@@ -48,7 +48,6 @@ public class RouteEntity {
     @Column("rewrite_path_to")
     private String rewritePathTo;
 
-    @Size()
     @Column("description")
     private String description;
 

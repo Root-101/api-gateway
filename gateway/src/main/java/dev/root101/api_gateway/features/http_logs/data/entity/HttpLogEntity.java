@@ -103,10 +103,6 @@ public class HttpLogEntity {
         return rawRoute == null || rawRoute.isBlank() ? null : RouteLog.fromStringJson(rawRoute);
     }
 
-    public void setRawRoute(RouteLog route) {
-        this.rawRoute = route == null ? null : route.toStringJson();
-    }
-
     public record RouteLog(
             @NotNull
             String routeId,

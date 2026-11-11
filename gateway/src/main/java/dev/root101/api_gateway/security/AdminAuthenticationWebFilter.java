@@ -3,20 +3,20 @@ package dev.root101.api_gateway.security;
 
 import dev.root101.api_gateway.features.http_logs.filter.HttpLogsWebFilter;
 import dev.root101.api_gateway.config.GlobalExceptionHandler;
-import dev.root101.commons.exceptions.UnauthorizedException;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.ReactiveSecurityContextHolder;
-import org.springframework.security.web.server.authentication.AuthenticationWebFilter;
 import org.springframework.web.server.ServerWebExchange;
+import org.springframework.web.server.WebFilter;
 import org.springframework.web.server.WebFilterChain;
 import reactor.core.publisher.Mono;
 
 /**
  * Created in `SecurityConfig`, NOT a bean (see comment there).
  */
-public class AdminAuthenticationWebFilter extends AuthenticationWebFilter {
+public class AdminAuthenticationWebFilter implements WebFilter {
 
     private final static String BASIC = "Basic ";
 
@@ -39,7 +39,6 @@ public class AdminAuthenticationWebFilter extends AuthenticationWebFilter {
             String adminBasePath,
             GlobalExceptionHandler errorHandler
     ) {
-        super(adminAuthenticationManager);
         this.errorHandler = errorHandler;
         this.adminAuthenticationManager = adminAuthenticationManager;
         this.adminTokens = adminTokens;
@@ -55,13 +54,19 @@ public class AdminAuthenticationWebFilter extends AuthenticationWebFilter {
         if (!path.equals(adminBasePath) && !path.startsWith(adminBasePath + "/")) {
             return chain.filter(exchange);
         }
+        //public and probed often: a stray Authorization header there must not count as a try of the credentials
+        if (path.equals(adminBasePath + "/health")) {
+            return chain.filter(exchange);
+        }
         String clientIp = HttpLogsWebFilter.getClientIp(exchange);
         String header = exchange.getRequest().getHeaders().getFirst(HttpHeaders.AUTHORIZATION);
-        boolean isLogin = path.equals(adminBasePath + "/auth/login");
+        //only a POST is a try of the credentials (an OPTIONS or a GET there must not clear the count)
+        boolean isLogin = path.equals(adminBasePath + "/auth/login") && exchange.getRequest().getMethod() == HttpMethod.POST;
         boolean isBasic = header != null && header.startsWith(BASIC);
 
-        //the lockout only stops new tries of the credentials: a valid token and the health check keep working
-        if ((isLogin || isBasic) && loginAttemptsGuard.isLocked(clientIp)) {
+        //the lockout only stops new tries of the credentials: a valid token and the health check keep working.
+        //The try is taken before the check, so concurrent guesses can't all pass before any failure counts
+        if ((isLogin || isBasic) && !loginAttemptsGuard.tryAcquire(clientIp)) {
             long seconds = loginAttemptsGuard.retryAfterSeconds(clientIp);
             exchange.getResponse().getHeaders().set(HttpHeaders.RETRY_AFTER, String.valueOf(seconds));
             return errorHandler.writeProblem(exchange, HttpStatus.TOO_MANY_REQUESTS,
@@ -72,7 +77,6 @@ public class AdminAuthenticationWebFilter extends AuthenticationWebFilter {
         if (isBasic) {
             String credentials = header.substring(BASIC.length());
             result = adminAuthenticationManager.authenticate(new UsernamePasswordAuthenticationToken(credentials, credentials))
-                    .doOnError(UnauthorizedException.class, e -> loginAttemptsGuard.failed(clientIp))
                     .doOnNext(auth -> loginAttemptsGuard.succeeded(clientIp))
                     .flatMap(auth -> chain.filter(exchange)
                             .contextWrite(ReactiveSecurityContextHolder.withAuthentication(auth)));
@@ -85,10 +89,8 @@ public class AdminAuthenticationWebFilter extends AuthenticationWebFilter {
         }
 
         if (isLogin) {
-            //wrong credentials in the login endpoint (its error goes through this filter too)
-            result = result
-                    .doOnSuccess(v -> loginAttemptsGuard.succeeded(clientIp))
-                    .doOnError(UnauthorizedException.class, e -> loginAttemptsGuard.failed(clientIp));
+            //a login POST only completes without error with the right credentials (wrong ones: UnauthorizedException)
+            result = result.doOnSuccess(v -> loginAttemptsGuard.succeeded(clientIp));
         }
         return result;
     }
