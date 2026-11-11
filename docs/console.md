@@ -196,7 +196,8 @@ says when the connection is back.
 
 When the token expires (or the gateway restarted, which forgets every token), the screen you were
 on stays under a dialog that logs in again with the password, or goes to the login page; it can't
-be closed any other way.
+be closed any other way. Like the login, it shows the password with the eye and recalls the
+environment variables of the credentials.
 
 **Behind it:** any admin call answered `401` or `403`, then [`POST /_admin/auth/login`](api.md#log-in).
 

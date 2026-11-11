@@ -62,6 +62,8 @@
           the console shows `100,000+`. Pages only reach the capped count.
         * **General** :hammer_and_wrench: : Removed unused code (`RouteModel.fromJson`) and the unused `build_runner`
           dependency.
+        * **Auth** :lock: : The session expired dialog shows and hides the password, like the login, and says the
+          credentials come from `ADMIN_USERNAME` and `ADMIN_PASSWORD`.
         * **Docs** :books: : README screenshots now come from `docs/design/screens` and link to `docs/console.md`.
         * **General** :hammer_and_wrench: : Added CI job (analyze and build), updated README, console version in
           the side menu and several memory and UI fixes. The unit tests were removed.

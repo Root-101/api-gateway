@@ -26,6 +26,7 @@ class _SessionExpiredDialogState extends State<SessionExpiredDialog> {
   final TextEditingController _pass = TextEditingController();
   bool _failed = false;
   bool _busy = false;
+  bool _showPassword = false;
 
   bool get _knowsUser => auth.username != null;
 
@@ -128,8 +129,21 @@ class _SessionExpiredDialogState extends State<SessionExpiredDialog> {
                 AppField(
                   label: intl.login.passwordLabel,
                   controller: _pass,
-                  obscure: true,
+                  obscure: !_showPassword,
                   autofocus: _knowsUser,
+                  suffix: AppIconButton(
+                    icon: _showPassword
+                        ? app.assets.icons.general.eyeOff
+                        : app.assets.icons.general.eye,
+                    tooltip: _showPassword
+                        ? intl.login.hidePassword
+                        : intl.login.showPassword,
+                    size: 40,
+                    iconSize: 20,
+                    radius: 10,
+                    onPressed: () =>
+                        setState(() => _showPassword = !_showPassword),
+                  ),
                   hint: intl.session.passwordHint,
                   autofillHint: AutofillHints.password,
                   errorText: _failed ? intl.session.wrongPassword : null,
@@ -158,6 +172,8 @@ class _SessionExpiredDialogState extends State<SessionExpiredDialog> {
                     },
                   ),
                 ),
+                const SizedBox(height: 16),
+                const CredentialsHint(),
               ],
             ),
           ),

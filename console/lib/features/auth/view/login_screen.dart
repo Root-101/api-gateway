@@ -391,29 +391,7 @@ class _LoginScreenState extends State<LoginScreen> {
               onPressed: _signingIn ? null : _login,
             ),
             const SizedBox(height: 16),
-            Text.rich(
-              TextSpan(
-                text: '${intl.login.credentialsHintStart} ',
-                children: [
-                  TextSpan(
-                    text: 'ADMIN_USERNAME',
-                    style: monoStyle(size: 12, color: c.label),
-                  ),
-                  TextSpan(text: ' ${intl.login.credentialsHintAnd} '),
-                  TextSpan(
-                    text: 'ADMIN_PASSWORD',
-                    style: monoStyle(size: 12, color: c.label),
-                  ),
-                  TextSpan(text: ' ${intl.login.credentialsHintEnd}'),
-                ],
-              ),
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 12,
-                height: 18 / 12,
-                color: c.textTertiary,
-              ),
-            ),
+            const CredentialsHint(),
           ],
         ),
       ),
