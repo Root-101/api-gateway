@@ -119,7 +119,7 @@ class _LogDetailsScreenState extends State<LogDetailsScreen> {
                   ? [
                       _Item(
                         intl.logDetails.routeName,
-                        noRouteId,
+                        intl.logFilters.filterNoRouteName,
                         mono: true,
                         muted: true,
                       ),

@@ -64,6 +64,8 @@
           dependency.
         * **Auth** :lock: : The session expired dialog shows and hides the password, like the login, and says the
           credentials come from `ADMIN_USERNAME` and `ADMIN_PASSWORD`.
+        * **Logs** :memo: : The details of a log without a route show `No-Route` in the selected language, like the
+          table, instead of `NO-ROUTE`.
         * **Docs** :books: : README screenshots now come from `docs/design/screens` and link to `docs/console.md`.
         * **General** :hammer_and_wrench: : Added CI job (analyze and build), updated README, console version in
           the side menu and several memory and UI fixes. The unit tests were removed.
