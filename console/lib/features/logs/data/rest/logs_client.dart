@@ -3,16 +3,16 @@ import 'package:dio/dio.dart';
 
 class LogsClient extends BaseClient {
   @override
-  String get baseUrl => '${Environment.baseApiUrl}/http-log';
+  String get baseUrl => '${Environment.baseApiUrl}/http-logs';
 
   LogsClient(super.dio);
 
   Future<HttpLogSearchResponse> findAll({
     required HttpLogSearchRequest search,
   }) async {
-    Response rawResponse = await dio.post(
-      '$baseUrl/search',
-      data: search.toJson(),
+    Response rawResponse = await dio.get(
+      baseUrl,
+      queryParameters: search.toQuery(),
     );
 
     return HttpLogSearchResponse.fromJson(rawResponse.data!);
@@ -42,16 +42,17 @@ class HttpLogSearchRequest {
     this.toDate,
   });
 
-  Map<String, dynamic> toJson() {
+  ///empty filters are left out: every parameter is optional
+  Map<String, dynamic> toQuery() {
     return {
       'page': page,
-      'size': size,
-      'response_code': responseCode,
-      'method': method,
-      'query': query,
-      'route_id': routeId,
-      'from_date': fromDate?.toUtc().toIso8601String(),
-      'to_date': toDate?.toUtc().toIso8601String(),
+      'size': ?size,
+      'status': ?responseCode,
+      'method': ?method,
+      'query': ?query,
+      'route_id': ?routeId,
+      'from': ?fromDate?.toUtc().toIso8601String(),
+      'to': ?toDate?.toUtc().toIso8601String(),
     };
   }
 }
@@ -77,7 +78,7 @@ class HttpLogSearchResponse {
       size: json['size'] ?? 0,
       totalPages: json['total_pages'] ?? 0,
       totalElements: json['total_elements'] ?? 0,
-      pageContent: (json['page_content'] as List<dynamic>? ?? [])
+      pageContent: (json['items'] as List<dynamic>? ?? [])
           .map((item) => HttpLogResponse.fromJson(item))
           .toList(),
     );

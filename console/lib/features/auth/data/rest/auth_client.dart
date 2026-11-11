@@ -6,7 +6,7 @@ class AuthClient extends BaseClient {
 
   AuthClient(super.dio);
 
-  ///returns the session token. `expires_in` is not read: an expired token gets a 401, which logs out
+  ///returns the session token. `expires_in`/`expire_at` are not read: an expired token gets a 401, which asks to sign in again
   Future<String> login({
     required String username,
     required String password,
@@ -16,15 +16,14 @@ class AuthClient extends BaseClient {
       data: {'username': username, 'password': password},
     );
     final data = response.data;
-    final token = data is Map ? data['token'] : null;
-    //a gateway older than 6.0.0 answers 200 with an empty body
+    final token = data is Map ? data['access_token'] : null;
     if (token is! String || token.isEmpty) {
       throw const FormatException('Login response without token');
     }
     return token;
   }
 
-  ///GET /{ADMIN_PATH}/health: no auth, 200 {"status":"UP"}, 503 when the db is down
+  ///GET /{ADMIN_PATH}/health: no auth, 200 {"status":"up"}, 503 {"status":"down"} when the db is down
   Future health() async {
     await dio.get('${Environment.baseApiUrl}/health');
   }

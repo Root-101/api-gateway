@@ -52,6 +52,10 @@
           `env.js` is generated on container start, so one image serves every environment.
         * **Config** :wrench: : `ADMIN_PATH` is optional and defaults to `_admin`, the same default as the gateway.
           Before, a missing value stopped the console with a configuration error.
+        * **API** :electric_plug: : Adapted to the gateway `6.0.0` admin API. Errors are RFC 9457 problem details:
+          the field errors of a `422` come from `violations` (`fieldName`, `message`), and the message of any other
+          error from `detail`. Login reads `access_token`. Logs use `GET /http-logs` with query parameters and read
+          `items`.
         * **Docs** :books: : README screenshots now come from `docs/design/screens` and link to `docs/console.md`.
         * **General** :hammer_and_wrench: : Added CI job (analyze and build), updated README, console version in
           the side menu and several memory and UI fixes. The unit tests were removed.

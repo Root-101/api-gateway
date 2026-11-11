@@ -54,12 +54,13 @@ class ApiExceptionConverter {
   static GlobalException _parseBadResponse(DioException error) {
     final int status = error.response?.statusCode ?? 0;
     final dynamic data = error.response?.data;
+    final dynamic violations = data is Map ? data['violations'] : null;
 
-    if (status == 422 && data is List) {
+    if (status == 422 && violations is List) {
       return GlobalException(
         type: GlobalExceptionType.validation,
         message: app.intl.errors.validation,
-        data: data
+        data: violations
             .whereType<Map<String, dynamic>>()
             .map(ValidationError.fromJson)
             .toList(),
@@ -85,7 +86,7 @@ class ApiExceptionConverter {
     }
   }
 
-  ///body can be a plain string (ApiException) or a ProblemDetail json (spring ErrorResponse)
+  ///body is an RFC 9457 problem json (`detail` is the message); plain strings came from gateways before 6.0.0
   static String? _messageFrom(dynamic data) {
     if (data is String && data.isNotEmpty) return data;
     if (data is Map) {
