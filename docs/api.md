@@ -16,7 +16,7 @@ The examples use the default `ADMIN_PATH`; change it and every path below change
 are `snake_case`. Dates are ISO 8601 in UTC (`2026-11-11T04:05:31.267144Z`), whatever the time
 zone of the server.
 
-The [Postman collection](#postman-collection) has every call below, with assertions.
+The [Postman collection](#postman-collection) has every call below, to import and try by hand.
 
 ## Authentication
 
@@ -698,14 +698,11 @@ isn't slowed down. Logs older than `MAINTAIN_LOGS_FOR_DAYS` (14 by default) are 
 ## Postman collection
 
 [`postman/Api-Gateway.postman_collection.json`](postman/Api-Gateway.postman_collection.json) has
-every call of this page, with assertions on the status and the shape of each answer. It creates,
-edits and deletes its own routes (names with a suffix per run) and reads their ids from the
-answers, so it runs against any gateway and leaves nothing behind. Run it in order, with the
-environment of the same folder (gateway URL, admin path, username and password):
-
-```shell
-postman collection run docs/postman/Api-Gateway.postman_collection.json -e "docs/postman/Api-Gateway - Local.postman_environment.json"
-```
+every call of this page, to import in Postman and send by hand, with the environment of the same
+folder (gateway URL, admin path, username and password). It creates, edits and deletes its own
+routes (names with a suffix per run) and reads their ids from the answers, so sent in order it
+works against any gateway and leaves nothing behind. Each request checks its status and the shape
+of its answer (the Test Results tab).
 
 It sends 2 requests with wrong credentials on purpose (a login and a Basic one): they count for
 the [lockout](#authentication), and the correct login at the start of each run resets the count.

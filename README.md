@@ -186,13 +186,8 @@ dates in UTC, and every error a Problem Details (RFC 9457), with its `violations
 | `GET`    | `/_admin/http-logs`     | Searches the HTTP logs: page and filters in the query               |
 
 Every call, with real requests and responses and its errors: [`docs/api.md`](docs/api.md). The
-[Postman collection](docs/postman/Api-Gateway.postman_collection.json) has them all, with
-assertions, and runs as a test suite (the CI runs it against the native image):
-
-```bash
-postman collection run docs/postman/Api-Gateway.postman_collection.json \
-  -e "docs/postman/Api-Gateway - Local.postman_environment.json"
-```
+[Postman collection](docs/postman/Api-Gateway.postman_collection.json) has them all, to import
+in Postman and try by hand with its environment.
 
 It creates and deletes its own routes, and makes two wrong logins on purpose (they count for the
 lockout; a correct one resets it).

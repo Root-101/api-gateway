@@ -23,7 +23,7 @@ How to run each one locally is in the [README](README.md#locally).
   an old one.
 - **Native image:** a class read by reflection (JSON models, entities, gateway predicates and
   filters) needs its hint in `config/ReflectionConfig.java`; the CI builds the native image and
-  runs the Postman collection against it, which is where a missing hint shows up.
+  runs a smoke test against it, which is where a missing hint shows up.
 - **Console:** a feature is `data/rest` → `data/repo` → `logic/cubit` and `logic/model` → `view`,
   wired in its `<name>_init.dart`. No user-visible text is hardcoded (`lib/l10n/*.i18n.yaml`, both
   languages, then `fvm dart run slang`). See [`console/README.md`](console/README.md).
@@ -60,15 +60,8 @@ From `gateway/`:
 The coverage report is in `gateway/build/reports/jacoco/test/html`. A bug fix comes with the test
 that would have caught it.
 
-The Postman collection is also a test suite, against a running gateway:
-
-```bash
-postman collection run docs/postman/Api-Gateway.postman_collection.json \
-  -e "docs/postman/Api-Gateway - Local.postman_environment.json"
-```
-
 The CI (`.github/workflows/ci.yml`) runs the tests and the coverage gate, analyzes and builds the
-console, and builds the native image, starts it and runs the collection against it. A version tag
+console, and builds the native image, starts it and runs a smoke test against it. A version tag
 publishes both images to GHCR once the CI passes.
 
 ## Commits

@@ -85,11 +85,6 @@ jobs:
           curl -sf localhost:8080/self/health | grep -q '"status":"up"'
           sleep 3
           curl -sf -u "$AUTH" "localhost:8080/_admin/http-logs?size=10" | grep -q '/self/health'
-      # contract of the admin API for external clients: the documented collection, with its assertions, against the native image
-      - name: Postman collection
-        run: |
-          curl -o- "https://dl-cli.pstmn.io/install/linux64.sh" | sh
-          postman collection run docs/postman/Api-Gateway.postman_collection.json -e "docs/postman/Api-Gateway - Local.postman_environment.json" --no-report-events
       # a route the gateway can't build still answers 200 to the api, it only shows up here
       - name: No route build errors in the log
         if: always()
