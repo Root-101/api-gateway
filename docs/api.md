@@ -49,12 +49,14 @@ Basic auth with a wrong username or password is also a `401`:
 
 A `Basic` header that isn't `base64(username:password)` has `"detail":"Invalid Basic credentials"`.
 
-Wrong credentials (in the login or in Basic auth) count per client IP. After
-`ADMIN_MAX_FAILED_ATTEMPTS` (10 by default) within `ADMIN_LOCKOUT_MINUTES` (15 by default), that IP
+Tries of the credentials count per client IP: each `POST /_admin/auth/login` and each request with
+Basic auth (not the health check, which ignores the header). The try is counted before the password
+is checked, so concurrent guesses can't slip past the limit. After `ADMIN_MAX_FAILED_ATTEMPTS`
+(10 by default) tries without a correct one within `ADMIN_LOCKOUT_MINUTES` (15 by default), that IP
 can't try credentials again until the window ends: the login and every request with Basic auth get
 a `429`, also with the right password. A valid token keeps working from that IP, and so does the
-health check. Proxied traffic is not affected. A correct login resets the count. The client IP is
-the first one of `X-Forwarded-For`, or the connection's IP without it.
+health check. Proxied traffic is not affected. Only correct credentials reset the count. The client
+IP is the first one of `X-Forwarded-For`, or the connection's IP without it.
 
 ```http
 HTTP/1.1 429 Too Many Requests
@@ -66,8 +68,9 @@ Content-Type: application/problem+json
 
 `Retry-After` is the seconds left in the window, the same number as in `detail`.
 
-CORS allows the origins of `CORS_ALLOWED_ORIGINS` (`*` by default), any method and any header,
-with credentials.
+CORS applies to the admin API only (`/_admin/**`): the origins of `CORS_ALLOWED_ORIGINS` (`*` by
+default), any method and any header, without credentials (tokens go in a header, never a cookie).
+Proxied paths get no CORS headers from the gateway: each service keeps its own policy.
 
 ## Errors
 
@@ -552,7 +555,8 @@ and they add up (AND). Encode the values: a `+` in a date offset must go as `%2B
 | `page`              | integer | The page asked for                                                                                |
 | `size`              | integer | The size used (after the cap)                                                                     |
 | `total_pages`       | integer | Pages of this size                                                                                |
-| `total_elements`    | integer | Logs that match the filters                                                                       |
+| `total_elements`    | integer | Logs that match the filters, counted up to 100000                                                 |
+| `total_capped`      | boolean | `true` when more than 100000 match: `total_elements` and `total_pages` stop there                 |
 | `items[]`           | array   | The logs                                                                                          |
 | `.id`               | string  | UUID of the log                                                                                   |
 | `.source_ip`        | string  | Client IP: first of `X-Forwarded-For`, or the connection's IP. Up to 50 characters                |
@@ -627,8 +631,8 @@ goes to `https://httpbin.org/get?page=2`, which answers:
 
 The method, the query string, the headers and the body go through; the `Host` becomes the
 service's. The answer of the service comes back as it is, with its status, headers and body,
-except the CORS headers the gateway already sets, which are not duplicated. Proxied traffic needs no credentials: the
-service handles its own auth.
+CORS included: the gateway adds no CORS headers to proxied traffic. The service handles its own
+auth.
 
 When something fails on the way, the gateway answers by itself, with a [Problem Details](#errors)
 that never shows the host or port of the service:
@@ -670,10 +674,11 @@ load them when they restart.
 
 ## What gets logged
 
-Every request is saved in the logs, proxied or admin, with any status (`401`, `404`, `502`…),
+Every request is saved in the logs, proxied or admin, with any status (`401`, `404`, `429`, `502`…),
+including the admin requests the security layer rejects (no credentials, wrong Basic, the lockout),
 except:
 
-- `OPTIONS` requests (CORS preflights).
+- CORS preflights (`OPTIONS` with `Origin` and `Access-Control-Request-Method`); any other `OPTIONS` is logged.
 - `GET /_admin/health`.
 - `GET /_admin/http-logs` (searching the logs would fill them).
 - `GET` under `/_admin/routes` (listing and reading routes).
@@ -686,7 +691,7 @@ tokens or passwords.
 Logs are written in the background: a queue in memory (10000 at most) saved in batches every
 second. A log shows up in a search about a second after its request. If the database is slow or
 down and the queue fills, new logs are dropped (with a warning in the server log) and the traffic
-isn't slowed down. Logs older than `MAINTAIN_LOGS_FOR_DAYS` (14 by default) are deleted every day at midnight (server time).
+isn't slowed down. Logs older than `MAINTAIN_LOGS_FOR_DAYS` (14 by default) are deleted every day at midnight UTC (the gateway runs in UTC).
 
 ---
 

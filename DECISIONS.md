@@ -22,6 +22,11 @@ Before 6.0.0 they were loaded after the start, and every deploy answered `404` f
 requests that came in first. A gateway that starts without its routes is worse than one that
 doesn't start: the orchestrator keeps the old one running.
 
+A route the gateway can't build never gets saved: the API rejects with a `422` a path pattern or a
+`replace_from` regex that doesn't parse, and a `uri` with a path (the gateway only takes its scheme,
+host and port). One bad route used to fail the refresh of every route. A bad row written to the
+database by hand only skips itself (`fail-on-route-definition-error: false`).
+
 ## 3. Logs never slow down the traffic
 
 Each request's log goes to an in-memory queue (10 000 at most), saved in batches every second, out
@@ -121,7 +126,9 @@ for one huge one.
 ## 13. The lockout stops guesses, not admins
 
 A locked IP gets `429` with `Retry-After` on the login and on Basic auth only. A valid token and the
-health check are never blocked.
+health check are never blocked. Each try is taken from the count before the password is checked
+(atomically), so concurrent guesses can't all pass first; only correct credentials (a `POST` login
+that succeeds, or a valid Basic) reset it. A plain `OPTIONS` to the login used to reset it too.
 
 What it must stop is guessing the password. Blocking everything locked out the admin already
 logged in, and failed the health check, so an orchestrator restarted a healthy gateway; behind a
@@ -137,3 +144,22 @@ change, so its logs, and links to it, still find it.
 
 The same rules as the other Root-101 services: a client knows what came out of each call without
 reading the list again.
+
+## 15. CORS only for the admin API
+
+The CORS policy (`CORS_ALLOWED_ORIGINS`) applies to `/{ADMIN_PATH}/**` only, without credentials.
+
+It is there for the console, which calls the admin API from another origin with a Bearer header.
+Applied to every path with credentials, as it was before 6.0.0, it reflected any origin on the
+responses of every proxied service and replaced their own CORS headers: any page could read a
+cookie-authenticated service through the gateway. Proxied responses now pass with the service's
+CORS headers untouched.
+
+## 16. Rejected admin requests are logged
+
+The HTTP logs filter runs before the security chain (order `-101`, security is `-100`), and answers
+errors itself so their status is known when the log is saved.
+
+After it, the 401 of a missing or wrong credential and the 429 of the lockout ended the request
+before the filter ran: guessing the password over Basic left no trace.
+

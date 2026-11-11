@@ -99,6 +99,9 @@ docker compose up -d --build
 - Console: <http://localhost>, log in with `admin` / `admin123**`.
 - PostgreSQL: `localhost:5432`, its data in the `postgres_data` volume.
 
+Every port is published on `127.0.0.1` only. To reach the stack from other machines, publish the
+gateway behind a proxy with TLS, never the database.
+
 The first build compiles the native image and takes several minutes. Change the passwords before
 exposing it: the gateway warns in its log when it runs with the default ones.
 
@@ -140,14 +143,14 @@ Environment variables of the gateway, read on start:
 | `ADMIN_PASSWORD`              | `admin123**`             | Its password; change it                                                                                    |
 | `ADMIN_PATH`                  | `_admin`                 | Where the admin API lives (`/_admin/routes`); change it if a service needs that path                       |
 | `ADMIN_TOKEN_MINUTES`         | `480`                    | How long a login token lasts                                                                               |
-| `ADMIN_MAX_FAILED_ATTEMPTS`   | `10`                     | Wrong logins from one IP before it is locked (`0` disables it)                                             |
+| `ADMIN_MAX_FAILED_ATTEMPTS`   | `10`                     | Tries of the credentials from one IP, without a correct one, before it is locked (`0` disables it)        |
 | `ADMIN_LOCKOUT_MINUTES`       | `15`                     | The window of the lockout                                                                                  |
 | `DB_HOST`, `DB_PORT`          | `localhost`, `5432`      | Where PostgreSQL is                                                                                        |
 | `DB_NAME`                     | `api-gateway`            | The database                                                                                               |
 | `DB_USERNAME`, `DB_PASSWORD`  | `postgres`, `admin123`   | Its user and password; change the password                                                                 |
 | `MAINTAIN_LOGS_FOR_DAYS`      | `14`                     | Days the HTTP logs are kept; older ones are deleted every night                                            |
 | `MAX_LOGS_SEARCH_SIZE`        | `10000`                  | The biggest page a log search returns                                                                      |
-| `CORS_ALLOWED_ORIGINS`        | `*`                      | Origins allowed to call the admin API, comma separated (`https://*.example.com`): the console's, at least  |
+| `CORS_ALLOWED_ORIGINS`        | `*`                      | Origins allowed to call the admin API, comma separated (`https://*.example.com`): the console's, at least. Proxied paths keep their service's CORS |
 | `GATEWAY_CONNECT_TIMEOUT_MS`  | `10000`                  | Wait to connect to a service (`504` after it)                                                              |
 | `GATEWAY_RESPONSE_TIMEOUT`    | `60s`                    | Wait for a service to start answering (`504` after it); empty for no limit, for slow exports or long polling |
 | `PORT`                        | `8080`                   | Port of the gateway                                                                                        |
