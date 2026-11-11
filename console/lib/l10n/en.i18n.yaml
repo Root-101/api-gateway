@@ -43,7 +43,7 @@ errors:
   noData: 'Nothing found here'
   genericError: 'An error has ocurred'
   errorWrongRouteId: 'Wrong route id'
-  errorLoadingRoute: 'Error loading route {id: String}. {message: String}'
+  errorLoadingRoute: 'Error loading the route. {message: String}'
   errorUnsupportedAction: 'Unsupported action'
 login:
   usernameLabel: 'Username'

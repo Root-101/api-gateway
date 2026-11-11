@@ -218,8 +218,8 @@ class AppMessages$errors$es implements AppMessages$errors$en {
   @override
   String get errorWrongRouteId => 'Id de ruta incorrecto';
   @override
-  String errorLoadingRoute({required Object id, required Object message}) =>
-      'Error cargando la ruta ${id}. ${message}';
+  String errorLoadingRoute({required Object message}) =>
+      'Error cargando la ruta. ${message}';
   @override
   String get errorUnsupportedAction => 'Acción no soportada';
 }
@@ -784,9 +784,8 @@ extension on AppMessagesEs {
       'errors.genericError' => 'Ha ocurrido un error',
       'errors.errorWrongRouteId' => 'Id de ruta incorrecto',
       'errors.errorLoadingRoute' => ({
-        required Object id,
         required Object message,
-      }) => 'Error cargando la ruta ${id}. ${message}',
+      }) => 'Error cargando la ruta. ${message}',
       'errors.errorUnsupportedAction' => 'Acción no soportada',
       'login.usernameLabel' => 'Usuario',
       'login.passwordLabel' => 'Contraseña',

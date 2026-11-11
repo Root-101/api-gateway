@@ -232,9 +232,9 @@ class AppMessages$errors$en {
   /// en: 'Wrong route id'
   String get errorWrongRouteId => 'Wrong route id';
 
-  /// en: 'Error loading route {id: String}. {message: String}'
-  String errorLoadingRoute({required String id, required String message}) =>
-      'Error loading route ${id}. ${message}';
+  /// en: 'Error loading the route. {message: String}'
+  String errorLoadingRoute({required String message}) =>
+      'Error loading the route. ${message}';
 
   /// en: 'Unsupported action'
   String get errorUnsupportedAction => 'Unsupported action';
@@ -982,9 +982,8 @@ extension on AppMessages {
       'errors.genericError' => 'An error has ocurred',
       'errors.errorWrongRouteId' => 'Wrong route id',
       'errors.errorLoadingRoute' => ({
-        required String id,
         required String message,
-      }) => 'Error loading route ${id}. ${message}',
+      }) => 'Error loading the route. ${message}',
       'errors.errorUnsupportedAction' => 'Unsupported action',
       'login.usernameLabel' => 'Username',
       'login.passwordLabel' => 'Password',

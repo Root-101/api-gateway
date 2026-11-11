@@ -58,10 +58,7 @@ class RoutesFormCubit extends Cubit<RoutesFormState>
       } on GlobalException catch (global) {
         emit(
           RoutesFormLoadingErrorState(
-            app.intl.errors.errorLoadingRoute(
-              id: routeId,
-              message: global.message,
-            ),
+            app.intl.errors.errorLoadingRoute(message: global.message),
           ),
         );
       } on Exception {

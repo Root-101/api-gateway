@@ -41,7 +41,7 @@ errors:
   noData: 'No hay nada por aquí'
   genericError: 'Ha ocurrido un error'
   errorWrongRouteId: 'Id de ruta incorrecto'
-  errorLoadingRoute: 'Error cargando la ruta {id}. {message}'
+  errorLoadingRoute: 'Error cargando la ruta. {message}'
   errorUnsupportedAction: 'Acción no soportada'
 login:
   usernameLabel: 'Usuario'
