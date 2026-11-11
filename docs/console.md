@@ -59,7 +59,9 @@ Logged out, any URL brings you here; logged in, this one takes you to Routes.
 
 The rail on the left: **Routes** and **Http logs**; at its foot the **language** (English or
 Spanish; the browser's at first, the chosen one after that), **Logout** and the version of the
-console. The notch next to the logo expands it to show the names, and folds it again.
+console. Every request carries it as `Accept-Language`, so the messages of the gateway (a field
+it rejects, a route that doesn't exist) come in that language too
+([Errors](api.md#errors)). The notch next to the logo expands it to show the names, and folds it again.
 
 If `SESSION_TIMEOUT_MINUTES` is set on the console, it logs out after that many minutes without
 mouse or keyboard activity.
@@ -101,7 +103,7 @@ changes**) after checking everything, and goes to the first step with an error. 
 Esc or a click outside closes without saving. The rules are the gateway's own: each step is checked
 with [`POST /_admin/routes/validate`](api.md#validate-a-route), so the console never keeps a copy;
 only a name already used is checked against the list. What the gateway rejects when saving is
-shown under its field too.
+shown under its field too. The messages are the gateway's, in the language of the console.
 
 ![Edit a route](design/screens/07-route-edit.png)
 
