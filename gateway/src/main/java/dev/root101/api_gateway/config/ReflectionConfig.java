@@ -33,6 +33,9 @@ import java.time.OffsetDateTime;
         HttpLogSearchResponse.class, HttpLogResponse.class, HttpLogEntity.RouteLog.class,
         //--------- Flyway ---------\\
         org.flywaydb.database.postgresql.TransactionalModel.class,
+        //--------- CLOUD ---------\\
+        //the gateway's load balancer auto-configuration is read by reflection at startup (see build.gradle)
+        org.springframework.cloud.client.loadbalancer.reactive.ReactiveLoadBalancer.class,
 })
 public class ReflectionConfig {
 }

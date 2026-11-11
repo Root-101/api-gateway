@@ -25,6 +25,9 @@ java {
 dependencies {
     //base api-gateway dependency (versions from the spring cloud BOM)
     implementation 'org.springframework.cloud:spring-cloud-gateway-server-webflux'
+    //not for lb:// routes: without it the native image segfaults at startup parsing the annotations of
+    //GatewayNoLoadBalancerClientAutoConfiguration (the gateway's fallback when this library is missing)
+    implementation 'org.springframework.cloud:spring-cloud-loadbalancer'
 
     //security
     implementation 'org.springframework.boot:spring-boot-starter-security'
