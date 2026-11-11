@@ -271,16 +271,19 @@ class _RoutesFormWidgetState extends State<RoutesFormWidget> {
 
   ///shows [errors] (api names) and goes to the first step with one
   void _showErrors(Map<String, String>? errors) {
-    final requiredText = app.intl.validations.requiredField;
-    _errors = {
-      for (final e in (errors ?? const <String, String>{}).entries)
-        //the only api message worth translating: the rest name the rule itself
-        e.key: e.value == 'must not be blank' ? requiredText : e.value,
-    };
+    _errors = _translated(errors ?? const {});
     if (_errors.isNotEmpty) {
       _step = _errors.keys.map(_stepOf).reduce((a, b) => a < b ? a : b);
     }
   }
+
+  ///the only api message worth translating: the rest name the rule itself
+  Map<String, String> _translated(Map<String, String> errors) => {
+    for (final e in errors.entries)
+      e.key: e.value == 'must not be blank'
+          ? app.intl.validations.requiredField
+          : e.value,
+  };
 
   ///the rules are the api's (`POST /routes/validate`); only the taken name is checked here, against the list
   Future<Map<String, String>?> _check(RouteFormModel model) async {
@@ -295,7 +298,7 @@ class _RoutesFormWidgetState extends State<RoutesFormWidget> {
               r.name.toLowerCase() == model.name.toLowerCase(),
         );
     return {
-      ...errors,
+      ..._translated(errors),
       if (nameTaken && !errors.containsKey(_name.key))
         _name.key: app.intl.form.nameTaken,
     };
@@ -317,12 +320,20 @@ class _RoutesFormWidgetState extends State<RoutesFormWidget> {
           if (_stepOf(e.key) == _step) e.key: e.value,
       };
       setState(() => _errors = mine);
-      if (mine.isEmpty) _goTo(_step + 1);
+      _goTo(mine.isEmpty ? _step + 1 : _step, _firstWithError());
       return;
     }
     setState(() => _showErrors(errors));
-    if (errors.isEmpty) widget.onSave(model);
+    if (errors.isEmpty) {
+      widget.onSave(model);
+    } else {
+      _goTo(_step, _firstWithError());
+    }
   }
+
+  _Field? _firstWithError() => _fields
+      .where((f) => f.step == _step && _errors.containsKey(f.key))
+      .firstOrNull;
 
   ///shows [step] and focuses [field] (its first one by default), selecting its text
   void _goTo(int step, [_Field? field]) {
