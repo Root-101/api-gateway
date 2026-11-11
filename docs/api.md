@@ -9,11 +9,12 @@ The gateway serves two things on the same port (8080 by default):
 - **Proxied traffic** at any path: each request goes to the service of the [route](#how-a-request-is-routed)
   whose path matches.
 - **Admin API** at `/{ADMIN_PATH}` (`/_admin` by default): log in, manage the routes, search the
-  logs. Always JSON in, JSON or plain text out. Don't give a route a path under it.
+  logs. Always JSON in and out; errors are [Problem Details](#errors). Don't give a route a path
+  under it.
 
 The examples use the default `ADMIN_PATH`; change it and every path below changes with it. Keys
-are `snake_case`. Dates are ISO 8601 with the offset of the server's time zone
-(`2026-11-10T21:29:12.096276-06:00`; `Z` in the Docker image, which runs in UTC).
+are `snake_case`. Dates are ISO 8601 in UTC (`2026-11-11T04:05:31.267144Z`), whatever the time
+zone of the server.
 
 The [Postman collection](#postman-collection) has every call below, with assertions.
 
@@ -21,7 +22,7 @@ The [Postman collection](#postman-collection) has every call below, with asserti
 
 | Who                                          | How                                                                                                    |
 |----------------------------------------------|--------------------------------------------------------------------------------------------------------|
-| The console (and anything else that logs in) | `Authorization: Bearer <token>`, from [`POST /_admin/auth/login`](#log-in)                             |
+| The console (and anything else that logs in) | `Authorization: Bearer <access_token>`, from [`POST /_admin/auth/login`](#log-in)                      |
 | Scripts and tools                            | `Authorization: Basic <base64(username:password)>`, with `ADMIN_USERNAME` and `ADMIN_PASSWORD`        |
 | Nobody                                       | Only `POST /_admin/auth/login`, [`GET /_admin/health`](#health), `OPTIONS` preflights, and proxied traffic |
 
@@ -30,102 +31,105 @@ default, with a warning in the server log). The token is opaque (not a JWT) and 
 `ADMIN_TOKEN_MINUTES` (480 by default). Tokens live in memory: a restart of the gateway logs
 everyone out, and there is no logout or refresh.
 
-Without credentials, or with an unknown or expired token, the answer is a `401` with no body (and no
+Without credentials, or with an unknown or expired token, the answer is a `401` (with no
 `WWW-Authenticate`, so browsers don't open their login popup):
 
 ```http
 HTTP/1.1 401 Unauthorized
-content-length: 0
+Content-Type: application/problem+json
+
+{"type":"about:blank","title":"Unauthorized","status":401,"detail":"Authentication required","instance":"/_admin/routes"}
 ```
 
-Basic auth with a wrong password is a `403`:
+Basic auth with a wrong username or password is also a `401`:
 
-```http
-HTTP/1.1 403 Forbidden
-Content-Type: text/plain;charset=UTF-8
-
-Forbidden
+```json
+{"type":"about:blank","title":"Unauthorized","status":401,"detail":"Wrong username or password","instance":"/_admin/routes"}
 ```
+
+A `Basic` header that isn't `base64(username:password)` has `"detail":"Invalid Basic credentials"`.
 
 Wrong credentials (in the login or in Basic auth) count per client IP. After
 `ADMIN_MAX_FAILED_ATTEMPTS` (10 by default) within `ADMIN_LOCKOUT_MINUTES` (15 by default), that IP
-gets a `429` on every admin path until the window ends: the login, a valid token, and the health
-check too. Proxied traffic is not affected. A correct login resets the count. The client IP is the
-first one of `X-Forwarded-For`, or the connection's IP without it.
+can't try credentials again until the window ends: the login and every request with Basic auth get
+a `429`, also with the right password. A valid token keeps working from that IP, and so does the
+health check. Proxied traffic is not affected. A correct login resets the count. The client IP is
+the first one of `X-Forwarded-For`, or the connection's IP without it.
 
-```json
-{"type": null, "title": "Too Many Requests", "status": 429, "detail": "Too many failed attempts, try again later", "instance": null, "properties": null}
+```http
+HTTP/1.1 429 Too Many Requests
+Retry-After: 900
+Content-Type: application/problem+json
+
+{"type":"about:blank","title":"Too Many Requests","status":429,"detail":"Too many failed attempts, try again in 900 s","instance":"/_admin/auth/login"}
 ```
 
-There is no `Retry-After` header.
+`Retry-After` is the seconds left in the window, the same number as in `detail`.
 
 CORS allows the origins of `CORS_ALLOWED_ORIGINS` (`*` by default), any method and any header,
 with credentials.
 
 ## Errors
 
-The body of an error depends on where it comes from. There are four shapes.
-
-**Plain text** for the errors of the gateway itself (`Content-Type: text/plain`): the message is
-the whole body.
+Every error, of the admin API or of proxied traffic the gateway answers by itself, is a Problem
+Details ([RFC 9457](https://www.rfc-editor.org/rfc/rfc9457)) with
+`Content-Type: application/problem+json`:
 
 ```http
 HTTP/1.1 404 Not Found
-Content-Type: text/plain;charset=UTF-8
+Content-Type: application/problem+json
 
-Route does not exist: 00000000-0000-0000-0000-000000000001
+{"type":"about:blank","title":"Not Found","status":404,"detail":"Route does not exist: 00000000-0000-0000-0000-000000000001","instance":"/_admin/routes/00000000-0000-0000-0000-000000000001"}
 ```
 
-```http
-HTTP/1.1 409 Conflict
-Content-Type: text/plain;charset=UTF-8
+| Field        | Type    | Description                                                     |
+|--------------|---------|-----------------------------------------------------------------|
+| `type`       | string  | Always `about:blank`: the status says what kind of error it is  |
+| `title`      | string  | The name of the status (`Not Found`, `Conflict`…)               |
+| `status`     | integer | The HTTP status, again                                          |
+| `detail`     | string  | What went wrong, in English, for people                         |
+| `instance`   | string  | The path of the request                                         |
+| `violations` | array   | Only in a `422`: one entry per broken rule                      |
 
-Route already exists: users-service
-```
-
-**A list of violations** for a body that breaks a rule, as a `422`. One entry per broken rule; a
-field that breaks two rules comes twice:
+A body that breaks a rule is a `422` with `violations`. A field that breaks two rules comes twice;
+the order of the entries is not fixed:
 
 ```json
-[
-  {"source": "uri", "invalid_value": "not a url", "message": "must be a valid URL"},
-  {"source": "name", "invalid_value": "", "message": "must not be blank"},
-  {"source": "rewrite_path.replace_from", "invalid_value": "", "message": "must not be blank"}
-]
+{
+  "type": "about:blank",
+  "title": "Unprocessable Content",
+  "status": 422,
+  "detail": "The request has invalid fields",
+  "instance": "/_admin/routes",
+  "violations": [
+    {"fieldName": "name", "message": "must not be blank"},
+    {"fieldName": "uri", "message": "must be a valid URL"},
+    {"fieldName": "rewrite_path.replace_from", "message": "must not be blank"}
+  ]
+}
 ```
 
-| Field           | Type   | Description                                                                                  |
-|-----------------|--------|----------------------------------------------------------------------------------------------|
-| `source`        | string | The field, with its path: `rewrite_path.replace_from`, or `root[0].name` in a list body      |
-| `invalid_value` | string | The value it had, as text (`"null"` when it was missing)                                     |
-| `message`       | string | What is wrong, in English (`must not be blank`, `size must be between 0 and 255`…)           |
+| Field       | Type   | Description                                                                          |
+|-------------|--------|--------------------------------------------------------------------------------------|
+| `fieldName` | string | The field, as a JSON path: `rewrite_path.replace_from`, or `[1].name` in a list body |
+| `message`   | string | What is wrong, in English (`must not be blank`, `size must be between 0 and 255`…)   |
 
-The order of the entries is not fixed.
-
-**A Problem Details-like object** for a body that can't be read (broken JSON, a date that isn't a
-date), as a `400`, and also for the `415` (no `Content-Type: application/json`) and the
-[`429`](#authentication):
-
-```json
-{"type": null, "title": "Bad Request", "status": 400, "detail": "Failed to read HTTP message", "instance": null, "properties": null}
-```
-
-It doesn't say which field failed.
-
-**No body** for the `401` of the [authentication](#authentication).
+A body that can't be read is a `400` that names the field when it can, never the Java types:
+`"detail":"Invalid value for name"` (a list where a text goes), or `"The body is not valid JSON"`.
 
 | Status | When                                                                                                 |
 |--------|------------------------------------------------------------------------------------------------------|
-| `400`  | The body can't be read, or a log search filter is wrong (`response_code must be a number`)           |
-| `401`  | No credentials, an unknown or expired token, or a wrong login                                        |
-| `403`  | Basic auth with wrong credentials                                                                    |
-| `404`  | A route id that doesn't exist (any text, not only UUIDs), or a path no route matches                 |
+| `400`  | The body can't be read, a route id isn't a UUID, or a log search filter is wrong                     |
+| `401`  | No credentials, an unknown or expired token, or wrong credentials (login or Basic)                   |
+| `403`  | Authenticated without the admin role (`Not allowed`); can't happen with the built-in user            |
+| `404`  | A route id that doesn't exist, or a path no route matches                                            |
 | `409`  | A route name already taken, or the same name twice in one body                                       |
 | `415`  | A body sent without `Content-Type: application/json`                                                 |
 | `422`  | A body that breaks a rule                                                                            |
-| `429`  | Too many failed logins from this IP                                                                  |
-| `500`  | Anything unexpected: `Internal server error`, in plain text, with the stack trace in the server log |
-| `502`  | Proxied traffic: the service can't be reached                                                        |
+| `429`  | Too many failed credentials from this IP, with `Retry-After`                                         |
+| `500`  | Anything unexpected: `Internal server error`, with the stack trace in the server log                 |
+| `502`  | Proxied traffic: the service can't be reached, or it closed the connection                           |
+| `503`  | Only the [health check](#health), when the database doesn't answer                                  |
 | `504`  | Proxied traffic: the service doesn't connect or answer in time                                       |
 
 ---
@@ -137,15 +141,18 @@ GET /_admin/health
 ```
 
 ```json
-{"groups": ["liveness", "readiness"], "status": "UP"}
+{"status": "up"}
 ```
 
-`Content-Type: application/vnd.spring-boot.actuator.v3+json`. For load balancers and container
-checks: no credentials, and it isn't saved in the logs. `UP` means the gateway answers and so does
-its database; when the database doesn't, it is a `503`:
+For load balancers and container checks: no credentials, never blocked by the lockout, and it
+isn't saved in the logs. `up` means the gateway answers and so does its database (within 3 s);
+when the database doesn't, it is a `503`:
 
-```json
-{"groups": ["liveness", "readiness"], "status": "DOWN"}
+```http
+HTTP/1.1 503 Service Unavailable
+Content-Type: application/json
+
+{"status": "down"}
 ```
 
 ## Log in
@@ -158,32 +165,40 @@ Content-Type: application/json
 ```
 
 ```json
-{"token": "Y_3aeVbZ…", "expires_in": 28800}
+{"access_token": "7Et5codt…", "expires_in": 28800000, "expire_at": 1794398730785}
 ```
 
-| Field        | Type    | Description                                                         |
-|--------------|---------|---------------------------------------------------------------------|
-| `username`   | string  | Required, not blank. `ADMIN_USERNAME`                               |
-| `password`   | string  | Required, not blank. `ADMIN_PASSWORD`                               |
-| `token`      | string  | Send it as `Authorization: Bearer <token>`                          |
-| `expires_in` | integer | Seconds until it expires (`ADMIN_TOKEN_MINUTES` × 60)               |
+| Field          | Type    | Description                                                         |
+|----------------|---------|---------------------------------------------------------------------|
+| `username`     | string  | Required, not blank. `ADMIN_USERNAME`                               |
+| `password`     | string  | Required, not blank. `ADMIN_PASSWORD`                               |
+| `access_token` | string  | Send it as `Authorization: Bearer <access_token>`                   |
+| `expires_in`   | integer | Milliseconds it lasts (`ADMIN_TOKEN_MINUTES` × 60000)               |
+| `expire_at`    | integer | When it expires, as epoch milliseconds                              |
 
 Wrong credentials:
 
 ```http
 HTTP/1.1 401 Unauthorized
-Content-Type: text/plain;charset=UTF-8
+Content-Type: application/problem+json
 
-Wrong username or password
+{"type":"about:blank","title":"Unauthorized","status":401,"detail":"Wrong username or password","instance":"/_admin/auth/login"}
 ```
 
-A blank field is a `422`:
+A blank or missing field is a `422`:
 
 ```json
-[
-  {"source": "username", "invalid_value": "", "message": "must not be blank"},
-  {"source": "password", "invalid_value": "null", "message": "must not be blank"}
-]
+{
+  "type": "about:blank",
+  "title": "Unprocessable Content",
+  "status": 422,
+  "detail": "The request has invalid fields",
+  "instance": "/_admin/auth/login",
+  "violations": [
+    {"fieldName": "password", "message": "must not be blank"},
+    {"fieldName": "username", "message": "must not be blank"}
+  ]
+}
 ```
 
 Failed logins count for the [lockout](#authentication).
@@ -210,7 +225,7 @@ A route that comes back also has:
 | Field        | Type   | Description                                                                 |
 |--------------|--------|-----------------------------------------------------------------------------|
 | `id`         | string | A UUID, given by the gateway                                                |
-| `created_at` | string | When it was created. Kept on an edit; new on a [replace](#replace-every-route) |
+| `created_at` | string | When it was created. Kept on an edit, and on a [replace](#replace-every-route) of a route with the same name |
 
 `rewrite_path` and `description` come back as `null` when the route has none. Unknown fields in a
 body are ignored.
@@ -224,31 +239,31 @@ GET /_admin/routes
 ```json
 [
   {
-    "id": "a4937331-975d-4c0b-8fd2-eb97a0c2cc69",
+    "id": "687b86ec-7c3b-4c78-9f82-69e82ebb8338",
     "name": "users-service",
     "path": "/users/**",
     "uri": "http://users.internal:8080",
     "rewrite_path": {"replace_from": "/users/(?<segment>.*)", "replace_to": "/${segment}"},
     "description": "Users and profiles",
-    "created_at": "2026-11-10T21:29:12.096276-06:00"
+    "created_at": "2026-11-11T04:05:31.267144Z"
   },
   {
-    "id": "dfe1d847-16f3-44da-a668-830683f4ea5e",
+    "id": "48390ce8-8633-4c04-8a4d-b5b4694f6d4b",
     "name": "httpbin",
     "path": "/httpbin/**",
     "uri": "https://httpbin.org",
     "rewrite_path": {"replace_from": "/httpbin/(?<segment>.*)", "replace_to": "/${segment}"},
     "description": "Public echo service",
-    "created_at": "2026-11-10T21:29:12.474555-06:00"
+    "created_at": "2026-11-11T04:05:31.590127Z"
   },
   {
-    "id": "68bb53b9-8198-4f0c-8ee2-0bb5ee57246b",
+    "id": "f5f1ab1b-0430-4c01-b653-7dd0ebf3bb11",
     "name": "orders-service",
     "path": "/orders/**",
     "uri": "http://orders.internal:8080",
     "rewrite_path": null,
     "description": null,
-    "created_at": "2026-11-10T21:29:12.478794-06:00"
+    "created_at": "2026-11-11T04:05:31.593383Z"
   }
 ]
 ```
@@ -258,28 +273,26 @@ Every route, in no fixed order and without pages. `[]` when there are none.
 ## Get a route
 
 ```http
-GET /_admin/routes/a4937331-975d-4c0b-8fd2-eb97a0c2cc69
+GET /_admin/routes/687b86ec-7c3b-4c78-9f82-69e82ebb8338
 ```
 
 ```json
 {
-  "id": "a4937331-975d-4c0b-8fd2-eb97a0c2cc69",
+  "id": "687b86ec-7c3b-4c78-9f82-69e82ebb8338",
   "name": "users-service",
   "path": "/users/**",
   "uri": "http://users.internal:8080",
   "rewrite_path": {"replace_from": "/users/(?<segment>.*)", "replace_to": "/${segment}"},
   "description": "Users and profiles",
-  "created_at": "2026-11-10T21:29:12.096276-06:00"
+  "created_at": "2026-11-11T04:05:31.267144Z"
 }
 ```
 
-An id that doesn't exist, or isn't a UUID at all, is a `404`:
+An id that doesn't exist is a `404` (`"detail":"Route does not exist: …"`, see [errors](#errors)).
+An id that isn't a UUID is a `400`, here and in the edit and delete:
 
-```http
-HTTP/1.1 404 Not Found
-Content-Type: text/plain;charset=UTF-8
-
-Route does not exist: not-a-uuid
+```json
+{"type":"about:blank","title":"Bad Request","status":400,"detail":"Route id must be a UUID: not-a-uuid","instance":"/_admin/routes/not-a-uuid"}
 ```
 
 ## Create a route
@@ -297,20 +310,33 @@ Content-Type: application/json
 }
 ```
 
-`200` with no body: the answer doesn't carry the new id; [list the routes](#list-routes) to get
-it. The route takes traffic right away. A name already taken:
+`201` with the new route, its `id` included. The route takes traffic right away.
+
+```json
+{
+  "id": "687b86ec-7c3b-4c78-9f82-69e82ebb8338",
+  "name": "users-service",
+  "path": "/users/**",
+  "uri": "http://users.internal:8080",
+  "rewrite_path": {"replace_from": "/users/(?<segment>.*)", "replace_to": "/${segment}"},
+  "description": "Users and profiles",
+  "created_at": "2026-11-11T04:05:31.267144Z"
+}
+```
+
+A name already taken:
 
 ```http
 HTTP/1.1 409 Conflict
-Content-Type: text/plain;charset=UTF-8
+Content-Type: application/problem+json
 
-Route already exists: users-service
+{"type":"about:blank","title":"Conflict","status":409,"detail":"Route already exists: users-service","instance":"/_admin/routes"}
 ```
 
 ## Create several routes
 
 ```http
-POST /_admin/routes/multi-add
+POST /_admin/routes/batch
 Content-Type: application/json
 
 [
@@ -325,20 +351,49 @@ Content-Type: application/json
 ]
 ```
 
-`200` with no body. All or nothing: a name already taken (`409 Route already exists: …`), the same
-name twice in the list, or a broken rule, and none is created.
+`201` with the new routes, in the order sent:
 
-```http
-HTTP/1.1 409 Conflict
-Content-Type: text/plain;charset=UTF-8
+```json
+[
+  {
+    "id": "48390ce8-8633-4c04-8a4d-b5b4694f6d4b",
+    "name": "httpbin",
+    "path": "/httpbin/**",
+    "uri": "https://httpbin.org",
+    "rewrite_path": {"replace_from": "/httpbin/(?<segment>.*)", "replace_to": "/${segment}"},
+    "description": "Public echo service",
+    "created_at": "2026-11-11T04:05:31.590127Z"
+  },
+  {
+    "id": "f5f1ab1b-0430-4c01-b653-7dd0ebf3bb11",
+    "name": "orders-service",
+    "path": "/orders/**",
+    "uri": "http://orders.internal:8080",
+    "rewrite_path": null,
+    "description": null,
+    "created_at": "2026-11-11T04:05:31.593383Z"
+  }
+]
+```
 
-Duplicated route: a
+All or nothing: a name already taken (`409 Route already exists: …`), the same name twice in the
+list, or a broken rule, and none is created.
+
+```json
+{"type":"about:blank","title":"Conflict","status":409,"detail":"Duplicated route: a","instance":"/_admin/routes/batch"}
 ```
 
 The violations of a list name the item by its index:
 
 ```json
-[{"source": "root[0].name", "invalid_value": "nnnn…", "message": "size must be between 0 and 255"}]
+{
+  "type": "about:blank",
+  "title": "Unprocessable Content",
+  "status": 422,
+  "detail": "The request has invalid fields",
+  "instance": "/_admin/routes/batch",
+  "violations": [{"fieldName": "[1].name", "message": "must not be blank"}]
+}
 ```
 
 ## Replace every route
@@ -365,17 +420,40 @@ Content-Type: application/json
 ]
 ```
 
-`200` with no body. After the call the gateway has exactly these routes: the others are deleted.
-How the console restores a backup (the body of a backup is the answer of
+`200` with the routes as saved. After the call the gateway has exactly these routes: the others
+are deleted. How the console restores a backup (the body of a backup is the answer of
 [list routes](#list-routes); `id` and `created_at` are ignored). All or nothing: on any error the
-current routes stay as they were. Every route gets a **new id** and a new `created_at`, also those
-that didn't change, so searching the logs by the old id no longer finds them. `[]` deletes every
-route. The same name twice is a `409 Duplicated route: …`.
+current routes stay as they were. A route whose **name** already exists keeps its `id` and
+`created_at`, so its logs still find it; the others get a new id. `[]` deletes every route. The same
+name twice is a `409 Duplicated route: …`.
+
+```json
+[
+  {
+    "id": "687b86ec-7c3b-4c78-9f82-69e82ebb8338",
+    "name": "users-service",
+    "path": "/users/**",
+    "uri": "http://users.internal:8080",
+    "rewrite_path": {"replace_from": "/users/(?<segment>.*)", "replace_to": "/${segment}"},
+    "description": "Users and profiles",
+    "created_at": "2026-11-11T04:05:31.267144Z"
+  },
+  {
+    "id": "48390ce8-8633-4c04-8a4d-b5b4694f6d4b",
+    "name": "httpbin",
+    "path": "/httpbin/**",
+    "uri": "https://httpbin.org",
+    "rewrite_path": {"replace_from": "/httpbin/(?<segment>.*)", "replace_to": "/${segment}"},
+    "description": "Public echo service",
+    "created_at": "2026-11-11T04:05:31.590127Z"
+  }
+]
+```
 
 ## Edit a route
 
 ```http
-PUT /_admin/routes/a4937331-975d-4c0b-8fd2-eb97a0c2cc69
+PUT /_admin/routes/687b86ec-7c3b-4c78-9f82-69e82ebb8338
 Content-Type: application/json
 
 {
@@ -387,31 +465,38 @@ Content-Type: application/json
 }
 ```
 
-`200` with no body. Every field is replaced (a field left out becomes `null`); the `id` and
-`created_at` stay. `404` when the route doesn't exist, `409` when the new name belongs to another
-route:
+`200` with the edited route. Every field is replaced (a field left out becomes `null`); the `id` and
+`created_at` stay.
 
-```http
-HTTP/1.1 409 Conflict
-Content-Type: text/plain;charset=UTF-8
+```json
+{
+  "id": "687b86ec-7c3b-4c78-9f82-69e82ebb8338",
+  "name": "users-service",
+  "path": "/users/**",
+  "uri": "http://users-v2.internal:8080",
+  "rewrite_path": {"replace_from": "/users/(?<segment>.*)", "replace_to": "/api/${segment}"},
+  "description": "Users and profiles, v2",
+  "created_at": "2026-11-11T04:05:31.267144Z"
+}
+```
 
-Route already exists: orders-service
+`404` when the route doesn't exist, `409` when the new name belongs to another route:
+
+```json
+{"type":"about:blank","title":"Conflict","status":409,"detail":"Route already exists: orders-service","instance":"/_admin/routes/687b86ec-7c3b-4c78-9f82-69e82ebb8338"}
 ```
 
 ## Delete a route
 
 ```http
-DELETE /_admin/routes/68bb53b9-8198-4f0c-8ee2-0bb5ee57246b
+DELETE /_admin/routes/f5f1ab1b-0430-4c01-b653-7dd0ebf3bb11
 ```
 
-`200` with no body. Its path stops matching right away (`404`). A route that doesn't exist (also
+`204` with no body. Its path stops matching right away (`404`). A route that doesn't exist (also
 the second time):
 
-```http
-HTTP/1.1 404 Not Found
-Content-Type: text/plain;charset=UTF-8
-
-Route does not exist: 68bb53b9-8198-4f0c-8ee2-0bb5ee57246b
+```json
+{"type":"about:blank","title":"Not Found","status":404,"detail":"Route does not exist: f5f1ab1b-0430-4c01-b653-7dd0ebf3bb11","instance":"/_admin/routes/f5f1ab1b-0430-4c01-b653-7dd0ebf3bb11"}
 ```
 
 The logs of a deleted route stay, with its id and name.
@@ -419,19 +504,7 @@ The logs of a deleted route stay, with its id and name.
 ## Search the logs
 
 ```http
-POST /_admin/http-log/search
-Content-Type: application/json
-
-{
-  "page": 0,
-  "size": 5,
-  "query": "httpbin",
-  "method": "GET",
-  "response_code": "2",
-  "route_id": "dfe1d847-16f3-44da-a668-830683f4ea5e",
-  "from_date": "2026-11-10T00:00:00Z",
-  "to_date": "2026-11-12T00:00:00Z"
-}
+GET /_admin/http-logs?page=0&size=5&query=HTTPBIN&method=get&status=2&route_id=48390ce8-8633-4c04-8a4d-b5b4694f6d4b&from=2026-11-10T00:00:00Z&to=2026-11-12T00:00:00Z
 ```
 
 ```json
@@ -440,18 +513,18 @@ Content-Type: application/json
   "size": 5,
   "total_pages": 1,
   "total_elements": 1,
-  "page_content": [
+  "items": [
     {
-      "id": "dcab8227-7148-47f8-9e5d-d4424f17f0c2",
-      "source_ip": "0:0:0:0:0:0:0:1",
-      "requested_at": "2026-11-10T21:29:31.916361-06:00",
+      "id": "1fbfd37e-b0a7-4e95-aebf-e9f990e433c8",
+      "source_ip": "203.0.113.10",
+      "requested_at": "2026-11-11T04:05:49.171519Z",
       "user_agent": "curl/8.9.1",
       "http_method": "GET",
       "path": "/httpbin/get",
       "response_code": 200,
-      "request_duration": 2900,
+      "request_duration": 1465,
       "route": {
-        "route_id": "dfe1d847-16f3-44da-a668-830683f4ea5e",
+        "route_id": "48390ce8-8633-4c04-8a4d-b5b4694f6d4b",
         "route_name": "httpbin",
         "route_path": "https://httpbin.org/get"
       }
@@ -460,47 +533,47 @@ Content-Type: application/json
 }
 ```
 
-A `POST` so the filters go in the body. Newest first. Every filter is optional and they add up
-(AND):
+Newest first. Every filter is an optional query parameter, an empty one (`status=`) is no filter,
+and they add up (AND). Encode the values: a `+` in a date offset must go as `%2B`.
 
-| Field           | Type    | Default | Description                                                                                                      |
-|-----------------|---------|---------|------------------------------------------------------------------------------------------------------------------|
-| `page`          | integer | `0`     | The page, from 0. `422` below 0                                                                                  |
-| `size`          | integer | all     | Logs per page, more than 0. Left out: every log that matches, up to `MAX_LOGS_SEARCH_SIZE` (10000). Never more than that |
-| `query`         | string  |         | Contained in the IP, the user agent, the path or the route (its id, name or final URL). Case-sensitive          |
-| `method`        | string  |         | Contained in the method (`GET`, `POST`…). Case-sensitive                                                         |
-| `response_code` | string  |         | Digits. Three are an exact code (`404`); fewer, a prefix (`4` is 400–499, `50` is 500–509). `400` if not a number |
-| `route_id`      | string  |         | A route id; `00000000-0000-0000-0000-000000000000` for the admin API; `NO-ROUTE` for requests no route matched. `400` otherwise |
-| `from_date`     | string  |         | ISO 8601 with offset, inclusive                                                                                  |
-| `to_date`       | string  |         | ISO 8601 with offset, inclusive                                                                                  |
+| Parameter  | Type    | Default | Description                                                                                                      |
+|------------|---------|---------|------------------------------------------------------------------------------------------------------------------|
+| `page`     | integer | `0`     | The page, from 0. `400` below 0                                                                                  |
+| `size`     | integer | `50`    | Logs per page, 1 or more (`400` below). Never more than `MAX_LOGS_SEARCH_SIZE` (10000): a bigger one is cut to it |
+| `query`    | string  |         | Contained in the IP, the user agent, the path or the route (its id, name or final URL). Ignores the case        |
+| `method`   | string  |         | Contained in the method (`GET`, `POST`…). Ignores the case                                                       |
+| `status`   | string  |         | Digits. Three are an exact code (`404`); fewer, a prefix (`4` is 400–499, `50` is 500–509). `400` if not a number |
+| `route_id` | string  |         | A route id; `00000000-0000-0000-0000-000000000000` for the admin API; `NO-ROUTE` for requests no route matched. `400` otherwise |
+| `from`     | string  |         | ISO 8601 date-time with offset (`2026-11-10T00:00:00Z`), inclusive                                               |
+| `to`       | string  |         | ISO 8601 date-time with offset, inclusive                                                                        |
 
-| Field              | Type    | Description                                                                                       |
-|--------------------|---------|---------------------------------------------------------------------------------------------------|
-| `page`             | integer | The page asked for                                                                                |
-| `size`             | integer | The size asked for; without one, the number of logs returned                                      |
-| `total_pages`      | integer | Pages of this size                                                                                |
-| `total_elements`   | integer | Logs that match the filters                                                                       |
-| `page_content[]`   | array   | The logs                                                                                          |
-| `.id`              | string  | UUID of the log                                                                                   |
-| `.source_ip`       | string  | Client IP: first of `X-Forwarded-For`, or the connection's IP. Up to 50 characters                |
-| `.requested_at`    | string  | When the request arrived                                                                          |
-| `.user_agent`      | string  | `User-Agent` header, or `null`                                                                    |
-| `.http_method`     | string  | `GET`, `POST`…                                                                                    |
-| `.path`            | string  | Path asked for, without the query string                                                          |
-| `.response_code`   | integer | Status sent to the client; `0` when the connection broke before one                               |
-| `.request_duration`| integer | Milliseconds, from arrival to the end of the response                                             |
-| `.route`           | object  | The route that took it, or `null` when none matched                                               |
-| `.route.route_id`  | string  | Id of the route; all zeros for the admin API                                                      |
-| `.route.route_name`| string  | Name of the route when it was logged; `Admin` for the admin API                                   |
-| `.route.route_path`| string  | Where it went: `uri` plus the rewritten path. For the admin API, the gateway's URL plus the path |
+| Field               | Type    | Description                                                                                       |
+|---------------------|---------|---------------------------------------------------------------------------------------------------|
+| `page`              | integer | The page asked for                                                                                |
+| `size`              | integer | The size used (after the cap)                                                                     |
+| `total_pages`       | integer | Pages of this size                                                                                |
+| `total_elements`    | integer | Logs that match the filters                                                                       |
+| `items[]`           | array   | The logs                                                                                          |
+| `.id`               | string  | UUID of the log                                                                                   |
+| `.source_ip`        | string  | Client IP: first of `X-Forwarded-For`, or the connection's IP. Up to 50 characters                |
+| `.requested_at`     | string  | When the request arrived                                                                          |
+| `.user_agent`       | string  | `User-Agent` header, or `null`                                                                    |
+| `.http_method`      | string  | `GET`, `POST`…                                                                                    |
+| `.path`             | string  | Path asked for, without the query string                                                          |
+| `.response_code`    | integer | Status sent to the client; `0` when the connection broke before one                               |
+| `.request_duration` | integer | Milliseconds, from arrival to the end of the response                                             |
+| `.route`            | object  | The route that took it, or `null` when none matched                                               |
+| `.route.route_id`   | string  | Id of the route; all zeros for the admin API                                                      |
+| `.route.route_name` | string  | Name of the route when it was logged; `Admin` for the admin API                                   |
+| `.route.route_path` | string  | Where it went: `uri` plus the rewritten path. For the admin API, the gateway's URL plus the path |
 
 A request to the admin API, as it is logged:
 
 ```json
 {
-  "http_method": "POST",
+  "http_method": "PUT",
   "path": "/_admin/routes",
-  "response_code": 200,
+  "response_code": 409,
   "route": {
     "route_id": "00000000-0000-0000-0000-000000000000",
     "route_name": "Admin",
@@ -509,23 +582,14 @@ A request to the admin API, as it is logged:
 }
 ```
 
-Wrong filters:
+Wrong filters are a `400`, with what is wrong in `detail`: `status must be a number`,
+`route_id must be a uuid or NO-ROUTE`, `page must be 0 or more`, `size must be 1 or more`.
 
 ```json
-[
-  {"source": "size", "invalid_value": "0", "message": "must be greater than 0"},
-  {"source": "page", "invalid_value": "-1", "message": "must be greater than or equal to 0"}
-]
+{"type":"about:blank","title":"Bad Request","status":400,"detail":"status must be a number","instance":"/_admin/http-logs"}
 ```
 
-```http
-HTTP/1.1 400 Bad Request
-Content-Type: text/plain;charset=UTF-8
-
-route_id must be a uuid or NO-ROUTE
-```
-
-A date that can't be read is the generic `400 Failed to read HTTP message`.
+A date that can't be read is a `400` naming its parameter (`"detail":"Invalid value for from"`).
 
 ---
 
@@ -556,7 +620,7 @@ goes to `https://httpbin.org/get?page=2`, which answers:
   "args": {"page": "2"},
   "headers": {"Accept": "*/*", "Host": "httpbin.org", "User-Agent": "curl/8.9.1"},
   "method": "GET",
-  "origin": "<client public ip>",
+  "origin": "203.0.113.10",
   "url": "https://httpbin.org/get?page=2"
 }
 ```
@@ -566,15 +630,16 @@ service's. The answer of the service comes back as it is, with its status, heade
 except the CORS headers the gateway already sets, which are not duplicated. Proxied traffic needs no credentials: the
 service handles its own auth.
 
-When something fails on the way, the gateway answers by itself, in plain text, without the host or
-port of the service:
+When something fails on the way, the gateway answers by itself, with a [Problem Details](#errors)
+that never shows the host or port of the service:
 
-| Case                                                                            | Answer                                    |
-|---------------------------------------------------------------------------------|-------------------------------------------|
-| No route matches                                                                | `404`, the generic Problem Details-like body (`"detail": "No static resource nothing/here."`) |
-| The host doesn't resolve, refuses the connection, or closes it before answering | `502 Bad gateway`                          |
-| No connection within `GATEWAY_CONNECT_TIMEOUT_MS` (10 s by default)             | `504 Gateway timeout`                      |
-| No answer within `GATEWAY_RESPONSE_TIMEOUT` (60 s by default; empty = no limit) | `504 Gateway timeout`                      |
+| Case                                                                            | Answer                                      |
+|---------------------------------------------------------------------------------|---------------------------------------------|
+| No route matches                                                                | `404`, `No route matches /the/path`         |
+| The host doesn't resolve or refuses the connection                              | `502`, `The service can't be reached`       |
+| The service closes the connection before answering                              | `502`, `The service closed the connection`  |
+| No connection within `GATEWAY_CONNECT_TIMEOUT_MS` (10 s by default)             | `504`, `The service didn't connect in time` |
+| No answer within `GATEWAY_RESPONSE_TIMEOUT` (60 s by default; empty = no limit) | `504`, `The service didn't answer in time`  |
 
 ```http
 GET /users/42
@@ -582,9 +647,20 @@ GET /users/42
 
 ```http
 HTTP/1.1 502 Bad Gateway
-Content-Type: text/plain;charset=UTF-8
+Content-Type: application/problem+json
 
-Bad gateway
+{"type":"about:blank","title":"Bad Gateway","status":502,"detail":"The service can't be reached","instance":"/users/42"}
+```
+
+```http
+GET /nothing/here
+```
+
+```http
+HTTP/1.1 404 Not Found
+Content-Type: application/problem+json
+
+{"type":"about:blank","title":"Not Found","status":404,"detail":"No route matches /nothing/here","instance":"/nothing/here"}
 ```
 
 If the service fails after the status was sent (in the middle of the body), the connection is cut.
@@ -599,7 +675,7 @@ except:
 
 - `OPTIONS` requests (CORS preflights).
 - `GET /_admin/health`.
-- Anything under `/_admin/http-log` (searching the logs would fill them).
+- `GET /_admin/http-logs` (searching the logs would fill them).
 - `GET` under `/_admin/routes` (listing and reading routes).
 
 So failed logins, route changes and their errors are logged; reads are not. The log keeps the
@@ -626,5 +702,5 @@ environment of the same folder (gateway URL, admin path, username and password):
 postman collection run docs/postman/Api-Gateway.postman_collection.json -e "docs/postman/Api-Gateway - Local.postman_environment.json"
 ```
 
-It sends 2 logins with wrong credentials on purpose: they count for the
-[lockout](#authentication), and its correct login right after resets the count.
+It sends 2 requests with wrong credentials on purpose (a login and a Basic one): they count for
+the [lockout](#authentication), and the correct login at the start of each run resets the count.

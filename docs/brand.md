@@ -2,10 +2,16 @@
 
 The visual identity of api-gateway: the icon, its colors and type, and the image used to present
 the project. Everything here comes from the Claude Design canvas "API Gateway Console" (its page
-*Identidad visual*) and is exported to [`design/brand/`](design/brand) (see
+*Visual identity*) and is exported to [`design/brand/`](design/brand) (see
 [`design/README.md`](design/README.md)).
 
 ![The identity](design/brand/images/identity.png)
+
+The whole identity on one sheet: the logo on dark and light, the icon and its sizes, the palette,
+the type, the icons and the base elements of the console (buttons, chips, the search with its
+filters, notices, toasts, loading, navigation and pagination). The sections below detail each part.
+
+![The identity sheet](design/brand/images/identity-sheet.png)
 
 ## The icon
 
@@ -96,6 +102,7 @@ Line icons, 2 px stroke on a 24 px grid with round ends, used at 16–22 px insi
 | [`app-icon-lilac.svg`](design/brand/app-icon-lilac.svg) · [`.png`](design/brand/images/app-icon-lilac.png) | The app icon, lilac             |
 | [`app-icon-light.svg`](design/brand/app-icon-light.svg) · [`.png`](design/brand/images/app-icon-light.png) | The app icon, light             |
 | [`images/identity.png`](design/brand/images/identity.png)                                  | The identity, 1920 × 1080: for presentations and the social preview |
+| [`images/identity-sheet.png`](design/brand/images/identity-sheet.png)                      | The identity sheet, 1600 × 2660: logo, icon, palette, type, icons and base elements |
 
 The PNGs are rendered from the canvas by `design/tool/export.py`; the SVGs are kept by hand with the
 same values.

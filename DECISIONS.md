@@ -78,13 +78,22 @@ The console is optional: the admin API is enough for scripts, and a gateway with
 nothing a stranger could load. Read at start, the same image works in every environment, without a
 build per URL.
 
-## 9. Errors that don't help the browser log in
+## 9. One shape for every error
 
-`401` and `403` carry the CORS headers and no `WWW-Authenticate`.
+Every error is a Problem Details (RFC 9457, `application/problem+json`): `type`, `title`, `status`,
+`detail`, `instance`, and in a `422` the `violations`, each with the `fieldName` as the client sent
+it (`rewrite_path.replace_from`, `[0].name`) and its `message`. The 401 of the security layer and
+the 429 of the lockout are written by the same handler.
 
-Without the CORS headers the browser hides the status from the console, which can't tell an
-expired session from a network error. With `WWW-Authenticate: Basic`, the browser opens its own
-login popup over the console.
+Before 6.0.0 there were four shapes (plain text, a bare list, an empty body and a Problem Details
+full of `null`s), so every client had to guess. It is the format of the other Root-101 services,
+and the console reads `detail` and `violations` for all of them. `detail` never carries internals:
+not the Java types of a body that can't be read, not the static resources of Spring for a path no
+route matches, not the host of a service that doesn't answer.
+
+`401` and `403` carry the CORS headers and no `WWW-Authenticate`: without the CORS headers the
+browser hides the status from the console, which can't tell an expired session from a network
+error; with `WWW-Authenticate: Basic`, the browser opens its own login popup over the console.
 
 ## 10. Upstream failures with their own status
 
@@ -102,9 +111,29 @@ Jackson 2 defaults, so the admin API's JSON didn't change with the upgrade.
 
 ## 12. Bounded log searches
 
-`size` is capped by `MAX_LOGS_SEARCH_SIZE` (10 000), and `response_code` with fewer than three
+`size` is capped by `MAX_LOGS_SEARCH_SIZE` (10 000), and `status` with fewer than three
 digits is a prefix (`4` = 4xx, `50` = 500–509).
 
 An unbounded page could read the whole table into memory. The prefix gives the console its
 families (2xx…5xx) without another field. The console's export walks every page instead of asking
 for one huge one.
+
+## 13. The lockout stops guesses, not admins
+
+A locked IP gets `429` with `Retry-After` on the login and on Basic auth only. A valid token and the
+health check are never blocked.
+
+What it must stop is guessing the password. Blocking everything locked out the admin already
+logged in, and failed the health check, so an orchestrator restarted a healthy gateway; behind a
+proxy that hides the client IP, that was everyone at once.
+
+## 14. Resources and their statuses
+
+`POST` creates and answers `201` with what it created (its `id` included), `PUT` answers `200` with
+what was saved, `DELETE` answers `204`. An id that isn't a UUID is a `400`, one that doesn't exist a
+`404`. Searches are a `GET` with their filters in the query (`/http-logs?status=5&method=get`), an
+empty filter being no filter. Replacing every route keeps the id of a route whose name doesn't
+change, so its logs, and links to it, still find it.
+
+The same rules as the other Root-101 services: a client knows what came out of each call without
+reading the list again.

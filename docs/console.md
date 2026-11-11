@@ -43,14 +43,15 @@ device. Without it, the token lives only in the open tab. The password is never 
 ![Log in, wrong credentials](design/screens/03-login-error.png)
 
 Wrong credentials mark both fields and say so in the form. After `ADMIN_MAX_FAILED_ATTEMPTS` wrong
-tries from the same IP, the gateway locks it for `ADMIN_LOCKOUT_MINUTES` (a `429`). In a narrow
+tries from the same IP, the gateway stops taking its logins for `ADMIN_LOCKOUT_MINUTES` (a `429`,
+whose message says how long to wait). In a narrow
 window the brand goes above the form.
 
 Logged out, any URL brings you here; logged in, this one takes you to Routes.
 
 **Behind it:** [`GET /_admin/health`](api.md#health) for the badge, and
 [`POST /_admin/auth/login`](api.md#log-in) with `{"username", "password"}`, which answers the token
-every other call sends. **Logout**, at the foot of the rail, only forgets the token.
+(`access_token`) every other call sends. **Logout**, at the foot of the rail, only forgets the token.
 
 ## Navigation
 
@@ -167,7 +168,7 @@ A click on a row opens its details: the method, status, path and duration, then 
 
 ![No results](design/screens/15-logs-empty.png)
 
-**Behind it:** [`POST /_admin/http-log/search`](api.md#search-the-logs) for the table, every filter,
+**Behind it:** [`GET /_admin/http-logs`](api.md#search-the-logs) for the table, every filter,
 the refresh and each page of the export.
 
 ## States

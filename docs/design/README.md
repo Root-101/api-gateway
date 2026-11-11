@@ -7,8 +7,8 @@ can be seen without access to it:
   one per page, grouped by section.
 - [`screens/`](screens): the same screens as PNG (1536 × 730), used by
   [`../console.md`](../console.md) and the [README](../../README.md).
-- [`brand/`](brand): the icon as SVG, and [`brand/images/`](brand/images), the identity image and
-  the app icon as PNG, described in [`../brand.md`](../brand.md).
+- [`brand/`](brand): the icon as SVG, and [`brand/images/`](brand/images), the identity image, the
+  identity sheet and the app icon as PNG, described in [`../brand.md`](../brand.md).
 
 The intermediate states of the forms (a field with an error, a half-typed search) and the menu of
 the language stay only in the canvas.
@@ -16,8 +16,8 @@ the language stay only in the canvas.
 ## Source
 
 One Claude Design canvas, "API Gateway Console": https://claude.ai/artifact/JJsr56r92JUPHJqwdZqFfw.
-Its pages are **Pantallas** (a replica of every screen and state of the console, all driven by one
-artboard, `Prototype`, and its props) and **Identidad visual** (the identity sheet, the app icon
+Its pages are **Screens** (a replica of every screen and state of the console, all driven by one
+artboard, `Prototype`, and its props) and **Visual identity** (the identity sheet, the app icon
 and the identity image).
 
 ## Keeping it up to date

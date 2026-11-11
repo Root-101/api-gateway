@@ -50,6 +50,7 @@ SCREENS = [
 
 # (file name, artboard, props): the brand images, at their size on the canvas
 BRAND = [
+    ('identity-sheet.png', 'Identity', ''),
     ('identity.png', 'Identity-Final', ''),
     ('app-icon-dark.png', 'AppIcon', 'variant=dark'),
     ('app-icon-lilac.png', 'AppIcon', 'variant=lilac'),

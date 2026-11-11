@@ -21,7 +21,7 @@ The gateway has two faces on the same port:
 |-----------------------|--------------------------------------------------------------------------------------------------------------------------|
 | Admin credentials     | One user, `ADMIN_USERNAME` / `ADMIN_PASSWORD`, compared in constant time; never logged or printed                        |
 | Tokens                | Random and opaque, given by the login, valid `ADMIN_TOKEN_MINUTES` (480); in memory: a restart revokes them all          |
-| Brute force           | `ADMIN_MAX_FAILED_ATTEMPTS` (10) wrong credentials from one IP within `ADMIN_LOCKOUT_MINUTES` (15) lock it: `429`         |
+| Brute force           | `ADMIN_MAX_FAILED_ATTEMPTS` (10) wrong credentials from one IP within `ADMIN_LOCKOUT_MINUTES` (15) lock its new tries: `429` with `Retry-After` |
 | Errors                | A `500` says only `Internal server error`; the detail stays in the server log                                            |
 | Defaults              | The gateway warns in its log when it runs with the default admin or database password                                    |
 | Container             | The image runs as a non-root user                                                                                        |
@@ -34,10 +34,10 @@ The gateway has two faces on the same port:
   nginx, `proxy_set_header X-Forwarded-For $remote_addr`). The client IP of the logs and the
   lockout is the first one of that header, which the client can set: exposed directly, the IP in
   the logs can be faked and the lockout dodged by changing it.
-- **Know what the lockout blocks.** A locked IP gets `429` on every admin path, the health check
-  included, even with a valid token. Behind a proxy that doesn't set `X-Forwarded-For`, every
-  client shares the proxy's IP, so a few wrong passwords lock every admin out and fail the health
-  check until the window ends.
+- **Know what the lockout blocks.** A locked IP gets `429` (with `Retry-After`) only on new tries
+  of the credentials: the login and Basic auth. A token it already has and the health check keep
+  working. Behind a proxy that doesn't set `X-Forwarded-For`, every client shares the proxy's IP,
+  so a few wrong passwords keep every admin from logging in until the window ends.
 - **Restrict CORS** with `CORS_ALLOWED_ORIGINS` to the console's origin: the default `*` lets any
   page call the admin API with a token it has.
 - **Rename the admin path** (`ADMIN_PATH`) if you want it off the default `_admin`; it is not a

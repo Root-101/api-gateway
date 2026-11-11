@@ -28,7 +28,8 @@ How to run each one locally is in the [README](README.md#locally).
   wired in its `<name>_init.dart`. No user-visible text is hardcoded (`lib/l10n/*.i18n.yaml`, both
   languages, then `fvm dart run slang`). See [`console/README.md`](console/README.md).
 - **Both:** JSON keys are `snake_case`. A change to the contract of `/auth`, `/routes` or
-  `/http-log` changes both folders in the same change.
+  `/http-logs` changes both folders in the same change. Every error goes through
+  `GlobalExceptionHandler` as a Problem Details; don't write an error body anywhere else.
 - Don't add a dependency for something Java, Spring or Flutter already does.
 
 ## Documentation, in the same change

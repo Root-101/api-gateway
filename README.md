@@ -166,20 +166,21 @@ instance), is in [`SECURITY.md`](SECURITY.md).
 
 ## The admin API
 
-Under `/{ADMIN_PATH}`, JSON, with a token from the login (or Basic auth):
+Under `/{ADMIN_PATH}`, JSON, with a token from the login (or Basic auth). Keys in `snake_case`,
+dates in UTC, and every error a Problem Details (RFC 9457), with its `violations` in a `422`:
 
-| Method   | Path                       | What it does                                   |
-|----------|----------------------------|------------------------------------------------|
-| `GET`    | `/_admin/health`           | Health check, no auth                          |
-| `POST`   | `/_admin/auth/login`       | Checks the credentials and gives a token       |
-| `GET`    | `/_admin/routes`           | Every route                                    |
-| `GET`    | `/_admin/routes/{id}`      | One route                                      |
-| `POST`   | `/_admin/routes`           | Creates a route                                |
-| `POST`   | `/_admin/routes/multi-add` | Creates several, all or nothing                |
-| `PUT`    | `/_admin/routes`           | Replaces every route with the ones in the body |
-| `PUT`    | `/_admin/routes/{id}`      | Edits a route                                  |
-| `DELETE` | `/_admin/routes/{id}`      | Deletes a route                                |
-| `POST`   | `/_admin/http-log/search`  | Searches the HTTP logs, by page and filters    |
+| Method   | Path                    | What it does                                                        |
+|----------|-------------------------|---------------------------------------------------------------------|
+| `GET`    | `/_admin/health`        | Health check, no auth: `{"status": "up"}`, or `503`                 |
+| `POST`   | `/_admin/auth/login`    | Checks the credentials and gives an `access_token`                  |
+| `GET`    | `/_admin/routes`        | Every route                                                         |
+| `GET`    | `/_admin/routes/{id}`   | One route                                                           |
+| `POST`   | `/_admin/routes`        | Creates a route: `201` with it                                      |
+| `POST`   | `/_admin/routes/batch`  | Creates several, all or nothing: `201` with them                    |
+| `PUT`    | `/_admin/routes`        | Replaces every route with the ones in the body (same name, same id) |
+| `PUT`    | `/_admin/routes/{id}`   | Edits a route                                                       |
+| `DELETE` | `/_admin/routes/{id}`   | Deletes a route: `204`                                              |
+| `GET`    | `/_admin/http-logs`     | Searches the HTTP logs: page and filters in the query               |
 
 Every call, with real requests and responses and its errors: [`docs/api.md`](docs/api.md). The
 [Postman collection](docs/postman/Api-Gateway.postman_collection.json) has them all, with
