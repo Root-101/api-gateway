@@ -22,14 +22,6 @@ class RewritePathModel {
       ? null
       : RewritePathModel(replaceFrom: from, replaceTo: to.isEmpty ? '/' : to);
 
-  static RewritePathModel? tryFromJson(dynamic json) {
-    if (json is! Map<String, dynamic>) return null;
-    final from = json['replace_from'];
-    final to = json['replace_to'];
-    if (from is! String || to is! String) return null;
-    return RewritePathModel(replaceFrom: from, replaceTo: to);
-  }
-
   ///same as the gateway's RewritePath filter: Java `path.replaceAll(regex, to)` with `$\{` accepted as `${`
   String apply(String path) {
     final RegExp regex;

@@ -62,6 +62,9 @@ class HttpLogSearchResponse {
   final int size;
   final int totalPages;
   final int totalElements;
+
+  ///the gateway stops counting at 100 000: true when more logs match
+  final bool totalCapped;
   final List<HttpLogResponse> pageContent;
 
   HttpLogSearchResponse({
@@ -70,6 +73,7 @@ class HttpLogSearchResponse {
     required this.totalPages,
     required this.totalElements,
     required this.pageContent,
+    this.totalCapped = false,
   });
 
   factory HttpLogSearchResponse.fromJson(Map<String, dynamic> json) {
@@ -78,6 +82,7 @@ class HttpLogSearchResponse {
       size: json['size'] ?? 0,
       totalPages: json['total_pages'] ?? 0,
       totalElements: json['total_elements'] ?? 0,
+      totalCapped: json['total_capped'] == true,
       pageContent: (json['items'] as List<dynamic>? ?? [])
           .map((item) => HttpLogResponse.fromJson(item))
           .toList(),

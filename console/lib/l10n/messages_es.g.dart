@@ -592,6 +592,8 @@ class AppMessages$logs$es implements AppMessages$logs$en {
   @override
   String get noNewRequests => 'No hay peticiones nuevas';
   @override
+  String get refreshed => 'Mostrando las peticiones más recientes';
+  @override
   String get oneNewRequest => '1 petición nueva';
   @override
   String manyNewRequests({required Object count}) =>
@@ -599,6 +601,9 @@ class AppMessages$logs$es implements AppMessages$logs$en {
   @override
   String exported({required Object count}) =>
       'Exportados ${count} logs como JSON';
+  @override
+  String exportedCapped({required Object count}) =>
+      'Exportados los ${count} logs más recientes como JSON (el límite de exportación). Acota los filtros para exportar el resto';
 }
 
 // Path: logDetails
@@ -927,6 +932,7 @@ extension on AppMessagesEs {
       'logs.nextPage' => 'Página siguiente',
       'logs.page' => ({required Object page}) => 'Página ${page}',
       'logs.noNewRequests' => 'No hay peticiones nuevas',
+      'logs.refreshed' => 'Mostrando las peticiones más recientes',
       'logs.oneNewRequest' => '1 petición nueva',
       'logs.manyNewRequests' => ({
         required Object count,
@@ -934,6 +940,9 @@ extension on AppMessagesEs {
       'logs.exported' => ({
         required Object count,
       }) => 'Exportados ${count} logs como JSON',
+      'logs.exportedCapped' => ({
+        required Object count,
+      }) => 'Exportados los ${count} logs más recientes como JSON (el límite de exportación). Acota los filtros para exportar el resto',
       'logDetails.title' => 'Detalles de la petición',
       'logDetails.request' => 'PETICIÓN',
       'logDetails.route' => 'RUTA',

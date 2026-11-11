@@ -56,6 +56,12 @@
           the field errors of a `422` come from `violations` (`fieldName`, `message`), and the message of any other
           error from `detail`. Login reads `access_token`. Logs use `GET /http-logs` with query parameters and read
           `items`.
+        * **Logs** :memo: : The export freezes the end date when it starts, so logs that arrive meanwhile don't
+          repeat rows, and it stops at 100 000 logs (the newest), telling you to narrow the filters.
+        * **Logs** :memo: : When more than 100 000 logs match, the gateway caps the count (`total_capped`) and
+          the console shows `100,000+`. Pages only reach the capped count.
+        * **General** :hammer_and_wrench: : Removed unused code (`RouteModel.fromJson`) and the unused `build_runner`
+          dependency.
         * **Docs** :books: : README screenshots now come from `docs/design/screens` and link to `docs/console.md`.
         * **General** :hammer_and_wrench: : Added CI job (analyze and build), updated README, console version in
           the side menu and several memory and UI fixes. The unit tests were removed.

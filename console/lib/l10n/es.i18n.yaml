@@ -185,9 +185,11 @@ logs:
   nextPage: 'Página siguiente'
   page: 'Página {page}'
   noNewRequests: 'No hay peticiones nuevas'
+  refreshed: 'Mostrando las peticiones más recientes'
   oneNewRequest: '1 petición nueva'
   manyNewRequests: '{count} peticiones nuevas'
   exported: 'Exportados {count} logs como JSON'
+  exportedCapped: 'Exportados los {count} logs más recientes como JSON (el límite de exportación). Acota los filtros para exportar el resto'
 logDetails:
   title: 'Detalles de la petición'
   request: 'PETICIÓN'

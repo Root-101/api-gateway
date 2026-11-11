@@ -187,9 +187,11 @@ logs:
   nextPage: 'Next page'
   page: 'Page {page: int}'
   noNewRequests: 'No new requests'
+  refreshed: 'Showing the newest requests'
   oneNewRequest: '1 new request'
   manyNewRequests: '{count: int} new requests'
   exported: 'Exported {count: String} logs as JSON'
+  exportedCapped: 'Exported the newest {count: String} logs as JSON (the export limit). Narrow the filters to export the rest'
 logDetails:
   title: 'Request details'
   request: 'REQUEST'

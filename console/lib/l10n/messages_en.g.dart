@@ -735,6 +735,9 @@ class AppMessages$logs$en {
   /// en: 'No new requests'
   String get noNewRequests => 'No new requests';
 
+  /// en: 'Showing the newest requests'
+  String get refreshed => 'Showing the newest requests';
+
   /// en: '1 new request'
   String get oneNewRequest => '1 new request';
 
@@ -743,6 +746,10 @@ class AppMessages$logs$en {
 
   /// en: 'Exported {count: String} logs as JSON'
   String exported({required String count}) => 'Exported ${count} logs as JSON';
+
+  /// en: 'Exported the newest {count: String} logs as JSON (the export limit). Narrow the filters to export the rest'
+  String exportedCapped({required String count}) =>
+      'Exported the newest ${count} logs as JSON (the export limit). Narrow the filters to export the rest';
 }
 
 // Path: logDetails
@@ -1104,6 +1111,7 @@ extension on AppMessages {
       'logs.nextPage' => 'Next page',
       'logs.page' => ({required int page}) => 'Page ${page}',
       'logs.noNewRequests' => 'No new requests',
+      'logs.refreshed' => 'Showing the newest requests',
       'logs.oneNewRequest' => '1 new request',
       'logs.manyNewRequests' => ({
         required int count,
@@ -1111,6 +1119,9 @@ extension on AppMessages {
       'logs.exported' => ({
         required String count,
       }) => 'Exported ${count} logs as JSON',
+      'logs.exportedCapped' => ({
+        required String count,
+      }) => 'Exported the newest ${count} logs as JSON (the export limit). Narrow the filters to export the rest',
       'logDetails.title' => 'Request details',
       'logDetails.request' => 'REQUEST',
       'logDetails.route' => 'ROUTE',

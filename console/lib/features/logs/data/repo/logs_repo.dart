@@ -41,6 +41,7 @@ extension HttpLogSearchModelParser on HttpLogSearchResponse {
     size: size,
     totalPages: totalPages,
     totalElements: totalElements,
+    totalCapped: totalCapped,
     pageContent: pageContent.map((log) => log.toModel()).toList(),
   );
 }

@@ -29,18 +29,6 @@ class RouteModel {
     this.gatewayUrl,
   });
 
-  factory RouteModel.fromJson(Map<String, dynamic> json) {
-    return RouteModel(
-      id: json['id'],
-      name: json['name'],
-      path: json['path'],
-      uri: json['uri'],
-      rewritePath: RewritePathModel.tryFromJson(json['rewrite_path']),
-      description: json['description'] ?? '',
-      createdAt: DateTime.parse(json['created_at']),
-    );
-  }
-
   Map<String, dynamic> toJson() {
     return {
       'id': id,

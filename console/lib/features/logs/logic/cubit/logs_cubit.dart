@@ -75,6 +75,9 @@ class LogsCubit extends Cubit<LogsState>
   static const int defaultPageSize = 10;
   static const int exportPageSize = 1000;
 
+  ///the export stops here: everything is held in browser memory before the download
+  static const int exportMaxRows = 100000;
+
   final LogsRepo repo;
   final RoutesRepo routesRepo;
 
@@ -84,9 +87,11 @@ class LogsCubit extends Cubit<LogsState>
 
   //total_elements of the last search (with the active filters)
   int totalElements = 0;
+  bool totalCapped = false;
 
   //total_elements of the last search without any filter
   int capturedTotal = 0;
+  bool capturedCapped = false;
 
   ///false until the first page arrives: first load shows the skeleton
   bool loaded = false;
@@ -130,6 +135,7 @@ class LogsCubit extends Cubit<LogsState>
     totalPages = 0;
     totalElements = 0;
     capturedTotal = 0;
+    capturedCapped = false;
     _clearFilters();
     emit(const LogsInitialState());
   }
@@ -176,7 +182,11 @@ class LogsCubit extends Cubit<LogsState>
 
       totalPages = response.totalPages;
       totalElements = response.totalElements;
-      if (filters.isEmpty) capturedTotal = totalElements;
+      totalCapped = response.totalCapped;
+      if (filters.isEmpty) {
+        capturedTotal = totalElements;
+        capturedCapped = totalCapped;
+      }
       items
         ..clear()
         ..addAll(response.pageContent);
@@ -195,11 +205,11 @@ class LogsCubit extends Cubit<LogsState>
   }
 
   ///back to the newest logs (written in ~1 s batches, so the very last may take a moment);
-  ///returns how many arrived since the last search
-  Future<int> refresh() async {
+  ///returns how many arrived since the last search, null when unknown (the count is capped)
+  Future<int?> refresh() async {
     final before = totalElements;
     await _searchFirstPage();
-    return totalElements - before;
+    return totalCapped ? null : totalElements - before;
   }
 
   Future<void> goToPage(int page) {
@@ -287,12 +297,14 @@ class LogsCubit extends Cubit<LogsState>
     try {
       emit(LogsBackupProcessingState());
 
-      //the gateway caps size (MAX_LOGS_SEARCH_SIZE) and truncates silently, so walk every page
+      //the gateway caps size (MAX_LOGS_SEARCH_SIZE) and truncates silently, so walk every page.
+      //`to` is frozen at the start: rows logged meanwhile would shift the offset pages and repeat rows
+      final toDate = filters.date?.toDate ?? DateTime.now();
       final List<HttpLogModel> all = [];
       int totalElements = 0;
       int page = 0;
       int totalPages = 1;
-      while (page < totalPages) {
+      while (page < totalPages && all.length < exportMaxRows) {
         HttpLogSearchModel response = await repo.findAll(
           page: page,
           size: exportPageSize,
@@ -300,13 +312,18 @@ class LogsCubit extends Cubit<LogsState>
           method: filters.httpMethod,
           responseCode: filters.responseCode,
           fromDate: filters.date?.fromDate,
-          toDate: filters.date?.toDate,
+          toDate: toDate,
           routeId: filters.route?.routeId,
         );
         all.addAll(response.pageContent);
         totalElements = response.totalElements;
         totalPages = response.totalPages;
         page++;
+      }
+
+      final capped = all.length > exportMaxRows || totalElements > all.length;
+      if (all.length > exportMaxRows) {
+        all.removeRange(exportMaxRows, all.length);
       }
 
       final encoder = const JsonEncoder.withIndent('  ');
@@ -326,7 +343,7 @@ class LogsCubit extends Cubit<LogsState>
         filename: 'logs-export-$stamp.json',
       );
 
-      emit(LogsBackupOkState(all.length));
+      emit(LogsBackupOkState(all.length, capped: capped));
     } on Exception catch (exc) {
       emit(LogsBackupErrorState(ExceptionConverter.parse(exc)));
     }
@@ -386,7 +403,10 @@ class LogsBackupProcessingState extends LogsBackupState {
 class LogsBackupOkState extends LogsBackupState {
   final int count;
 
-  LogsBackupOkState(this.count);
+  ///more logs matched than [LogsCubit.exportMaxRows]: only the newest were exported
+  final bool capped;
+
+  LogsBackupOkState(this.count, {this.capped = false});
 }
 
 class LogsBackupErrorState extends LogsBackupState {

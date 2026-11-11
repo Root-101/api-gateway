@@ -3,6 +3,9 @@ class HttpLogSearchModel {
   final int size;
   final int totalPages;
   final int totalElements;
+
+  ///more logs match than [totalElements] (the gateway caps the count)
+  final bool totalCapped;
   final List<HttpLogModel> pageContent;
 
   HttpLogSearchModel({
@@ -11,6 +14,7 @@ class HttpLogSearchModel {
     required this.totalPages,
     required this.totalElements,
     required this.pageContent,
+    this.totalCapped = false,
   });
 
   @override

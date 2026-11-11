@@ -45,9 +45,6 @@ dev_dependencies:
 
   flutter_lints: 6.0.0
 
-  #code gen
-  build_runner: 2.17.1
-
   #app config
   flutter_native_splash: 2.4.8
   flutter_launcher_icons: 0.14.4

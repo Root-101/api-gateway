@@ -83,7 +83,9 @@ class _LogsScreenState extends State<LogsScreen> {
     final added = await cubit.refresh();
     if (cubit.state is! LogsSearchOkState) return;
     app.snack.showSuccess(
-      message: added <= 0
+      message: added == null
+          ? intl.logs.refreshed
+          : added <= 0
           ? intl.logs.noNewRequests
           : added == 1
           ? intl.logs.oneNewRequest
@@ -97,7 +99,11 @@ class _LogsScreenState extends State<LogsScreen> {
     } else if (state is LogsBackupOkState) {
       app.loading.hide();
       app.snack.showSuccess(
-        message: context.intl.logs.exported(count: _number.format(state.count)),
+        message: state.capped
+            ? context.intl.logs.exportedCapped(
+                count: _number.format(state.count),
+              )
+            : context.intl.logs.exported(count: _number.format(state.count)),
       );
     } else if (state is LogsBackupErrorState) {
       app.loading.hide();
@@ -156,7 +162,9 @@ class _LogsScreenState extends State<LogsScreen> {
             ),
             const SizedBox(height: 4),
             Text(
-              intl.logs.captured(count: _number.format(cubit.capturedTotal)),
+              intl.logs.captured(
+                count: _count(cubit.capturedTotal, cubit.capturedCapped),
+              ),
               style: TextStyle(fontSize: 13, color: c.textSecondary),
             ),
           ],
@@ -581,6 +589,10 @@ class _LogsScreenState extends State<LogsScreen> {
     );
   }
 
+  ///`100,000+` when the gateway capped the count
+  String _count(int total, bool capped) =>
+      '${_number.format(total)}${capped ? '+' : ''}';
+
   String _statusText(
     BuildContext context, {
     required bool booting,
@@ -592,7 +604,7 @@ class _LogsScreenState extends State<LogsScreen> {
     final total = cubit.totalElements;
     final count = total == 1
         ? logs.oneRequest
-        : logs.manyRequests(count: _number.format(total));
+        : logs.manyRequests(count: _count(total, cubit.totalCapped));
     return '$count${cubit.filters.isEmpty ? '' : logs.matchSuffix}${logs.rowHint}';
   }
 
@@ -658,7 +670,7 @@ class _LogsScreenState extends State<LogsScreen> {
                   : intl.logs.range(
                       start: '${start + 1}',
                       end: '${start + cubit.items.length}',
-                      total: _number.format(total),
+                      total: _count(total, cubit.totalCapped),
                     ),
               style: TextStyle(
                 color: c.label,
