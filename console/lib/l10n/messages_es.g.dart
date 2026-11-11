@@ -443,17 +443,44 @@ class AppMessages$form$es implements AppMessages$form$en {
   @override
   String get descriptionHint => 'Para qué sirve esta ruta (opcional)';
   @override
-  String get preview => 'Vista previa';
+  String get preview => 'VISTA PREVIA';
   @override
   String get previewName => 'Nombre de la ruta';
   @override
-  String get nameRequired => 'El nombre es obligatorio';
+  String get rewrite => 'Reescritura';
+  @override
+  String aboutDuplicating({required String name}) => 'Sobre duplicar ${name}';
+  @override
+  String get editName => 'Editar el nombre';
+  @override
+  String get editDescription => 'Editar la descripción';
+  @override
+  String get editPath => 'Editar el path';
+  @override
+  String get editUri => 'Editar la URI';
+  @override
+  String get editRewrite => 'Editar la reescritura del path';
+  @override
+  String get next => 'Siguiente';
+  @override
+  String stepOf({required int step, required String name}) =>
+      'Paso ${step} de 3 · ${name}';
+  @override
+  String get stepGeneral => 'General';
+  @override
+  String get stepGeneralHint => 'Cómo se ve la ruta en la consola.';
+  @override
+  String get stepForwarding => 'Reenvío';
+  @override
+  String get stepForwardingHint =>
+      'Las peticiones que coinciden con el path se envían a la URI.';
+  @override
+  String get stepRewrite => 'Reescritura del path';
+  @override
+  String get stepRewriteHint =>
+      'Opcional. Cambia un prefijo del path antes de reenviar.';
   @override
   String get nameTaken => 'Ya existe una ruta con este nombre';
-  @override
-  String get pathInvalid => 'El path debe empezar con /';
-  @override
-  String get uriInvalid => 'Escribe una URL http(s) válida';
 }
 
 // Path: delete
@@ -853,12 +880,31 @@ extension on AppMessagesEs {
       'form.rewritePathToHint' => '/',
       'form.descriptionLabel' => 'Descripción',
       'form.descriptionHint' => 'Para qué sirve esta ruta (opcional)',
-      'form.preview' => 'Vista previa',
+      'form.preview' => 'VISTA PREVIA',
       'form.previewName' => 'Nombre de la ruta',
-      'form.nameRequired' => 'El nombre es obligatorio',
+      'form.rewrite' => 'Reescritura',
+      'form.aboutDuplicating' => ({
+        required String name,
+      }) => 'Sobre duplicar ${name}',
+      'form.editName' => 'Editar el nombre',
+      'form.editDescription' => 'Editar la descripción',
+      'form.editPath' => 'Editar el path',
+      'form.editUri' => 'Editar la URI',
+      'form.editRewrite' => 'Editar la reescritura del path',
+      'form.next' => 'Siguiente',
+      'form.stepOf' => ({
+        required int step,
+        required String name,
+      }) => 'Paso ${step} de 3 · ${name}',
+      'form.stepGeneral' => 'General',
+      'form.stepGeneralHint' => 'Cómo se ve la ruta en la consola.',
+      'form.stepForwarding' => 'Reenvío',
+      'form.stepForwardingHint' =>
+        'Las peticiones que coinciden con el path se envían a la URI.',
+      'form.stepRewrite' => 'Reescritura del path',
+      'form.stepRewriteHint' =>
+        'Opcional. Cambia un prefijo del path antes de reenviar.',
       'form.nameTaken' => 'Ya existe una ruta con este nombre',
-      'form.pathInvalid' => 'El path debe empezar con /',
-      'form.uriInvalid' => 'Escribe una URL http(s) válida',
       'delete.title' => '¿Eliminar esta ruta?',
       'delete.descriptionStart' => 'Las peticiones a',
       'delete.descriptionEnd' =>

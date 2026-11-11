@@ -187,6 +187,33 @@ class RoutesIT extends IntegrationTest {
     }
 
     /**
+     * The dry run used by the console form: same rules as create, nothing saved and nothing logged
+     */
+    @Test
+    void validateChecksWithoutSaving() {
+        String id = unique();
+        admin(HttpMethod.POST, "/routes/validate")
+                .bodyValue(new RouteConfigRequest("va-" + id, "/va-" + id + "/**", upstreamUrl(), null, null))
+                .exchange()
+                .expectStatus().isNoContent();
+        assertThat(routeRepo.findByName("va-" + id).block()).isNull();
+
+        admin(HttpMethod.POST, "/routes/validate")
+                .bodyValue(new RouteConfigRequest(" ", "/va-" + id + "/{x", "not a url", null, null))
+                .exchange()
+                .expectStatus().isEqualTo(HttpStatus.UNPROCESSABLE_CONTENT)
+                .expectBody()
+                .jsonPath("$.violations[?(@.fieldName == 'name')]").exists()
+                .jsonPath("$.violations[?(@.fieldName == 'uri')]").exists();
+
+        admin(HttpMethod.POST, "/routes/validate")
+                .bodyValue(new RouteConfigRequest("va-" + id, "/va-" + id + "/{x", upstreamUrl(), null, null))
+                .exchange()
+                .expectStatus().isEqualTo(HttpStatus.UNPROCESSABLE_CONTENT)
+                .expectBody().jsonPath("$.violations[0].fieldName").isEqualTo("path");
+    }
+
+    /**
      * A body that can't be read is a 400 naming the field, never the Java types
      */
     @Test

@@ -110,11 +110,13 @@ class DialogFrame extends StatelessWidget {
   final double radius;
   final Color? color;
   final Color? borderColor;
+  final EdgeInsets padding;
   final Widget child;
 
   const DialogFrame({
     required this.child,
     this.width = 580,
+    this.padding = const EdgeInsets.all(16),
     this.alignment = Alignment.center,
     this.radius = 22,
     this.color,
@@ -128,7 +130,7 @@ class DialogFrame extends StatelessWidget {
     return Align(
       alignment: alignment,
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: padding,
         child: ConstrainedBox(
           constraints: BoxConstraints(maxWidth: width),
           child: Material(

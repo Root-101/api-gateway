@@ -72,6 +72,18 @@ class RoutesFormCubit extends Cubit<RoutesFormState>
     }
   }
 
+  ///the fields the api rejects, without saving; null when it couldn't be checked (the error is shown)
+  Future<Map<String, String>?> validate({required RouteFormModel model}) async {
+    try {
+      return await repo.validate(model: model);
+    } on GlobalException catch (global) {
+      if (global.type != GlobalExceptionType.auth) {
+        app.snack.showError(message: global.message);
+      }
+      return null;
+    }
+  }
+
   Future create({required RouteFormModel model}) async {
     emit(RoutesFormProcessInProgressState());
     try {

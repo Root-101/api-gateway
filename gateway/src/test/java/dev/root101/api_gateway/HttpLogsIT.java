@@ -87,7 +87,7 @@ class HttpLogsIT extends IntegrationTest {
     }
 
     /**
-     * NOT logged: admin `GET /routes*`, `/http-logs`, CORS preflights and the health check.
+     * NOT logged: admin `GET /routes*`, `POST /routes/validate`, `/http-logs`, CORS preflights and the health check.
      * Logged: the rest of the admin requests (as the "Admin" route), and an OPTIONS that is not a preflight.
      */
     @Test
@@ -98,6 +98,8 @@ class HttpLogsIT extends IntegrationTest {
         admin(HttpMethod.GET, "/routes").exchange().expectStatus().isOk();
         admin(HttpMethod.GET, "/http-logs").exchange().expectStatus().isOk();
         webTestClient.get().uri("/%s/health".formatted(ADMIN_PATH)).exchange().expectStatus().isOk();
+        admin(HttpMethod.POST, "/routes/validate").bodyValue(Map.of("name", "")).exchange()
+                .expectStatus().isEqualTo(HttpStatus.UNPROCESSABLE_CONTENT);
         admin(HttpMethod.GET, marker.substring(ADMIN_PATH.length() + 1)).exchange().expectStatus().isNotFound();
         webTestClient.options().uri("/opt-%s/x".formatted(id))
                 .header(HttpHeaders.ORIGIN, "http://console.example.com")
@@ -119,6 +121,7 @@ class HttpLogsIT extends IntegrationTest {
         assertThat(logs).noneMatch(log -> log.getPath().equals("/opt-%s/x".formatted(id)));
         assertThat(logs).noneMatch(log -> log.getPath().startsWith("/" + ADMIN_PATH + "/http-logs"));
         assertThat(logs).noneMatch(log -> log.getPath().equals("/" + ADMIN_PATH + "/health"));
+        assertThat(logs).noneMatch(log -> log.getPath().equals("/" + ADMIN_PATH + "/routes/validate"));
     }
 
     /**

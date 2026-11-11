@@ -336,6 +336,27 @@ Content-Type: application/problem+json
 {"type":"about:blank","title":"Conflict","status":409,"detail":"Route already exists: users-service","instance":"/_admin/routes"}
 ```
 
+## Validate a route
+
+```http
+POST /_admin/routes/validate
+Content-Type: application/json
+
+{"name": "users-service", "path": "/users/{x", "uri": "http://users.internal:8080"}
+```
+
+Checks a route with the same rules as [create](#create-a-route) and [edit](#edit-a-route), without
+saving anything: `204` when it's valid, or the same [`422`](#errors) with every broken field. A name
+already taken is not checked here (that `409` only comes when saving). The console validates each
+step of its route form with it, so the rules live only in the gateway. Not logged.
+
+```http
+HTTP/1.1 422 Unprocessable Content
+Content-Type: application/problem+json
+
+{"type":"about:blank","title":"Unprocessable Content","status":422,"detail":"The request has invalid fields","instance":"/_admin/routes/validate","violations":[{"fieldName":"path","message":"must be a valid path pattern"}]}
+```
+
 ## Create several routes
 
 ```http
@@ -682,6 +703,7 @@ except:
 - `GET /_admin/health`.
 - `GET /_admin/http-logs` (searching the logs would fill them).
 - `GET` under `/_admin/routes` (listing and reading routes).
+- `POST /_admin/routes/validate` (it changes nothing).
 
 So failed logins, route changes and their errors are logged; reads are not. The log keeps the
 client IP, time, user agent, method, path (without the query string), status, duration and the

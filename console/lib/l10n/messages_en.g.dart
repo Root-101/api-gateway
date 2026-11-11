@@ -532,23 +532,63 @@ class AppMessages$form$en {
   /// en: 'What this route is for (optional)'
   String get descriptionHint => 'What this route is for (optional)';
 
-  /// en: 'Preview'
-  String get preview => 'Preview';
+  /// en: 'PREVIEW'
+  String get preview => 'PREVIEW';
 
   /// en: 'Route name'
   String get previewName => 'Route name';
 
-  /// en: 'Name is required'
-  String get nameRequired => 'Name is required';
+  /// en: 'Rewrite'
+  String get rewrite => 'Rewrite';
+
+  /// en: 'About duplicating {name: String}'
+  String aboutDuplicating({required String name}) =>
+      'About duplicating ${name}';
+
+  /// en: 'Edit name'
+  String get editName => 'Edit name';
+
+  /// en: 'Edit description'
+  String get editDescription => 'Edit description';
+
+  /// en: 'Edit path'
+  String get editPath => 'Edit path';
+
+  /// en: 'Edit URI'
+  String get editUri => 'Edit URI';
+
+  /// en: 'Edit path rewrite'
+  String get editRewrite => 'Edit path rewrite';
+
+  /// en: 'Next'
+  String get next => 'Next';
+
+  /// en: 'Step {step: int} of 3 · {name: String}'
+  String stepOf({required int step, required String name}) =>
+      'Step ${step} of 3 · ${name}';
+
+  /// en: 'General'
+  String get stepGeneral => 'General';
+
+  /// en: 'How the route shows up in the console.'
+  String get stepGeneralHint => 'How the route shows up in the console.';
+
+  /// en: 'Forwarding'
+  String get stepForwarding => 'Forwarding';
+
+  /// en: 'Requests that match the path are sent to the URI.'
+  String get stepForwardingHint =>
+      'Requests that match the path are sent to the URI.';
+
+  /// en: 'Path rewrite'
+  String get stepRewrite => 'Path rewrite';
+
+  /// en: 'Optional. Swap a prefix of the path before forwarding.'
+  String get stepRewriteHint =>
+      'Optional. Swap a prefix of the path before forwarding.';
 
   /// en: 'A route with this name already exists'
   String get nameTaken => 'A route with this name already exists';
-
-  /// en: 'Path must start with /'
-  String get pathInvalid => 'Path must start with /';
-
-  /// en: 'Enter a valid http(s) URL'
-  String get uriInvalid => 'Enter a valid http(s) URL';
 }
 
 // Path: delete
@@ -1032,12 +1072,31 @@ extension on AppMessages {
       'form.rewritePathToHint' => '/',
       'form.descriptionLabel' => 'Description',
       'form.descriptionHint' => 'What this route is for (optional)',
-      'form.preview' => 'Preview',
+      'form.preview' => 'PREVIEW',
       'form.previewName' => 'Route name',
-      'form.nameRequired' => 'Name is required',
+      'form.rewrite' => 'Rewrite',
+      'form.aboutDuplicating' => ({
+        required String name,
+      }) => 'About duplicating ${name}',
+      'form.editName' => 'Edit name',
+      'form.editDescription' => 'Edit description',
+      'form.editPath' => 'Edit path',
+      'form.editUri' => 'Edit URI',
+      'form.editRewrite' => 'Edit path rewrite',
+      'form.next' => 'Next',
+      'form.stepOf' => ({
+        required int step,
+        required String name,
+      }) => 'Step ${step} of 3 · ${name}',
+      'form.stepGeneral' => 'General',
+      'form.stepGeneralHint' => 'How the route shows up in the console.',
+      'form.stepForwarding' => 'Forwarding',
+      'form.stepForwardingHint' =>
+        'Requests that match the path are sent to the URI.',
+      'form.stepRewrite' => 'Path rewrite',
+      'form.stepRewriteHint' =>
+        'Optional. Swap a prefix of the path before forwarding.',
       'form.nameTaken' => 'A route with this name already exists',
-      'form.pathInvalid' => 'Path must start with /',
-      'form.uriInvalid' => 'Enter a valid http(s) URL',
       'delete.title' => 'Delete this route?',
       'delete.descriptionStart' => 'Requests to',
       'delete.descriptionEnd' =>

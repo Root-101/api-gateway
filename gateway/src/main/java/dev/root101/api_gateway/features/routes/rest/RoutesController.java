@@ -85,6 +85,22 @@ public class RoutesController {
     }
 
     /**
+     * Check a route with the same rules as create and edit, without saving it. The console validates each
+     * step of its form here, so it never keeps its own copy of the rules. The name being taken is not checked.
+     *
+     * @param routeDefinition The route to check
+     * @return Nothing (204), or a `422` with every broken field
+     */
+    @PostMapping("/validate")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public Mono<Void> validateRoute(@RequestBody RouteConfigRequest routeDefinition) {
+        this.validationService.validate(routeDefinition);
+        RouteRules.check(routeDefinition);
+
+        return Mono.empty();
+    }
+
+    /**
      * Get a route
      *
      * @param routeId The id of the route to find

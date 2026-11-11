@@ -83,19 +83,25 @@ The search at the top filters by name, path or URI, in the browser.
 
 ![Create a route](design/screens/06-route-create.png)
 
-**Create route** opens the form:
+**Create route** opens the form, in three steps:
 
-| Field                                | What it is                                                                              |
-|--------------------------------------|-----------------------------------------------------------------------------------------|
-| **Name**                             | Unique; the one the logs show for the requests of this route                           |
-| **Path**                             | What a request must match, starting with `/` (`/users/**`)                             |
-| **URI**                              | The service it forwards to, an `http(s)://` URL                                         |
-| **Rewrite path from** / **to**       | Optional: the start of the path to replace, and what replaces it (`/users/` → `/`)     |
-| **Description**                      | Optional                                                                                |
+| Step             | Fields                                   | What they are                                                                       |
+|------------------|------------------------------------------|-------------------------------------------------------------------------------------|
+| **General**      | **Name**, **Description**                | Name: unique, the one the logs show for this route. Description: optional           |
+| **Forwarding**   | **Path**, **URI**                        | What a request must match (`/users/**`), and the service it forwards to             |
+| **Path rewrite** | **Rewrite path from** / **to**           | Optional: the start of the path to replace, and what replaces it (`/users/` → `/`)  |
 
-The **Preview** under them shows FROM and TO as they will be, while you type. A name already used,
-a path without `/` or a URI that isn't a URL is marked under its field before saving; what the
-gateway rejects ([`422`](api.md#errors)) is shown under its field too.
+Above the steps, the **preview** shows the route as its card in Routes will: name, description,
+FROM and TO (and the rewrite, if there is one), updated while you type; what's still empty shows
+its placeholder, dimmed. The pencil next to each value goes to its step and selects its field.
+
+**Next** checks only the fields of its step and stays there if one is wrong, marked under the
+field; the error goes away when you type in it. The last step saves (**Create route** or **Save
+changes**) after checking everything, and goes to the first step with an error. Enter is Next,
+Esc or a click outside closes without saving. The rules are the gateway's own: each step is checked
+with [`POST /_admin/routes/validate`](api.md#validate-a-route), so the console never keeps a copy;
+only a name already used is checked against the list. What the gateway rejects when saving is
+shown under its field too.
 
 ![Edit a route](design/screens/07-route-edit.png)
 
@@ -104,10 +110,13 @@ opens it (a route that doesn't exist says so). Changes apply to new requests rig
 
 ![Duplicate a route](design/screens/08-route-duplicate.png)
 
-**Duplicate** opens the form with a copy (`auth-copy`, or the next free name) and a warning: review the name, path and URI,
-because two routes with the same path compete for the same requests (the first one created wins).
+**Duplicate** opens the form with a copy (`auth-copy`, or the next free name). A chip with the name
+of the original route sits next to the title; its ⓘ opens the warning: review the name, path and
+URI, because two routes with the same path compete for the same requests (the first one created
+wins).
 
-**Behind it:** [`POST /_admin/routes`](api.md#create-a-route) to create or duplicate,
+**Behind it:** [`POST /_admin/routes/validate`](api.md#validate-a-route) on each Next,
+[`POST /_admin/routes`](api.md#create-a-route) to create or duplicate,
 [`GET /_admin/routes/{id}`](api.md#get-a-route) to open one by its URL, and
 [`PUT /_admin/routes/{id}`](api.md#edit-a-route) to save the changes.
 

@@ -55,6 +55,8 @@ public class HttpLogsWebFilter implements WebFilter {
                         //is admin and it's a get
                         (requestedPath.startsWith("/%s/routes".formatted(adminBasePath))
                                 && httpMethod == HttpMethod.GET)
+                        //a dry run of the route form, it changes nothing
+                        || requestedPath.equals("/%s/routes/validate".formatted(adminBasePath))
                         //a CORS preflight (any other OPTIONS reaches a handler or an upstream: logged)
                         || CorsUtils.isPreFlightRequest(exchange.getRequest())
                         //health checks (would fill the table)

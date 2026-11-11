@@ -18,6 +18,7 @@ class AppColors {
   Color get field => const Color(0xff17151f);
   Color get raised => const Color(0xff2f2c3f);
   Color get popup => const Color(0xff211e2e);
+  Color get popupLilac => const Color(0xff2a2540);
   Color get toast => const Color(0xff2b2930);
   Color get barrier => const Color(0x9908070c);
 
@@ -42,6 +43,9 @@ class AppColors {
   Color get label => const Color(0xffcac4d0);
   Color get textSecondary => const Color(0xffafafaf);
   Color get textTertiary => const Color(0xff8f8e9b);
+
+  ///an empty value shown in its place, like the route form preview
+  Color get textPlaceholder => const Color(0xff6f6c7b);
   Color get white => const Color(0xffffffff);
 
   //status

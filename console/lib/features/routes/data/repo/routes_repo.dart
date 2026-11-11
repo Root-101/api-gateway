@@ -17,6 +17,21 @@ class RoutesRepo {
     }
   }
 
+  ///the broken fields of [model] by their api name (empty when it's valid), checked by the api itself
+  Future<Map<String, String>> validate({required RouteFormModel model}) async {
+    try {
+      await client.validate(model: model.toRequest());
+      return {};
+    } on Exception catch (exc) {
+      final global = ExceptionConverter.parse(exc);
+      if (global.type == GlobalExceptionType.validation &&
+          global.data is List<ValidationError>) {
+        return (global.data as List<ValidationError>).asFailedValidations();
+      }
+      throw global;
+    }
+  }
+
   Future create({required RouteFormModel model}) async {
     try {
       await client.create(model: model.toRequest());

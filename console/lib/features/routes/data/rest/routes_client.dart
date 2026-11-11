@@ -16,6 +16,11 @@ class RoutesClient extends BaseClient {
         .cast<RouteResponse>();
   }
 
+  ///same rules as create and edit, nothing saved: 204 or a 422 with the broken fields
+  Future validate({required RouteRequest model}) async {
+    await dio.post('$baseUrl/validate', data: model.toJson());
+  }
+
   Future create({required RouteRequest model}) async {
     await dio.post(baseUrl, data: model.toJson());
   }

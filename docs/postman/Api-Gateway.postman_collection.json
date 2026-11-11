@@ -505,6 +505,107 @@
           ]
         },
         {
+          "name": "validate",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{gateway-url}}/{{gateway-admin-path}}/routes/validate",
+              "host": [
+                "{{gateway-url}}"
+              ],
+              "path": [
+                "{{gateway-admin-path}}",
+                "routes",
+                "validate"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"name\": \"validate-only\",\n    \"path\": \"/validate-only/**\",\n    \"uri\": \"http://localhost:8080\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 204, nothing saved', () => pm.response.to.have.status(204));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "validate - invalid",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{gateway-url}}/{{gateway-admin-path}}/routes/validate",
+              "host": [
+                "{{gateway-url}}"
+              ],
+              "path": [
+                "{{gateway-admin-path}}",
+                "routes",
+                "validate"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"name\": \"\",\n    \"path\": \"/x/**\",\n    \"uri\": \"not a url\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 422', () => pm.response.to.have.status(422));",
+                  "pm.test('body is a Problem Details', () => {",
+                  "    pm.expect(pm.response.headers.get('Content-Type')).to.include('application/problem+json');",
+                  "    const p = pm.response.json();",
+                  "    pm.expect(p.status).to.eql(422);",
+                  "    pm.expect(p).to.include.all.keys('type', 'title', 'status', 'detail', 'instance');",
+                  "    pm.expect(p.detail).to.eql('The request has invalid fields');",
+                  "});",
+                  "pm.test('violations name the JSON fields', () => {",
+                  "    const violations = pm.response.json().violations;",
+                  "    pm.expect(violations).to.be.an('array').that.is.not.empty;",
+                  "    violations.forEach(v => pm.expect(v).to.have.all.keys('fieldName', 'message'));",
+                  "    pm.expect(violations.map(v => v.fieldName)).to.include.members(['name', 'uri']);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
           "name": "create-all",
           "request": {
             "method": "POST",
