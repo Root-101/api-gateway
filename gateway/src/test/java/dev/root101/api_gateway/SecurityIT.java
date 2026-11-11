@@ -311,7 +311,7 @@ class SecurityIT extends IntegrationTest {
                 .expectHeader().value(HttpHeaders.RETRY_AFTER, value -> assertThat(Long.parseLong(value)).isPositive())
                 .expectHeader().contentType(MediaType.APPLICATION_PROBLEM_JSON)
                 .expectBody().jsonPath("$.detail").value(String.class,
-                        detail -> assertThat(detail).matches("Too many failed attempts, try again in \\d+ s"));
+                        detail -> assertThat(detail).matches("Too many failed attempts, try again in \\d+ min"));
 
         webTestClient.post()
                 .uri("/%s/auth/login".formatted(ADMIN_PATH))

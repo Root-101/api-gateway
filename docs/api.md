@@ -63,10 +63,10 @@ HTTP/1.1 429 Too Many Requests
 Retry-After: 900
 Content-Type: application/problem+json
 
-{"type":"about:blank","title":"Too Many Requests","status":429,"detail":"Too many failed attempts, try again in 900 s","instance":"/_admin/auth/login"}
+{"type":"about:blank","title":"Too Many Requests","status":429,"detail":"Too many failed attempts, try again in 15 min","instance":"/_admin/auth/login"}
 ```
 
-`Retry-After` is the seconds left in the window, the same number as in `detail`.
+`Retry-After` is the seconds left in the window; `detail` says it in minutes, rounded up (in seconds under one minute).
 
 CORS applies to the admin API only (`/_admin/**`): the origins of `CORS_ALLOWED_ORIGINS` (`*` by
 default), any method and any header, without credentials (tokens go in a header, never a cookie).
