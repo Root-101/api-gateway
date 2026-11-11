@@ -15,7 +15,7 @@ class AdminTokensTest {
         assertThat(tokens.isValid(token)).isTrue();
         assertThat(tokens.isValid("unknown")).isFalse();
         assertThat(tokens.issue()).isNotEqualTo(token);
-        assertThat(tokens.ttlSeconds()).isEqualTo(600);
+        assertThat(tokens.ttlMillis()).isEqualTo(600_000);
     }
 
     @Test

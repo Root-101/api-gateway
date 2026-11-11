@@ -7,6 +7,7 @@ import dev.root101.api_gateway.features.routes.logic.model.RouteConfigRequest;
 import dev.root101.api_gateway.features.routes.logic.model.RouteConfigResponse;
 import dev.root101.api_gateway.features.routes.utils.RouteDefinitionMapper;
 import dev.root101.api_gateway.features.routes.utils.RouteUpdater;
+import dev.root101.commons.exceptions.BadRequestException;
 import dev.root101.commons.exceptions.ConflictException;
 import dev.root101.commons.exceptions.NotFoundException;
 import dev.root101.commons.validation.ValidationService;
@@ -23,11 +24,12 @@ import reactor.core.publisher.Mono;
 
 import java.time.Duration;
 import java.time.OffsetDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.stream.Collectors;
 
 /**
  * This is the class who really make the modifications in the routes.
@@ -90,127 +92,84 @@ class RouteUseCaseImpl implements RouteUseCase, SmartInitializingSingleton {
      * Add a single route
      *
      * @param request The route to add
-     * @return Void
+     * @return The created route
      */
-    public Mono<Void> addRoute(RouteConfigRequest request) {
-        //find any route with same name
-        return routeRepo.findByName(request.getName())
-                //if a route is found, throw error (can't have two routes with same name)
-                .flatMap(
-                        existingRoute -> Mono.error(
-                                new ConflictException("Route already exists: %s".formatted(request.getName()))
-                        )
-                )
-                //if no route is found, then process request
-                .switchIfEmpty(
-                        Mono.defer(() -> {
-                            //parse request to entity
-                            RouteEntity entity = buildEntity(request);
-
-                            //validate request
-                            return Mono.fromRunnable(() -> vs.validate(entity))//if any error, exception is thrown
-                                    .then(
-                                            //if all validations oka, save route to DB
-                                            routeRepo.save(entity)
-                                                    //if route is saved ok in db, save it to cache (for faster http logs access)
-                                                    .doOnNext(
-                                                            routeEntity -> cache.put(
-                                                                    routeEntity.getRouteId().toString(),
-                                                                    entity
-                                                            )
-                                                    )
-                                                    .flatMap(
-                                                            //save route to gateway
-                                                            savedEntity -> routeDefinitionWriter.save(
-                                                                    Mono.just(
-                                                                            buildDefinition(savedEntity)
-                                                                    )
-                                                            ).then(
-                                                                    //update routes
-                                                                    Mono.defer(routeUpdater::updateRoutes)
-                                                            )
-                                                    )
-                                    );
-                        })
-                )
-                .then();
+    public Mono<RouteConfigResponse> addRoute(RouteConfigRequest request) {
+        return addAllRoutes(List.of(request)).map(List::getFirst);
     }
 
     /**
-     * Create multiple routes at the same time
+     * Create multiple routes at the same time, all or nothing
      *
      * @param requests List of routes to create
-     * @return Void
+     * @return The created routes
      */
-    public Mono<Void> addAllRoutes(List<RouteConfigRequest> requests) {
+    public Mono<List<RouteConfigResponse>> addAllRoutes(List<RouteConfigRequest> requests) {
         return withoutDuplicatedNames(requests)
                 // Check for duplicates in the database
-                .flatMap(
+                .concatMap(
                         request -> routeRepo.findByName(request.getName())
-                                .flatMap(existing -> Mono.error(new ConflictException("Route already exists: %s".formatted(request.getName()))))
+                                .flatMap(existing -> Mono.<RouteConfigRequest>error(new ConflictException("Route already exists: %s".formatted(request.getName()))))
                                 .switchIfEmpty(Mono.just(request))
                 )
-                // Parse input list into entities
-                .map(request -> buildEntity((RouteConfigRequest) request)) // Manual parse of type (up we lose the type)
+                .map(this::buildEntity)
                 .collectList()
                 .flatMap(
                         entities -> Mono.fromRunnable(() -> vs.validate(entities))
-                                .then(
-                                        //all or nothing: a failure in the middle must not leave half the routes in db
-                                        routeRepo.saveAll(entities).collectList().as(tx::transactional)
-                                                //if routes are saved ok in db, save it to cache (for faster http logs access)
-                                                .doOnNext(
-                                                        savedEntities -> cache.putAll(
-                                                                savedEntities.stream()
-                                                                        .collect(Collectors.toMap(
-                                                                                routeEntity -> routeEntity.getRouteId().toString(),
-                                                                                routeEntity -> routeEntity
-                                                                        ))
-                                                        )
-                                                )
-                                )
+                                //all or nothing: a failure in the middle must not leave half the routes in db
+                                .then(routeRepo.saveAll(entities).collectList().as(tx::transactional))
                 )
-                .flatMapMany(
-                        savedEntities -> Flux.fromIterable(savedEntities)
-                                .map(this::buildDefinition)
-                                .concatMap(route -> routeDefinitionWriter.save(Mono.just(route)))
-                )
-                .then(Mono.defer(routeUpdater::updateRoutes));
+                .flatMap(saved -> apply(saved, List.of()));
     }
 
     /**
-     * Replace every route with the given ones, all or nothing. The new routes get new ids.
+     * Replace every route with the given ones, all or nothing. A route whose name already exists keeps its id
+     * (and its creation date), so its logs still find it; the others get new ids.
      *
      * @param requests The routes that will exist after the call
-     * @return Void
+     * @return The routes, as saved
      */
-    public Mono<Void> replaceAllRoutes(List<RouteConfigRequest> requests) {
+    public Mono<List<RouteConfigResponse>> replaceAllRoutes(List<RouteConfigRequest> requests) {
         return withoutDuplicatedNames(requests)
                 .map(this::buildEntity)
                 .collectList()
                 .flatMap(
                         entities -> Mono.fromRunnable(() -> vs.validate(entities))
-                                .then(
-                                        //in one transaction: a failure leaves the current routes untouched
-                                        routeRepo.deleteAll()
-                                                .thenMany(routeRepo.saveAll(entities))
-                                                .collectList()
-                                                .as(tx::transactional)
-                                )
-                )
-                .flatMap(savedEntities -> {
-                    //what the writer holds: same keys as the cache
-                    List<String> oldIds = List.copyOf(cache.keySet());
-                    oldIds.forEach(cache::remove);
-                    savedEntities.forEach(entity -> cache.put(entity.getRouteId().toString(), entity));
+                                .then(routeRepo.findAll().collectMap(RouteEntity::getName))
+                                .flatMap(current -> {
+                                    for (RouteEntity entity : entities) {
+                                        RouteEntity old = current.remove(entity.getName());
+                                        if (old != null) {
+                                            entity.setRouteId(old.getRouteId());
+                                            entity.setCreatedAt(old.getCreatedAt());
+                                        }
+                                    }
+                                    List<RouteEntity> removed = List.copyOf(current.values());
+                                    //in one transaction: a failure leaves the current routes untouched
+                                    return routeRepo.deleteAll(removed)
+                                            .thenMany(routeRepo.saveAll(entities))
+                                            .collectList()
+                                            .as(tx::transactional)
+                                            .flatMap(saved -> apply(saved, removed));
+                                })
+                );
+    }
 
-                    return Flux.fromIterable(savedEntities)
-                            .map(this::buildDefinition)
-                            .concatMap(route -> routeDefinitionWriter.save(Mono.just(route)))
-                            .thenMany(Flux.fromIterable(oldIds))
-                            .concatMap(id -> routeDefinitionWriter.delete(Mono.just(id)))
-                            .then(Mono.defer(routeUpdater::updateRoutes));
-                });
+    /**
+     * Puts the saved routes in the cache and the gateway (replacing the ones with the same id), removes the
+     * deleted ones, and refreshes the routes in use
+     */
+    private Mono<List<RouteConfigResponse>> apply(List<RouteEntity> saved, List<RouteEntity> removed) {
+        saved.forEach(entity -> cache.put(entity.getRouteId().toString(), entity));
+        removed.forEach(entity -> cache.remove(entity.getRouteId().toString()));
+        return Flux.fromIterable(removed)
+                //a route saved in db by another instance isn't in this gateway: nothing to remove
+                .concatMap(entity -> routeDefinitionWriter.delete(Mono.just(entity.getRouteId().toString()))
+                        .onErrorResume(org.springframework.cloud.gateway.support.NotFoundException.class, e -> Mono.empty()))
+                .thenMany(Flux.fromIterable(saved))
+                .concatMap(entity -> routeDefinitionWriter.save(Mono.just(buildDefinition(entity))))
+                .then(Mono.defer(routeUpdater::updateRoutes))
+                .thenReturn(saved.stream().map(this::buildResponse).toList());
     }
 
     /**
@@ -230,17 +189,14 @@ class RouteUseCaseImpl implements RouteUseCase, SmartInitializingSingleton {
     }
 
     /**
-     * Edit a route. Since the edit is not allowed in `RouteDefinitionWriter` this logic
-     * delete the old route, create a new one and update the context.
+     * Edit a route, keeping its id and creation date
      *
-     * @param routeId The name of the old route
+     * @param routeId The id of the route
      * @param request The new config of route
-     * @return void
+     * @return The edited route
      */
-    public Mono<Void> editRoute(String routeId, RouteConfigRequest request) {
-        // Search old route
-        return routeRepo.findByRawId(routeId)
-                .switchIfEmpty(Mono.error(new NotFoundException("Route does not exist: %s".formatted(routeId))))
+    public Mono<RouteConfigResponse> editRoute(String routeId, RouteConfigRequest request) {
+        return findEntity(routeId)
                 //the new name can't be used by another route
                 .flatMap(oldRoute -> routeRepo.findByName(request.getName())
                         .filter(existing -> !existing.getRouteId().equals(oldRoute.getRouteId()))
@@ -253,33 +209,11 @@ class RouteUseCaseImpl implements RouteUseCase, SmartInitializingSingleton {
                     entityToEdit.setCreatedAt(oldRoute.getCreatedAt());//maintain same create_at
 
                     return Mono.fromRunnable(() -> vs.validate(entityToEdit))
-                            .then(
-                                    routeRepo.save(entityToEdit)
-                                            //if route is edited ok in db, updated it to cache (for faster http logs access)
-                                            .doOnNext(
-                                                    routeEntity -> cache.put(
-                                                            routeEntity.getRouteId().toString(),
-                                                            entityToEdit
-                                                    )
-                                            ).flatMap(
-                                                    parsedEntity -> {
-                                                        // Build new route-definition
-                                                        RouteDefinition newRoute = buildDefinition(parsedEntity);
-
-                                                        // Update routes
-                                                        // 1 - delete
-                                                        // 2 - save
-                                                        return routeDefinitionWriter.delete(
-                                                                Mono.just(oldRoute.getRouteId().toString())
-                                                        ).then(
-                                                                routeDefinitionWriter.save(Mono.just(newRoute))
-                                                        );
-                                                    }
-                                            )
-                            );
-                })
-                // Update route after all changes
-                .then(Mono.defer(routeUpdater::updateRoutes));
+                            .then(routeRepo.save(entityToEdit))
+                            //same id: the writer replaces the old definition
+                            .flatMap(saved -> apply(List.of(saved), List.of()))
+                            .map(List::getFirst);
+                });
     }
 
     /**
@@ -288,13 +222,21 @@ class RouteUseCaseImpl implements RouteUseCase, SmartInitializingSingleton {
      * @param routeId The id of the route to find.
      */
     public Mono<RouteConfigResponse> findById(String routeId) {
-        return routeRepo.findByRawId(routeId)
-                .switchIfEmpty(
-                        Mono.error(
-                                new NotFoundException("Route does not exist: %s".formatted(routeId))
-                        )
-                )
-                .map(this::buildResponse);
+        return findEntity(routeId).map(this::buildResponse);
+    }
+
+    /**
+     * The route with this id: `400` if the id isn't a UUID, `404` if there is none
+     */
+    private Mono<RouteEntity> findEntity(String routeId) {
+        UUID id;
+        try {
+            id = UUID.fromString(routeId);
+        } catch (IllegalArgumentException e) {
+            return Mono.error(new BadRequestException("Route id must be a UUID: %s".formatted(routeId)));
+        }
+        return routeRepo.findById(id)
+                .switchIfEmpty(Mono.error(new NotFoundException("Route does not exist: %s".formatted(routeId))));
     }
 
     /**
@@ -315,8 +257,7 @@ class RouteUseCaseImpl implements RouteUseCase, SmartInitializingSingleton {
      */
     public Mono<Void> deleteRoute(String routeId) {
         // Search old route
-        return routeRepo.findByRawId(routeId)
-                .switchIfEmpty(Mono.error(new NotFoundException("Route does not exist: %s".formatted(routeId))))
+        return findEntity(routeId)
                 .flatMap(route -> {
                     //use the normalized id, not the raw one (could be in uppercase and not match the cache/writer keys)
                     String id = route.getRouteId().toString();
@@ -326,7 +267,7 @@ class RouteUseCaseImpl implements RouteUseCase, SmartInitializingSingleton {
                             .then(
                                     routeDefinitionWriter.delete( // Delete route from writer
                                             Mono.just(id)
-                                    )
+                                    ).onErrorResume(org.springframework.cloud.gateway.support.NotFoundException.class, e -> Mono.empty())
                             );
                 })
                 .then(Mono.defer(routeUpdater::updateRoutes)); // Update route after all changes
@@ -368,7 +309,8 @@ class RouteUseCaseImpl implements RouteUseCase, SmartInitializingSingleton {
                 routeModel.getRewritePath() != null ? routeModel.getRewritePath().getReplaceFrom() : null,
                 routeModel.getRewritePath() != null ? routeModel.getRewritePath().getReplaceTo() : null,
                 routeModel.getDescription(),
-                OffsetDateTime.now()
+                //to the microsecond, what postgres keeps: the answer of a save matches a later read
+                OffsetDateTime.now().truncatedTo(ChronoUnit.MICROS)
         );
     }
 

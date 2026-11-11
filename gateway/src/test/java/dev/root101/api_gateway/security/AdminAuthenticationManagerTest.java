@@ -1,6 +1,5 @@
 package dev.root101.api_gateway.security;
 
-import dev.root101.commons.exceptions.ForbiddenException;
 import dev.root101.commons.exceptions.UnauthorizedException;
 import org.junit.jupiter.api.Test;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -39,9 +38,9 @@ class AdminAuthenticationManagerTest {
     }
 
     @Test
-    void wrongCredentialsAre403() {
-        StepVerifier.create(manager.authenticate(basic("admin:wrong"))).verifyError(ForbiddenException.class);
-        StepVerifier.create(manager.authenticate(basic("other:pa:ss-ñ"))).verifyError(ForbiddenException.class);
+    void wrongCredentialsAre401() {
+        StepVerifier.create(manager.authenticate(basic("admin:wrong"))).verifyError(UnauthorizedException.class);
+        StepVerifier.create(manager.authenticate(basic("other:pa:ss-ñ"))).verifyError(UnauthorizedException.class);
     }
 
     @Test

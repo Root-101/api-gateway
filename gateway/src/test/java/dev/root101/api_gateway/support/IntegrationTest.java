@@ -141,11 +141,18 @@ public abstract class IntegrationTest {
                 .header(HttpHeaders.AUTHORIZATION, adminAuth());
     }
 
-    protected void createRoute(RouteConfigRequest request) {
-        admin(org.springframework.http.HttpMethod.POST, "/routes")
+    /**
+     * Creates the route (`201`) and returns its id
+     */
+    protected String createRoute(RouteConfigRequest request) {
+        return (String) admin(org.springframework.http.HttpMethod.POST, "/routes")
                 .bodyValue(request)
                 .exchange()
-                .expectStatus().isOk();
+                .expectStatus().isCreated()
+                .expectBody(Map.class)
+                .returnResult()
+                .getResponseBody()
+                .get("id");
     }
 
     protected String routeId(String name) {
@@ -167,9 +174,14 @@ public abstract class IntegrationTest {
     }
 
     @SuppressWarnings("unchecked")
-    protected Map<String, Object> searchLogs(Map<String, Object> body) {
-        return admin(org.springframework.http.HttpMethod.POST, "/http-log/search")
-                .bodyValue(body)
+    protected Map<String, Object> searchLogs(Map<String, Object> params) {
+        return webTestClient.get()
+                .uri(uri -> {
+                    uri.path("/" + ADMIN_PATH + "/http-logs");
+                    params.forEach((name, value) -> uri.queryParam(name, "{" + name + "}"));
+                    return uri.build(params);
+                })
+                .header(HttpHeaders.AUTHORIZATION, adminAuth())
                 .exchange()
                 .expectStatus().isOk()
                 .expectBody(Map.class)
@@ -177,7 +189,7 @@ public abstract class IntegrationTest {
                 .getResponseBody();
     }
 
-    protected long totalLogs(Map<String, Object> body) {
-        return ((Number) searchLogs(body).get("total_elements")).longValue();
+    protected long totalLogs(Map<String, Object> params) {
+        return ((Number) searchLogs(params).get("total_elements")).longValue();
     }
 }

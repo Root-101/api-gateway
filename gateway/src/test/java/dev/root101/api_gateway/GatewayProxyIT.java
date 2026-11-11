@@ -4,6 +4,7 @@ import dev.root101.api_gateway.support.IntegrationTest;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -45,12 +46,31 @@ class GatewayProxyIT extends IntegrationTest {
 
         webTestClient.get().uri("/down-%s/x".formatted(id)).exchange()
                 .expectStatus().isEqualTo(HttpStatus.BAD_GATEWAY)
-                .expectBody(String.class).value(body -> assertThat(body).doesNotContain(String.valueOf(closedPort)));
+                .expectHeader().contentType(MediaType.APPLICATION_PROBLEM_JSON)
+                .expectBody(String.class).value(body -> assertThat(body)
+                        .doesNotContain(String.valueOf(closedPort))
+                        .contains("\"detail\":\"The service can't be reached\""));
 
         webTestClient.get().uri("/slow-%s/x".formatted(id)).exchange()
-                .expectStatus().isEqualTo(HttpStatus.GATEWAY_TIMEOUT);
+                .expectStatus().isEqualTo(HttpStatus.GATEWAY_TIMEOUT)
+                .expectBody().jsonPath("$.detail").isEqualTo("The service didn't answer in time");
 
         assertThat(awaitLog("/down-" + id).getResponseCode()).isEqualTo(502);
+    }
+
+    /**
+     * A path no route matches: 404 Problem Details, without the Spring "static resource" message
+     */
+    @Test
+    void noRouteIs404ProblemDetails() {
+        String path = "/no-route-%s/x".formatted(unique());
+        webTestClient.get().uri(path).exchange()
+                .expectStatus().isNotFound()
+                .expectHeader().contentType(MediaType.APPLICATION_PROBLEM_JSON)
+                .expectBody(String.class).value(body -> assertThat(body)
+                        .doesNotContainIgnoringCase("static resource")
+                        .contains("\"detail\":\"No route matches %s\"".formatted(path))
+                        .contains("\"instance\":\"%s\"".formatted(path)));
     }
 
     /**

@@ -5,6 +5,7 @@ import dev.root101.api_gateway.features.routes.logic.model.RouteConfigResponse;
 import dev.root101.api_gateway.features.routes.logic.usecase.RouteUseCase;
 import dev.root101.commons.validation.ValidationService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -42,10 +43,11 @@ public class RoutesController {
      * Create multiple routes at the same time
      *
      * @param routeDefinition List of routes to create
-     * @return Void
+     * @return The created routes
      */
-    @PostMapping("/multi-add")
-    public Mono<Void> addAllRoutes(@RequestBody List<RouteConfigRequest> routeDefinition) {
+    @PostMapping("/batch")
+    @ResponseStatus(HttpStatus.CREATED)
+    public Mono<List<RouteConfigResponse>> addAllRoutes(@RequestBody List<RouteConfigRequest> routeDefinition) {
         this.validationService.validate(routeDefinition);
 
         return routeUseCase.addAllRoutes(routeDefinition);
@@ -55,10 +57,10 @@ public class RoutesController {
      * Replace every route with the given ones, all or nothing
      *
      * @param routeDefinition The routes that will exist after the call
-     * @return Void
+     * @return The routes, as saved
      */
     @PutMapping
-    public Mono<Void> replaceAllRoutes(@RequestBody List<RouteConfigRequest> routeDefinition) {
+    public Mono<List<RouteConfigResponse>> replaceAllRoutes(@RequestBody List<RouteConfigRequest> routeDefinition) {
         this.validationService.validate(routeDefinition);
 
         return routeUseCase.replaceAllRoutes(routeDefinition);
@@ -68,10 +70,11 @@ public class RoutesController {
      * Add a single route
      *
      * @param routeDefinition The route to add
-     * @return Void
+     * @return The created route
      */
     @PostMapping
-    public Mono<Void> addRoute(@RequestBody RouteConfigRequest routeDefinition) {
+    @ResponseStatus(HttpStatus.CREATED)
+    public Mono<RouteConfigResponse> addRoute(@RequestBody RouteConfigRequest routeDefinition) {
         this.validationService.validate(routeDefinition);
 
         return routeUseCase.addRoute(routeDefinition);
@@ -81,7 +84,7 @@ public class RoutesController {
      * Get a route
      *
      * @param routeId The id of the route to find
-     * @return Void
+     * @return The route
      */
     @GetMapping("/{route-id}")
     public Mono<RouteConfigResponse> getRoute(@PathVariable("route-id") String routeId) {
@@ -93,10 +96,10 @@ public class RoutesController {
      *
      * @param routeId         The id of the route to edit
      * @param routeDefinition The new route data to set up
-     * @return Void
+     * @return The edited route
      */
     @PutMapping("/{route-id}")
-    public Mono<Void> editRoute(@PathVariable("route-id") String routeId, @RequestBody RouteConfigRequest routeDefinition) {
+    public Mono<RouteConfigResponse> editRoute(@PathVariable("route-id") String routeId, @RequestBody RouteConfigRequest routeDefinition) {
         this.validationService.validate(routeDefinition);
 
         return routeUseCase.editRoute(routeId, routeDefinition);
@@ -106,9 +109,10 @@ public class RoutesController {
      * Delete a route
      *
      * @param routeId The id of the route to delete
-     * @return Void
+     * @return Nothing (204)
      */
     @DeleteMapping("/{route-id}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
     public Mono<Void> deleteRoute(@PathVariable("route-id") String routeId) {
         return routeUseCase.deleteRoute(routeId);
     }

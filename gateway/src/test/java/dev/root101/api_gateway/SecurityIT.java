@@ -7,8 +7,11 @@ import org.junit.jupiter.params.provider.CsvSource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 
 import java.util.Map;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 class SecurityIT extends IntegrationTest {
 
@@ -22,11 +25,11 @@ class SecurityIT extends IntegrationTest {
             "GET, /routes",
             "GET, /routes/00000000-0000-0000-0000-000000000001",
             "POST, /routes",
-            "POST, /routes/multi-add",
+            "POST, /routes/batch",
             "PUT, /routes",
             "PUT, /routes/00000000-0000-0000-0000-000000000001",
             "DELETE, /routes/00000000-0000-0000-0000-000000000001",
-            "POST, /http-log/search",
+            "GET, /http-logs",
             "GET, /unknown",
     })
     void adminEndpointsRequireAuth(String method, String path) {
@@ -38,11 +41,16 @@ class SecurityIT extends IntegrationTest {
                 .exchange()
                 .expectStatus().isUnauthorized()
                 .expectHeader().valueEquals(HttpHeaders.ACCESS_CONTROL_ALLOW_ORIGIN, ORIGIN)
-                .expectHeader().doesNotExist(HttpHeaders.WWW_AUTHENTICATE);
+                .expectHeader().doesNotExist(HttpHeaders.WWW_AUTHENTICATE)
+                .expectHeader().contentType(MediaType.APPLICATION_PROBLEM_JSON)
+                .expectBody()
+                .jsonPath("$.status").isEqualTo(401)
+                .jsonPath("$.detail").isEqualTo("Authentication required")
+                .jsonPath("$.instance").isEqualTo("/" + ADMIN_PATH + path);
     }
 
     /**
-     * Malformed Basic → 401 (used to be a 500), wrong credentials → 403, both with CORS.
+     * Malformed Basic and wrong credentials → 401, both with CORS and a Problem Details body.
      */
     @Test
     void wrongCredentials() {
@@ -51,15 +59,18 @@ class SecurityIT extends IntegrationTest {
                 .header(HttpHeaders.AUTHORIZATION, "Basic %%%not-base64%%%")
                 .exchange()
                 .expectStatus().isUnauthorized()
-                .expectHeader().valueEquals(HttpHeaders.ACCESS_CONTROL_ALLOW_ORIGIN, ORIGIN);
+                .expectHeader().valueEquals(HttpHeaders.ACCESS_CONTROL_ALLOW_ORIGIN, ORIGIN)
+                .expectBody().jsonPath("$.detail").isEqualTo("Invalid Basic credentials");
 
         webTestClient.get().uri("/%s/routes".formatted(ADMIN_PATH))
                 .header(HttpHeaders.ORIGIN, ORIGIN)
                 .header("X-Forwarded-For", "192.0.2." + (int) (Math.random() * 200))
                 .header(HttpHeaders.AUTHORIZATION, "Basic " + HttpHeaders.encodeBasicAuth("admin", "wrong", null))
                 .exchange()
-                .expectStatus().isForbidden()
-                .expectHeader().valueEquals(HttpHeaders.ACCESS_CONTROL_ALLOW_ORIGIN, ORIGIN);
+                .expectStatus().isUnauthorized()
+                .expectHeader().valueEquals(HttpHeaders.ACCESS_CONTROL_ALLOW_ORIGIN, ORIGIN)
+                .expectHeader().contentType(MediaType.APPLICATION_PROBLEM_JSON)
+                .expectBody().jsonPath("$.detail").isEqualTo("Wrong username or password");
 
         webTestClient.get().uri("/%s/routes".formatted(ADMIN_PATH))
                 .header(HttpHeaders.ORIGIN, ORIGIN)
@@ -84,13 +95,14 @@ class SecurityIT extends IntegrationTest {
                 .bodyValue(Map.of("username", "admin", "password", "wrong"))
                 .exchange()
                 .expectStatus().isUnauthorized()
-                .expectHeader().valueEquals(HttpHeaders.ACCESS_CONTROL_ALLOW_ORIGIN, ORIGIN);
+                .expectHeader().valueEquals(HttpHeaders.ACCESS_CONTROL_ALLOW_ORIGIN, ORIGIN)
+                .expectBody().jsonPath("$.detail").isEqualTo("Wrong username or password");
 
         webTestClient.post().uri("/%s/auth/login".formatted(ADMIN_PATH))
                 .bodyValue(Map.of("username", "", "password", ""))
                 .exchange()
                 .expectStatus().isEqualTo(HttpStatus.UNPROCESSABLE_CONTENT)
-                .expectBody().jsonPath("$.length()").isEqualTo(2);
+                .expectBody().jsonPath("$.violations.length()").isEqualTo(2);
     }
 
     private String loginToken(String clientIp) {
@@ -99,18 +111,24 @@ class SecurityIT extends IntegrationTest {
                 .bodyValue(Map.of("username", ADMIN_USERNAME, "password", ADMIN_PASSWORD))
                 .exchange()
                 .expectStatus().isOk()
-                .expectBody(Map.class).returnResult().getResponseBody().get("token");
+                .expectBody(Map.class).returnResult().getResponseBody().get("access_token");
     }
 
     @Test
     void loginReturnsAToken() {
-        webTestClient.post().uri("/%s/auth/login".formatted(ADMIN_PATH))
+        long before = System.currentTimeMillis();
+        Map<?, ?> body = webTestClient.post().uri("/%s/auth/login".formatted(ADMIN_PATH))
                 .bodyValue(Map.of("username", ADMIN_USERNAME, "password", ADMIN_PASSWORD))
                 .exchange()
                 .expectStatus().isOk()
-                .expectBody()
-                .jsonPath("$.token").isNotEmpty()
-                .jsonPath("$.expires_in").isEqualTo(28800);
+                .expectBody(Map.class).returnResult().getResponseBody();
+
+        assertThat((String) body.get("access_token")).isNotEmpty();
+        assertThat(body.containsKey("token")).isFalse();
+        //8 h, in ms
+        assertThat(((Number) body.get("expires_in")).longValue()).isEqualTo(28_800_000L);
+        assertThat(((Number) body.get("expire_at")).longValue())
+                .isBetween(before + 28_800_000L, System.currentTimeMillis() + 28_800_000L);
     }
 
     /**
@@ -203,12 +221,14 @@ class SecurityIT extends IntegrationTest {
     }
 
     /**
-     * After max-failed-attempts (5 in the tests) wrong credentials from the same ip, that ip gets 429,
-     * even with the right credentials. Other ips are not affected.
+     * After max-failed-attempts (5 in the tests) wrong credentials from the same ip, that ip gets 429 with
+     * `Retry-After` on every credentials try (login and Basic), even with the right ones. A valid token and the
+     * health check keep working from that ip. Other ips are not affected.
      */
     @Test
     void lockoutAfterFailedAttempts() {
         String attackerIp = "198.51.100." + (int) (Math.random() * 200);
+        String token = loginToken(attackerIp);
         for (int i = 0; i < 5; i++) {
             webTestClient.post()
                     .uri("/%s/auth/login".formatted(ADMIN_PATH))
@@ -224,19 +244,43 @@ class SecurityIT extends IntegrationTest {
                 .header(HttpHeaders.AUTHORIZATION, adminAuth())
                 .exchange()
                 .expectStatus().isEqualTo(HttpStatus.TOO_MANY_REQUESTS)
-                .expectBody().jsonPath("$.detail").exists();
+                .expectHeader().value(HttpHeaders.RETRY_AFTER, value -> assertThat(Long.parseLong(value)).isPositive())
+                .expectHeader().contentType(MediaType.APPLICATION_PROBLEM_JSON)
+                .expectBody().jsonPath("$.detail").value(String.class,
+                        detail -> assertThat(detail).matches("Too many failed attempts, try again in \\d+ s"));
+
+        webTestClient.post()
+                .uri("/%s/auth/login".formatted(ADMIN_PATH))
+                .header("X-Forwarded-For", attackerIp)
+                .bodyValue(Map.of("username", ADMIN_USERNAME, "password", ADMIN_PASSWORD))
+                .exchange()
+                .expectStatus().isEqualTo(HttpStatus.TOO_MANY_REQUESTS)
+                .expectHeader().exists(HttpHeaders.RETRY_AFTER);
+
+        //not blocked: a valid token and the health check
+        webTestClient.get()
+                .uri("/%s/routes".formatted(ADMIN_PATH))
+                .header("X-Forwarded-For", attackerIp)
+                .header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
+                .exchange()
+                .expectStatus().isOk();
+        webTestClient.get()
+                .uri("/%s/health".formatted(ADMIN_PATH))
+                .header("X-Forwarded-For", attackerIp)
+                .exchange()
+                .expectStatus().isOk();
 
         admin(HttpMethod.GET, "/routes").exchange().expectStatus().isOk();
     }
 
     /**
-     * Health check: no auth, under the admin path. The actuator index is not exposed.
+     * Health check: no auth, under the admin path. No actuator.
      */
     @Test
     void healthCheck() {
         webTestClient.get().uri("/%s/health".formatted(ADMIN_PATH)).exchange()
                 .expectStatus().isOk()
-                .expectBody().jsonPath("$.status").isEqualTo("UP");
+                .expectBody().json("{\"status\":\"up\"}", org.springframework.test.json.JsonCompareMode.STRICT);
 
         webTestClient.get().uri("/%s".formatted(ADMIN_PATH)).exchange().expectStatus().isUnauthorized();
         admin(HttpMethod.GET, "/env").exchange().expectStatus().isNotFound();

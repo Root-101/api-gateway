@@ -15,5 +15,5 @@ public class HttpLogSearchResponse {
     private int totalPages;
     private long totalElements;
 
-    private List<HttpLogResponse> pageContent;
+    private List<HttpLogResponse> items;
 }

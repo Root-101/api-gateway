@@ -41,8 +41,9 @@ class GlobalExceptionHandlerTest {
                 .verifyComplete();
 
         assertThat(exchange.getResponse().getStatusCode()).isEqualTo(HttpStatus.INTERNAL_SERVER_ERROR);
-        assertThat(exchange.getResponse().getHeaders().getContentType()).isEqualTo(MediaType.parseMediaType("text/plain;charset=UTF-8"));
-        assertThat(exchange.getResponse().getBodyAsString().block()).isEqualTo("Internal server error");
+        assertThat(exchange.getResponse().getHeaders().getContentType()).isEqualTo(MediaType.APPLICATION_PROBLEM_JSON);
+        assertThat(exchange.getResponse().getBodyAsString().block()).isEqualTo(
+                "{\"type\":\"about:blank\",\"title\":\"Internal Server Error\",\"status\":500,\"detail\":\"Internal server error\",\"instance\":\"/any\"}");
     }
 
     @Test
@@ -73,15 +74,15 @@ class GlobalExceptionHandlerTest {
     static Stream<Arguments> errors() {
         return Stream.of(
                 Arguments.of(new ValidationException(new ValidationException.ValidationErrorMessage("name", "", "must not be blank")),
-                        HttpStatus.UNPROCESSABLE_CONTENT, "{\"source\":\"name\",\"invalid_value\":\"\",\"message\":\"must not be blank\"}"),
+                        HttpStatus.UNPROCESSABLE_CONTENT, "\"violations\":[{\"fieldName\":\"name\",\"message\":\"must not be blank\"}]"),
                 Arguments.of(new NotFoundException("Route does not exist: x"), HttpStatus.NOT_FOUND, "Route does not exist: x"),
                 Arguments.of(new DataIntegrityViolationException("duplicate key value violates unique constraint \"unique_route_name\""),
                         HttpStatus.CONFLICT, "Conflict with existing data"),
                 Arguments.of(new ResponseStatusException(HttpStatus.TOO_MANY_REQUESTS, "Too many"), HttpStatus.TOO_MANY_REQUESTS, "\"detail\":\"Too many\""),
-                Arguments.of(new ConnectException("Connection refused: /10.0.0.5:8081"), HttpStatus.BAD_GATEWAY, "Bad gateway"),
-                Arguments.of(new UnknownHostException("internal-host"), HttpStatus.BAD_GATEWAY, "Bad gateway"),
-                Arguments.of(new ConnectTimeoutException("connection timed out: /10.0.0.5:8081"), HttpStatus.GATEWAY_TIMEOUT, "Gateway timeout"),
-                Arguments.of(new TimeoutException("Did not observe any item"), HttpStatus.GATEWAY_TIMEOUT, "Gateway timeout")
+                Arguments.of(new ConnectException("Connection refused: /10.0.0.5:8081"), HttpStatus.BAD_GATEWAY, "The service can't be reached"),
+                Arguments.of(new UnknownHostException("internal-host"), HttpStatus.BAD_GATEWAY, "The service can't be reached"),
+                Arguments.of(new ConnectTimeoutException("connection timed out: /10.0.0.5:8081"), HttpStatus.GATEWAY_TIMEOUT, "The service didn't connect in time"),
+                Arguments.of(new TimeoutException("Did not observe any item"), HttpStatus.GATEWAY_TIMEOUT, "The service didn't answer in time")
         );
     }
 
@@ -92,12 +93,18 @@ class GlobalExceptionHandlerTest {
     }
 
     @Test
-    void stringBodyIsUtf8() {
+    void detailIsUtf8() {
         MockServerWebExchange exchange = exchange();
 
         handler.handle(exchange, new dev.root101.commons.exceptions.ConflictException("name already used: ñ")).block();
 
         assertThat(exchange.getResponse().getStatusCode()).isEqualTo(HttpStatus.CONFLICT);
-        assertThat(exchange.getResponse().getBodyAsString().block()).isEqualTo("name already used: ñ");
+        assertThat(exchange.getResponse().getBodyAsString().block()).contains("\"detail\":\"name already used: ñ\"");
+    }
+
+    @Test
+    void listFieldNamesDropTheRoot() {
+        assertThat(GlobalExceptionHandler.fieldName("root[0].name")).isEqualTo("[0].name");
+        assertThat(GlobalExceptionHandler.fieldName("rewrite_path.replace_from")).isEqualTo("rewrite_path.replace_from");
     }
 }

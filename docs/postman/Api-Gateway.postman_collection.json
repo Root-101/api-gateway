@@ -58,6 +58,10 @@
     {
       "key": "logs-to",
       "value": ""
+    },
+    {
+      "key": "login-token",
+      "value": ""
     }
   ],
   "item": [
@@ -107,11 +111,14 @@
                 "exec": [
                   "pm.test('status is 200', () => pm.response.to.have.status(200));",
                   "const r = pm.response.json();",
-                  "pm.test('returns a token', () => {",
-                  "    pm.expect(r.token).to.be.a('string').and.not.empty;",
-                  "    pm.expect(r.expires_in).to.be.above(0);",
+                  "pm.test('returns an access token', () => {",
+                  "    pm.expect(r).to.have.all.keys('access_token', 'expires_in', 'expire_at');",
+                  "    pm.expect(r.access_token).to.be.a('string').and.not.empty;",
+                  "    //milliseconds",
+                  "    pm.expect(r.expires_in).to.be.above(60 * 1000);",
+                  "    pm.expect(r.expire_at).to.be.above(Date.now());",
                   "});",
-                  "pm.collectionVariables.set('login-token', r.token);"
+                  "pm.collectionVariables.set('login-token', r.access_token);"
                 ]
               }
             }
@@ -197,7 +204,14 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('status is 401', () => pm.response.to.have.status(401));"
+                  "pm.test('status is 401', () => pm.response.to.have.status(401));",
+                  "pm.test('body is a Problem Details', () => {",
+                  "    pm.expect(pm.response.headers.get('Content-Type')).to.include('application/problem+json');",
+                  "    const p = pm.response.json();",
+                  "    pm.expect(p.status).to.eql(401);",
+                  "    pm.expect(p).to.include.all.keys('type', 'title', 'status', 'detail', 'instance');",
+                  "    pm.expect(p.detail).to.eql('Wrong username or password');",
+                  "});"
                 ]
               }
             }
@@ -229,7 +243,15 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('status is 401', () => pm.response.to.have.status(401));"
+                  "pm.test('status is 401', () => pm.response.to.have.status(401));",
+                  "pm.test('body is a Problem Details', () => {",
+                  "    pm.expect(pm.response.headers.get('Content-Type')).to.include('application/problem+json');",
+                  "    const p = pm.response.json();",
+                  "    pm.expect(p.status).to.eql(401);",
+                  "    pm.expect(p).to.include.all.keys('type', 'title', 'status', 'detail', 'instance');",
+                  "    pm.expect(p.detail).to.eql('Authentication required');",
+                  "});",
+                  "pm.test('no WWW-Authenticate (browser popup)', () => pm.response.to.not.have.header('WWW-Authenticate'));"
                 ]
               }
             }
@@ -273,7 +295,47 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('status is 403', () => pm.response.to.have.status(403));"
+                  "pm.test('status is 401', () => pm.response.to.have.status(401));",
+                  "pm.test('body is a Problem Details', () => {",
+                  "    pm.expect(pm.response.headers.get('Content-Type')).to.include('application/problem+json');",
+                  "    const p = pm.response.json();",
+                  "    pm.expect(p.status).to.eql(401);",
+                  "    pm.expect(p).to.include.all.keys('type', 'title', 'status', 'detail', 'instance');",
+                  "    pm.expect(p.detail).to.eql('Wrong username or password');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "health",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{gateway-url}}/{{gateway-admin-path}}/health",
+              "host": [
+                "{{gateway-url}}"
+              ],
+              "path": [
+                "{{gateway-admin-path}}",
+                "health"
+              ]
+            },
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 200', () => pm.response.to.have.status(200));",
+                  "pm.test('body: up', () => pm.expect(pm.response.json()).to.eql({status: 'up'}));"
                 ]
               }
             }
@@ -321,7 +383,16 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('status is 200', () => pm.response.to.have.status(200));"
+                  "pm.test('status is 201', () => pm.response.to.have.status(201));",
+                  "const r = pm.response.json();",
+                  "const run = pm.collectionVariables.get('run');",
+                  "pm.test('returns the created route', () => {",
+                  "    pm.expect(r.id).to.match(/^[0-9a-f-]{36}$/);",
+                  "    pm.expect(r.name).to.eql(`test-dev-${run}`);",
+                  "    pm.expect(r.rewrite_path).to.eql({replace_from: `/test-service-${run}/`, replace_to: '/'});",
+                  "    pm.expect(new Date(r.created_at).getTime()).to.not.be.NaN;",
+                  "});",
+                  "pm.collectionVariables.set('route-id', r.id);"
                 ]
               }
             }
@@ -365,7 +436,13 @@
                 "type": "text/javascript",
                 "exec": [
                   "pm.test('status is 409', () => pm.response.to.have.status(409));",
-                  "pm.test('body: Route already exists', () => pm.expect(pm.response.text()).to.include('Route already exists'));"
+                  "pm.test('body is a Problem Details', () => {",
+                  "    pm.expect(pm.response.headers.get('Content-Type')).to.include('application/problem+json');",
+                  "    const p = pm.response.json();",
+                  "    pm.expect(p.status).to.eql(409);",
+                  "    pm.expect(p).to.include.all.keys('type', 'title', 'status', 'detail', 'instance');",
+                  "    pm.expect(p.detail).to.include('Route already exists');",
+                  "});"
                 ]
               }
             }
@@ -409,10 +486,18 @@
                 "type": "text/javascript",
                 "exec": [
                   "pm.test('status is 422', () => pm.response.to.have.status(422));",
-                  "pm.test('body is a list of field errors', () => {",
-                  "    const errors = pm.response.json();",
-                  "    pm.expect(errors).to.be.an('array').that.is.not.empty;",
-                  "    errors.forEach(e => pm.expect(e).to.have.all.keys('source', 'invalid_value', 'message'));",
+                  "pm.test('body is a Problem Details', () => {",
+                  "    pm.expect(pm.response.headers.get('Content-Type')).to.include('application/problem+json');",
+                  "    const p = pm.response.json();",
+                  "    pm.expect(p.status).to.eql(422);",
+                  "    pm.expect(p).to.include.all.keys('type', 'title', 'status', 'detail', 'instance');",
+                  "    pm.expect(p.detail).to.eql('The request has invalid fields');",
+                  "});",
+                  "pm.test('violations name the JSON fields', () => {",
+                  "    const violations = pm.response.json().violations;",
+                  "    pm.expect(violations).to.be.an('array').that.is.not.empty;",
+                  "    violations.forEach(v => pm.expect(v).to.have.all.keys('fieldName', 'message'));",
+                  "    pm.expect(violations.map(v => v.fieldName)).to.include.members(['name', 'uri']);",
                   "});"
                 ]
               }
@@ -430,14 +515,14 @@
               }
             ],
             "url": {
-              "raw": "{{gateway-url}}/{{gateway-admin-path}}/routes/multi-add",
+              "raw": "{{gateway-url}}/{{gateway-admin-path}}/routes/batch",
               "host": [
                 "{{gateway-url}}"
               ],
               "path": [
                 "{{gateway-admin-path}}",
                 "routes",
-                "multi-add"
+                "batch"
               ]
             },
             "body": {
@@ -457,7 +542,17 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('status is 200', () => pm.response.to.have.status(200));"
+                  "pm.test('status is 201', () => pm.response.to.have.status(201));",
+                  "const routes = pm.response.json();",
+                  "const run = pm.collectionVariables.get('run');",
+                  "pm.test('returns the created routes, in order', () => {",
+                  "    pm.expect(routes).to.have.lengthOf(2);",
+                  "    pm.expect(routes[0].name).to.eql(`test-dev-a-${run}`);",
+                  "    pm.expect(routes[1].name).to.eql(`test-dev-b-${run}`);",
+                  "    pm.expect(routes[1].rewrite_path, 'route b without rewrite').to.be.null;",
+                  "});",
+                  "pm.collectionVariables.set('route-id-a', routes[0].id);",
+                  "pm.collectionVariables.set('route-id-b', routes[1].id);"
                 ]
               }
             }
@@ -501,7 +596,14 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('status is 409', () => pm.response.to.have.status(409));"
+                  "pm.test('status is 409', () => pm.response.to.have.status(409));",
+                  "pm.test('body is a Problem Details', () => {",
+                  "    pm.expect(pm.response.headers.get('Content-Type')).to.include('application/problem+json');",
+                  "    const p = pm.response.json();",
+                  "    pm.expect(p.status).to.eql(409);",
+                  "    pm.expect(p).to.include.all.keys('type', 'title', 'status', 'detail', 'instance');",
+                  "    pm.expect(p.detail).to.include('Duplicated route');",
+                  "});"
                 ]
               }
             }
@@ -522,7 +624,7 @@
                 "routes"
               ]
             },
-            "description": "Also saves the ids of the routes created by `create` and `create-all` for the next requests."
+            "description": "Every route, with the ones created by `create` and `create-all`."
           },
           "response": [],
           "event": [
@@ -539,19 +641,12 @@
                   "",
                   "const routes = pm.response.json();",
                   "pm.test('every route has the response shape', () => routes.forEach(isRoute));",
-                  "const byName = (name) => routes.find(r => r.name === name);",
-                  "const run = pm.collectionVariables.get('run');",
+                  "const byId = (id) => routes.find(r => r.id === id);",
                   "pm.test('created routes are listed', () => {",
-                  "    const created = byName(`test-dev-${run}`);",
-                  "    pm.expect(created, 'route of `create`').to.exist;",
-                  "    pm.expect(created.rewrite_path).to.eql({replace_from: `/test-service-${run}/`, replace_to: '/'});",
-                  "    pm.expect(byName(`test-dev-a-${run}`), 'route a of `create-all`').to.exist;",
-                  "    pm.expect(byName(`test-dev-b-${run}`).rewrite_path, 'route b without rewrite').to.be.null;",
-                  "});",
-                  "//ids for the next requests",
-                  "pm.collectionVariables.set('route-id', byName(`test-dev-${run}`).id);",
-                  "pm.collectionVariables.set('route-id-a', byName(`test-dev-a-${run}`).id);",
-                  "pm.collectionVariables.set('route-id-b', byName(`test-dev-b-${run}`).id);"
+                  "    pm.expect(byId(pm.collectionVariables.get('route-id')), 'route of `create`').to.exist;",
+                  "    pm.expect(byId(pm.collectionVariables.get('route-id-a')), 'route a of `create-all`').to.exist;",
+                  "    pm.expect(byId(pm.collectionVariables.get('route-id-b')), 'route b of `create-all`').to.exist;",
+                  "});"
                 ]
               }
             }
@@ -625,7 +720,50 @@
                 "type": "text/javascript",
                 "exec": [
                   "pm.test('status is 404', () => pm.response.to.have.status(404));",
-                  "pm.test('body: Route does not exist', () => pm.expect(pm.response.text()).to.include('Route does not exist'));"
+                  "pm.test('body is a Problem Details', () => {",
+                  "    pm.expect(pm.response.headers.get('Content-Type')).to.include('application/problem+json');",
+                  "    const p = pm.response.json();",
+                  "    pm.expect(p.status).to.eql(404);",
+                  "    pm.expect(p).to.include.all.keys('type', 'title', 'status', 'detail', 'instance');",
+                  "    pm.expect(p.detail).to.eql('Route does not exist: 00000000-0000-0000-0000-000000000001');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "get - invalid id",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{gateway-url}}/{{gateway-admin-path}}/routes/not-a-uuid",
+              "host": [
+                "{{gateway-url}}"
+              ],
+              "path": [
+                "{{gateway-admin-path}}",
+                "routes",
+                "not-a-uuid"
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 400', () => pm.response.to.have.status(400));",
+                  "pm.test('body is a Problem Details', () => {",
+                  "    pm.expect(pm.response.headers.get('Content-Type')).to.include('application/problem+json');",
+                  "    const p = pm.response.json();",
+                  "    pm.expect(p.status).to.eql(400);",
+                  "    pm.expect(p).to.include.all.keys('type', 'title', 'status', 'detail', 'instance');",
+                  "    pm.expect(p.detail).to.eql('Route id must be a UUID: not-a-uuid');",
+                  "});"
                 ]
               }
             }
@@ -669,7 +807,12 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('status is 200', () => pm.response.to.have.status(200));"
+                  "pm.test('status is 200', () => pm.response.to.have.status(200));",
+                  "const r = pm.response.json();",
+                  "pm.test('returns the edited route, same id', () => {",
+                  "    pm.expect(r.id).to.eql(pm.collectionVariables.get('route-id'));",
+                  "    pm.expect(r.name).to.eql(`test-dev-123-${pm.collectionVariables.get('run')}`);",
+                  "});"
                 ]
               }
             }
@@ -714,7 +857,13 @@
                 "type": "text/javascript",
                 "exec": [
                   "pm.test('status is 409', () => pm.response.to.have.status(409));",
-                  "pm.test('body: Route already exists', () => pm.expect(pm.response.text()).to.include('Route already exists'));"
+                  "pm.test('body is a Problem Details', () => {",
+                  "    pm.expect(pm.response.headers.get('Content-Type')).to.include('application/problem+json');",
+                  "    const p = pm.response.json();",
+                  "    pm.expect(p.status).to.eql(409);",
+                  "    pm.expect(p).to.include.all.keys('type', 'title', 'status', 'detail', 'instance');",
+                  "    pm.expect(p.detail).to.include('Route already exists');",
+                  "});"
                 ]
               }
             }
@@ -781,7 +930,8 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('status is 200', () => pm.response.to.have.status(200));"
+                  "pm.test('status is 204', () => pm.response.to.have.status(204));",
+                  "pm.test('no body', () => pm.expect(pm.response.text()).to.be.empty);"
                 ]
               }
             }
@@ -811,7 +961,8 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('status is 200', () => pm.response.to.have.status(200));"
+                  "pm.test('status is 204', () => pm.response.to.have.status(204));",
+                  "pm.test('no body', () => pm.expect(pm.response.text()).to.be.empty);"
                 ]
               }
             }
@@ -841,7 +992,8 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('status is 200', () => pm.response.to.have.status(200));"
+                  "pm.test('status is 204', () => pm.response.to.have.status(204));",
+                  "pm.test('no body', () => pm.expect(pm.response.text()).to.be.empty);"
                 ]
               }
             }
@@ -872,7 +1024,53 @@
                 "type": "text/javascript",
                 "exec": [
                   "pm.test('status is 404', () => pm.response.to.have.status(404));",
-                  "pm.test('body: Route does not exist', () => pm.expect(pm.response.text()).to.include('Route does not exist'));"
+                  "pm.test('body is a Problem Details', () => {",
+                  "    pm.expect(pm.response.headers.get('Content-Type')).to.include('application/problem+json');",
+                  "    const p = pm.response.json();",
+                  "    pm.expect(p.status).to.eql(404);",
+                  "    pm.expect(p).to.include.all.keys('type', 'title', 'status', 'detail', 'instance');",
+                  "    pm.expect(p.detail).to.include('Route does not exist');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "proxy - no route",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{gateway-url}}/no-route-{{run}}/x",
+              "host": [
+                "{{gateway-url}}"
+              ],
+              "path": [
+                "no-route-{{run}}",
+                "x"
+              ]
+            },
+            "auth": {
+              "type": "noauth"
+            },
+            "description": "A path that no route matches: `404` with the path in the detail."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 404', () => pm.response.to.have.status(404));",
+                  "pm.test('body is a Problem Details', () => {",
+                  "    pm.expect(pm.response.headers.get('Content-Type')).to.include('application/problem+json');",
+                  "    const p = pm.response.json();",
+                  "    pm.expect(p.status).to.eql(404);",
+                  "    pm.expect(p).to.include.all.keys('type', 'title', 'status', 'detail', 'instance');",
+                  "    pm.expect(p.detail).to.eql(`No route matches /no-route-${pm.collectionVariables.get('run')}/x`);",
+                  "});"
                 ]
               }
             }
@@ -886,33 +1084,37 @@
         {
           "name": "search",
           "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
+            "method": "GET",
+            "header": [],
             "url": {
-              "raw": "{{gateway-url}}/{{gateway-admin-path}}/http-log/search",
+              "raw": "{{gateway-url}}/{{gateway-admin-path}}/http-logs?page=0&size=20&from={{logs-from}}&to={{logs-to}}",
               "host": [
                 "{{gateway-url}}"
               ],
               "path": [
                 "{{gateway-admin-path}}",
-                "http-log",
-                "search"
+                "http-logs"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "0"
+                },
+                {
+                  "key": "size",
+                  "value": "20"
+                },
+                {
+                  "key": "from",
+                  "value": "{{logs-from}}"
+                },
+                {
+                  "key": "to",
+                  "value": "{{logs-to}}"
+                }
               ]
             },
-            "body": {
-              "mode": "raw",
-              "raw": "{\n    \"page\": 0,\n    \"size\": 20,\n    \"query\": \"\",\n    \"from_date\": \"{{logs-from}}\",\n    \"to_date\": \"{{logs-to}}\"\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            }
+            "description": "Every filter is optional (`page`, `size`, `status`, `method`, `query`, `route_id`, `from`, `to`); an empty one is no filter."
           },
           "response": [],
           "event": [
@@ -921,10 +1123,10 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "//last hour (the requests of this run included)",
+                  "//last hour (the requests of this run included); encoded, a `+` in the query is a space",
                   "const now = Date.now();",
-                  "pm.collectionVariables.set('logs-from', new Date(now - 60 * 60 * 1000).toISOString());",
-                  "pm.collectionVariables.set('logs-to', new Date(now + 60 * 1000).toISOString());"
+                  "pm.collectionVariables.set('logs-from', encodeURIComponent(new Date(now - 60 * 60 * 1000).toISOString()));",
+                  "pm.collectionVariables.set('logs-to', encodeURIComponent(new Date(now + 60 * 1000).toISOString()));"
                 ]
               }
             },
@@ -936,15 +1138,16 @@
                   "pm.test('status is 200', () => pm.response.to.have.status(200));",
                   "const page = pm.response.json();",
                   "pm.test('page shape', () => {",
-                  "    pm.expect(page).to.have.all.keys('page', 'size', 'total_pages', 'total_elements', 'page_content');",
+                  "    pm.expect(page).to.have.all.keys('page', 'size', 'total_pages', 'total_elements', 'items');",
                   "    pm.expect(page.page).to.eql(0);",
-                  "    pm.expect(page.page_content.length).to.be.at.most(20);",
+                  "    pm.expect(page.items.length).to.be.at.most(20);",
                   "});",
                   "pm.test('log shape', () => {",
                   "    pm.expect(page.total_elements, 'requests of this run are logged').to.be.above(0);",
-                  "    page.page_content.forEach(log => {",
+                  "    page.items.forEach(log => {",
                   "        pm.expect(log).to.include.all.keys('id', 'source_ip', 'requested_at', 'user_agent', 'http_method', 'path', 'response_code', 'request_duration', 'route');",
                   "        pm.expect(log.response_code).to.be.a('number');",
+                  "        pm.expect(log.requested_at, 'dates in UTC').to.match(/Z$/);",
                   "    });",
                   "});"
                 ]
@@ -953,34 +1156,77 @@
           ]
         },
         {
-          "name": "search - invalid response code",
+          "name": "search - by status, method and query",
           "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
+            "method": "GET",
+            "header": [],
             "url": {
-              "raw": "{{gateway-url}}/{{gateway-admin-path}}/http-log/search",
+              "raw": "{{gateway-url}}/{{gateway-admin-path}}/http-logs?status=4&method=post&query=ROUTES",
               "host": [
                 "{{gateway-url}}"
               ],
               "path": [
                 "{{gateway-admin-path}}",
-                "http-log",
-                "search"
+                "http-logs"
+              ],
+              "query": [
+                {
+                  "key": "status",
+                  "value": "4"
+                },
+                {
+                  "key": "method",
+                  "value": "post"
+                },
+                {
+                  "key": "query",
+                  "value": "ROUTES"
+                }
               ]
             },
-            "body": {
-              "mode": "raw",
-              "raw": "{\n    \"page\": 0,\n    \"size\": 20,\n    \"response_code\": \"abc\"\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
+            "description": "`status` is a prefix (`4` = 4xx); `method` and `query` ignore the case."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 200', () => pm.response.to.have.status(200));",
+                  "const page = pm.response.json();",
+                  "pm.test('only the failed POST /routes of this run and earlier', () => {",
+                  "    pm.expect(page.total_elements).to.be.above(0);",
+                  "    page.items.forEach(log => {",
+                  "        pm.expect(log.http_method).to.eql('POST');",
+                  "        pm.expect(log.response_code).to.be.within(400, 499);",
+                  "    });",
+                  "});"
+                ]
               }
+            }
+          ]
+        },
+        {
+          "name": "search - invalid status",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{gateway-url}}/{{gateway-admin-path}}/http-logs?status=abc",
+              "host": [
+                "{{gateway-url}}"
+              ],
+              "path": [
+                "{{gateway-admin-path}}",
+                "http-logs"
+              ],
+              "query": [
+                {
+                  "key": "status",
+                  "value": "abc"
+                }
+              ]
             }
           },
           "response": [],
@@ -991,7 +1237,13 @@
                 "type": "text/javascript",
                 "exec": [
                   "pm.test('status is 400', () => pm.response.to.have.status(400));",
-                  "pm.test('body: response_code must be a number', () => pm.expect(pm.response.text()).to.include('response_code must be a number'));"
+                  "pm.test('body is a Problem Details', () => {",
+                  "    pm.expect(pm.response.headers.get('Content-Type')).to.include('application/problem+json');",
+                  "    const p = pm.response.json();",
+                  "    pm.expect(p.status).to.eql(400);",
+                  "    pm.expect(p).to.include.all.keys('type', 'title', 'status', 'detail', 'instance');",
+                  "    pm.expect(p.detail).to.eql('status must be a number');",
+                  "});"
                 ]
               }
             }

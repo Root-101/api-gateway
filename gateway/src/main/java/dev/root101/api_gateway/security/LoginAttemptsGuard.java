@@ -40,6 +40,16 @@ public class LoginAttemptsGuard {
         return f != null && !expired(f, System.currentTimeMillis()) && f.count() >= maxFailedAttempts;
     }
 
+    /**
+     * Seconds until the lockout of this ip ends (0 if it isn't locked)
+     */
+    public long retryAfterSeconds(String clientIp) {
+        Failures f = failures.get(key(clientIp));
+        if (f == null || !isLocked(clientIp)) return 0;
+        long left = f.firstAtMillis() + windowMillis - System.currentTimeMillis();
+        return Math.max(1, (left + 999) / 1000);
+    }
+
     public void failed(String clientIp) {
         if (maxFailedAttempts <= 0) return;
         long now = System.currentTimeMillis();

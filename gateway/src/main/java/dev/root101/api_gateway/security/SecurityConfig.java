@@ -1,5 +1,6 @@
 package dev.root101.api_gateway.security;
 
+import dev.root101.api_gateway.config.GlobalExceptionHandler;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -10,7 +11,6 @@ import org.springframework.security.config.annotation.method.configuration.Enabl
 import org.springframework.security.config.web.server.SecurityWebFiltersOrder;
 import org.springframework.security.config.web.server.ServerHttpSecurity;
 import org.springframework.security.web.server.SecurityWebFilterChain;
-import org.springframework.security.web.server.authentication.HttpStatusServerEntryPoint;
 
 @Configuration
 @EnableReactiveMethodSecurity
@@ -23,20 +23,22 @@ public class SecurityConfig {
             AdminTokens adminTokens,
             LoginAttemptsGuard loginAttemptsGuard,
             @Value("${app.admin.base-path}") String adminBasePath,
-            @Value("${app.admin.role}") String adminRole
+            @Value("${app.admin.role}") String adminRole,
+            GlobalExceptionHandler errorHandler
     ) {
         String loginPathMatcher = "/%s/auth/login".formatted(adminBasePath);
         String healthPathMatcher = "/%s/health".formatted(adminBasePath);
         String adminPathMatchers = "/%s/**".formatted(adminBasePath);
         String adminCleanRole = adminRole.replaceFirst("ROLE_", "");
         //not a bean: as a bean/@Component, WebFlux would also register it in the global chain and run it twice
-        AdminAuthenticationWebFilter adminAuthenticationWebFilter = new AdminAuthenticationWebFilter(adminAuthenticationManager, adminTokens, loginAttemptsGuard, adminBasePath);
+        AdminAuthenticationWebFilter adminAuthenticationWebFilter = new AdminAuthenticationWebFilter(adminAuthenticationManager, adminTokens, loginAttemptsGuard, adminBasePath, errorHandler);
         return http
                 .csrf(ServerHttpSecurity.CsrfSpec::disable)                                       // Disable CSRF (this is a stateless api, don't need csrf)
                 .cors(Customizer.withDefaults())                                                  // Uses the CorsConfigurationSource bean, so 401/403 also get CORS headers
                 .exceptionHandling(exc -> exc
-                        // Plain 401: no `WWW-Authenticate: Basic` header, it makes browsers open the native login popup
-                        .authenticationEntryPoint(new HttpStatusServerEntryPoint(HttpStatus.UNAUTHORIZED))
+                        // Problem Details, and no `WWW-Authenticate: Basic` header: it makes browsers open the native login popup
+                        .authenticationEntryPoint((exchange, e) -> errorHandler.writeProblem(exchange, HttpStatus.UNAUTHORIZED, "Authentication required"))
+                        .accessDeniedHandler((exchange, e) -> errorHandler.writeProblem(exchange, HttpStatus.FORBIDDEN, "Not allowed"))
                 )
                 .authorizeExchange(
                         exchange -> exchange

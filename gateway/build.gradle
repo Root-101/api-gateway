@@ -31,8 +31,6 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-security'
     implementation 'org.springframework.boot:spring-boot-starter-webflux'
 
-    //health check
-    implementation 'org.springframework.boot:spring-boot-starter-actuator'
 
     //DB
     //versions of the libraries managed by spring boot come from its BOM

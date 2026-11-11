@@ -4,8 +4,12 @@ import dev.root101.api_gateway.features.http_logs.data.entity.HttpLogEntity;
 import dev.root101.api_gateway.features.http_logs.task.CleanUpOldLogs;
 import dev.root101.api_gateway.support.IntegrationTest;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
+import org.springframework.http.MediaType;
 
 import java.time.Duration;
 import java.time.OffsetDateTime;
@@ -82,15 +86,17 @@ class HttpLogsIT extends IntegrationTest {
     }
 
     /**
-     * NOT logged: admin `GET /routes*`, `/http-log*`, `OPTIONS` and the health check.
+     * NOT logged: admin `GET /routes*`, `/http-logs`, `OPTIONS` and the health check.
      * Logged: the rest of the admin requests (as the "Admin" route).
      */
     @Test
     void whatIsAndIsNotLogged() {
         String id = unique();
-        String marker = "/" + ADMIN_PATH + "/routes/00000000-0000-0000-0000-00000000" + id;
+        String marker = "/" + ADMIN_PATH + "/routes/00000000-0000-0000-0000-0000" + id;
 
         admin(HttpMethod.GET, "/routes").exchange().expectStatus().isOk();
+        admin(HttpMethod.GET, "/http-logs").exchange().expectStatus().isOk();
+        webTestClient.get().uri("/%s/health".formatted(ADMIN_PATH)).exchange().expectStatus().isOk();
         admin(HttpMethod.GET, marker.substring(ADMIN_PATH.length() + 1)).exchange().expectStatus().isNotFound();
         webTestClient.options().uri("/opt-%s/x".formatted(id)).exchange();
         //logged: a DELETE to the admin
@@ -105,12 +111,12 @@ class HttpLogsIT extends IntegrationTest {
         List<HttpLogEntity> logs = httpLogRepo.findAll().collectList().block();
         assertThat(logs).noneMatch(log -> log.getPath().equals(marker) && log.getHttpMethod().equals("GET"));
         assertThat(logs).noneMatch(log -> log.getPath().equals("/opt-%s/x".formatted(id)));
-        assertThat(logs).noneMatch(log -> log.getPath().startsWith("/" + ADMIN_PATH + "/http-log"));
+        assertThat(logs).noneMatch(log -> log.getPath().startsWith("/" + ADMIN_PATH + "/http-logs"));
         assertThat(logs).noneMatch(log -> log.getPath().equals("/" + ADMIN_PATH + "/health"));
     }
 
     /**
-     * Search with `size: null` is capped (max-search-size=2 in the tests), but totals are real.
+     * Search without `size` is capped (max-search-size=2 in the tests), but totals are real.
      * Every filter alone and combined, LIKE wildcards escaped, pagination and order by date desc.
      */
     @Test
@@ -130,58 +136,89 @@ class HttpLogsIT extends IntegrationTest {
         String routeId = routeId("search-" + id);
 
         //size cap and real totals
-        Map<String, Object> page = searchLogs(Map.of("page", 0, "query", "/se-" + id));
+        Map<String, Object> page = searchLogs(Map.of("query", "/se-" + id));
         assertThat(((Number) page.get("total_elements")).longValue()).isEqualTo(4);
         assertThat(page.get("total_pages")).isEqualTo(2);
+        assertThat(page.get("page")).isEqualTo(0);
         assertThat(page.get("size")).isEqualTo(2);
-        List<Map<String, Object>> content = (List<Map<String, Object>>) page.get("page_content");
-        assertThat(content).hasSize(2);
+        List<Map<String, Object>> items = (List<Map<String, Object>>) page.get("items");
+        assertThat(items).hasSize(2);
         //newest first
-        assertThat((String) content.get(0).get("requested_at")).isGreaterThanOrEqualTo((String) content.get(1).get("requested_at"));
-        assertThat(content.get(0)).containsKeys("id", "source_ip", "user_agent", "http_method", "path", "response_code", "request_duration", "route");
+        assertThat((String) items.get(0).get("requested_at")).isGreaterThanOrEqualTo((String) items.get(1).get("requested_at"));
+        assertThat(items.get(0)).containsKeys("id", "source_ip", "user_agent", "http_method", "path", "response_code", "request_duration", "route");
 
-        //pagination
-        Map<String, Object> second = searchLogs(Map.of("page", 1, "size", 2, "query", "/se-" + id));
-        assertThat((List<Object>) second.get("page_content")).hasSize(2);
+        //pagination, a size over the cap is capped too
+        Map<String, Object> second = searchLogs(Map.of("page", 1, "size", 50, "query", "/se-" + id));
+        assertThat((List<Object>) second.get("items")).hasSize(2);
+        assertThat(second.get("size")).isEqualTo(2);
 
-        //each filter
-        assertThat(totalLogs(Map.of("page", 0, "query", "/se-" + id, "response_code", 200))).isEqualTo(3);
-        assertThat(totalLogs(Map.of("page", 0, "query", "/se-" + id, "response_code", "500"))).isEqualTo(1);
+        //each filter, an empty one is no filter
+        assertThat(totalLogs(Map.of("query", "/se-" + id, "status", 200))).isEqualTo(3);
+        assertThat(totalLogs(Map.of("query", "/se-" + id, "status", "500"))).isEqualTo(1);
+        assertThat(totalLogs(Map.of("query", "/se-" + id, "status", "", "method", "", "route_id", ""))).isEqualTo(4);
         //fewer than 3 digits is a prefix
-        assertThat(totalLogs(Map.of("page", 0, "query", "/se-" + id, "response_code", "2"))).isEqualTo(3);
-        assertThat(totalLogs(Map.of("page", 0, "query", "/se-" + id, "response_code", "50"))).isEqualTo(1);
-        assertThat(totalLogs(Map.of("page", 0, "query", "/se-" + id, "response_code", "4"))).isZero();
-        assertThat(totalLogs(Map.of("page", 0, "query", "/se-" + id, "method", "POST"))).isEqualTo(1);
-        assertThat(totalLogs(Map.of("page", 0, "route_id", routeId))).isEqualTo(4);
-        assertThat(totalLogs(Map.of("page", 0, "query", id, "route_id", "NO-ROUTE"))).isEqualTo(1);
+        assertThat(totalLogs(Map.of("query", "/se-" + id, "status", "2"))).isEqualTo(3);
+        assertThat(totalLogs(Map.of("query", "/se-" + id, "status", "50"))).isEqualTo(1);
+        assertThat(totalLogs(Map.of("query", "/se-" + id, "status", "4"))).isZero();
+        assertThat(totalLogs(Map.of("query", "/se-" + id, "method", "POST"))).isEqualTo(1);
+        assertThat(totalLogs(Map.of("route_id", routeId))).isEqualTo(4);
+        assertThat(totalLogs(Map.of("query", id, "route_id", "NO-ROUTE"))).isEqualTo(1);
         //`_` would match any char if not escaped
-        assertThat(totalLogs(Map.of("page", 0, "query", "/se_" + id))).isZero();
+        assertThat(totalLogs(Map.of("query", "/se_" + id))).isZero();
 
-        //dates
+        //dates (the `+` of the offset must arrive encoded)
         String tomorrow = OffsetDateTime.now().plusDays(1).toString();
         String yesterday = OffsetDateTime.now().minusDays(1).toString();
-        assertThat(totalLogs(Map.of("page", 0, "route_id", routeId, "from_date", tomorrow))).isZero();
-        assertThat(totalLogs(Map.of("page", 0, "route_id", routeId, "to_date", yesterday))).isZero();
-        assertThat(totalLogs(Map.of("page", 0, "route_id", routeId, "from_date", yesterday, "to_date", tomorrow))).isEqualTo(4);
+        assertThat(totalLogs(Map.of("route_id", routeId, "from", tomorrow))).isZero();
+        assertThat(totalLogs(Map.of("route_id", routeId, "to", yesterday))).isZero();
+        assertThat(totalLogs(Map.of("route_id", routeId, "from", yesterday, "to", tomorrow))).isEqualTo(4);
 
         //combined
-        assertThat(totalLogs(Map.of("page", 0, "route_id", routeId, "method", "GET", "response_code", 200, "query", "item-1"))).isEqualTo(1);
+        assertThat(totalLogs(Map.of("route_id", routeId, "method", "GET", "status", 200, "query", "item-1"))).isEqualTo(1);
+    }
+
+    /**
+     * `method` and `query` don't care about the case
+     */
+    @Test
+    void searchIsCaseInsensitive() {
+        String id = unique();
+        createRoute(route("case-" + id, "case-" + id));
+        webTestClient.post().uri("/case-%s/Mixed-Path".formatted(id)).exchange().expectStatus().isOk();
+        awaitLog("/case-" + id + "/Mixed-Path");
+
+        assertThat(totalLogs(Map.of("query", "/CASE-" + id.toUpperCase() + "/mixed-path", "method", "post"))).isEqualTo(1);
+        assertThat(totalLogs(Map.of("query", "/case-" + id + "/MIXED-PATH", "method", "Post"))).isEqualTo(1);
+        assertThat(totalLogs(Map.of("query", "/case-" + id, "method", "get"))).isZero();
+    }
+
+    @ParameterizedTest
+    @CsvSource({
+            "status, abc, status must be a number",
+            "route_id, not-a-uuid, route_id must be a uuid or NO-ROUTE",
+            "page, -1, page must be 0 or more",
+            "size, 0, size must be 1 or more",
+    })
+    void searchWithInvalidParamIs400(String param, String value, String detail) {
+        webTestClient.get().uri("/%s/http-logs?%s=%s".formatted(ADMIN_PATH, param, value))
+                .header(HttpHeaders.AUTHORIZATION, adminAuth())
+                .exchange()
+                .expectStatus().isBadRequest()
+                .expectHeader().contentType(MediaType.APPLICATION_PROBLEM_JSON)
+                .expectBody()
+                .jsonPath("$.status").isEqualTo(400)
+                .jsonPath("$.detail").isEqualTo(detail)
+                .jsonPath("$.instance").isEqualTo("/%s/http-logs".formatted(ADMIN_PATH));
     }
 
     @Test
-    void searchWithNonNumericResponseCodeIs400() {
-        admin(HttpMethod.POST, "/http-log/search")
-                .bodyValue(Map.of("page", 0, "response_code", "abc"))
+    void searchWithInvalidDateIs400() {
+        webTestClient.get().uri("/%s/http-logs?from=yesterday".formatted(ADMIN_PATH))
+                .header(HttpHeaders.AUTHORIZATION, adminAuth())
                 .exchange()
-                .expectStatus().isBadRequest();
-    }
-
-    @Test
-    void searchWithInvalidRouteIdIs400() {
-        admin(HttpMethod.POST, "/http-log/search")
-                .bodyValue(Map.of("page", 0, "route_id", "not-a-uuid"))
-                .exchange()
-                .expectStatus().isBadRequest();
+                .expectStatus().isBadRequest()
+                .expectHeader().contentType(MediaType.APPLICATION_PROBLEM_JSON)
+                .expectBody().jsonPath("$.detail").isEqualTo("Invalid value for from");
     }
 
     /**

@@ -1,6 +1,5 @@
 package dev.root101.api_gateway.security;
 
-import dev.root101.commons.exceptions.ForbiddenException;
 import dev.root101.commons.exceptions.UnauthorizedException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -69,17 +68,17 @@ public class AdminAuthenticationManager implements ReactiveAuthenticationManager
         try {
             values = new String(Base64.getDecoder().decode(base64Credentials.trim()), StandardCharsets.UTF_8).split(":", 2);
         } catch (IllegalArgumentException e) {//not valid base64
-            return Mono.error(new UnauthorizedException());
+            return Mono.error(new UnauthorizedException("Invalid Basic credentials"));
         }
 
         if (values.length == 2 && values[0] != null && values[1] != null && !values[0].isBlank() && !values[1].isBlank()) {
             if (matches(values[0], values[1])) {
                 return Mono.just(adminAuthentication());
             } else {
-                return Mono.error(new ForbiddenException());
+                return Mono.error(new UnauthorizedException("Wrong username or password"));
             }
         } else {
-            return Mono.error(new UnauthorizedException());
+            return Mono.error(new UnauthorizedException("Invalid Basic credentials"));
         }
     }
 

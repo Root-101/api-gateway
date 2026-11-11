@@ -6,17 +6,20 @@ import dev.root101.api_gateway.features.routes.logic.model.RouteConfigRequest;
 import dev.root101.api_gateway.support.IntegrationTest;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.r2dbc.core.DatabaseClient;
 import org.springframework.test.web.reactive.server.WebTestClient;
 import org.testcontainers.postgresql.PostgreSQLContainer;
 import reactor.test.StepVerifier;
 
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Stream;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -34,7 +37,15 @@ class RoutesIT extends IntegrationTest {
                 new RewritePathModel("/abc-" + id + "/", "/"), "description"
         );
 
-        createRoute(request);
+        //201 with the created route, its id included
+        admin(HttpMethod.POST, "/routes").bodyValue(request).exchange()
+                .expectStatus().isCreated()
+                .expectBody()
+                //evaluated after the exchange: the route is already saved
+                .jsonPath("$.id").isEqualTo(routeId(request.getName()))
+                .jsonPath("$.name").isEqualTo(request.getName())
+                .jsonPath("$.rewrite_path.replace_to").isEqualTo("/")
+                .jsonPath("$.created_at").exists();
 
         StepVerifier.create(routeRepo.findByName(request.getName()))
                 .assertNext(routeEntity -> {
@@ -104,9 +115,61 @@ class RoutesIT extends IntegrationTest {
     void invalidRouteIs422WithFieldErrors(RouteConfigRequest request) {
         admin(HttpMethod.POST, "/routes").bodyValue(request).exchange()
                 .expectStatus().isEqualTo(HttpStatus.UNPROCESSABLE_CONTENT)
+                .expectHeader().contentType(MediaType.APPLICATION_PROBLEM_JSON)
                 .expectBody()
-                .jsonPath("$[0].source").exists()
-                .jsonPath("$[0].message").exists();
+                .jsonPath("$.status").isEqualTo(422)
+                .jsonPath("$.detail").isEqualTo("The request has invalid fields")
+                .jsonPath("$.instance").isEqualTo("/%s/routes".formatted(ADMIN_PATH))
+                .jsonPath("$.violations[0].fieldName").isNotEmpty()
+                .jsonPath("$.violations[0].message").isNotEmpty();
+    }
+
+    /**
+     * `fieldName` is the JSON path as the client sent it: snake_case, `[i].` in a list
+     */
+    @Test
+    void violationsNameTheJsonField() {
+        admin(HttpMethod.POST, "/routes")
+                .bodyValue(new RouteConfigRequest("n-" + unique(), "/x/**", "not a url", null, null))
+                .exchange()
+                .expectStatus().isEqualTo(HttpStatus.UNPROCESSABLE_CONTENT)
+                .expectBody()
+                .jsonPath("$.violations.length()").isEqualTo(1)
+                .jsonPath("$.violations[0].fieldName").isEqualTo("uri");
+
+        admin(HttpMethod.POST, "/routes/batch")
+                .bodyValue(List.of(route("ok-" + unique(), "ok-" + unique()), new RouteConfigRequest(" ", "/x/**", upstreamUrl(), null, null)))
+                .exchange()
+                .expectStatus().isEqualTo(HttpStatus.UNPROCESSABLE_CONTENT)
+                .expectBody()
+                .jsonPath("$.violations[0].fieldName").isEqualTo("[1].name");
+
+        admin(HttpMethod.POST, "/routes")
+                .bodyValue(new RouteConfigRequest("n-" + unique(), "/x/**", upstreamUrl(), new RewritePathModel("", "/"), null))
+                .exchange()
+                .expectStatus().isEqualTo(HttpStatus.UNPROCESSABLE_CONTENT)
+                .expectBody()
+                .jsonPath("$.violations[0].fieldName").isEqualTo("rewrite_path.replace_from");
+    }
+
+    /**
+     * A body that can't be read is a 400 naming the field, never the Java types
+     */
+    @Test
+    void unreadableBodyIs400() {
+        admin(HttpMethod.POST, "/routes")
+                .header("Content-Type", "application/json")
+                .bodyValue("{\"name\": [1, 2]}")
+                .exchange()
+                .expectStatus().isBadRequest()
+                .expectBody().jsonPath("$.detail").isEqualTo("Invalid value for name");
+
+        admin(HttpMethod.POST, "/routes")
+                .header("Content-Type", "application/json")
+                .bodyValue("{not json")
+                .exchange()
+                .expectStatus().isBadRequest()
+                .expectBody().jsonPath("$.detail").isEqualTo("The body is not valid JSON");
     }
 
     @Test
@@ -118,13 +181,13 @@ class RoutesIT extends IntegrationTest {
                 .expectStatus().isEqualTo(HttpStatus.CONFLICT);
 
         //duplicated inside the list
-        admin(HttpMethod.POST, "/routes/multi-add")
+        admin(HttpMethod.POST, "/routes/batch")
                 .bodyValue(List.of(route("m-" + id, "m1-" + id), route("m-" + id, "m2-" + id)))
                 .exchange()
                 .expectStatus().isEqualTo(HttpStatus.CONFLICT);
 
         //one of them already in db: nothing is created
-        admin(HttpMethod.POST, "/routes/multi-add")
+        admin(HttpMethod.POST, "/routes/batch")
                 .bodyValue(List.of(route("new-" + id, "new-" + id), route("dup-" + id, "x-" + id)))
                 .exchange()
                 .expectStatus().isEqualTo(HttpStatus.CONFLICT);
@@ -133,24 +196,29 @@ class RoutesIT extends IntegrationTest {
     }
 
     @Test
-    void multiAddCreatesAllTheRoutes() {
+    void batchCreatesAllTheRoutes() {
         String id = unique();
-        admin(HttpMethod.POST, "/routes/multi-add")
+        admin(HttpMethod.POST, "/routes/batch")
                 .bodyValue(List.of(route("ma1-" + id, "ma1-" + id), route("ma2-" + id, "ma2-" + id)))
                 .exchange()
-                .expectStatus().isOk();
+                .expectStatus().isCreated()
+                .expectBody()
+                .jsonPath("$.length()").isEqualTo(2)
+                .jsonPath("$[0].name").isEqualTo("ma1-" + id)
+                .jsonPath("$[0].id").isEqualTo(routeId("ma1-" + id))
+                .jsonPath("$[1].id").isEqualTo(routeId("ma2-" + id));
 
         webTestClient.get().uri("/ma1-%s/x".formatted(id)).exchange().expectStatus().isOk();
         webTestClient.get().uri("/ma2-%s/x".formatted(id)).exchange().expectStatus().isOk();
     }
 
     /**
-     * A db error in the middle of a multi-add (here forced with a trigger) must not leave half the routes saved.
+     * A db error in the middle of a batch (here forced with a trigger) must not leave half the routes saved.
      */
     @Test
-    void multiAddFailingHalfwayRollsBack() {
+    void batchFailingHalfwayRollsBack() {
         String id = unique();
-        whileBoomRoutesFailToInsert(() -> admin(HttpMethod.POST, "/routes/multi-add")
+        whileBoomRoutesFailToInsert(() -> admin(HttpMethod.POST, "/routes/batch")
                 .bodyValue(List.of(route("ok-" + id, "ok-" + id), route("boom-" + id, "boom-" + id)))
                 .exchange()
                 .expectStatus().isEqualTo(HttpStatus.CONFLICT));
@@ -179,27 +247,38 @@ class RoutesIT extends IntegrationTest {
     }
 
     /**
-     * A name that already exists is not a conflict, that route is being replaced.
+     * A name that already exists is not a conflict, that route is being replaced: it keeps its id and creation date.
+     * The others get new ids, the missing ones are deleted.
      */
     @Test
     void replaceSwapsAllTheRoutes() {
         String id = unique();
         createRoute(route("gone-" + id, "gone-" + id));
-        createRoute(route("kept-" + id, "before-" + id));
-        String oldId = routeId("kept-" + id);
+        String keptId = createRoute(route("kept-" + id, "before-" + id));
+        String keptCreatedAt = (String) admin(HttpMethod.GET, "/routes/" + keptId).exchange()
+                .expectBody(Map.class).returnResult().getResponseBody().get("created_at");
 
         admin(HttpMethod.PUT, "/routes")
                 .bodyValue(List.of(route("kept-" + id, "after-" + id), route("fresh-" + id, "fresh-" + id)))
                 .exchange()
                 .expectStatus().isOk()
-                .expectBody().isEmpty();
+                .expectBody()
+                .jsonPath("$.length()").isEqualTo(2)
+                .jsonPath("$[0].id").isEqualTo(keptId)
+                .jsonPath("$[0].path").isEqualTo("/after-" + id + "/**")
+                .jsonPath("$[0].created_at").isEqualTo(keptCreatedAt)
+                .jsonPath("$[1].name").isEqualTo("fresh-" + id)
+                .jsonPath("$[1].id").isEqualTo(routeId("fresh-" + id));
 
         webTestClient.get().uri("/gone-%s/x".formatted(id)).exchange().expectStatus().isNotFound();
         webTestClient.get().uri("/before-%s/x".formatted(id)).exchange().expectStatus().isNotFound();
         webTestClient.get().uri("/after-%s/x".formatted(id)).exchange().expectStatus().isOk();
         webTestClient.get().uri("/fresh-%s/x".formatted(id)).exchange().expectStatus().isOk();
         assertThat(routeRepo.count().block()).isEqualTo(2);
-        assertThat(routeId("kept-" + id)).isNotEqualTo(oldId);
+        assertThat(routeId("kept-" + id)).isEqualTo(keptId);
+        admin(HttpMethod.GET, "/routes/" + keptId).exchange()
+                .expectStatus().isOk()
+                .expectBody().jsonPath("$.created_at").isEqualTo(keptCreatedAt);
     }
 
     @Test
@@ -235,18 +314,35 @@ class RoutesIT extends IntegrationTest {
         webTestClient.get().uri("/ok-%s/x".formatted(id)).exchange().expectStatus().isNotFound();
     }
 
-    @Test
-    void unknownOrInvalidIdIs404() {
+    @ParameterizedTest
+    @CsvSource({"GET", "PUT", "DELETE"})
+    void unknownIdIs404(String method) {
+        String routeId = "00000000-0000-0000-0000-000000000001";
+        idRequest(method, routeId)
+                .expectStatus().isNotFound()
+                .expectHeader().contentType(MediaType.APPLICATION_PROBLEM_JSON)
+                .expectBody()
+                .jsonPath("$.title").isEqualTo("Not Found")
+                .jsonPath("$.detail").isEqualTo("Route does not exist: " + routeId)
+                .jsonPath("$.instance").isEqualTo("/%s/routes/%s".formatted(ADMIN_PATH, routeId));
+    }
+
+    @ParameterizedTest
+    @CsvSource({"GET", "PUT", "DELETE"})
+    void nonUuidIdIs400(String method) {
+        idRequest(method, "not-a-uuid")
+                .expectStatus().isBadRequest()
+                .expectHeader().contentType(MediaType.APPLICATION_PROBLEM_JSON)
+                .expectBody()
+                .jsonPath("$.detail").isEqualTo("Route id must be a UUID: not-a-uuid");
+    }
+
+    private WebTestClient.ResponseSpec idRequest(String method, String routeId) {
         String body = "{\"name\":\"n-%s\",\"path\":\"/n/**\",\"uri\":\"http://localhost:8080\"}".formatted(unique());
-        for (String routeId : List.of("00000000-0000-0000-0000-000000000001", "not-a-uuid")) {
-            admin(HttpMethod.GET, "/routes/" + routeId).exchange().expectStatus().isNotFound();
-            admin(HttpMethod.DELETE, "/routes/" + routeId).exchange().expectStatus().isNotFound();
-            admin(HttpMethod.PUT, "/routes/" + routeId)
-                    .header("Content-Type", "application/json")
-                    .bodyValue(body)
-                    .exchange()
-                    .expectStatus().isNotFound();
-        }
+        WebTestClient.RequestBodySpec request = admin(HttpMethod.valueOf(method), "/routes/" + routeId);
+        return method.equals("PUT")
+                ? request.header("Content-Type", "application/json").bodyValue(body).exchange()
+                : request.exchange();
     }
 
     /**
@@ -261,7 +357,10 @@ class RoutesIT extends IntegrationTest {
         admin(HttpMethod.PUT, "/routes/" + routeId("edit-" + id))
                 .bodyValue(rewriteRoute("edit-" + id, "after-" + id))
                 .exchange()
-                .expectStatus().isOk();
+                .expectStatus().isOk()
+                .expectBody()
+                .jsonPath("$.id").isEqualTo(routeId("edit-" + id))
+                .jsonPath("$.path").isEqualTo("/after-" + id + "/**");
 
         webTestClient.get().uri("/before-%s/x".formatted(id)).exchange().expectStatus().isNotFound();
         webTestClient.get().uri("/after-%s/y".formatted(id)).exchange()
@@ -298,7 +397,8 @@ class RoutesIT extends IntegrationTest {
         webTestClient.get().uri("/du-%s/x".formatted(id)).exchange().expectStatus().isOk();
 
         admin(HttpMethod.DELETE, "/routes/" + routeId("delete-upper-" + id).toUpperCase()).exchange()
-                .expectStatus().isOk();
+                .expectStatus().isNoContent()
+                .expectBody().isEmpty();
 
         webTestClient.get().uri("/du-%s/x".formatted(id)).exchange().expectStatus().isNotFound();
         assertThat(routeRepo.findByName("delete-upper-" + id).block()).isNull();

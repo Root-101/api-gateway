@@ -14,35 +14,34 @@ public interface RouteUseCase {
      * Add a single route
      *
      * @param request The route to add
-     * @return Void
+     * @return The created route
      */
-    Mono<Void> addRoute(RouteConfigRequest request);
+    Mono<RouteConfigResponse> addRoute(RouteConfigRequest request);
 
     /**
      * Create multiple routes at the same time
      *
      * @param requests List of routes to create
-     * @return Void
+     * @return The created routes
      */
-    Mono<Void> addAllRoutes(List<RouteConfigRequest> requests);
+    Mono<List<RouteConfigResponse>> addAllRoutes(List<RouteConfigRequest> requests);
 
     /**
-     * Replace every route with the given ones, all or nothing. The new routes get new ids.
+     * Replace every route with the given ones, all or nothing. A route whose name already exists keeps its id.
      *
      * @param requests The routes that will exist after the call
-     * @return Void
+     * @return The routes, as saved
      */
-    Mono<Void> replaceAllRoutes(List<RouteConfigRequest> requests);
+    Mono<List<RouteConfigResponse>> replaceAllRoutes(List<RouteConfigRequest> requests);
 
     /**
-     * Edit a route. Since the edit is not allowed in `RouteDefinitionWriter` this logic
-     * delete the old route, create a new one and update the context.
+     * Edit a route, keeping its id
      *
-     * @param routeId The id of the old route
+     * @param routeId The id of the route
      * @param request The new config of route
-     * @return void
+     * @return The edited route
      */
-    Mono<Void> editRoute(String routeId, RouteConfigRequest request);
+    Mono<RouteConfigResponse> editRoute(String routeId, RouteConfigRequest request);
 
     /**
      * Find a route by its id, or null if it's not found

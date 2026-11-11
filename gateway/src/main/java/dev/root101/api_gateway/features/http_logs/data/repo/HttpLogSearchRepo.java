@@ -29,26 +29,26 @@ public class HttpLogSearchRepo {
         Criteria criteria = Criteria.empty();
 
         if (request.getMethod() != null && !request.getMethod().isBlank()) {
-            criteria = criteria.and("httpMethod").like(contains(request.getMethod()));
+            criteria = criteria.and(Criteria.where("httpMethod").like(contains(request.getMethod())).ignoreCase(true));
         }
-        if (request.getResponseCode() != null && !request.getResponseCode().isBlank()) {
+        if (request.getStatus() != null && !request.getStatus().isBlank()) {
             try {
-                int[] range = responseCodeRange(request.getResponseCode().trim());
+                int[] range = responseCodeRange(request.getStatus().trim());
                 criteria = criteria.and("responseCode")
                         .greaterThanOrEquals(range[0])
                         .and("responseCode")
                         .lessThanOrEquals(range[1]);
             } catch (NumberFormatException e) {
-                throw new BadRequestException("response_code must be a number");
+                throw new BadRequestException("status must be a number");
             }
         }
         if (request.getQuery() != null && !request.getQuery().isBlank()) {
             String likeQuery = contains(request.getQuery());
 
-            Criteria orCriteria = Criteria.where("sourceIp").like(likeQuery)
-                    .or("userAgent").like(likeQuery)
-                    .or("path").like(likeQuery)
-                    .or("rawRoute").like(likeQuery);
+            Criteria orCriteria = Criteria.where("sourceIp").like(likeQuery).ignoreCase(true)
+                    .or(Criteria.where("userAgent").like(likeQuery).ignoreCase(true))
+                    .or(Criteria.where("path").like(likeQuery).ignoreCase(true))
+                    .or(Criteria.where("rawRoute").like(likeQuery).ignoreCase(true));
 
             criteria = criteria.and(orCriteria);
         }
@@ -64,15 +64,11 @@ public class HttpLogSearchRepo {
             }
         }
 
-        if (request.getFromDate() != null && request.getToDate() != null) {
-            criteria = criteria.and("requestedAt")
-                    .greaterThanOrEquals(request.getFromDate())
-                    .and("requestedAt")
-                    .lessThanOrEquals(request.getToDate());
-        } else if (request.getFromDate() != null) {
-            criteria = criteria.and("requestedAt").greaterThanOrEquals(request.getFromDate());
-        } else if (request.getToDate() != null) {
-            criteria = criteria.and("requestedAt").lessThanOrEquals(request.getToDate());
+        if (request.getFrom() != null) {
+            criteria = criteria.and("requestedAt").greaterThanOrEquals(request.getFrom());
+        }
+        if (request.getTo() != null) {
+            criteria = criteria.and("requestedAt").lessThanOrEquals(request.getTo());
         }
 
         PageRequest pageRequest = PageRequest.of(

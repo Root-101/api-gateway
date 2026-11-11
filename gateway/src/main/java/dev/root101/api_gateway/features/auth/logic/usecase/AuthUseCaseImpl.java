@@ -39,7 +39,8 @@ class AuthUseCaseImpl implements AuthUseCase {
                 .then(
                         Mono.defer(() -> {
                             if (adminAuthenticationManager.matches(request.getUsername(), request.getPassword())) {
-                                return Mono.just(new LoginResponse(adminTokens.issue(), adminTokens.ttlSeconds()));
+                                String token = adminTokens.issue();
+                                return Mono.just(new LoginResponse(token, adminTokens.ttlMillis(), adminTokens.expireAt(token)));
                             } else {
                                 return Mono.error(new UnauthorizedException("Wrong username or password"));
                             }

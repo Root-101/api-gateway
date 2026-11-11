@@ -28,7 +28,7 @@ class CustomAdminPathIT extends IntegrationTest {
                 .header(HttpHeaders.AUTHORIZATION, adminAuth())
                 .bodyValue(route("old-admin-" + id, "_admin/" + id))
                 .exchange()
-                .expectStatus().isOk();
+                .expectStatus().isCreated();
         webTestClient.get().uri("/_admin/%s/x".formatted(id)).exchange()
                 .expectStatus().isOk()
                 .expectBody(String.class).value(body -> assertThat(body).startsWith("/_admin/%s/x|".formatted(id)));

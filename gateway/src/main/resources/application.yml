@@ -12,7 +12,7 @@ spring:
     #Variables must be available at compile time (since we started using the native image in v4.1.0), so they are set by default and then overridden with the real values
     url: r2dbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:api-gateway}          #r2dbc:postgresql:/host:port/db-name
     username: ${DB_USERNAME:postgres}                                                            #postgres
-    password: ${DB_PASSWORD:${app.defaults.db-password}}                                           #admin123
+    password: ${DB_PASSWORD:${app.defaults.db-password}}                                         #admin123
     pool:
       enabled: true
 
@@ -35,17 +35,6 @@ spring:
     user: ${DB_USERNAME:postgres}
     password: ${DB_PASSWORD:${app.defaults.db-password}}
     locations: classpath:db/migration
-
-management:
-  endpoints:
-    web:
-      #health check in `/{ADMIN_PATH}/health` (no auth): under the admin path so it never shadows a proxied `/actuator/**` route
-      base-path: /${ADMIN_PATH:_admin}
-      exposure:
-        include: health
-  endpoint:
-    health:
-      show-details: never
 
 app:
   defaults:

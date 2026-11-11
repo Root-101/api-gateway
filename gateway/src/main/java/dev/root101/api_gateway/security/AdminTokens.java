@@ -40,8 +40,15 @@ public class AdminTokens {
         return expiration != null && System.currentTimeMillis() < expiration;
     }
 
-    public long ttlSeconds() {
-        return ttlMillis / 1000;
+    public long ttlMillis() {
+        return ttlMillis;
+    }
+
+    /**
+     * When the token expires, as epoch milliseconds (0 if unknown)
+     */
+    public long expireAt(String token) {
+        return expirations.getOrDefault(token, 0L);
     }
 
     @Scheduled(fixedDelay = 60_000)

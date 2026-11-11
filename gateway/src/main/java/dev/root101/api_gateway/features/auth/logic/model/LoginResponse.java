@@ -1,8 +1,9 @@
 package dev.root101.api_gateway.features.auth.logic.model;
 
 /**
- * @param token     To send as `Authorization: Bearer {token}`
- * @param expiresIn Seconds until the token expires
+ * @param accessToken To send as `Authorization: Bearer {access_token}`
+ * @param expiresIn   Milliseconds the token is valid for
+ * @param expireAt    When it expires, as epoch milliseconds
  */
-public record LoginResponse(String token, long expiresIn) {
+public record LoginResponse(String accessToken, long expiresIn, long expireAt) {
 }

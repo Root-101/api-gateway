@@ -30,6 +30,8 @@ public class HttpLogUseCaseImpl implements HttpLogUseCase {
 
     private final int maxSearchSize;
 
+    private static final int DEFAULT_PAGE_SIZE = 50;
+
     public HttpLogUseCaseImpl(
             HttpLogWriter writer, HttpLogSearchRepo searchRepo,
             ValidationService vs,
@@ -109,17 +111,13 @@ public class HttpLogUseCaseImpl implements HttpLogUseCase {
 
     @Override
     public Mono<HttpLogSearchResponse> search(HttpLogSearchRequest request) {
-        Integer originalSize = request.getSize();
-
-        //null size means "all", but capped so a big table can't be loaded fully in memory
-        int realSize = originalSize != null ? Math.min(originalSize, maxSearchSize) : maxSearchSize;
+        //capped so a big table can't be loaded fully in memory
+        int realSize = Math.min(request.getSize() != null ? request.getSize() : DEFAULT_PAGE_SIZE, maxSearchSize);
 
         return searchRepo.search(request, realSize)
                 .map(page -> new HttpLogSearchResponse(
                         page.getNumber(),                // current page
-                        originalSize == null
-                                ? (int) Math.min(page.getTotalElements(), realSize)
-                                : page.getSize(),        // page size
+                        page.getSize(),                  // page size
                         page.getTotalPages(),            // total pages
                         page.getTotalElements(),         // total elements
                         page                             // page content
