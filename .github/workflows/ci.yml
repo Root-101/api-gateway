@@ -85,7 +85,7 @@ jobs:
       - name: Postman collection
         run: |
           curl -o- "https://dl-cli.pstmn.io/install/linux64.sh" | sh
-          postman collection run doc/Api-Gateway.postman_collection.json -e "doc/Api-Gateway - Local.postman_environment.json" --no-report-events
+          postman collection run docs/postman/Api-Gateway.postman_collection.json -e "docs/postman/Api-Gateway - Local.postman_environment.json" --no-report-events
       # a route the gateway can't build still answers 200 to the api, it only shows up here
       - name: No route build errors in the log
         if: always()

@@ -20,7 +20,7 @@ Rules:
 - [ ] Gateway: **HTTP/2 and gRPC** support, for a later version (not 6.0.0). gRPC needs HTTP/2 end
   to end (trailers, multiplexed streams): enable it on the gateway server (`server.http2.enabled`)
   and on the client to the upstreams, check the Railway edge forwards HTTP/2 to the container, and
-  check the http logs filter with long-lived streams. Then update README section 7.1.
+  check the http logs filter with long-lived streams. Then update *Supported protocols* in the README.
 - [ ] Gateway: mutation testing with **PIT** on the routes and logs logic, to measure test quality
   beyond coverage.
 
