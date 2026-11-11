@@ -65,6 +65,7 @@
         * **Auth** :lock: : The session expired dialog shows and hides the password, like the login, and says the
           credentials come from `ADMIN_USERNAME` and `ADMIN_PASSWORD`.
         * **Routes** :twisted_rightwards_arrows: : The route form, in three steps (General, Forwarding, Path rewrite) with a compact stepper in the footer. A preview like the card in Routes stays on top and fills in while typing, with a pencil per value that opens its field. Duplicate shows the original route as a chip next to the title, with its warning in a popup. Each Next is checked by the gateway (`POST /routes/validate`): the form no longer keeps its own copy of the rules. The dialog takes the whole height.
+        * **Language** :globe_with_meridians: : Every request sends `Accept-Language` with the language of the console, so the gateway answers its validation errors in that language (needs the gateway `6.0.0`).
         * **Logs** :memo: : The details of a log without a route show `No-Route` in the selected language, like the
           table, instead of `NO-ROUTE`.
         * **Docs** :books: : README screenshots now come from `docs/design/screens` and link to `docs/console.md`.
