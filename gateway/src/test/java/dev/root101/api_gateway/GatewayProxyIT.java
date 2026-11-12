@@ -74,29 +74,39 @@ class GatewayProxyIT extends IntegrationTest {
     }
 
     /**
-     * Proxied responses keep the CORS policy of their own service: the gateway adds none and doesn't
-     * replace the upstream's (it used to reflect any origin with credentials on every route).
+     * Proxied routes get the gateway's CORS (`CORS_ALLOWED_ORIGINS`, no credentials), also on the preflight
+     * (WebFlux never forwards it to the route). The upstream's own CORS headers are dropped, not duplicated.
      */
     @Test
-    void proxiedResponsesKeepTheUpstreamCors() {
+    void proxiedResponsesGetTheGatewayCors() {
         String id = unique();
-        String origin = "http://evil.example.com";
+        String origin = "http://web.example.com";
         createRoute(route("cors-" + id, "cors-" + id));
 
+        webTestClient.options().uri("/cors-%s/x".formatted(id))
+                .header(HttpHeaders.ORIGIN, origin)
+                .header(HttpHeaders.ACCESS_CONTROL_REQUEST_METHOD, "POST")
+                .header(HttpHeaders.ACCESS_CONTROL_REQUEST_HEADERS, "content-type")
+                .exchange()
+                .expectStatus().isOk()
+                .expectHeader().valueEquals(HttpHeaders.ACCESS_CONTROL_ALLOW_ORIGIN, origin)
+                .expectHeader().exists(HttpHeaders.ACCESS_CONTROL_ALLOW_METHODS);
+
+        //the upstream sends its own CORS: the gateway's replace them
         webTestClient.get().uri("/cors-%s/x".formatted(id))
                 .header(HttpHeaders.ORIGIN, origin)
                 .exchange()
                 .expectStatus().isOk()
-                .expectHeader().valueEquals(HttpHeaders.ACCESS_CONTROL_ALLOW_ORIGIN, "http://upstream.example.com");
+                .expectHeader().valueEquals(HttpHeaders.ACCESS_CONTROL_ALLOW_ORIGIN, origin)
+                .expectHeader().doesNotExist(HttpHeaders.ACCESS_CONTROL_ALLOW_CREDENTIALS);
 
-        //an upstream without CORS stays without CORS
+        //an upstream without CORS gets the gateway's
         createRoute(route("nocors-" + id, "nocors-" + id));
         webTestClient.get().uri("/nocors-%s/x".formatted(id))
                 .header(HttpHeaders.ORIGIN, origin)
                 .exchange()
                 .expectStatus().isOk()
-                .expectHeader().doesNotExist(HttpHeaders.ACCESS_CONTROL_ALLOW_ORIGIN)
-                .expectHeader().doesNotExist(HttpHeaders.ACCESS_CONTROL_ALLOW_CREDENTIALS);
+                .expectHeader().valueEquals(HttpHeaders.ACCESS_CONTROL_ALLOW_ORIGIN, origin);
     }
 
     /**

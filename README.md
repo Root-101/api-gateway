@@ -150,7 +150,7 @@ Environment variables of the gateway, read on start:
 | `DB_USERNAME`, `DB_PASSWORD`  | `postgres`, `admin123`   | Its user and password; change the password                                                                 |
 | `MAINTAIN_LOGS_FOR_DAYS`      | `14`                     | Days the HTTP logs are kept; older ones are deleted every night                                            |
 | `MAX_LOGS_SEARCH_SIZE`        | `10000`                  | The biggest page a log search returns                                                                      |
-| `CORS_ALLOWED_ORIGINS`        | `*`                      | Origins allowed to call the admin API, comma separated (`https://*.example.com`): the console's, at least. Proxied paths keep their service's CORS |
+| `CORS_ALLOWED_ORIGINS`        | `*`                      | Origins allowed by CORS, comma separated (`https://*.example.com`): the console's, at least. Applies to the admin API and every proxied route; the services' own CORS headers are replaced |
 | `GATEWAY_CONNECT_TIMEOUT_MS`  | `10000`                  | Wait to connect to a service (`504` after it)                                                              |
 | `GATEWAY_RESPONSE_TIMEOUT`    | `60s`                    | Wait for a service to start answering (`504` after it); empty for no limit, for slow exports or long polling |
 | `PORT`                        | `8080`                   | Port of the gateway                                                                                        |

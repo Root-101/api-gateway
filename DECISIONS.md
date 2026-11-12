@@ -145,15 +145,18 @@ change, so its logs, and links to it, still find it.
 The same rules as the other Root-101 services: a client knows what came out of each call without
 reading the list again.
 
-## 15. CORS only for the admin API
+## 15. One CORS policy for every path, without credentials
 
-The CORS policy (`CORS_ALLOWED_ORIGINS`) applies to `/{ADMIN_PATH}/**` only, without credentials.
+The CORS policy (`CORS_ALLOWED_ORIGINS`, `*` by default) applies to every path, the admin API and
+the proxied routes, without credentials. The `Access-Control-*` headers a service sends are dropped:
+the gateway's are the only ones.
 
-It is there for the console, which calls the admin API from another origin with a Bearer header.
-Applied to every path with credentials, as it was before 6.0.0, it reflected any origin on the
-responses of every proxied service and replaced their own CORS headers: any page could read a
-cookie-authenticated service through the gateway. Proxied responses now pass with the service's
-CORS headers untouched.
+Leaving the proxied routes to their services doesn't work: Spring answers the CORS preflights in
+the handler mapping and never forwards them to the route, so a browser couldn't send a JSON request
+to any service. Keeping both sets of headers is no option either: two `Access-Control-Allow-Origin`
+and the browser blocks the response. Without credentials, unlike before 6.0.0, a page can't read a
+cookie-authenticated service through the gateway. A CORS policy per route is a
+[possible improvement](ROADMAP.md#possible-improvements).
 
 ## 16. Rejected admin requests are logged
 

@@ -203,7 +203,7 @@ class SecurityIT extends IntegrationTest {
 
     /**
      * Preflight requests to the admin answer with CORS and no auth, without credentials (the console sends
-     * a header, never a cookie). Proxied paths get no CORS from the gateway: that is each service's policy.
+     * a header, never a cookie). Proxied paths get the same CORS.
      */
     @Test
     void preflightWithoutAuth() {
@@ -221,7 +221,8 @@ class SecurityIT extends IntegrationTest {
                 .header(HttpHeaders.ORIGIN, ORIGIN)
                 .header(HttpHeaders.ACCESS_CONTROL_REQUEST_METHOD, "POST")
                 .exchange()
-                .expectHeader().doesNotExist(HttpHeaders.ACCESS_CONTROL_ALLOW_ORIGIN);
+                .expectStatus().isOk()
+                .expectHeader().valueEquals(HttpHeaders.ACCESS_CONTROL_ALLOW_ORIGIN, ORIGIN);
     }
 
     /**

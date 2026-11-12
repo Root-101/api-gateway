@@ -68,9 +68,10 @@ Content-Type: application/problem+json
 
 `Retry-After` is the seconds left in the window; `detail` says it in minutes, rounded up (in seconds under one minute).
 
-CORS applies to the admin API only (`/_admin/**`): the origins of `CORS_ALLOWED_ORIGINS` (`*` by
-default), any method and any header, without credentials (tokens go in a header, never a cookie).
-Proxied paths get no CORS headers from the gateway: each service keeps its own policy.
+CORS applies to every path, the admin API and the proxied routes: the origins of
+`CORS_ALLOWED_ORIGINS` (`*` by default), any method and any header, without credentials (tokens go
+in a header, never a cookie). The gateway answers the preflights itself, and the `Access-Control-*`
+headers a service sends are replaced by the gateway's.
 
 ## Errors
 
@@ -669,8 +670,8 @@ goes to `https://httpbin.org/get?page=2`, which answers:
 
 The method, the query string, the headers and the body go through; the `Host` becomes the
 service's. The answer of the service comes back as it is, with its status, headers and body,
-CORS included: the gateway adds no CORS headers to proxied traffic. The service handles its own
-auth.
+except its `Access-Control-*` headers: the gateway's [CORS](#authentication) replace them. The service
+handles its own auth.
 
 When something fails on the way, the gateway answers by itself, with a [Problem Details](#errors)
 that never shows the host or port of the service:

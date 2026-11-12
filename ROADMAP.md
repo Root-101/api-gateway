@@ -73,5 +73,9 @@ and GraalVM reflection hints for the predicates and filters it uses.
   to end (trailers, multiplexed streams): enable it on the gateway server (`server.http2.enabled`)
   and on the client to the upstreams, check the Railway edge forwards HTTP/2 to the container, and
   check the http logs filter with long-lived streams. Then update *Supported protocols* in the README.
+- [ ] Gateway: **CORS per route**: today one policy (`CORS_ALLOWED_ORIGINS`) for every path, and
+  the services' own CORS headers are replaced. Let each route keep its service's CORS (forward the
+  preflight to the upstream instead of answering it in the gateway) or set its own origins, and
+  maybe edit them from the admin API and the console. See decision 15 in `DECISIONS.md`.
 - [ ] Gateway: mutation testing with **PIT** on the routes and logs logic, to measure test quality
   beyond coverage.
