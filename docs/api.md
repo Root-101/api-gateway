@@ -73,6 +73,19 @@ CORS applies to every path, the admin API and the proxied routes: the origins of
 in a header, never a cookie). The gateway answers the preflights itself, and the `Access-Control-*`
 headers a service sends are replaced by the gateway's.
 
+A request with an `Origin` that `CORS_ALLOWED_ORIGINS` doesn't allow is answered `403` with an
+empty body (not a Problem Details), preflight or not, on the admin API and on proxied routes: it
+never reaches the service. Requests without `Origin` (curl, server to server) and same-origin ones
+are not affected.
+
+```http
+GET /_admin/routes
+Origin: https://not-allowed.example.com
+
+HTTP/1.1 403 Forbidden
+Vary: Origin
+```
+
 ## Errors
 
 Every error, of the admin API or of proxied traffic the gateway answers by itself, is a Problem
@@ -142,7 +155,7 @@ A body that can't be read is a `400` that names the field when it can, never the
 |--------|------------------------------------------------------------------------------------------------------|
 | `400`  | The body can't be read, a route id isn't a UUID, or a log search filter is wrong                     |
 | `401`  | No credentials, an unknown or expired token, or wrong credentials (login or Basic)                   |
-| `403`  | Authenticated without the admin role (`Not allowed`); can't happen with the built-in user            |
+| `403`  | Authenticated without the admin role (`Not allowed`); can't happen with the built-in user. Also an `Origin` not allowed by [CORS](#authentication), with an empty body |
 | `404`  | A route id that doesn't exist, or a path no route matches                                            |
 | `409`  | A route name already taken, or the same name twice in one body                                       |
 | `415`  | A body sent without `Content-Type: application/json`                                                 |
