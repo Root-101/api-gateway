@@ -57,7 +57,8 @@ class _RoutesRestoreDialogState extends State<RoutesRestoreDialog> {
       final content = utf8.decode(await _dropzone.getFileData(file));
       final names = cubit.repo.parseBackup(content).map((r) => r.name).toList();
       final seen = <String>{};
-      final repeated = names.where((n) => !seen.add(n)).toSet();
+      //ignoring case, like the name check of the route form
+      final repeated = names.where((n) => !seen.add(n.toLowerCase())).toSet();
       if (repeated.isNotEmpty) {
         _fail(
           name,

@@ -283,10 +283,10 @@ class LogsCubit extends Cubit<LogsState>
           ),
         )
         .toList();
-    routes.addAll(tempRoutes);
-
+    //Admin and No-Route first, like the design's filter dialog
     routes.add(adminRoute);
     routes.add(noRoute);
+    routes.addAll(tempRoutes);
 
     if (filters.route != null && filters.route!.routeId == noRouteId) {
       filters.route = noRoute.copyWith();

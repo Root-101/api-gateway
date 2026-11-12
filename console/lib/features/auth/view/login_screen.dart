@@ -119,8 +119,9 @@ class _LoginScreenState extends State<LoginScreen> {
             return Row(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Expanded(
-                  flex: 125,
+                //like the design's CSS flex (1.25 1 520px | 1 1 420px): the bases first, the rest 1.25:1
+                SizedBox(
+                  width: 520 + (constraints.maxWidth - 940) * 1.25 / 2.25,
                   child: GridBackground(child: _buildIdentity(context)),
                 ),
                 Expanded(flex: 100, child: _buildFormColumn(context)),
@@ -135,77 +136,76 @@ class _LoginScreenState extends State<LoginScreen> {
   Widget _buildIdentity(BuildContext context) {
     final c = app.colors;
     final intl = context.intl;
-    return LayoutBuilder(
-      builder: (context, constraints) => Padding(
-        padding: EdgeInsets.symmetric(
-          horizontal: constraints.maxWidth * 0.08,
-          vertical: 64,
-        ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            FittedBox(
-              fit: BoxFit.scaleDown,
-              alignment: Alignment.centerLeft,
-              child: Row(
-                children: [
-                  const AppLogo(width: 150),
-                  const SizedBox(width: 36),
-                  Stack(
-                    clipBehavior: Clip.none,
-                    children: [
-                      Positioned(
-                        left: -20,
-                        top: -90,
-                        child: IgnorePointer(
-                          child: Container(
-                            width: 260,
-                            height: 260,
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              gradient: RadialGradient(
-                                colors: [
-                                  c.glow.withValues(alpha: 0.34),
-                                  c.glow.withValues(alpha: 0),
-                                ],
-                                stops: const [0, 0.65],
-                              ),
+    return Padding(
+      //8% of the window, not of the column: the design's CSS padding percentage refers to the page width
+      padding: EdgeInsets.symmetric(
+        horizontal: MediaQuery.sizeOf(context).width * 0.08,
+        vertical: 64,
+      ),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            alignment: Alignment.centerLeft,
+            child: Row(
+              children: [
+                const AppLogo(width: 150),
+                const SizedBox(width: 36),
+                Stack(
+                  clipBehavior: Clip.none,
+                  children: [
+                    Positioned(
+                      left: -20,
+                      top: -90,
+                      child: IgnorePointer(
+                        child: Container(
+                          width: 260,
+                          height: 260,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            gradient: RadialGradient(
+                              colors: [
+                                c.glow.withValues(alpha: 0.34),
+                                c.glow.withValues(alpha: 0),
+                              ],
+                              stops: const [0, 0.65],
                             ),
                           ),
                         ),
                       ),
-                      const Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          AppWordmark(size: 72, letterSpacing: -3),
-                          SizedBox(height: 14),
-                          Padding(
-                            padding: EdgeInsets.only(left: 2),
-                            child: AppTagline(size: 30, letterSpacing: -0.6),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ],
-              ),
+                    ),
+                    const Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        AppWordmark(size: 72, letterSpacing: -3),
+                        SizedBox(height: 14),
+                        Padding(
+                          padding: EdgeInsets.only(left: 2),
+                          child: AppTagline(size: 30, letterSpacing: -0.6),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ],
             ),
-            const SizedBox(height: 36),
-            Padding(
-              padding: const EdgeInsets.only(left: 6),
-              child: Wrap(
-                spacing: 10,
-                runSpacing: 10,
-                children: [
-                  _FeatureChip(intl.login.featureRedirections, dot: c.lilac),
-                  _FeatureChip(intl.login.featureLogs, dot: c.lilacMuted),
-                  _FeatureChip(intl.login.featureBackup, dot: c.lilacMuted),
-                ],
-              ),
+          ),
+          const SizedBox(height: 36),
+          Padding(
+            padding: const EdgeInsets.only(left: 6),
+            child: Wrap(
+              spacing: 10,
+              runSpacing: 10,
+              children: [
+                _FeatureChip(intl.login.featureRedirections, dot: c.lilac),
+                _FeatureChip(intl.login.featureLogs, dot: c.lilacMuted),
+                _FeatureChip(intl.login.featureBackup, dot: c.lilacMuted),
+              ],
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

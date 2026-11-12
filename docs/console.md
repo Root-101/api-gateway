@@ -138,7 +138,7 @@ fields as the form.
 ![Restore routes](design/screens/10-routes-restore.png)
 
 **Restore** takes one of those files: drop it on the dialog or **Select file**. A file that isn't a
-list of routes, or that repeats a name, says why and goes no further.
+list of routes, or that repeats a name (ignoring case), says why and goes no further.
 
 ![Restore routes, confirm](design/screens/11-routes-restore-confirm.png)
 

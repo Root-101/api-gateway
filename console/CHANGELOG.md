@@ -67,6 +67,9 @@
         * **Auth** :lock: : The session expired dialog shows and hides the password, like the login, and says the
           credentials come from `ADMIN_USERNAME` and `ADMIN_PASSWORD`.
         * **Routes** :twisted_rightwards_arrows: : The route form, in three steps (General, Forwarding, Path rewrite) with a compact stepper in the footer. A preview like the card in Routes stays on top and fills in while typing, with a pencil per value that opens its field. Duplicate shows the original route as a chip next to the title, with its warning in a popup. Each Next is checked by the gateway (`POST /routes/validate`): the form no longer keeps its own copy of the rules. The dialog takes the whole height.
+        * **Design** :art: : Matched with the canvas: the login brand keeps its side margin (8 % of the window, not
+          of its column) and the columns split like the design; the route filter of the logs lists `Admin` and
+          `No-Route` before the routes. Restore rejects a file whose names repeat ignoring case, like the form.
         * **Routes** :twisted_rightwards_arrows: : Route form fixes: `Required field` shows on steps 1 and 2, the
           first field with an error gets the focus and scrolls into view with its message, and a route that fails
           to load shows its id once.
