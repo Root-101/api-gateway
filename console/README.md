@@ -1,6 +1,6 @@
-# API-Gateway Front
+# API Gateway Console
 
-This project is the **Web UI client** for the **API Gateway**, providing an **easy-to-use interface** to manage routes,
+This project is the **web console** for the **API Gateway**, providing an **easy-to-use interface** to manage routes,
 view HTTP logs, and handle administrative tasks.
 
 It is designed to **sync with the latest version** of the API Gateway and provides a visual complement to the REST API.
@@ -35,7 +35,7 @@ The client can be customized using the following **environment variables**:
 
 | Env Variable        | Description                                                                    | Expected | Default value (example)                              | Added in version |
 |---------------------|--------------------------------------------------------------------------------|----------|------------------------------------------------------|------------------|
-| GATEWAY_SERVICE_URL | Base URL of the API Gateway service                                            | text     | [https://gateway-url.test](https://gateway-url.test) | 1.0.0            |
+| GATEWAY_SERVICE_URL | Base URL of the API Gateway service. Without a scheme, `https://` is added      | text     | [https://gateway-url.test](https://gateway-url.test) | 1.0.0            |
 | ADMIN_PATH          | Optional. Admin path of the gateway service (must match `ADMIN_PATH` in the API Gateway) | text     | \_admin                                              | 1.0.0            |
 | SESSION_TIMEOUT_MINUTES | Optional. Minutes without mouse/keyboard activity before the console logs out. `0` or missing = disabled | number | 0 | 6.0.0 |
 
@@ -51,6 +51,8 @@ docker run -p 80:80   -e GATEWAY_SERVICE_URL=https://gateway-url.test   -e ADMIN
 ```
 
 Build args with the same names still work as defaults (e.g. `args:` in `docker-compose.yml`).
+
+nginx answers `GET /health` with `{"status":"up"}`, for the Docker healthcheck and load balancers.
 
 ### Run locally
 
