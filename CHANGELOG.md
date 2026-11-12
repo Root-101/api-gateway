@@ -1,4 +1,7 @@
 * 6.x:
+    * 6.0.1 (in progress):
+        * **DATE** :date: : not released yet (started 2026-11-12).
+        * **Docs** :books: : `docs/railway.md` updated to 6.0.0: the admin credentials are random (no more `admin`/`admin123**`), every variable of the gateway and the web client with its template value or default (`ADMIN_PATH` on both, `GATEWAY_SERVICE_URL`, `GATEWAY_RESPONSE_TIMEOUT`…), the root directories `/gateway` and `/console`, the images on GHCR, a banner, what changed in 6.0.0 with PostgreSQL 18 by default, and how to migrate from 5.x (switch the services to the images, or deploy the template again over the old database). Same text as the Railway template, under its 10000 characters; links to `master` (there is no `main` branch).
     * 6.0.0:
         * **DATE** :date: : 2026-11-12.
         * **Deploy** :warning: : Deploy together with the web console (`console`) of this same release: it relies on the `401`/`403` with CORS headers to log out. Building now needs a **JDK 25** (Gradle finds the installed ones).
