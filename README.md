@@ -179,6 +179,7 @@ dates in UTC, and every error a Problem Details (RFC 9457), with its `violations
 | `GET`    | `/_admin/routes`        | Every route                                                         |
 | `GET`    | `/_admin/routes/{id}`   | One route                                                           |
 | `POST`   | `/_admin/routes`        | Creates a route: `201` with it                                      |
+| `POST`   | `/_admin/routes/validate` | Checks a route without saving it: `204`, or the `422`             |
 | `POST`   | `/_admin/routes/batch`  | Creates several, all or nothing: `201` with them                    |
 | `PUT`    | `/_admin/routes`        | Replaces every route with the ones in the body (same name, same id) |
 | `PUT`    | `/_admin/routes/{id}`   | Edits a route                                                       |
