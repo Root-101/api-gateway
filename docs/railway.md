@@ -62,17 +62,56 @@ This setup isolates your internal microservices from the public internet while p
 
 ### Implementation Details (Optional)
 
-* Default admin credentials:
-
-    * **Username:** `admin`
-    * **Password:** `admin123**`
-
-> ⚠️ Update `ADMIN_USERNAME` and `ADMIN_PASSWORD` environment variables in Railway before production use.
-
+* The admin credentials are generated at random when the template is deployed: find them in the **Variables** tab of
+  the gateway service (`ADMIN_USERNAME` and `ADMIN_PASSWORD`).
 * The **Core Service** and the **DB** are connected through **private networking**, so the project must have private
   networking enabled in order for it to work correctly.
-* The **Web Client** is connected to the api gateway through **RAILWAY_PUBLIC_DOMAIN**, pointing to the admin path
-  defined in the env **ADMIN_PATH** of the gateway service.
+* The **Web Client** calls the gateway through its public domain (`RAILWAY_PUBLIC_DOMAIN`), on the admin path set in
+  `ADMIN_PATH`. Both services must have the same `ADMIN_PATH`.
+* Deploy the gateway and the web client of the same version together: the client of a version relies on the API of
+  that same version.
+* Built from the repository, the services need their root directory: `/gateway` for the gateway and `/console` for
+  the web client. Each version is also published as a ready image: `ghcr.io/root-101/api-gateway:<version>` and
+  `ghcr.io/root-101/api-gateway-console:<version>`.
+
+#### Gateway variables
+
+| Variable                     | Template value                     | Description                                                                                       |
+|------------------------------|------------------------------------|---------------------------------------------------------------------------------------------------|
+| `PORT`                       | `8080`                             | Port the service listens on                                                                       |
+| `DB_HOST`                    | `${{Postgres.PGHOST}}`             | Host of the database                                                                              |
+| `DB_PORT`                    | `${{Postgres.PGPORT}}`             | Port of the database                                                                              |
+| `DB_NAME`                    | `${{Postgres.PGDATABASE}}`         | Name of the database                                                                              |
+| `DB_USERNAME`                | `${{Postgres.PGUSER}}`             | User of the database                                                                              |
+| `DB_PASSWORD`                | `${{Postgres.PGPASSWORD}}`         | Password of the database user                                                                     |
+| `ADMIN_USERNAME`             | random, 10 characters              | User of the admin API and the web client                                                          |
+| `ADMIN_PASSWORD`             | random, 20 characters              | Password of the admin user                                                                        |
+| `ADMIN_PATH`                 | `_admin`                           | Base path of the admin API. Same value on the web client                                          |
+| `MAINTAIN_LOGS_FOR_DAYS`     | `14`                               | Days the HTTP logs are kept                                                                       |
+
+Optional, with their default when not set:
+
+| Variable                     | Default  | Description                                                                                                     |
+|------------------------------|----------|-----------------------------------------------------------------------------------------------------------------|
+| `GATEWAY_RESPONSE_TIMEOUT`   | `60s`    | Longest wait for a service to answer, then `504`. Empty = no limit. Raise it for services with slower endpoints |
+| `GATEWAY_CONNECT_TIMEOUT_MS` | `10000`  | Longest wait to connect to a service, in milliseconds, then `504`                                               |
+| `CORS_ALLOWED_ORIGINS`       | `*`      | Comma separated origins allowed by CORS, for the admin API and every route                                      |
+| `ADMIN_MAX_FAILED_ATTEMPTS`  | `10`     | Failed logins from one IP before it's locked out. `0` disables the lockout                                      |
+| `ADMIN_LOCKOUT_MINUTES`      | `15`     | Minutes a locked out IP waits                                                                                   |
+| `ADMIN_TOKEN_MINUTES`        | `480`    | Minutes a login token lasts. Tokens live in memory: a restart logs everyone out                                 |
+| `MAX_LOGS_SEARCH_SIZE`       | `10000`  | Most logs a search returns in one page                                                                          |
+
+#### Web client variables
+
+Read when the container starts, so changing them only needs a restart, not a new build.
+
+| Variable                  | Template value                            | Description                                                         |
+|---------------------------|-------------------------------------------|---------------------------------------------------------------------|
+| `GATEWAY_SERVICE_URL`     | `https://${{api-gateway.RAILWAY_PUBLIC_DOMAIN}}` | Public URL of the gateway, without the admin path              |
+| `ADMIN_PATH`              | `${{api-gateway.ADMIN_PATH}}`             | Admin path of the gateway                                           |
+| `SESSION_TIMEOUT_MINUTES` | `0` (optional)                            | Minutes without activity before logging out. `0` = never            |
+
+`api-gateway` is the name of the gateway service in the project: use the name it has in yours.
 
 ---
 
