@@ -39,6 +39,7 @@ void main() {
   GoRouter.optionURLReflectsImperativeAPIs = true;
 
   WidgetsFlutterBinding.ensureInitialized();
+  RouteConfig.launchLocation = PlatformDispatcher.instance.defaultRouteName;
   //the html splash (web/index.html) covers the download of the app; Flutter's SplashScreen looks the same
   WidgetsBinding.instance.addPostFrameCallback((_) => _removeWebSplash());
 

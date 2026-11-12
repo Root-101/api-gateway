@@ -134,11 +134,11 @@ class _RoutesFormScreenState extends State<RoutesFormScreen> {
   }
 }
 
-///`<name>-copy`, or `-copy-2` and up when that one is taken (ignoring case)
+///`<name>-copy`, or `-copy-2` and up when that one is taken (exact match, like the api)
 String duplicateRouteName(String name, Iterable<String> existing) {
-  final taken = existing.map((e) => e.toLowerCase()).toSet();
+  final taken = existing.toSet();
   var candidate = '$name-copy';
-  for (var i = 2; taken.contains(candidate.toLowerCase()); i++) {
+  for (var i = 2; taken.contains(candidate); i++) {
     candidate = '$name-copy-$i';
   }
   return candidate;
@@ -290,7 +290,7 @@ class _RoutesFormWidgetState extends State<RoutesFormWidget> {
         _routes.any(
           (r) =>
               r.id != currentId &&
-              r.name.toLowerCase() == model.name.toLowerCase(),
+              r.name == model.name,
         );
     return {
       ...errors,

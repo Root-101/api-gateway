@@ -416,28 +416,38 @@ class _AppSearchFieldState extends State<AppSearchField> {
                       radius: 10,
                     ),
             ),
-            if (widget.chips.isNotEmpty) ...[
-              Container(
-                width: 1,
-                height: 24,
-                margin: const EdgeInsets.symmetric(horizontal: 4),
-                color: c.outline,
-              ),
-              Flexible(
-                child: SingleChildScrollView(
-                  scrollDirection: Axis.horizontal,
+            //the chips (and their divider) sit against the right edge, the free space stays on the left
+            if (widget.chips.isNotEmpty)
+              Expanded(
+                child: Align(
+                  alignment: Alignment.centerRight,
                   child: Row(
+                    mainAxisSize: MainAxisSize.min,
                     children: [
-                      for (final chip in widget.chips)
-                        Padding(
-                          padding: const EdgeInsets.only(left: 6),
-                          child: chip,
+                      Container(
+                        width: 1,
+                        height: 24,
+                        margin: const EdgeInsets.symmetric(horizontal: 4),
+                        color: c.outline,
+                      ),
+                      Flexible(
+                        child: SingleChildScrollView(
+                          scrollDirection: Axis.horizontal,
+                          child: Row(
+                            children: [
+                              for (final chip in widget.chips)
+                                Padding(
+                                  padding: const EdgeInsets.only(left: 6),
+                                  child: chip,
+                                ),
+                            ],
+                          ),
                         ),
+                      ),
                     ],
                   ),
                 ),
               ),
-            ],
           ],
         ),
       ),

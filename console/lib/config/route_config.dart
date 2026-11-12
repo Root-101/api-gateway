@@ -4,9 +4,12 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 class RouteConfig {
+  ///the url the page was opened with, read in `main` before the splash's navigator resets it to `/` (F5 on a deep link)
+  static String launchLocation = '/';
+
   static RouterConfig<Object> router = GoRouter(
     initialLocation: app.di.find<AuthCubit>().isLoggedIn
-        ? RoutesScreen.navigator.path
+        ? (launchLocation != '/' ? launchLocation : RoutesScreen.navigator.path)
         : LoginScreen.navigator.path,
     navigatorKey: navigatorKey,
     //guard: logged-out users only see login, logged-in users never see it
