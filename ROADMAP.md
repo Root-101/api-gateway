@@ -12,11 +12,17 @@ Rules:
 
 ---
 
+## 6.0.0 release
+
+- [ ] **Last step:** migrate to images on **GHCR** (`ghcr.io`): `.github/workflows/release.yml`
+  publishes them with each version tag. After the first tag, check they are public and use them in
+  `docker-compose.yml` and the deployment docs instead of building locally.
+
 ## Gateway features
 
-In priority order. Impact and effort are estimates from how the project is built today. Every new
-per-route option means a migration, a field in the admin API, the console form, and GraalVM
-reflection hints for the predicates and filters it uses.
+After 6.0.0, in priority order. Impact and effort are estimates from how the project is built
+today. Every new per-route option means a migration, a field in the admin API, the console form,
+and GraalVM reflection hints for the predicates and filters it uses.
 
 0. [ ] **Maintenance mode.** The whole gateway, or a single route, can be put in maintenance:
    every request to it gets an instant answer instead of reaching the service. For maintenance
@@ -69,9 +75,3 @@ reflection hints for the predicates and filters it uses.
   check the http logs filter with long-lived streams. Then update *Supported protocols* in the README.
 - [ ] Gateway: mutation testing with **PIT** on the routes and logs logic, to measure test quality
   beyond coverage.
-
-## 6.0.0 release
-
-- [ ] **Last step:** migrate to images on **GHCR** (`ghcr.io`): `.github/workflows/release.yml`
-  publishes them with each version tag. After the first tag, check they are public and use them in
-  `docker-compose.yml` and the deployment docs instead of building locally.
