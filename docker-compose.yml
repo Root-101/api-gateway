@@ -58,6 +58,13 @@ services:
 
       GATEWAY_CONNECT_TIMEOUT_MS: 10000
       GATEWAY_RESPONSE_TIMEOUT: 60s
+    healthcheck:
+      #the image has no curl or wget: bash /dev/tcp does the GET. `$$` keeps the container's PORT and ADMIN_PATH
+      test: [ "CMD", "bash", "-c", "exec 3<>/dev/tcp/127.0.0.1/$${PORT} && printf 'GET /%s/health HTTP/1.1\\r\\nHost: localhost\\r\\nConnection: close\\r\\n\\r\\n' \"$${ADMIN_PATH}\" >&3 && head -n 1 <&3 | grep -q ' 200 '" ]
+      interval: 10s
+      timeout: 5s
+      start_period: 30s
+      retries: 3
     ports:
       - "127.0.0.1:8080:8080"
     networks:
@@ -76,7 +83,13 @@ services:
       GATEWAY_SERVICE_URL: "http://localhost:8080"
       ADMIN_PATH: "_admin"
     depends_on:
-      - api-gateway
+      api-gateway:
+        condition: service_healthy    #the console is usable only once the gateway answers
+    healthcheck:
+      test: [ "CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1/health" ]
+      interval: 10s
+      timeout: 3s
+      retries: 3
     ports:
       - "127.0.0.1:80:80"
     networks:

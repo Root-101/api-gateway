@@ -16,6 +16,8 @@
           builds (the logger was silent there).
         * **Splash** :art: : The splash of the design is now in `index.html`, so it shows while the app downloads
           instead of a blank page, and it is removed on the first frame.
+        * **Docker** :whale: : New `GET /health` in nginx (`{"status":"up"}`), used by the healthcheck in
+          `docker-compose.yml`. Before, every path answered `200` with `index.html`.
         * **Dependencies** :package: : Removed `syncfusion_flutter_datagrid` and `top_snackbar_flutter`.
         * **Version** :bookmark: : The console now shares the version of the API Gateway, so both projects are
           released with the same number. It jumps from `1.1.1` to `6.0.0` for that reason.
