@@ -6,6 +6,7 @@ import dev.root101.api_gateway.config.GlobalExceptionHandler;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.ReactiveSecurityContextHolder;
 import org.springframework.web.server.ServerWebExchange;
@@ -91,8 +92,12 @@ public class AdminAuthenticationWebFilter implements WebFilter {
         }
 
         if (isLogin) {
-            //a login POST only completes without error with the right credentials (wrong ones: UnauthorizedException)
-            result = result.doOnSuccess(v -> loginAttemptsGuard.succeeded(clientIp));
+            //only the right credentials answer 2xx. Cleared before the response is sent: after it, the client's next
+            //try could be counted first and then wiped by this late reset
+            exchange.getResponse().beforeCommit(() -> Mono.fromRunnable(() -> {
+                HttpStatusCode status = exchange.getResponse().getStatusCode();
+                if (status == null || status.is2xxSuccessful()) loginAttemptsGuard.succeeded(clientIp);
+            }));
         }
         return result;
     }
