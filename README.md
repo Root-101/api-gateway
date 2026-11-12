@@ -1,353 +1,222 @@
-# Api-Gateway
+<p align="center">
+  <img src="docs/design/brand/images/banner.png" alt="api-gateway: one route to rule them all">
+</p>
 
-[![Version](https://img.shields.io/badge/Version-5.x-blue)](#)
-[![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.5-green)](#)
-[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-blue)](#)
-[![Flutter](https://img.shields.io/badge/Flutter-3.35-02569B)](#)
-[![License](https://img.shields.io/badge/license-Apache-green)](#)
+A ready-to-deploy API gateway: one public URL in front of your services. Each request goes to the
+service whose route matches its path, every request is logged, and a web console manages the routes
+and searches the logs, all without redeploying anything.
 
-A ready-to-deploy **API Gateway** built with **Spring Boot**, **PostgreSQL** and **Flutter**.
-It centralizes client requests, routes them to internal services, logs traffic, and provides an admin UI for monitoring.
+- **`gateway/`**: the gateway, in Java 25 on Spring Boot 4 and Spring Cloud Gateway (WebFlux),
+  built as a GraalVM native image. It routes the traffic, serves the admin API and keeps its
+  routes and logs in PostgreSQL.
+- **`console/`**: the web console, in Flutter Web, served by nginx in its own image.
 
-## Table of Contents
+> **Status: `6.0.0`.** A restructuring release, with breaking changes in the admin API: read
+> [`CHANGELOG.md`](CHANGELOG.md) before upgrading from 5.x, and deploy the gateway and the console
+> of the same version together.
 
-- [1 - Overview](#1)
-    - [1.1 - How it work](#1.1)
-    - [1.2 - Example](#1.2)
-- [2 - Quick Start](#2)
-- [3 - About this version (5.x)](#3)
-- [4 - Configuring the service](#4)
-    - [4.1 - Env Variables table](#4.1)
-    - [4.2 - PORT, PROFILE & APPLICATION_NAME](#4.2)
-    - [4.3 - ADMIN_USERNAME & ADMIN_PASSWORD](#4.3)
-    - [4.4 - ADMIN_PATH](#4.4)
-    - [4.5 - DB_HOST, DB_PORT, DB_NAME, DB_USERNAME, DB_PASSWORD](#4.5)
-    - [4.6 - MAINTAIN_LOGS_FOR_DAYS](#4.6)
-- [5 - Api Docs](#5)
-    - [5.1 - Login](#5.1)
-    - [5.2 - Routes](#5.2)
-    - [5.3 - Http Logs](#5.3)
-    - [5.4 - Examples](#5.4)
-- [6 - Project Versions & Roadmap](#6)
-    - [6.1 - Version Overview](#6.1)
-    - [6.2 - Notes & Recommendations](#6.2)
-    - [6.3 - Extra / Interesting Tips](#6.3)
+![The routes in the console](docs/design/screens/04-routes.png)
 
-## **Overview**  <a name="1"></a>
+## How it works
 
-An **API Gateway** acts as a single entry point for all client requests, routing them to the appropriate internal
-services. Instead of clients communicating directly with multiple microservices, they only interact with the gateway,
-which handles:
+![The gateway between the users and the services](docs/images/api-gateway-1.png)
 
-* 🔀 **Request routing** → Determines which service should handle the request based on the path.
-* 📜 **Centralized logging** → Captures HTTP logs for monitoring and debugging.
-* 🔒 **Service abstraction** → Clients don’t need to know the internal URLs of services. Services may not be public on
-  the internet.
-* 📈 **Scalability** → Easily connect more services.
-* 🖥️ **Admin Dashboard** → Visual manage routes and review HTTP logs.
+1. Users call a single public URL: `https://gateway.example.com`.
+2. The gateway picks the route whose path matches and forwards the request to its service:
+   `/service-a/**` → `http://service-a.internal`, `/service-b/**` → `http://service-b.internal`.
+3. Each request and its answer are recorded in the HTTP logs.
+4. The services stay private: only the gateway is exposed.
 
-Next, a graphic representation of the gateway:
+With a rewrite of the path, the prefix of the route is dropped on the way:
 
-![api-gateway-example-1.png](doc/images/api-gateway-1.png)
+| Request to the gateway                              | Forwarded to                                    |
+|-----------------------------------------------------|-------------------------------------------------|
+| `https://gateway.example.com/service-a/planets`     | `http://service-a.internal/planets`             |
+| `https://gateway.example.com/service-a/pluto/info`  | `http://service-a.internal/pluto/info`          |
+| `https://gateway.example.com/service-b/recipes`     | `http://service-b.internal/recipes`             |
 
-### **How it works** <a name="1.1"></a>
+![The example, drawn](docs/images/api-gateway-2.png)
 
-1. **Users** send requests to a single public endpoint:
-   `https://cool-api-gateway.com`
-2. The **API Gateway** analyzes the request path and forwards it to the corresponding internal service:
+## What it does
 
-* Requests to `/service-a/**` → routed to **Service A** → `http://service-a.internal.url`
-* Requests to `/service-b/**` → routed to **Service B** → `http://service-b.internal.url`
+|                 |                                                                                                                            |
+|-----------------|----------------------------------------------------------------------------------------------------------------------------|
+| **Routes**      | A path (`/users/**`), the service it goes to and an optional rewrite of the path; created, edited and deleted live         |
+| **Protocols**   | HTTP and HTTPS, Server-Sent Events and WebSocket (see [Supported protocols](#supported-protocols))                        |
+| **HTTP logs**   | Every request: when, method, path, route, status, duration, source IP and user agent; searchable, kept 14 days by default |
+| **Backup**      | Every route to a JSON file, and back, all or nothing                                                                       |
+| **Admin API**   | Everything the console does, for scripts and pipelines: token or Basic auth, with a lockout of brute force by IP           |
+| **Console**     | Routes and logs, in English and Spanish; one image for every environment, configured at start                              |
+| **Operations**  | A health check for load balancers, timeouts to the services (`502`/`504`), a native image of ~150 MB of memory             |
 
-3. Each request and response is recorded in the **HTTP Logs** for auditing and monitoring.
-4. Internal services are **isolated** and not directly exposed to the users.
+|                                                                 |                                                                          |
+|-----------------------------------------------------------------|--------------------------------------------------------------------------|
+| ![Edit a route](docs/design/screens/07-route-edit.png)           | ![The HTTP logs](docs/design/screens/12-logs.png)                        |
+| ![Filters of the logs](docs/design/screens/13-logs-filter.png)   | ![Restore the routes](docs/design/screens/11-routes-restore-confirm.png) |
 
-### **Example**  <a name="1.2"></a>
+Every screen, its URL and what it calls: [`docs/console.md`](docs/console.md). The whole design, as
+a PDF and images: [`docs/design/`](docs/design/README.md).
 
-* Request: `https://cool-api-gateway.com/service-a/load-planets` → Gateway forwards
-  to: `http://service-a.internal.url/load-planets`
-* Request: `https://cool-api-gateway.com/service-a/pluto/details` → Gateway forwards
-  to: `http://service-a.internal.url/pluto/details`
-* Request: `https://cool-api-gateway.com/service-b/cooking-recipes` → Gateway forwards
-  to: `http://service-b.internal.url/cooking-recipes`
-* Request: `https://cool-api-gateway.com/service-b/pancake/ingredients` → Gateway forwards
-  to: `http://service-b.internal.url/pancake/ingredients`
+**What it doesn't do (yet):** routes by method, host or header, or with an explicit order (all
+routes have the same priority: avoid overlapping paths); HTTP/2 and gRPC; raw TCP or UDP; more than
+one admin user; several instances sharing their routes and tokens (run one). It serves HTTP: put a
+proxy in front for TLS. See [`ROADMAP.md`](ROADMAP.md).
 
-Here, the visual representation of the example:
+### Supported protocols
 
-![api-gateway-example-2.png](doc/images/api-gateway-2.png)
+The gateway routes **HTTP traffic**: anything that starts as an HTTP request works, anything else
+doesn't.
 
----
+| Traffic                          | Works | Notes                                                                                                                                                                                                    |
+|----------------------------------|:-----:|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| HTTP / HTTPS                     |   ✅   | The main use case                                                                                                                                                                                         |
+| SSE (Server-Sent Events)         |   ✅   | Streamed as they arrive. `GATEWAY_RESPONSE_TIMEOUT` only limits the wait until the response starts; a silent stream stays open, but proxies in front may close it: send a heartbeat (`:` every 15–30 s) |
+| WebSocket (`ws` / `wss`)         |   ✅   | The route keeps an `http(s)://` URI: the gateway switches to `ws(s)://` when the client asks for the upgrade                                                                                             |
+| HTTP/2 / gRPC                    |   ❌   | Not configured yet: gRPC needs HTTP/2 end to end, and the gateway speaks HTTP/1.1 on both sides                                                                                                          |
+| Raw TCP / UDP (databases, MQTT…) |   ❌   | Not possible by design: the gateway picks the route from the method, path and headers, which raw TCP/UDP doesn't have. Use a layer 4 proxy (nginx `stream`, HAProxy, Traefik TCP)                     |
 
-## **Quick start**  <a name="2"></a>
+An SSE stream or a WebSocket is logged once, when it opens: its duration is the wait for the
+service's answer, and its messages are not logged.
 
-To run it and start testing it right now, you can:
+## Run it
+
+### With Docker Compose
+
+[`docker-compose.yml`](docker-compose.yml) builds and runs the three pieces: PostgreSQL, the gateway
+and the console.
 
 ```bash
-# 1. Clone the repo
 git clone https://github.com/Root-101/api-gateway.git
 cd api-gateway
-
-# 2. Run the services with Docker
-docker-compose up --build
-
-# 3. Go to:
-#    - Gateway API → http://localhost:8080
-#    - PostgreSQL  → localhost:5432
-#    - Web UI      → http://localhost
+docker compose up -d --build
 ```
 
-> 💡 Tip: If you prefer, you can deploy it on Railway with a single click:
+- Gateway: <http://localhost:8080> (admin API at `/_admin`).
+- Console: <http://localhost>, log in with `admin` / `admin123**`.
+- PostgreSQL: `localhost:5432`, its data in the `postgres_data` volume.
+
+Every port is published on `127.0.0.1` only. To reach the stack from other machines, publish the
+gateway behind a proxy with TLS, never the database.
+
+The first build compiles the native image and takes several minutes. Change the passwords before
+exposing it: the gateway warns in its log when it runs with the default ones.
+
+### On Railway
 
 [![Deploy on Railway](https://railway.app/button.svg)](https://railway.app/template/IR4lVv?referralCode=6_5_ta)
 
-## About this version (5.x) <a name="3"></a>
+The template deploys PostgreSQL, the gateway and the console (see [`docs/railway.md`](docs/railway.md)).
+The whole stack runs in 200–250 MB of memory, about 1.50–2.00 USD a month.
 
-This version (5.x) adds a Http Logs system, where each request made through this gateway will be saved as logs for later
-review.
+### Locally
 
-We include the updated ui-client, it's a web made with [Flutter](https://flutter.dev/) located
-under `/tools/api_gateway_front`, and the [Postman collection](doc/Api-Gateway.postman_collection.json) to test the
-management endpoints.
+The gateway needs a **JDK 25** (Gradle finds it through its toolchain) and a PostgreSQL; it runs its
+migrations on start.
 
-## Configuring the service <a name="4"></a>
+```bash
+# Gateway, on port 8080, against a local PostgreSQL
+cd gateway
+DB_HOST=localhost DB_NAME=api-gateway DB_USERNAME=postgres DB_PASSWORD=… ./gradlew bootRun
 
-To configure the gateway we have a variety of environmental variables at our disposal.
-These are configured before the service start.
-
-### Env Variables table <a name="4.1"></a>
-
-| Env Variable           | Expected | Description                               | Default value (and example) | Added in version |
-|------------------------|----------|-------------------------------------------|-----------------------------|------------------|
-| PORT                   | integer  | Port in which the service will be running | 8080                        | 2.x              |
-| PROFILE                | text     | Profile type of the service (Environment) | DEV                         | 2.x              |
-| APPLICATION_NAME       | text     | Application name                          | App Api-Gateway             | 2.x              |
-| ADMIN_USERNAME         | text     | Username of the admin user                | admin                       | 3.x              |
-| ADMIN_PASSWORD         | text     | Password of the admin user                | admin123**                  | 3.x              |
-| ADMIN_PATH             | text     | Path of the admin (management) endpoints  | _admin                      | 3.x              |
-| DB_HOST                | text     | Host of the running DB                    | localhost                   | 4.x              |
-| DB_PORT                | integer  | Port of the running DB                    | 5432                        | 4.x              |
-| DB_NAME                | text     | Name of the DB                            | api-gateway                 | 4.x              |
-| DB_USERNAME            | text     | Username of the DB user                   | postgres                    | 4.x              |
-| DB_PASSWORD            | text     | Password of the DB user                   | a123b456**                  | 4.x              |
-| MAINTAIN_LOGS_FOR_DAYS | integer  | Number of days the logs will be available | 14                          | 5.x              |
-
-#### PORT, PROFILE & APPLICATION_NAME <a name="4.2"></a>
-
-These environment variables are general service configurations, they can be left perfectly with the default values
-and would not have major impacts.
-
-#### ADMIN_USERNAME & ADMIN_PASSWORD <a name="4.3"></a>
-
-As a security measure, the gateway management endpoints, with which new routes are created, edited, deleted and
-listed, and the logs are listed, are protected with a layer of security.
-
-In this case, a `basic` auth type is used, which must be provided with a username and password to access.
-
-By configuring these variables (`ADMIN_USERNAME` and `ADMIN_PASSWORD`), the admin endpoints of the service can be
-protected against unauthorized access.
-
-> ⚠️ WARNING: It is recommended that production environments be properly configured to avoid (mainly) security issues.
-
-#### ADMIN_PATH <a name="4.4"></a>
-
-To avoid conflicts between management endpoints and redirects, this environment variable was designed to define the
-parent path of said management endpoints.
-
-In general, the URL of a management endpoint would be: `http(s)://ip:port/ADMIN_PATH/....`.
-
-An example running on localhost without setting the variable (using the default value) would
-be: `http://localhost:8080/_admin/routes`
-
-Setting this variable to `ADMIN_PATH = gateway-admin` would be: `http://localhost:8080/gateway-admin/routes`
-
-This way, if we have a service that is expected to be redirected to, and we want its URL to be `gateway-admin`, we can
-modify said variable so that that path is not occupied and the requests are redirected to the service instead of the
-configuration controller.
-
-#### DB_HOST, DB_PORT, DB_NAME, DB_USERNAME, DB_PASSWORD <a name="4.5"></a>
-
-These environment variables are used to configure the connection to the DB, and are then used as follows:
-
-```
-  r2dbc:
-    url: r2dbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:api-gateway}
-    username: ${DB_USERNAME:postgres}
-    password: ${DB_PASSWORD:admin123}
+# Console, apart: it reads the gateway's URL from web/env.js
+cd console
+cp web/env.example.js web/env.js
+fvm flutter pub get
+fvm flutter run -d chrome
 ```
 
-#### MAINTAIN_LOGS_FOR_DAYS <a name="4.6"></a>
+Tests run from `gateway/`: `./gradlew test` (unit, fast), `./gradlew integrationTest` (PostgreSQL
+with Testcontainers, **Docker required**) and `./gradlew check jacocoTestReport` (both, with the
+coverage gate). See [`CONTRIBUTING.md`](CONTRIBUTING.md).
 
-In version 5.x, we introduced logs, which allow each request to be recorded.
+## Configuration
 
-To avoid excessive resource consumption, a cron job runs every day at midnight to delete old logs. To define when a log
-is considered old, this environment variable is provided that allows modifying the number of days logs remain in the
-system.
+Environment variables of the gateway, read on start:
 
-By default it's configure to maintain logs for 14 days.
+| Variable                      | Default                  | What it is                                                                                                 |
+|-------------------------------|--------------------------|------------------------------------------------------------------------------------------------------------|
+| `ADMIN_USERNAME`              | `admin`                  | The user of the console and the admin API                                                                  |
+| `ADMIN_PASSWORD`              | `admin123**`             | Its password; change it                                                                                    |
+| `ADMIN_PATH`                  | `_admin`                 | Where the admin API lives (`/_admin/routes`); change it if a service needs that path                       |
+| `ADMIN_TOKEN_MINUTES`         | `480`                    | How long a login token lasts                                                                               |
+| `ADMIN_MAX_FAILED_ATTEMPTS`   | `10`                     | Tries of the credentials from one IP, without a correct one, before it is locked (`0` disables it)        |
+| `ADMIN_LOCKOUT_MINUTES`       | `15`                     | The window of the lockout                                                                                  |
+| `DB_HOST`, `DB_PORT`          | `localhost`, `5432`      | Where PostgreSQL is                                                                                        |
+| `DB_NAME`                     | `api-gateway`            | The database                                                                                               |
+| `DB_USERNAME`, `DB_PASSWORD`  | `postgres`, `admin123`   | Its user and password; change the password                                                                 |
+| `MAINTAIN_LOGS_FOR_DAYS`      | `14`                     | Days the HTTP logs are kept; older ones are deleted every night                                            |
+| `MAX_LOGS_SEARCH_SIZE`        | `10000`                  | The biggest page a log search returns                                                                      |
+| `CORS_ALLOWED_ORIGINS`        | `*`                      | Origins allowed by CORS, comma separated (`https://*.example.com`): the console's, at least. Applies to the admin API and every proxied route; the services' own CORS headers are replaced |
+| `GATEWAY_CONNECT_TIMEOUT_MS`  | `10000`                  | Wait to connect to a service (`504` after it)                                                              |
+| `GATEWAY_RESPONSE_TIMEOUT`    | `60s`                    | Wait for a service to start answering (`504` after it); empty for no limit, for slow exports or long polling |
+| `PORT`                        | `8080`                   | Port of the gateway                                                                                        |
+| `PROFILE`, `APPLICATION_NAME` | `default`, `Api-Gateway` | Spring profile and name; they can stay as they are                                                         |
 
-## **API Docs** <a name="5"></a>
+The database is set in parts (host, port, name, user, password) instead of as a connection URL
+because the gateway needs two URLs: an `r2dbc:` one for its reactive queries and a `jdbc:` one for
+the Flyway migrations. It builds both from the same parts, so you set the database once and the two
+can never point to different places.
 
-The **API Gateway** exposes several **management endpoints** that allow administrators to:
+The console has its own three (`GATEWAY_SERVICE_URL`, `ADMIN_PATH`, `SESSION_TIMEOUT_MINUTES`), read
+when its container starts: see [`console/README.md`](console/README.md).
 
-* 🔐 **Authenticate** — Secure all configuration endpoints with **Basic Auth** credentials.
-* 🔀 **Manage dynamic routes** — Create, update, and delete routes that define how requests are forwarded to internal
-  services.
-* 📜 **Access HTTP logs** — Search, filter, and export all incoming requests for monitoring and debugging purposes.
+The security model, and how to deploy it safely (behind a proxy that sets `X-Forwarded-For`, one
+instance), is in [`SECURITY.md`](SECURITY.md).
 
-For ease of use, we include a **web-based admin UI** that interacts with these endpoints behind the scenes.
-However, if you prefer, **you can interact with the REST API directly** using tools like **Postman** or **cURL**.
+## The admin API
 
-### Login <a name="5.1"></a>
+Under `/{ADMIN_PATH}`, JSON, with a token from the login (or Basic auth). Keys in `snake_case`,
+dates in UTC, and every error a Problem Details (RFC 9457), with its `violations` in a `422`:
 
-Use this endpoint to validate the administrator credentials before accessing the management features of the API Gateway.
-Mainly used since in v4.2.0 we add the ui client, and this endpoint is used to validate credentials in the login page.
+| Method   | Path                    | What it does                                                        |
+|----------|-------------------------|---------------------------------------------------------------------|
+| `GET`    | `/_admin/health`        | Health check, no auth: `{"status": "up"}`, or `503`                 |
+| `POST`   | `/_admin/auth/login`    | Checks the credentials and gives an `access_token`                  |
+| `GET`    | `/_admin/routes`        | Every route                                                         |
+| `GET`    | `/_admin/routes/{id}`   | One route                                                           |
+| `POST`   | `/_admin/routes`        | Creates a route: `201` with it                                      |
+| `POST`   | `/_admin/routes/validate` | Checks a route without saving it: `204`, or the `422`             |
+| `POST`   | `/_admin/routes/batch`  | Creates several, all or nothing: `201` with them                    |
+| `PUT`    | `/_admin/routes`        | Replaces every route with the ones in the body (same name, same id) |
+| `PUT`    | `/_admin/routes/{id}`   | Edits a route                                                       |
+| `DELETE` | `/_admin/routes/{id}`   | Deletes a route: `204`                                              |
+| `GET`    | `/_admin/http-logs`     | Searches the HTTP logs: page and filters in the query               |
 
-| Method | Endpoint               | Description                                 |
-|--------|------------------------|---------------------------------------------|
-| GET    | /**_admin**/auth/login | Check if the admin user/password is correct |
+Every call, with real requests and responses and its errors: [`docs/api.md`](docs/api.md). The
+[Postman collection](docs/postman/Api-Gateway.postman_collection.json) has them all, to import
+in Postman and try by hand with its environment.
 
-> ⚠️ WARNING: if the value of env `ADMIN_PATH` changes, the endpoints will change. These tables are based on the default
-> value of this variable (`_admin`).
->
-> 💡️ TIP: [Here](./doc/detailed-api-docs-README.md#2) we provide the complete details of each endpoint, the
-> request/response body, with example and visual reference in the web-base admin UI.
+It creates and deletes its own routes, and makes two wrong logins on purpose (they count for the
+lockout; a correct one resets it).
 
-### Routes <a name="5.2"></a>
+## Versions
 
-These endpoints allow administrators to manage dynamic routes in the API Gateway.
-Each route defines how incoming requests are redirected to internal services.
+Each major version has its tag; prefer the latest of each (`4.2.0` over `4.0.0`), and the latest
+major for its fixes. What changed in each one: [`CHANGELOG.md`](CHANGELOG.md).
 
-| Method | Endpoint                      | Description                                                                     |
-|--------|-------------------------------|---------------------------------------------------------------------------------|
-| GET    | /**_admin**/routes            | Get all configured routes in the gateway                                        |
-| GET    | /**_admin**/routes/{route-id} | Get details of a single route                                                   |
-| POST   | /**_admin**/routes            | Create a new route to redirect                                                  |
-| POST   | /**_admin**/routes/multi-add  | Create multiple routes in same request                                          |
-| PUT    | /**_admin**/routes/{route-id} | Edit the route with id = route-id, replace it with route in body of the request |
-| DELETE | /**_admin**/routes/{route-id} | Delete the route with id = route-id                                             |
+| Version | What it brought                                                                                                        |
+|---------|------------------------------------------------------------------------------------------------------------------------|
+| **2.x** | Routes from environment variables: changing one meant redeploying                                                      |
+| **3.x** | The admin API: routes changed live                                                                                     |
+| **4.x** | PostgreSQL keeps the routes across restarts; the native image (~500 MB → ~150 MB of memory) and the first console      |
+| **5.x** | The HTTP logs                                                                                                          |
+| **6.x** | A restructuring: Java 25 and Spring Boot 4, login tokens, lockout, timeouts, health check, a new console, tests and CI |
 
-> ⚠️ WARNING: if the value of env `ADMIN_PATH` changes, the endpoints will change. These tables are based on the default
-> value of this variable (`_admin`).
->
-> 💡️ TIP: [Here](./doc/detailed-api-docs-README.md#3) we provide the complete details of each endpoint, the
-> request/response body, with example and visual reference in the web-base admin UI.
+## Documentation
 
-### Http Logs <a name="5.3"></a>
+- [`docs/api.md`](docs/api.md): the admin API, with real requests and responses, how a request is
+  routed and what gets logged.
+- [`docs/console.md`](docs/console.md): a tour of the console, screen by screen, with the calls each
+  one makes; and [`docs/design/`](docs/design/README.md), its design as a PDF and images.
+- [`docs/brand.md`](docs/brand.md): the icon, its colors and type (files in
+  [`docs/design/brand/`](docs/design/brand)).
+- [`docs/railway.md`](docs/railway.md): the Railway template.
+- [`console/README.md`](console/README.md): configuring and running the console.
+- [`SECURITY.md`](SECURITY.md): the security model and how to deploy it safely.
+- [`DECISIONS.md`](DECISIONS.md): the non-obvious design decisions and why.
+- [`ROADMAP.md`](ROADMAP.md): what comes next.
+- [`CONTRIBUTING.md`](CONTRIBUTING.md).
 
-Starting from v5.0.0, the API Gateway includes an HTTP Logs system that allows administrators to search, filter, and
-review all incoming requests passing through the gateway.
+## License
 
-| Method | Endpoint             | Description                                                  |
-|--------|----------------------|--------------------------------------------------------------|
-| POST   | /**_admin**/http-log | Get the logs, use POST to send in the body the search params |
-
-> ⚠️ WARNING: if the value of env `ADMIN_PATH` changes, the endpoints will change. These tables are based on the default
-> value of this variable (`_admin`).
->
-> 💡️ TIP: [Here](./doc/detailed-api-docs-README.md#4) we provide the complete details of each endpoint, the
-> request/response body, with example and visual reference in the web-base admin UI.
-
-> **Note:** The API Gateway logs **almost all requests**. Exceptions include:
->
-> * **OPTIONS requests** — Considered “preflight” or non-critical, so they are **not logged**.
-> * **Requests to the logs search endpoint** — To avoid recursive logging, requests made to fetch logs are **not
-    recorded**.
-> * **GET requests to the routes endpoints** — Only route creation, update, or deletion requests are logged; simple GETs
-    to retrieve route information are **excluded**.
->
-> ⚡ **Future improvement:** A configuration option may be added to **customize which requests are logged**.
-
-### **Examples** <a name="5.4"></a>
-
-To test and explore the API Gateway endpoints, we use [**Postman**](https://www.postman.com/downloads/).
-A complete **Postman collection** is available, containing **all endpoints** and **example requests**:
-
-📄 **Collection file:** [**HERE**](doc/Api-Gateway.postman_collection.json)
-
-Additionally, a dedicated **Postman environment** has been configured to manage all required variables automatically:
-
-🌍 **Environment file:** [**HERE**](doc/Api-Gateway%20-%20Local.postman_environment.json)
-
----
-
-#### **Configured Postman Environment Variables**  <a name="5.4.1"></a>
-
-| Postman Env Variable | Description                                | Current value         | Configured by                                                                                     |
-|----------------------|--------------------------------------------|-----------------------|---------------------------------------------------------------------------------------------------|
-| gateway-url          | Url where the service is currently running | http://localhost:8080 | Hosting, this is the url (public or private) of the service, or localhost if it's running locally |
-| gateway-admin-path   | Administration endpoints URL               | _admin                | Env Variable: `ADMIN_PATH`                                                                        |
-| gateway-username     | Username of the admin user                 | admin                 | Env Variable: `ADMIN_USERNAME`                                                                    |
-| gateway-password     | Password of the admin user                 | admin123**            | Env Variable: `ADMIN_PASSWORD`                                                                    |
-
-> ⚠️ **Important:** The default values above are based on the default environment variables.
-> If you change any of these variables in your configuration, you must **update them in your Postman environment**
-> accordingly.
-
-## **Project Versions & Roadmap** <a name="6"></a>
-
-This project is organized into **multiple versions**, each introducing new features and improvements.
-Every version is published under a **dedicated Git tag**, and each tag includes in the **README** details of its
-specific version.
-
-### **Version Overview** <a name="6.1"></a>
-
-| **Version** | **Description**                                                                                                                                        |
-|-------------|--------------------------------------------------------------------------------------------------------------------------------------------------------|
-| **2.x**     | Basic gateway — routes are configured **via environment variables**. To change a route, you must **update the variable** and **redeploy the service**. |
-| **3.x**     | Adds **management endpoints** to configure routes **dynamically**, without redeploying the service.                                                    |
-| **4.x**     | Integrates a **PostgreSQL database** to **persist configurations**, allowing the service to reload them automatically after redeployment.              |
-| **5.x**     | Introduces an **HTTP Logs system** to **store all incoming requests** in the database for later review and analysis.                                   |
-| **x.x**     | Planned: Add a **configuration system** to manage settings like **log retention time**, **CORS policies**, **rate limiting**, and more.                |
-| **x.x**     | Planned: Add **metrics & statistics** to track response times, failure rates, and the most frequently requested endpoints.                             |
-
-This table outlines both **released** and **planned** features, serving as a **roadmap** for upcoming iterations.
-
-### **Notes & Recommendations** <a name="6.2"></a>
-
-> **📌 Note 1 — Use the Latest Tag**
->
-> Each major version (`2.x`, `3.x`, etc.) may have several **minor releases** (e.g., `2.2.0`, `2.1.0`, `2.0.0`).
-> Always prefer the **latest available tag** for improved stability and features.
-> **Example:** If using the `2.x` series, choose **`2.2.0`** over earlier versions.
-
-> **📌 Note 2 — Stay Updated**
->
-> We **recommend** always using the **latest available version** to benefit from:
->
-> * ✅ New features
-> * 🛠️ Bug fixes
-> * ⚡ Better performance
-> * 🔒 Security patches
-
-### **Extra / Interesting Tips**  <a name="6.3"></a>
-
-Here are some useful insights and performance notes about the project:
-
-#### 🏎️ **Reduced Memory Consumption**
-
-| Version | Base Image / Build                                        | RAM Usage           |
-|---------|-----------------------------------------------------------|---------------------|
-| 4.0.1   | `openjdk:21-jdk-oracle` → `eclipse-temurin:21-jre-alpine` | \~500 MB → \~350 MB |
-| 4.2.0   | Native build                                              | \~150 MB            |
-
-> ✅ Migrating to lighter base images and native builds significantly reduces memory usage.
-
----
-
-#### 💰 **Low Hosting Costs**
-
-* Full stack deployed (**PostgreSQL DB + API Gateway + Client UI**) consumes **200–250 MB**.
-* Estimated cost on **Railway:** **\$1.50–\$2.00 USD** per month.
-
-> ⚡ Efficient for small deployments and testing environments.
-
----
-
-#### 🛠️ **Project Focus & Maintenance**
-
-* This is a **side project**, maintained in our free time.
-* Given increasing real-world workloads, we’re **pausing new feature development**.
-* Current focus is on **bug fixes, stability, and performance improvements**.
-
-> 🟡 Status: **Maintenance Mode** — stable and polished for production use.
+[Apache License 2.0](LICENSE).

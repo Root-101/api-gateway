@@ -1,0 +1,58 @@
+server:
+  port: ${PORT:8080}
+
+spring:
+  main:
+    web-application-type: reactive
+  profiles:
+    default: ${PROFILE:default}
+  application:
+    name: ${APPLICATION_NAME:Api-Gateway}
+  messages:
+    #a language without its file (or English, which is messages.properties) falls back to English, never to the server's own language
+    fallback-to-system-locale: false
+  r2dbc:
+    #Variables must be available at compile time (since we started using the native image in v4.1.0), so they are set by default and then overridden with the real values
+    url: r2dbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:api-gateway}          #r2dbc:postgresql:/host:port/db-name
+    username: ${DB_USERNAME:postgres}                                                            #postgres
+    password: ${DB_PASSWORD:${app.defaults.db-password}}                                         #admin123
+    pool:
+      enabled: true
+
+  cloud:
+    gateway:
+      server:
+        webflux:
+          #a stored route that can't be built (only possible from a db edited by hand: the api validates them) skips itself, not every route
+          fail-on-route-definition-error: false
+          httpclient:
+            connect-timeout: ${GATEWAY_CONNECT_TIMEOUT_MS:10000}                                 #millis to open the connection to the upstream
+            response-timeout: ${GATEWAY_RESPONSE_TIMEOUT:60s}                                   #max wait for the upstream response, empty = no timeout
+
+  flyway:
+    enabled: true                                                                                #To enable disable the use of railway
+    baselineOnMigrate: true
+    #Variables must be available at compile time (since we started using the native image in v4.1.0), so they are set by default and then overridden with the real values
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:api-gateway}
+    user: ${DB_USERNAME:postgres}
+    password: ${DB_PASSWORD:${app.defaults.db-password}}
+    locations: classpath:db/migration
+
+app:
+  defaults:
+    username: admin
+    password: admin123**
+    db-password: admin123
+  admin:
+    username: ${ADMIN_USERNAME:${app.defaults.username}}
+    password: ${ADMIN_PASSWORD:${app.defaults.password}}
+    role: ROLE_GATEWAY_ADMIN
+    base-path: ${ADMIN_PATH:_admin}
+    max-failed-attempts: ${ADMIN_MAX_FAILED_ATTEMPTS:10}                                         #0 disables the lockout
+    lockout-minutes: ${ADMIN_LOCKOUT_MINUTES:15}
+    token-minutes: ${ADMIN_TOKEN_MINUTES:480}                                                    #validity of the token given by the login
+  cors:
+    allowed-origins: ${CORS_ALLOWED_ORIGINS:*}                                                   #comma separated origin patterns
+  logs:
+    maintainForDays: ${MAINTAIN_LOGS_FOR_DAYS:14}
+    max-search-size: ${MAX_LOGS_SEARCH_SIZE:10000}

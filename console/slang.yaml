@@ -1,0 +1,22 @@
+# Generates lib/l10n/messages.g.dart from the YAML files (run `fvm dart run slang`).
+# The generated code is versioned. No LocaleSettings: the language is the one of the
+# MaterialApp (`LanguageCubit`), read with `context.intl` / `app.intl`.
+base_locale: en
+# A key missing in a non-base locale is a compile error in the generated code.
+fallback_strategy: none
+input_directory: lib/l10n
+input_file_pattern: .i18n.yaml
+# `{value}` like ARB/ICU instead of the default `$value`
+string_interpolation: braces
+output_directory: lib/l10n
+output_file_name: messages.g.dart
+flutter_integration: false
+locale_handling: false
+translation_class_visibility: public
+lazy: false
+enum_name: AppMessagesLocale
+class_name: AppMessages
+timestamp: false
+statistics: false
+format:
+  enabled: true
