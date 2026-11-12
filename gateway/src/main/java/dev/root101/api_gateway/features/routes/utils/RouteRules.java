@@ -38,7 +38,10 @@ public final class RouteRules {
 
     static List<ValidationErrorMessage> errors(RouteConfigRequest route, String prefix) {
         List<ValidationErrorMessage> errors = new ArrayList<>();
-        if (route.getPath() != null) {
+        if (route.getPath() != null && !route.getPath().isBlank() && !route.getPath().startsWith("/")) {
+            //request paths always start with `/`: without it the pattern parses but never matches
+            errors.add(new ValidationErrorMessage(prefix + "path", route.getPath(), "route.path.no_leading_slash"));
+        } else if (route.getPath() != null) {
             try {
                 //the parser of the gateway's Path predicate
                 PathPatternParser.defaultInstance.parse(route.getPath());

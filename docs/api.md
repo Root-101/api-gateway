@@ -247,7 +247,7 @@ The body of a route, in every call that sends one:
 | Field                       | Type   | Rules                                     | Description                                                                 |
 |-----------------------------|--------|-------------------------------------------|-----------------------------------------------------------------------------|
 | `name`                      | string | Required, not blank, up to 255, unique    | A name for people (`users-service`)                                         |
-| `path`                      | string | Required, not blank, up to 255            | The path pattern of the requests it takes (`/users/**`)                     |
+| `path`                      | string | Required, starts with `/`, up to 255      | The path pattern of the requests it takes (`/users/**`)                     |
 | `uri`                       | string | Required, not blank, a URL, up to 255     | The base URL of the service (`http://users.internal:8080`)                  |
 | `rewrite_path`              | object | Optional (`null` or left out: no rewrite) | Rewrites the path before it goes to the service                             |
 | `rewrite_path.replace_from` | string | Required in the object, up to 255         | A Java regular expression, matched against the path                         |

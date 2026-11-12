@@ -175,6 +175,15 @@ class RoutesIT extends IntegrationTest {
                 .expectStatus().isEqualTo(HttpStatus.UNPROCESSABLE_CONTENT)
                 .expectBody().jsonPath("$.violations[0].fieldName").isEqualTo("path");
 
+        //parses, but a request path always starts with `/`: it would never match
+        admin(HttpMethod.POST, "/routes/validate")
+                .bodyValue(new RouteConfigRequest("ns-" + id, "ns-" + id + "/**", upstreamUrl(), null, null))
+                .exchange()
+                .expectStatus().isEqualTo(HttpStatus.UNPROCESSABLE_CONTENT)
+                .expectBody()
+                .jsonPath("$.violations[0].fieldName").isEqualTo("path")
+                .jsonPath("$.violations[0].message").isEqualTo("Must start with /");
+
         admin(HttpMethod.PUT, "/routes")
                 .bodyValue(List.of(new RouteConfigRequest("up-" + id, "/up-" + id + "/**", upstreamUrl() + "/api", null, null)))
                 .exchange()
