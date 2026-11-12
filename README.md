@@ -1,10 +1,6 @@
 <p align="center">
-  <img src="docs/design/brand/icon.svg" width="96" alt="">
+  <img src="docs/design/brand/images/banner.png" alt="api-gateway: one route to rule them all">
 </p>
-
-<h1 align="center"><code>api-gateway</code></h1>
-
-<p align="center"><i>One route to rule them all.</i></p>
 
 A ready-to-deploy API gateway: one public URL in front of your services. Each request goes to the
 service whose route matches its path, every request is logged, and a web console manages the routes

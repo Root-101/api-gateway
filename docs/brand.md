@@ -102,6 +102,7 @@ Line icons, 2 px stroke on a 24 px grid with round ends, used at 16–22 px insi
 | [`app-icon-lilac.svg`](design/brand/app-icon-lilac.svg) · [`.png`](design/brand/images/app-icon-lilac.png) | The app icon, lilac             |
 | [`app-icon-light.svg`](design/brand/app-icon-light.svg) · [`.png`](design/brand/images/app-icon-light.png) | The app icon, light             |
 | [`images/identity.png`](design/brand/images/identity.png)                                  | The identity, 1920 × 1080: for presentations and the social preview |
+| [`images/banner.png`](design/brand/images/banner.png)                                      | The identity cropped to its content, 1370 × 544, by hand: the README header |
 | [`images/identity-sheet.png`](design/brand/images/identity-sheet.png)                      | The identity sheet, 1600 × 2660: logo, icon, palette, type, icons and base elements |
 
 The PNGs are rendered from the canvas by `design/tool/export.py`; the SVGs are kept by hand with the
