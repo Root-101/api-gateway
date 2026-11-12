@@ -1,6 +1,6 @@
 * 6.x:
-    * 6.0.0 (in progress):
-        * **DATE** :date: : not released yet (started 2026-11-02).
+    * 6.0.0:
+        * **DATE** :date: : 2026-11-12.
         * **Redesign** :art: : New visual identity and rebuilt screens: login, side menu with notch, route cards,
           route form with live preview, logs table and filter dialog. New tokens, line icons and DM Mono font.
         * **Routes** :twisted_rightwards_arrows: : Restore has two steps and now replaces every route atomically
