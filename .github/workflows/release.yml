@@ -1,0 +1,62 @@
+# A version tag (6.0.0, 6.1.0-rc.1) publishes both images on ghcr.io, once the CI passes:
+# ghcr.io/root-101/api-gateway and ghcr.io/root-101/api-gateway-console, tagged with the version.
+# `latest` only moves with a version without `-rc`.
+name: Release
+
+on:
+  push:
+    tags: ['*.*.*']
+
+# read-only by default; only the image job gets packages: write
+permissions:
+  contents: read
+
+jobs:
+  check:
+    uses: ./.github/workflows/ci.yml
+
+  image:
+    name: Image ${{ matrix.image }}
+    needs: check
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    strategy:
+      matrix:
+        include:
+          - image: api-gateway
+            context: gateway
+          - image: api-gateway-console
+            context: console
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - name: Flutter version from .fvmrc
+        id: fvm
+        run: echo "version=$(jq -r .flutter console/.fvmrc)" >> "$GITHUB_OUTPUT"
+
+      - uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4
+      - uses: docker/login-action@8aa5831fb8d48d8f76594c7ddde61ae58019f550 # v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - id: meta
+        uses: docker/metadata-action@dc802804100637a589fabce1cb79ff13a1411302 # v6
+        with:
+          images: ghcr.io/root-101/${{ matrix.image }}
+          tags: type=semver,pattern={{version}}
+
+      - uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7
+        with:
+          context: ${{ matrix.context }}
+          # shortcut: amd64 only, a native compile under QEMU is too slow; use an arm runner if arm64 is needed
+          platforms: linux/amd64
+          # only the console's Dockerfile reads it
+          build-args: FLUTTER_VERSION=${{ steps.fvm.outputs.version }}
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha,scope=${{ matrix.image }}
+          cache-to: type=gha,mode=max,scope=${{ matrix.image }}
