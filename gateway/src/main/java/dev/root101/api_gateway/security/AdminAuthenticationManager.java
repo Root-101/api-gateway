@@ -1,6 +1,7 @@
 package dev.root101.api_gateway.security;
 
-import dev.root101.commons.exceptions.UnauthorizedException;
+import dev.root101.api_gateway.config.LocalizedException;
+import org.springframework.http.HttpStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -69,17 +70,17 @@ public class AdminAuthenticationManager implements ReactiveAuthenticationManager
         try {
             values = new String(Base64.getDecoder().decode(base64Credentials.trim()), StandardCharsets.UTF_8).split(":", 2);
         } catch (IllegalArgumentException e) {//not valid base64
-            return Mono.error(new UnauthorizedException("auth.invalid_basic"));
+            return Mono.error(new LocalizedException(HttpStatus.UNAUTHORIZED, "auth.invalid_basic"));
         }
 
         if (values.length == 2 && values[0] != null && values[1] != null && !values[0].isBlank() && !values[1].isBlank()) {
             if (matches(values[0], values[1])) {
                 return Mono.just(adminAuthentication());
             } else {
-                return Mono.error(new UnauthorizedException("auth.wrong_credentials"));
+                return Mono.error(new LocalizedException(HttpStatus.UNAUTHORIZED, "auth.wrong_credentials"));
             }
         } else {
-            return Mono.error(new UnauthorizedException("auth.invalid_basic"));
+            return Mono.error(new LocalizedException(HttpStatus.UNAUTHORIZED, "auth.invalid_basic"));
         }
     }
 

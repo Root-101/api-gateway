@@ -1,5 +1,7 @@
 package dev.root101.api_gateway.features.routes.logic.model;
 
+import dev.root101.api_gateway.features.routes.utils.ValidRoute;
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
@@ -13,6 +15,7 @@ import org.hibernate.validator.constraints.URL;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
+@ValidRoute
 public class RouteConfigRequest {
 
     /**
@@ -40,6 +43,7 @@ public class RouteConfigRequest {
     /**
      * Object if the path needs to be rewritten.
      */
+    @Valid
     private RewritePathModel rewritePath;
 
     /**

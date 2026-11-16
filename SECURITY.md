@@ -32,10 +32,12 @@ The gateway has two faces on the same port:
 ## Deploying it safely
 
 - **Change the passwords.** `ADMIN_PASSWORD` and `DB_PASSWORD` have public defaults.
-- **Put a proxy in front for TLS**, and make it overwrite `X-Forwarded-For` (Railway does; with
-  nginx, `proxy_set_header X-Forwarded-For $remote_addr`). The client IP of the logs and the
-  lockout is the first one of that header, which the client can set: exposed directly, the IP in
-  the logs can be faked and the lockout dodged by changing it.
+- **Put a proxy in front for TLS**, and set `TRUSTED_PROXIES` to the IPs of that proxy (a regex).
+  `X-Forwarded-For` is only believed when the connection comes from a trusted proxy, and the client
+  is the last entry that isn't one: what the client writes there itself is ignored. The default
+  `.*` trusts any connection, which is right only if the gateway can't be reached without the proxy
+  (Railway). Exposed directly with `.*`, the IP in the logs can be faked and the lockout dodged by
+  changing that header: set the proxy's IPs, or empty (`""`) if there is no proxy.
 - **Know what the lockout blocks.** A locked IP gets `429` (with `Retry-After`) only on new tries
   of the credentials: the login and Basic auth. A token it already has and the health check keep
   working. Behind a proxy that doesn't set `X-Forwarded-For`, every client shares the proxy's IP,

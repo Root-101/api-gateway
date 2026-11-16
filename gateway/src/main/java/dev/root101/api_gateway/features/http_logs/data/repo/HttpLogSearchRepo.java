@@ -2,7 +2,8 @@ package dev.root101.api_gateway.features.http_logs.data.repo;
 
 import dev.root101.api_gateway.features.http_logs.data.entity.HttpLogEntity;
 import dev.root101.api_gateway.features.http_logs.logic.model.HttpLogSearchRequest;
-import dev.root101.commons.exceptions.BadRequestException;
+import dev.root101.api_gateway.config.LocalizedException;
+import org.springframework.http.HttpStatus;
 import lombok.AllArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -47,7 +48,7 @@ public class HttpLogSearchRepo {
                         .and("responseCode")
                         .lessThanOrEquals(range[1]);
             } catch (NumberFormatException e) {
-                throw new BadRequestException("logs.status.invalid");
+                throw new LocalizedException(HttpStatus.BAD_REQUEST, "logs.status.invalid");
             }
         }
         if (request.getQuery() != null && !request.getQuery().isBlank()) {
@@ -67,7 +68,7 @@ public class HttpLogSearchRepo {
                 try {
                     criteria = criteria.and("routeId").is(UUID.fromString(request.getRouteId().trim()));
                 } catch (IllegalArgumentException e) {
-                    throw new BadRequestException("logs.route_id.invalid");
+                    throw new LocalizedException(HttpStatus.BAD_REQUEST, "logs.route_id.invalid");
                 }
             }
         }

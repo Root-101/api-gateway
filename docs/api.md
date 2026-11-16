@@ -56,7 +56,8 @@ is checked, so concurrent guesses can't slip past the limit. After `ADMIN_MAX_FA
 can't try credentials again until the window ends: the login and every request with Basic auth get
 a `429`, also with the right password. A valid token keeps working from that IP, and so does the
 health check. Proxied traffic is not affected. Only correct credentials reset the count. The client
-IP is the first one of `X-Forwarded-For`, or the connection's IP without it.
+IP is the connection's, or, when the connection comes from a proxy of `TRUSTED_PROXIES`, the last
+entry of `X-Forwarded-For` that isn't one of those proxies (the first one with the default `.*`).
 
 ```http
 HTTP/1.1 429 Too Many Requests
@@ -611,7 +612,7 @@ and they add up (AND). Encode the values: a `+` in a date offset must go as `%2B
 | `total_capped`      | boolean | `true` when more than 100000 match: `total_elements` and `total_pages` stop there                 |
 | `items[]`           | array   | The logs                                                                                          |
 | `.id`               | string  | UUID of the log                                                                                   |
-| `.source_ip`        | string  | Client IP: first of `X-Forwarded-For`, or the connection's IP. Up to 50 characters                |
+| `.source_ip`        | string  | Client IP, same rule as the lockout (`TRUSTED_PROXIES`). Up to 50 characters                     |
 | `.requested_at`     | string  | When the request arrived                                                                          |
 | `.user_agent`       | string  | `User-Agent` header, or `null`                                                                    |
 | `.http_method`      | string  | `GET`, `POST`…                                                                                    |

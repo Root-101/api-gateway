@@ -11,7 +11,7 @@ and searches the logs, all without redeploying anything.
   routes and logs in PostgreSQL.
 - **`console/`**: the web console, in Flutter Web, served by nginx in its own image.
 
-> **Status: `6.0.0`.** A restructuring release, with breaking changes in the admin API: read
+> **Status: `6.0.1`.** 6.0.0 was a restructuring release, with breaking changes in the admin API: read
 > [`CHANGELOG.md`](CHANGELOG.md) before upgrading from 5.x, and deploy the gateway and the console
 > of the same version together.
 
@@ -149,6 +149,7 @@ Environment variables of the gateway, read on start:
 | `CORS_ALLOWED_ORIGINS`        | `*`                      | Origins allowed by CORS, comma separated (`https://*.example.com`): the console's, at least. Applies to the admin API and every proxied route; the services' own CORS headers are replaced |
 | `GATEWAY_CONNECT_TIMEOUT_MS`  | `10000`                  | Wait to connect to a service (`504` after it)                                                              |
 | `GATEWAY_RESPONSE_TIMEOUT`    | `60s`                    | Wait for a service to start answering (`504` after it); empty for no limit, for slow exports or long polling |
+| `TRUSTED_PROXIES`             | `.*`                     | Regex of the IPs of the proxies in front of the gateway: only their `X-Forwarded-*` are believed (client IP of the logs and the lockout) and passed on to the services. Empty = none. Narrow it if the gateway can be reached without the proxy (see `SECURITY.md`) |
 | `PORT`                        | `8080`                   | Port of the gateway                                                                                        |
 | `PROFILE`, `APPLICATION_NAME` | `default`, `Api-Gateway` | Spring profile and name; they can stay as they are                                                         |
 

@@ -3,7 +3,8 @@ package dev.root101.api_gateway.features.http_logs.rest;
 import dev.root101.api_gateway.features.http_logs.logic.model.HttpLogSearchRequest;
 import dev.root101.api_gateway.features.http_logs.logic.model.HttpLogSearchResponse;
 import dev.root101.api_gateway.features.http_logs.logic.usecase.HttpLogUseCase;
-import dev.root101.commons.exceptions.BadRequestException;
+import dev.root101.api_gateway.config.LocalizedException;
+import org.springframework.http.HttpStatus;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -44,10 +45,10 @@ public class HttpLogController {
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) OffsetDateTime to
     ) {
         if (page < 0) {
-            throw new BadRequestException("logs.page.invalid");
+            throw new LocalizedException(HttpStatus.BAD_REQUEST, "logs.page.invalid");
         }
         if (size != null && size < 1) {
-            throw new BadRequestException("logs.size.invalid");
+            throw new LocalizedException(HttpStatus.BAD_REQUEST, "logs.size.invalid");
         }
         return httpLogUseCase.search(new HttpLogSearchRequest(page, size, query, method, status, routeId, from, to));
     }

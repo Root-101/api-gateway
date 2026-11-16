@@ -5,7 +5,7 @@ done is in `CHANGELOG.md`.
 
 Rules:
 
-- Every change is recorded in `CHANGELOG.md`, under the in-progress version (currently `6.0.0`).
+- Every change is recorded in `CHANGELOG.md`, under the in-progress version (currently `6.0.1`).
 - Everything in the project is written in English (code, comments, docs, changelog, roadmap).
 - Console: keep its base (Cubit + DI with Get + go_router + Dio). Changes in the contract of
   `/{ADMIN_PATH}/auth|routes|http-log` must be applied in both folders.
@@ -77,5 +77,3 @@ and GraalVM reflection hints for the predicates and filters it uses.
   the services' own CORS headers are replaced. Let each route keep its service's CORS (forward the
   preflight to the upstream instead of answering it in the gateway) or set its own origins, and
   maybe edit them from the admin API and the console. See decision 15 in `DECISIONS.md`.
-- [ ] Gateway: mutation testing with **PIT** on the routes and logs logic, to measure test quality
-  beyond coverage.

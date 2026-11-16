@@ -1,19 +1,18 @@
 package dev.root101.api_gateway.config;
 
 import tools.jackson.databind.json.JsonMapper;
-import dev.root101.commons.exceptions.NotFoundException;
-import dev.root101.commons.exceptions.ValidationException;
 import io.netty.channel.ConnectTimeoutException;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import dev.root101.api_gateway.features.routes.logic.model.RouteConfigRequest;
-import dev.root101.commons.validation.ValidationService;
-import org.hibernate.validator.messageinterpolation.ResourceBundleMessageInterpolator;
+import org.springframework.core.MethodParameter;
+import org.springframework.validation.BeanPropertyBindingResult;
+import org.springframework.validation.beanvalidation.LocalValidatorFactoryBean;
+import org.springframework.web.bind.support.WebExchangeBindException;
 import org.springframework.context.support.ResourceBundleMessageSource;
 import org.springframework.dao.DataIntegrityViolationException;
-import org.springframework.validation.beanvalidation.MessageSourceResourceBundleLocator;
 import tools.jackson.databind.PropertyNamingStrategies;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -30,7 +29,6 @@ import reactor.test.StepVerifier;
 import java.io.IOException;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.catchThrowableOfType;
 
 class GlobalExceptionHandlerTest {
 
@@ -43,7 +41,7 @@ class GlobalExceptionHandlerTest {
         MESSAGES.setFallbackToSystemLocale(false);
     }
 
-    private final GlobalExceptionHandler handler = new GlobalExceptionHandler(JsonMapper.builderWithJackson2Defaults().build(), MESSAGES);
+    private final GlobalExceptionHandler handler = new GlobalExceptionHandler(JsonMapper.builderWithJackson2Defaults().build(), MESSAGES, new PropertyNamingStrategies.SnakeCaseStrategy());
 
     private MockServerWebExchange exchange() {
         return MockServerWebExchange.from(MockServerHttpRequest.get("/any"));
@@ -95,9 +93,7 @@ class GlobalExceptionHandlerTest {
 
     static Stream<Arguments> errors() {
         return Stream.of(
-                Arguments.of(new ValidationException(new ValidationException.ValidationErrorMessage("name", "", "must not be blank")),
-                        HttpStatus.UNPROCESSABLE_CONTENT, "\"violations\":[{\"fieldName\":\"name\",\"message\":\"must not be blank\"}]"),
-                Arguments.of(new NotFoundException("Route does not exist: x"), HttpStatus.NOT_FOUND, "Route does not exist: x"),
+                Arguments.of(new LocalizedException(HttpStatus.NOT_FOUND, "route.not_found", "x"), HttpStatus.NOT_FOUND, "Route does not exist: x"),
                 Arguments.of(new DataIntegrityViolationException("duplicate key value violates unique constraint \"unique_route_name\""),
                         HttpStatus.CONFLICT, "Conflict with existing data"),
                 Arguments.of(new ResponseStatusException(HttpStatus.TOO_MANY_REQUESTS, "Too many"), HttpStatus.TOO_MANY_REQUESTS, "\"detail\":\"Too many\""),
@@ -118,7 +114,7 @@ class GlobalExceptionHandlerTest {
     void detailIsUtf8() {
         MockServerWebExchange exchange = exchange();
 
-        handler.handle(exchange, new dev.root101.commons.exceptions.ConflictException("name already used: ñ")).block();
+        handler.handle(exchange, new LocalizedException(HttpStatus.CONFLICT, "name already used: ñ")).block();
 
         assertThat(exchange.getResponse().getStatusCode()).isEqualTo(HttpStatus.CONFLICT);
         assertThat(exchange.getResponse().getBodyAsString().block()).contains("\"detail\":\"name already used: ñ\"");
@@ -137,14 +133,14 @@ class GlobalExceptionHandlerTest {
     }
 
     @Test
-    void validationMessagesInTheLanguageOfTheRequest() {
-        //the validation service as ServiceConfig builds it
-        ValidationService validation = ValidationService.builder()
-                .namingStrategy(new PropertyNamingStrategies.SnakeCaseStrategy())
-                .messageInterpolator(I18n.everyLanguage(new ResourceBundleMessageInterpolator(new MessageSourceResourceBundleLocator(MESSAGES))))
-                .build();
-        ValidationException error = catchThrowableOfType(ValidationException.class,
-                () -> validation.validate(new RouteConfigRequest("", "/a/**", "http://a" + "a".repeat(255), null, null)));
+    void validationMessagesInTheLanguageOfTheRequest() throws NoSuchMethodException {
+        //the validator as ServiceConfig builds it, and the error of a `@Valid` body
+        LocalValidatorFactoryBean validator = new ServiceConfig().defaultValidator(MESSAGES);
+        validator.afterPropertiesSet();
+        RouteConfigRequest route = new RouteConfigRequest("", "/a/**", "http://a" + "a".repeat(255), null, null);
+        BeanPropertyBindingResult result = new BeanPropertyBindingResult(route, "route");
+        validator.validate(route, result);
+        WebExchangeBindException error = new WebExchangeBindException(new MethodParameter(Object.class.getMethod("equals", Object.class), 0), result);
 
         assertThat(body(error, "es")).contains(
                 "\"detail\":\"La petición tiene campos inválidos\"",
@@ -156,8 +152,8 @@ class GlobalExceptionHandlerTest {
     }
 
     @Test
-    void listFieldNamesDropTheRoot() {
-        assertThat(GlobalExceptionHandler.fieldName("root[0].name")).isEqualTo("[0].name");
-        assertThat(GlobalExceptionHandler.fieldName("rewrite_path.replace_from")).isEqualTo("rewrite_path.replace_from");
+    void fieldNamesAsInTheJson() {
+        assertThat(handler.fieldName("name")).isEqualTo("name");
+        assertThat(handler.fieldName("rewritePath.replaceFrom")).isEqualTo("rewrite_path.replace_from");
     }
 }

@@ -25,6 +25,12 @@ spring:
         webflux:
           #a stored route that can't be built (only possible from a db edited by hand: the api validates them) skips itself, not every route
           fail-on-route-definition-error: false
+          #regex of the proxies in front of the gateway whose `X-Forwarded-*` are believed (client ip of the logs and the lockout,
+          #headers sent to the services). Empty = none. `.*` is only safe if the gateway can't be reached without that proxy
+          trusted-proxies: ${TRUSTED_PROXIES:.*}
+          httpserver:
+            #off: Netty would take the FIRST `X-Forwarded-For` entry as the client (spoofable), the gateway picks it itself
+            customizer-enabled: false
           httpclient:
             connect-timeout: ${GATEWAY_CONNECT_TIMEOUT_MS:10000}                                 #millis to open the connection to the upstream
             response-timeout: ${GATEWAY_RESPONSE_TIMEOUT:60s}                                   #max wait for the upstream response, empty = no timeout

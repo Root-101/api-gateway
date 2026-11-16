@@ -32,6 +32,59 @@ class GatewayProxyIT extends IntegrationTest {
     }
 
     /**
+     * A 5xx answered by the upstream is its own answer: same status and body, not replaced by a gateway error.
+     */
+    @Test
+    void upstreamServerErrorsPassThrough() {
+        String id = unique();
+        createRoute(route("u5xx-" + id, "u5xx-" + id));
+
+        for (int code : new int[]{500, 503}) {
+            webTestClient.get().uri("/u5xx-%s/status/%d".formatted(id, code)).exchange()
+                    .expectStatus().isEqualTo(code)
+                    .expectBody(String.class).isEqualTo("/u5xx-%s/status/%d|null".formatted(id, code));
+        }
+    }
+
+    /**
+     * A big binary body goes through both ways without changes (streamed, no buffer limit of the gateway).
+     */
+    @Test
+    void bigBinaryBodyGoesThroughUnchanged() {
+        String id = unique();
+        createRoute(route("bin-" + id, "bin-" + id));
+        byte[] body = new byte[5 * 1024 * 1024];
+        new java.util.Random(42).nextBytes(body);
+
+        byte[] answer = webTestClient.mutate().codecs(c -> c.defaultCodecs().maxInMemorySize(body.length * 2)).build()
+                .post().uri("/bin-%s/bytes".formatted(id))
+                .contentType(MediaType.APPLICATION_OCTET_STREAM)
+                .bodyValue(body)
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody(byte[].class).returnResult().getResponseBody();
+        assertThat(answer).isEqualTo(body);
+    }
+
+    /**
+     * The upstream gets the `X-Forwarded-*` headers: the client's ip appended to the `X-Forwarded-For` of a trusted
+     * proxy (the default `TRUSTED_PROXIES=.*`), the public host and scheme, and the prefix the rewrite took out.
+     * Without a trusted proxy, see `UntrustedProxyIT`.
+     */
+    @Test
+    void forwardedHeadersReachTheUpstream() {
+        String id = unique();
+        createRoute(rewriteRoute("fwd-" + id, "fwd-" + id));
+
+        webTestClient.get().uri("/fwd-%s/forwarded".formatted(id))
+                .header("X-Forwarded-For", "203.0.113.9")
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody(String.class).value(body -> assertThat(body)
+                        .matches("203\\.0\\.113\\.9,[0-9a-f.:]+\\|localhost:\\d+\\|http\\|/fwd-%s".formatted(id)));
+    }
+
+    /**
      * Upstream down → 502, upstream slower than the response-timeout → 504. The internal host/port is never exposed.
      */
     @Test
@@ -56,6 +109,7 @@ class GatewayProxyIT extends IntegrationTest {
                 .expectBody().jsonPath("$.detail").isEqualTo("The service didn't answer in time");
 
         assertThat(awaitLog("/down-" + id).getResponseCode()).isEqualTo(502);
+        assertThat(awaitLog("/slow-" + id).getResponseCode()).isEqualTo(504);
     }
 
     /**

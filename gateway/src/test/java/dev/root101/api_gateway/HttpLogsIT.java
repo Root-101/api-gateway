@@ -111,6 +111,7 @@ class HttpLogsIT extends IntegrationTest {
 
         HttpLogEntity adminLog = awaitLog(log -> log.getPath().equals(marker) && log.getHttpMethod().equals("DELETE"));
         assertThat(awaitLog("/plain-opt-" + id + "/x").getHttpMethod()).isEqualTo("OPTIONS");
+        assertThat(adminLog.getResponseCode()).isEqualTo(404);
         assertThat(adminLog.getRoute().routeName()).isEqualTo("Admin");
         assertThat(adminLog.getRoute().routeId()).isEqualTo("00000000-0000-0000-0000-000000000000");
 
