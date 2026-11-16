@@ -9,6 +9,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
+import org.springframework.cloud.gateway.filter.headers.TrustedProxies;
 import org.springframework.context.event.EventListener;
 import org.hibernate.validator.messageinterpolation.ResourceBundleMessageInterpolator;
 import org.springframework.context.MessageSource;
@@ -40,6 +41,14 @@ public class ServiceConfig {
         if (dbPassword.equals(defaultDbPassword)) {
             log.warn("Server running with the DEFAULT db password. Set the DB_PASSWORD environment variable for any real environment");
         }
+    }
+
+    /**
+     * The proxies whose `X-Forwarded-*` headers are believed (`TRUSTED_PROXIES`, empty = none).
+     */
+    @Bean
+    public TrustedProxies trustedProxies(@Value("${spring.cloud.gateway.server.webflux.trusted-proxies:}") String regex) {
+        return regex.isBlank() ? ip -> false : TrustedProxies.from(regex);
     }
 
     @Bean

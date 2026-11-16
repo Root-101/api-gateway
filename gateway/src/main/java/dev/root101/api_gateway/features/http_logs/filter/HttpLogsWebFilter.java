@@ -3,6 +3,7 @@ package dev.root101.api_gateway.features.http_logs.filter;
 import dev.root101.api_gateway.features.http_logs.logic.model.HttpLogRequest;
 import dev.root101.api_gateway.features.http_logs.logic.usecase.HttpLogUseCase;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cloud.gateway.filter.headers.TrustedProxies;
 import org.springframework.cloud.gateway.route.Route;
 import org.springframework.cloud.gateway.support.ServerWebExchangeUtils;
 import org.springframework.core.annotation.Order;
@@ -15,6 +16,7 @@ import org.springframework.web.server.WebFilter;
 import org.springframework.web.server.WebFilterChain;
 import reactor.core.publisher.Mono;
 
+import java.net.InetSocketAddress;
 import java.time.OffsetDateTime;
 
 /**
@@ -29,13 +31,17 @@ public class HttpLogsWebFilter implements WebFilter {
 
     private final String adminBasePath;
 
+    private final TrustedProxies trustedProxies;
+
     public HttpLogsWebFilter(
             HttpLogUseCase httpLogUseCase,
             @Value("${app.admin.base-path}")
-            String adminBasePath
+            String adminBasePath,
+            TrustedProxies trustedProxies
     ) {
         this.httpLogUseCase = httpLogUseCase;
         this.adminBasePath = adminBasePath;
+        this.trustedProxies = trustedProxies;
     }
 
     @Override
@@ -59,7 +65,7 @@ public class HttpLogsWebFilter implements WebFilter {
         ) {
             return chain.filter(exchange);
         }
-        final String clientIp = getClientIp(exchange);
+        final String clientIp = getClientIp(exchange, trustedProxies);
 
         final String userAgent = exchange.getRequest().getHeaders().getFirst("User-Agent");
 
@@ -76,7 +82,7 @@ public class HttpLogsWebFilter implements WebFilter {
 
                             HttpStatusCode statusCode = exchange.getResponse().getStatusCode();
 
-                            final String serverIp = getServerIp(exchange);
+                            final String serverIp = getServerIp(exchange, trustedProxies);
 
                             HttpLogRequest request = new HttpLogRequest(
                                     clientIp,
@@ -94,10 +100,11 @@ public class HttpLogsWebFilter implements WebFilter {
                 );
     }
 
-    static String getServerIp(ServerWebExchange exchange) {
-        String forwardedProto = exchange.getRequest().getHeaders().getFirst("X-Forwarded-Proto");
-        String forwardedHost = exchange.getRequest().getHeaders().getFirst("X-Forwarded-Host");
-        String forwardedPort = exchange.getRequest().getHeaders().getFirst("X-Forwarded-Port");
+    static String getServerIp(ServerWebExchange exchange, TrustedProxies trustedProxies) {
+        boolean fromProxy = isTrustedProxy(connectionIp(exchange), trustedProxies);
+        String forwardedProto = fromProxy ? exchange.getRequest().getHeaders().getFirst("X-Forwarded-Proto") : null;
+        String forwardedHost = fromProxy ? exchange.getRequest().getHeaders().getFirst("X-Forwarded-Host") : null;
+        String forwardedPort = fromProxy ? exchange.getRequest().getHeaders().getFirst("X-Forwarded-Port") : null;
 
         final String thisIp;
 
@@ -124,19 +131,31 @@ public class HttpLogsWebFilter implements WebFilter {
         return thisIp;
     }
 
-    public static String getClientIp(ServerWebExchange exchange) {
-        String tempClientIp = exchange.getRequest().getHeaders().getFirst("X-Forwarded-For");
-        //X-Forwarded-For is "client, proxy1, proxy2": the first one is the client
-        if (tempClientIp != null) {
-            tempClientIp = tempClientIp.split(",")[0].trim();
-            if (tempClientIp.isEmpty()) tempClientIp = null;
-        }
-        if (tempClientIp == null) {
-            tempClientIp = exchange.getRequest().getRemoteAddress() != null
-                    ? exchange.getRequest().getRemoteAddress().getAddress().getHostAddress()
-                    : null;
+    /**
+     * The client: the connection's ip, unless it is a trusted proxy. Then `X-Forwarded-For` ("client, proxy1, proxy2",
+     * each proxy appends who it got the request from) is read from the right, and the first entry that is not a
+     * trusted proxy is the client: the entries on its left were written by the client itself, so they are never believed.
+     */
+    public static String getClientIp(ServerWebExchange exchange, TrustedProxies trustedProxies) {
+        String tempClientIp = connectionIp(exchange);
+        String forwardedFor = exchange.getRequest().getHeaders().getFirst("X-Forwarded-For");
+        if (forwardedFor != null && isTrustedProxy(tempClientIp, trustedProxies)) {
+            String[] hops = forwardedFor.split(",");
+            for (int i = hops.length - 1; i >= 0 && !hops[i].isBlank(); i--) {
+                tempClientIp = hops[i].trim();
+                if (!trustedProxies.isTrusted(tempClientIp)) break;
+            }
         }
         //column is varchar(50) (IPv6 max is 45), never lose the log for a weird header
         return tempClientIp != null && tempClientIp.length() > 50 ? tempClientIp.substring(0, 50) : tempClientIp;
+    }
+
+    private static String connectionIp(ServerWebExchange exchange) {
+        InetSocketAddress remote = exchange.getRequest().getRemoteAddress();
+        return remote != null && remote.getAddress() != null ? remote.getAddress().getHostAddress() : null;
+    }
+
+    private static boolean isTrustedProxy(String ip, TrustedProxies trustedProxies) {
+        return ip != null && trustedProxies.isTrusted(ip);
     }
 }

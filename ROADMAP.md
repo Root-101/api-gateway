@@ -77,10 +77,3 @@ and GraalVM reflection hints for the predicates and filters it uses.
   the services' own CORS headers are replaced. Let each route keep its service's CORS (forward the
   preflight to the upstream instead of answering it in the gateway) or set its own origins, and
   maybe edit them from the admin API and the console. See decision 15 in `DECISIONS.md`.
-- [ ] Gateway: **`X-Forwarded-*` to the services.** Today the services behind the gateway get no
-  `X-Forwarded-For/Host/Proto/Prefix` (not even the one the client sent), so they can't see the
-  client ip: since Spring Cloud Gateway 4.1.8 those filters stay off until
-  `spring.cloud.gateway.server.webflux.trusted-proxies` is set. Add a `TRUSTED_PROXIES` variable
-  (regex of the proxies in front of the gateway, e.g. Railway's edge), document it, and flip
-  `GatewayProxyIT.forwardedHeadersDoNotReachTheUpstream`. Trusting every proxy (`.*`) would let any
-  client fake its ip.

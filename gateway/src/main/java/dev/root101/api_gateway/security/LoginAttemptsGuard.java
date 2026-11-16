@@ -12,7 +12,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * After `max-failed-attempts` tries of the credentials from the same client ip without a correct one,
  * that ip is locked until `lockout-minutes` after its first try.
  * <br/>
- * shortcut: in memory and per instance, and the client ip comes from `X-Forwarded-For` (see README), move to a shared store if the gateway runs with several replicas.
+ * shortcut: in memory and per instance, and the client ip is the one of `HttpLogsWebFilter.getClientIp` (`TRUSTED_PROXIES`), move to a shared store if the gateway runs with several replicas.
  */
 @Component
 public class LoginAttemptsGuard {

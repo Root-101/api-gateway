@@ -67,12 +67,12 @@ class GatewayProxyIT extends IntegrationTest {
     }
 
     /**
-     * Pins the current behavior: the upstream gets NO `X-Forwarded-*` header, not even the one the client sent.
-     * Since Spring Cloud Gateway 4.1.8 those filters are off until `spring.cloud.gateway.server.webflux.trusted-proxies`
-     * is set (see ROADMAP). If this test fails after an upgrade or a config change, the upstreams now see them.
+     * The upstream gets the `X-Forwarded-*` headers: the client's ip appended to the `X-Forwarded-For` of a trusted
+     * proxy (the default `TRUSTED_PROXIES=.*`), the public host and scheme, and the prefix the rewrite took out.
+     * Without a trusted proxy, see `UntrustedProxyIT`.
      */
     @Test
-    void forwardedHeadersDoNotReachTheUpstream() {
+    void forwardedHeadersReachTheUpstream() {
         String id = unique();
         createRoute(rewriteRoute("fwd-" + id, "fwd-" + id));
 
@@ -80,7 +80,8 @@ class GatewayProxyIT extends IntegrationTest {
                 .header("X-Forwarded-For", "203.0.113.9")
                 .exchange()
                 .expectStatus().isOk()
-                .expectBody(String.class).isEqualTo("null|null|null|null");
+                .expectBody(String.class).value(body -> assertThat(body)
+                        .matches("203\\.0\\.113\\.9,[0-9a-f.:]+\\|localhost:\\d+\\|http\\|/fwd-%s".formatted(id)));
     }
 
     /**

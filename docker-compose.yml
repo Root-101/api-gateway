@@ -55,6 +55,8 @@ services:
       ADMIN_LOCKOUT_MINUTES: 15
       ADMIN_TOKEN_MINUTES: 480
       CORS_ALLOWED_ORIGINS: "*"
+      #regex of the proxies whose X-Forwarded-* are believed; exposed directly (no proxy in front), set it to ""
+      TRUSTED_PROXIES: ".*"
 
       GATEWAY_CONNECT_TIMEOUT_MS: 10000
       GATEWAY_RESPONSE_TIMEOUT: 60s

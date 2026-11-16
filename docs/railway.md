@@ -139,6 +139,7 @@ Optional, with their default when not set:
 | `GATEWAY_RESPONSE_TIMEOUT` | `60s` | Longest wait for a service to answer, then `504`. Empty = no limit |
 | `GATEWAY_CONNECT_TIMEOUT_MS` | `10000` | Longest wait to connect to a service, in milliseconds, then `504` |
 | `CORS_ALLOWED_ORIGINS` | `*` | Comma separated origins allowed by CORS, for the admin API and every route |
+| `TRUSTED_PROXIES` | `.*` | Regex of the proxies whose `X-Forwarded-*` are believed. `.*` is right on Railway: the gateway is only reachable through its edge |
 | `ADMIN_MAX_FAILED_ATTEMPTS` | `10` | Failed logins from one IP before it's locked out. `0` disables the lockout |
 | `ADMIN_LOCKOUT_MINUTES` | `15` | Minutes a locked out IP waits |
 | `ADMIN_TOKEN_MINUTES` | `480` | Minutes a login token lasts |

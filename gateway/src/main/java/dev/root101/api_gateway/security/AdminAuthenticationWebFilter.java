@@ -1,6 +1,7 @@
 package dev.root101.api_gateway.security;
 
 
+import org.springframework.cloud.gateway.filter.headers.TrustedProxies;
 import dev.root101.api_gateway.features.http_logs.filter.HttpLogsWebFilter;
 import dev.root101.api_gateway.config.GlobalExceptionHandler;
 import org.springframework.http.HttpHeaders;
@@ -33,14 +34,18 @@ public class AdminAuthenticationWebFilter implements WebFilter {
 
     private final GlobalExceptionHandler errorHandler;
 
+    private final TrustedProxies trustedProxies;
+
     public AdminAuthenticationWebFilter(
             AdminAuthenticationManager adminAuthenticationManager,
             AdminTokens adminTokens,
             LoginAttemptsGuard loginAttemptsGuard,
             String adminBasePath,
-            GlobalExceptionHandler errorHandler
+            GlobalExceptionHandler errorHandler,
+            TrustedProxies trustedProxies
     ) {
         this.errorHandler = errorHandler;
+        this.trustedProxies = trustedProxies;
         this.adminAuthenticationManager = adminAuthenticationManager;
         this.adminTokens = adminTokens;
         this.loginAttemptsGuard = loginAttemptsGuard;
@@ -59,7 +64,7 @@ public class AdminAuthenticationWebFilter implements WebFilter {
         if (path.equals(adminBasePath + "/health")) {
             return chain.filter(exchange);
         }
-        String clientIp = HttpLogsWebFilter.getClientIp(exchange);
+        String clientIp = HttpLogsWebFilter.getClientIp(exchange, trustedProxies);
         String header = exchange.getRequest().getHeaders().getFirst(HttpHeaders.AUTHORIZATION);
         //only a POST is a try of the credentials (an OPTIONS or a GET there must not clear the count)
         boolean isLogin = path.equals(adminBasePath + "/auth/login") && exchange.getRequest().getMethod() == HttpMethod.POST;
