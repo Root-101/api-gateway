@@ -12,12 +12,6 @@ Rules:
 
 ---
 
-## 6.0.0 release
-
-- [ ] **Last step:** migrate to images on **GHCR** (`ghcr.io`): `.github/workflows/release.yml`
-  publishes them with each version tag. After the first tag, check they are public and use them in
-  `docker-compose.yml` and the deployment docs instead of building locally.
-
 ## Gateway features
 
 After 6.0.0, in priority order. Impact and effort are estimates from how the project is built
