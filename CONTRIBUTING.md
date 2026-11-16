@@ -77,6 +77,9 @@ python tool/mutate.py auth. logs.   # only the ids starting with these
 python tool/mutate.py --list
 ```
 
+**When:** only before merging to `master` (a release). While working on a feature or a fix, run
+the unit and integration tests (`./gradlew check`), not the mutations.
+
 - **One mutation per rule**, not per line, each naming the single test that must fail
   (`Class.method`). The rows of `ValidationIT` pin the annotations' output and are not mutated.
 - **Verdicts:** `KILLED` is the expected one. `SURVIVED` means the test misses the rule: fix the

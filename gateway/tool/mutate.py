@@ -154,9 +154,6 @@ MUTATIONS = [
     ("logs.first_forwarded_ip", "features/http_logs/filter/HttpLogsWebFilter.java",
      'tempClientIp = tempClientIp.split(",")[0].trim();', "tempClientIp = tempClientIp.trim();",
      "HttpLogsIT.logRouteWithoutRewriteAndLongForwardedFor"),
-    # not a mutation: dropping the `.onErrorResume(...)` of HttpLogsWebFilter changes nothing a client or the log
-    # can see (the ErrorWebExceptionHandler sets the status before the doFinally runs), checked on 2026-11-16 with
-    # upstream 502/504 and admin 404 errors. Equivalent, so no test can kill it.
     ("logs.admin_route", "features/http_logs/logic/usecase/HttpLogUseCaseImpl.java",
      "} else if (isAdminPath(request.getRequestedPath())) {", "} else if (false) {", "HttpLogsIT.whatIsAndIsNotLogged"),
     ("logs.final_route_rewrite", "features/http_logs/logic/usecase/HttpLogUseCaseImpl.java",

@@ -82,8 +82,7 @@ class RouteUseCaseImpl implements RouteUseCase, SmartInitializingSingleton {
                 )
                 .count()
                 .block(Duration.ofSeconds(60));
-        //on this (main) thread: the gateway listeners block, not allowed in a netty thread
-        routeUpdater.updateRoutes();
+        //no refresh needed: the gateway reads the routes on its first request
         log.info("{} routes loaded", count);
     }
 

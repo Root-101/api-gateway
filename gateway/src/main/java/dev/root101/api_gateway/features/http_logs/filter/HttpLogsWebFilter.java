@@ -5,7 +5,6 @@ import dev.root101.api_gateway.features.http_logs.logic.usecase.HttpLogUseCase;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cloud.gateway.route.Route;
 import org.springframework.cloud.gateway.support.ServerWebExchangeUtils;
-import dev.root101.api_gateway.config.GlobalExceptionHandler;
 import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatusCode;
@@ -30,17 +29,13 @@ public class HttpLogsWebFilter implements WebFilter {
 
     private final String adminBasePath;
 
-    private final GlobalExceptionHandler errorHandler;
-
     public HttpLogsWebFilter(
             HttpLogUseCase httpLogUseCase,
             @Value("${app.admin.base-path}")
-            String adminBasePath,
-            GlobalExceptionHandler errorHandler
+            String adminBasePath
     ) {
         this.httpLogUseCase = httpLogUseCase;
         this.adminBasePath = adminBasePath;
-        this.errorHandler = errorHandler;
     }
 
     @Override
@@ -71,9 +66,8 @@ public class HttpLogsWebFilter implements WebFilter {
         final OffsetDateTime serverTime = OffsetDateTime.now();
 
         long startTime = System.nanoTime();
+        //errors: the ErrorWebExceptionHandler sets their status before this doFinally runs
         return chain.filter(exchange)
-                //errors answered here, so their status is already set when the log is saved
-                .onErrorResume(error -> errorHandler.handle(exchange, error))
                 .doFinally(
                         signalType -> {
                             int duration = (int) ((System.nanoTime() - startTime) / 1_000_000);//millis, monotonic clock
