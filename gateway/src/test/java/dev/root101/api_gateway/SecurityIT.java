@@ -185,11 +185,12 @@ class SecurityIT extends IntegrationTest {
 
     /**
      * A successful login resets the failed attempts: a client using only tokens never sends Basic, which also resets them.
+     * A correct Basic auth resets them too.
      */
     @Test
     void successfulLoginResetsFailedAttempts() {
         String ip = "203.0.113." + (int) (Math.random() * 200);
-        for (int round = 0; round < 2; round++) {
+        for (int round = 0; round < 3; round++) {
             for (int i = 0; i < 4; i++) {
                 webTestClient.post().uri("/%s/auth/login".formatted(ADMIN_PATH))
                         .header("X-Forwarded-For", ip)
@@ -197,7 +198,15 @@ class SecurityIT extends IntegrationTest {
                         .exchange()
                         .expectStatus().isUnauthorized();
             }
-            loginToken(ip);
+            if (round == 1) {
+                webTestClient.get().uri("/%s/routes".formatted(ADMIN_PATH))
+                        .header("X-Forwarded-For", ip)
+                        .header(HttpHeaders.AUTHORIZATION, adminAuth())
+                        .exchange()
+                        .expectStatus().isOk();
+            } else {
+                loginToken(ip);
+            }
         }
     }
 

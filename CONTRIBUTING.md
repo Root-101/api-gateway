@@ -60,6 +60,34 @@ From `gateway/`:
 The coverage report is in `gateway/build/reports/jacoco/test/html`. A bug fix comes with the test
 that would have caught it.
 
+The integration tests start the whole gateway on a random port with a real PostgreSQL and a fake
+upstream service (`support/IntegrationTest`), and call it over HTTP like a client: every admin
+endpoint, the proxying and what gets logged. `ValidationIT` has one row per broken field of every
+request object, on every endpoint that takes it, pinning the `fieldName` and the message.
+
+### Mutation testing
+
+Coverage says a line ran, not that a test would notice it changing. `gateway/tool/mutate.py` breaks
+one business rule at a time (drop a check, move a limit, remove a transaction, change a filter of
+the log search) and runs the one test that must catch it:
+
+```bash
+python tool/mutate.py               # every mutation (about an hour)
+python tool/mutate.py auth. logs.   # only the ids starting with these
+python tool/mutate.py --list
+```
+
+- **One mutation per rule**, not per line, each naming the single test that must fail
+  (`Class.method`). The rows of `ValidationIT` pin the annotations' output and are not mutated.
+- **Verdicts:** `KILLED` is the expected one. `SURVIVED` means the test misses the rule: fix the
+  test, never drop the mutation. `COMPILE ERROR`, `NO TESTS` or `BAD PATTERN` (the old text is not
+  there exactly once) mean the mutation itself needs fixing.
+- **A new rule gets its mutation** in the list, proven `KILLED` before the commit. It is run by
+  hand, not in `check` or the CI.
+- The script restores each file from the bytes it read, never with `git checkout` (it would wipe
+  uncommitted work), and checks that `git diff -- src/main` is the same before and after. If it is
+  killed midway, the current mutation stays applied: check that diff and undo it by hand.
+
 The CI (`.github/workflows/ci.yml`) runs the tests and the coverage gate, analyzes and builds the
 console, and builds the native image, starts it and runs a smoke test against it. A version tag
 publishes both images to GHCR once the CI passes.

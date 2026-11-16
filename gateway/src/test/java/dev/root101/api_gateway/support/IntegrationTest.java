@@ -60,6 +60,8 @@ public abstract class IntegrationTest {
      *     <li>`/cors`: also sends its own CORS headers</li>
      *     <li>`/status/{code}`: answers with that status</li>
      *     <li>`/echo`: answers `<method>|<uri>|<X-Test header>|<body>`</li>
+     *     <li>`/bytes`: answers the request body, byte for byte</li>
+     *     <li>`/forwarded`: answers `<X-Forwarded-For>|<X-Forwarded-Host>|<X-Forwarded-Proto>|<X-Forwarded-Prefix>`</li>
      * </ul>
      */
     protected static final DisposableServer UPSTREAM;
@@ -77,6 +79,14 @@ public abstract class IntegrationTest {
                     Matcher status = STATUS.matcher(uri);
                     if (status.find()) {
                         res.status(HttpResponseStatus.valueOf(Integer.parseInt(status.group(1))));
+                    }
+                    if (uri.contains("/bytes")) {
+                        return res.send(req.receive().retain());
+                    }
+                    if (uri.contains("/forwarded")) {
+                        var h = req.requestHeaders();
+                        return res.sendString(Mono.just(h.get("X-Forwarded-For") + "|" + h.get("X-Forwarded-Host")
+                                + "|" + h.get("X-Forwarded-Proto") + "|" + h.get("X-Forwarded-Prefix")));
                     }
                     if (uri.contains("/echo")) {
                         return res.sendString(req.receive().aggregate().asString().defaultIfEmpty("")
