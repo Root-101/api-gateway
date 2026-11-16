@@ -9,7 +9,8 @@ import dev.root101.api_gateway.features.http_logs.logic.model.HttpLogSearchReque
 import dev.root101.api_gateway.features.http_logs.logic.model.HttpLogSearchResponse;
 import dev.root101.api_gateway.features.routes.data.entity.RouteEntity;
 import dev.root101.api_gateway.features.routes.logic.usecase.RouteUseCase;
-import dev.root101.commons.validation.ValidationService;
+import jakarta.validation.ConstraintViolationException;
+import jakarta.validation.Validator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -23,7 +24,7 @@ public class HttpLogUseCaseImpl implements HttpLogUseCase {
 
     private final HttpLogWriter writer;
     private final HttpLogSearchRepo searchRepo;
-    private final ValidationService vs;
+    private final Validator validator;
     private final RouteUseCase routeUseCase;
 
     private final String adminBasePath;
@@ -34,7 +35,7 @@ public class HttpLogUseCaseImpl implements HttpLogUseCase {
 
     public HttpLogUseCaseImpl(
             HttpLogWriter writer, HttpLogSearchRepo searchRepo,
-            ValidationService vs,
+            Validator validator,
             @Value("${app.admin.base-path}")
             String adminBasePath,
             @Value("${app.logs.max-search-size}")
@@ -43,7 +44,7 @@ public class HttpLogUseCaseImpl implements HttpLogUseCase {
     ) {
         this.writer = writer;
         this.searchRepo = searchRepo;
-        this.vs = vs;
+        this.validator = validator;
         this.adminBasePath = adminBasePath;
         this.maxSearchSize = maxSearchSize;
         this.routeUseCase = routeUseCase;
@@ -69,9 +70,6 @@ public class HttpLogUseCaseImpl implements HttpLogUseCase {
     @Override
     public void saveHttpLog(HttpLogRequest request) {
         try {
-            //validate the request
-            vs.validate(request);
-
             //check if it's a request to a configured route, if it is, load the corresponding RouteEntity
             RouteEntity routeEntity = (request.getRoute() != null) ? routeUseCase.findCachedById(request.getRoute().getId()) : null;
 
@@ -102,7 +100,11 @@ public class HttpLogUseCaseImpl implements HttpLogUseCase {
                     request.getDuration(),
                     routeLog
             );
-            vs.validate(entity);
+            //a value the column can't hold would fail the whole batch insert: this log is dropped instead
+            var violations = validator.validate(entity);
+            if (!violations.isEmpty()) {
+                throw new ConstraintViolationException(violations);
+            }
             writer.enqueue(entity);
         } catch (Exception e) {
             log.error("Something went wrong saving log", e);

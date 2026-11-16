@@ -43,8 +43,8 @@ dependencies {
     compileOnly 'org.projectlombok:lombok'
     annotationProcessor 'org.projectlombok:lombok'
 
-    //custom exceptions, validations & more
-    implementation 'dev.root101.commons:commons:5.5.3'
+    //bean validation (hibernate validator + the EL its messages use)
+    implementation 'org.springframework.boot:spring-boot-starter-validation'
 
     //flyway (spring boot 4: the auto-configuration lives in its own starter)
     implementation 'org.springframework.boot:spring-boot-starter-flyway'

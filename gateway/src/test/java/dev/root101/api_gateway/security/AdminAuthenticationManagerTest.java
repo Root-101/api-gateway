@@ -1,6 +1,6 @@
 package dev.root101.api_gateway.security;
 
-import dev.root101.commons.exceptions.UnauthorizedException;
+import dev.root101.api_gateway.config.LocalizedException;
 import org.junit.jupiter.api.Test;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -39,8 +39,8 @@ class AdminAuthenticationManagerTest {
 
     @Test
     void wrongCredentialsAre401() {
-        StepVerifier.create(manager.authenticate(basic("admin:wrong"))).verifyError(UnauthorizedException.class);
-        StepVerifier.create(manager.authenticate(basic("other:pa:ss-ñ"))).verifyError(UnauthorizedException.class);
+        StepVerifier.create(manager.authenticate(basic("admin:wrong"))).verifyError(LocalizedException.class);
+        StepVerifier.create(manager.authenticate(basic("other:pa:ss-ñ"))).verifyError(LocalizedException.class);
     }
 
     @Test
@@ -52,7 +52,7 @@ class AdminAuthenticationManagerTest {
                 basic("admin:"),
                 basic(" : "),
         }) {
-            StepVerifier.create(manager.authenticate(auth)).verifyError(UnauthorizedException.class);
+            StepVerifier.create(manager.authenticate(auth)).verifyError(LocalizedException.class);
         }
     }
 

@@ -8,7 +8,6 @@ import dev.root101.api_gateway.features.routes.logic.model.RouteConfigResponse;
 import dev.root101.api_gateway.features.routes.utils.RouteDefinitionMapper;
 import dev.root101.api_gateway.features.routes.utils.RouteUpdater;
 import dev.root101.api_gateway.config.LocalizedException;
-import dev.root101.commons.validation.ValidationService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -45,7 +44,6 @@ class RouteUseCaseImpl implements RouteUseCase, SmartInitializingSingleton {
 
     private final RouteRepo routeRepo;
 
-    private final ValidationService vs;
 
     private final TransactionalOperator tx;
 
@@ -56,13 +54,11 @@ class RouteUseCaseImpl implements RouteUseCase, SmartInitializingSingleton {
             RouteDefinitionWriter routeDefinitionWriter,
             RouteUpdater routeUpdater,
             RouteRepo routeRepo,
-            ValidationService validationService,
             TransactionalOperator tx
     ) {
         this.routeDefinitionWriter = routeDefinitionWriter;
         this.routeUpdater = routeUpdater;
         this.routeRepo = routeRepo;
-        this.vs = validationService;
         this.tx = tx;
     }
 
@@ -113,9 +109,8 @@ class RouteUseCaseImpl implements RouteUseCase, SmartInitializingSingleton {
                 .map(this::buildEntity)
                 .collectList()
                 .flatMap(
-                        entities -> Mono.fromRunnable(() -> vs.validate(entities))
-                                //all or nothing: a failure in the middle must not leave half the routes in db
-                                .then(routeRepo.saveAll(entities).collectList().as(tx::transactional))
+                        //all or nothing: a failure in the middle must not leave half the routes in db
+                        entities -> routeRepo.saveAll(entities).collectList().as(tx::transactional)
                 )
                 .flatMap(saved -> apply(saved, List.of()));
     }
@@ -132,8 +127,7 @@ class RouteUseCaseImpl implements RouteUseCase, SmartInitializingSingleton {
                 .map(this::buildEntity)
                 .collectList()
                 .flatMap(
-                        entities -> Mono.fromRunnable(() -> vs.validate(entities))
-                                .then(routeRepo.findAll().collectMap(RouteEntity::getName))
+                        entities -> routeRepo.findAll().collectMap(RouteEntity::getName)
                                 .flatMap(current -> {
                                     for (RouteEntity entity : entities) {
                                         RouteEntity old = current.remove(entity.getName());
@@ -206,8 +200,7 @@ class RouteUseCaseImpl implements RouteUseCase, SmartInitializingSingleton {
                     entityToEdit.setRouteId(oldRoute.getRouteId());//maintain same id
                     entityToEdit.setCreatedAt(oldRoute.getCreatedAt());//maintain same create_at
 
-                    return Mono.fromRunnable(() -> vs.validate(entityToEdit))
-                            .then(routeRepo.save(entityToEdit))
+                    return routeRepo.save(entityToEdit)
                             //same id: the writer replaces the old definition
                             .flatMap(saved -> apply(List.of(saved), List.of()))
                             .map(List::getFirst);

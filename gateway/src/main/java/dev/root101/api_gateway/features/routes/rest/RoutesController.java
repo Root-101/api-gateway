@@ -3,8 +3,7 @@ package dev.root101.api_gateway.features.routes.rest;
 import dev.root101.api_gateway.features.routes.logic.model.RouteConfigRequest;
 import dev.root101.api_gateway.features.routes.logic.model.RouteConfigResponse;
 import dev.root101.api_gateway.features.routes.logic.usecase.RouteUseCase;
-import dev.root101.api_gateway.features.routes.utils.RouteRules;
-import dev.root101.commons.validation.ValidationService;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
@@ -22,12 +21,10 @@ import java.util.List;
 public class RoutesController {
 
     private final RouteUseCase routeUseCase;
-    private final ValidationService validationService;
 
     @Autowired
-    public RoutesController(RouteUseCase routeUseCase, ValidationService validationService) {
+    public RoutesController(RouteUseCase routeUseCase) {
         this.routeUseCase = routeUseCase;
-        this.validationService = validationService;
     }
 
     /**
@@ -48,10 +45,7 @@ public class RoutesController {
      */
     @PostMapping("/batch")
     @ResponseStatus(HttpStatus.CREATED)
-    public Mono<List<RouteConfigResponse>> addAllRoutes(@RequestBody List<RouteConfigRequest> routeDefinition) {
-        this.validationService.validate(routeDefinition);
-        RouteRules.check(routeDefinition);
-
+    public Mono<List<RouteConfigResponse>> addAllRoutes(@RequestBody List<@Valid RouteConfigRequest> routeDefinition) {
         return routeUseCase.addAllRoutes(routeDefinition);
     }
 
@@ -62,10 +56,7 @@ public class RoutesController {
      * @return The routes, as saved
      */
     @PutMapping
-    public Mono<List<RouteConfigResponse>> replaceAllRoutes(@RequestBody List<RouteConfigRequest> routeDefinition) {
-        this.validationService.validate(routeDefinition);
-        RouteRules.check(routeDefinition);
-
+    public Mono<List<RouteConfigResponse>> replaceAllRoutes(@RequestBody List<@Valid RouteConfigRequest> routeDefinition) {
         return routeUseCase.replaceAllRoutes(routeDefinition);
     }
 
@@ -77,10 +68,7 @@ public class RoutesController {
      */
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public Mono<RouteConfigResponse> addRoute(@RequestBody RouteConfigRequest routeDefinition) {
-        this.validationService.validate(routeDefinition);
-        RouteRules.check(routeDefinition);
-
+    public Mono<RouteConfigResponse> addRoute(@Valid @RequestBody RouteConfigRequest routeDefinition) {
         return routeUseCase.addRoute(routeDefinition);
     }
 
@@ -93,9 +81,7 @@ public class RoutesController {
      */
     @PostMapping("/validate")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public Mono<Void> validateRoute(@RequestBody RouteConfigRequest routeDefinition) {
-        this.validationService.validate(routeDefinition);
-        RouteRules.check(routeDefinition);
+    public Mono<Void> validateRoute(@Valid @RequestBody RouteConfigRequest routeDefinition) {
 
         return Mono.empty();
     }
@@ -119,10 +105,7 @@ public class RoutesController {
      * @return The edited route
      */
     @PutMapping("/{route-id}")
-    public Mono<RouteConfigResponse> editRoute(@PathVariable("route-id") String routeId, @RequestBody RouteConfigRequest routeDefinition) {
-        this.validationService.validate(routeDefinition);
-        RouteRules.check(routeDefinition);
-
+    public Mono<RouteConfigResponse> editRoute(@PathVariable("route-id") String routeId, @Valid @RequestBody RouteConfigRequest routeDefinition) {
         return routeUseCase.editRoute(routeId, routeDefinition);
     }
 

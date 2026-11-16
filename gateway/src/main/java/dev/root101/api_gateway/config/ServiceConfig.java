@@ -4,7 +4,6 @@ import tools.jackson.databind.DeserializationFeature;
 import tools.jackson.databind.PropertyNamingStrategies;
 import tools.jackson.databind.json.JsonMapper;
 import tools.jackson.databind.cfg.DateTimeFeature;
-import dev.root101.commons.validation.ValidationService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -15,6 +14,8 @@ import org.hibernate.validator.messageinterpolation.ResourceBundleMessageInterpo
 import org.springframework.context.MessageSource;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Primary;
+import org.springframework.validation.beanvalidation.LocalValidatorFactoryBean;
 import org.springframework.validation.beanvalidation.MessageSourceResourceBundleLocator;
 
 
@@ -67,14 +68,18 @@ public class ServiceConfig {
                 .build();
     }
 
+    /**
+     * The bean validation of `@Valid` (replaces Spring Boot's): constraint messages from messages*.properties, in
+     * every language, and the error handler picks the one of the request (see I18n). Primary: the gateway looks up
+     * a single Spring Validator to check the route definitions (WebFlux registers another one)
+     */
     @Bean
-    public ValidationService validationService(PropertyNamingStrategies.NamingBase namingStrategy, MessageSource messageSource) {
-        //constraint messages from messages*.properties, in every language (see I18n)
-        return ValidationService.builder()
-                .namingStrategy(namingStrategy)
-                .messageInterpolator(I18n.everyLanguage(
-                        new ResourceBundleMessageInterpolator(new MessageSourceResourceBundleLocator(messageSource))))
-                .build();
+    @Primary
+    public LocalValidatorFactoryBean defaultValidator(MessageSource messageSource) {
+        LocalValidatorFactoryBean validator = new LocalValidatorFactoryBean();
+        validator.setMessageInterpolator(I18n.everyLanguage(
+                new ResourceBundleMessageInterpolator(new MessageSourceResourceBundleLocator(messageSource))));
+        return validator;
     }
 
 }

@@ -37,7 +37,7 @@ public final class I18n {
     }
 
     /**
-     * Bean validation runs where the request isn't at hand (controllers, use cases): each message is interpolated
+     * Bean validation runs where the request isn't at hand (`@Valid`, before the handler): each message is interpolated
      * in every language, and {@link #text} keeps the one of the request.
      */
     public static MessageInterpolator everyLanguage(MessageInterpolator delegate) {
@@ -49,9 +49,10 @@ public final class I18n {
                         .collect(Collectors.joining(SEPARATOR));
             }
 
+            //Spring's validator calls this one with the server's locale: every language too
             @Override
             public String interpolate(String template, Context context, Locale locale) {
-                return delegate.interpolate(template, context, locale);
+                return interpolate(template, context);
             }
         };
     }

@@ -1,7 +1,5 @@
 package dev.root101.api_gateway.config;
 
-import dev.root101.commons.exceptions.ApiException;
-import dev.root101.commons.exceptions.ValidationException;
 import io.netty.channel.ConnectTimeoutException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -13,9 +11,13 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.MediaType;
 import org.springframework.http.server.reactive.ServerHttpResponse;
+import org.springframework.validation.FieldError;
+import org.springframework.validation.method.ParameterErrors;
 import org.springframework.stereotype.Component;
 import org.springframework.web.ErrorResponse;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.support.WebExchangeBindException;
+import org.springframework.web.method.annotation.HandlerMethodValidationException;
 import org.springframework.web.reactive.resource.NoResourceFoundException;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.server.ServerWebExchange;
@@ -24,6 +26,7 @@ import reactor.core.publisher.Mono;
 import reactor.netty.http.client.PrematureCloseException;
 import tools.jackson.core.JacksonException;
 import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.PropertyNamingStrategies;
 
 import java.net.ConnectException;
 import java.net.UnknownHostException;
@@ -31,6 +34,8 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import java.util.concurrent.TimeoutException;
 
 /**
@@ -48,10 +53,12 @@ public class GlobalExceptionHandler implements ErrorWebExceptionHandler {
 
     private final ObjectMapper objectMapper;
     private final MessageSource messages;
+    private final PropertyNamingStrategies.NamingBase namingStrategy;
 
-    public GlobalExceptionHandler(ObjectMapper objectMapper, MessageSource messages) {
+    public GlobalExceptionHandler(ObjectMapper objectMapper, MessageSource messages, PropertyNamingStrategies.NamingBase namingStrategy) {
         this.objectMapper = objectMapper;
         this.messages = messages;
+        this.namingStrategy = namingStrategy;
     }
 
     @Override
@@ -66,17 +73,26 @@ public class GlobalExceptionHandler implements ErrorWebExceptionHandler {
         List<Map<String, String>> violations = null;
 
         switch (rawEx) {
-            case ValidationException ex -> {
-                status = ex.getStatusCode();
+            //`@Valid` on a body: its fields
+            case WebExchangeBindException ex -> {
+                status = HttpStatus.UNPROCESSABLE_CONTENT;
                 detail = text("error.validation", locale);
-                violations = ex.getMessages().stream()
-                        .map(m -> violation(fieldName(m.source()), text(m.message(), locale)))
+                violations = violations(ex.getFieldErrors(), "", locale);
+            }
+            //`@Valid` on a list body: the fields of each element, `[0].name`
+            case HandlerMethodValidationException ex -> {
+                status = HttpStatus.UNPROCESSABLE_CONTENT;
+                detail = text("error.validation", locale);
+                violations = ex.getParameterValidationResults().stream()
+                        .flatMap(result -> result instanceof ParameterErrors errors
+                                ? violations(errors.getFieldErrors(), "[%d].".formatted(errors.getContainerIndex()), locale).stream()
+                                : Stream.empty())
                         .toList();
             }
-            //its message is a key of the messages files (or a plain text, kept as is)
-            case ApiException ex -> {
+            //its message is a key of the messages files
+            case LocalizedException ex -> {
                 status = ex.status();
-                detail = I18n.text(messages, ex.getMessage(), ex instanceof LocalizedException l ? l.args() : null, locale);
+                detail = I18n.text(messages, ex.getMessage(), ex.args(), locale);
             }
             //unique constraints (ej: route name in a race condition)
             case DataIntegrityViolationException ex -> {
@@ -187,11 +203,19 @@ public class GlobalExceptionHandler implements ErrorWebExceptionHandler {
         return violation;
     }
 
+    private List<Map<String, String>> violations(List<FieldError> errors, String prefix, Locale locale) {
+        return errors.stream()
+                .map(error -> violation(prefix + fieldName(error.getField()), text(error.getDefaultMessage(), locale)))
+                .toList();
+    }
+
     /**
-     * The JSON path of the field, as the client sent it: `rewrite_path.replace_from`, `[0].name` in a list
+     * The JSON path of a Java field path, as the client sent it: `rewritePath.replaceFrom` → `rewrite_path.replace_from`
      */
-    static String fieldName(String source) {
-        return source == null ? "" : source.replaceFirst("^root(?=\\[)", "");
+    String fieldName(String javaPath) {
+        return Stream.of(javaPath.split("\\."))
+                .map(name -> namingStrategy.nameForField(null, null, name))
+                .collect(Collectors.joining("."));
     }
 
     /**
