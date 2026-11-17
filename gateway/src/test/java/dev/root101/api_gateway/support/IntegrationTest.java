@@ -49,7 +49,7 @@ public abstract class IntegrationTest {
     public static final String ADMIN_PASSWORD = "admin123**";
 
     //singleton container: started once, stopped by testcontainers (ryuk) when the JVM ends
-    protected static final PostgreSQLContainer POSTGRES = new PostgreSQLContainer("postgres:16");
+    protected static final PostgreSQLContainer POSTGRES = new PostgreSQLContainer("postgres:18");
 
     private static final Pattern STATUS = Pattern.compile("/status/(\\d{3})");
 

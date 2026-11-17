@@ -3,7 +3,7 @@ services:
   # POSTGRES DATABASE
   # -------------------
   postgres:
-    image: postgres:16
+    image: postgres:18
     container_name: api_gateway_db
     restart: unless-stopped
     environment:
@@ -13,7 +13,7 @@ services:
     ports:
       - "127.0.0.1:5432:5432"    #local only: the gateway reaches it on the compose network
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - postgres_data:/var/lib/postgresql    #18+ keeps its data in a folder per major version under it
     healthcheck:
       test: [ "CMD", "pg_isready", "-U", "postgres", "-d", "api-gateway-local" ]
       interval: 2s
