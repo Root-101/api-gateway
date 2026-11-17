@@ -57,7 +57,8 @@ Logged out, any URL brings you here; logged in, this one takes you to Routes.
 
 ![The rail, expanded](design/screens/20-rail-expanded.png)
 
-The rail on the left: **Routes** and **Http logs**; at its foot the **language** (English or
+The rail on the left: **Routes**, **Http logs** and, below them, **Maintenance** (of the whole
+gateway, see [Maintenance](#maintenance)); at its foot the **language** (English or
 Spanish; the browser's at first, the chosen one after that), **Logout** and the version of the
 console. Every request carries it as `Accept-Language`, so the messages of the gateway (a field
 it rejects, a route that doesn't exist) come in that language too
@@ -74,7 +75,8 @@ mouse or keyboard activity.
 
 Every route of the gateway as a card: its name and description, **FROM** (the public URL it
 answers, the gateway's URL plus its path) and **TO** (where it forwards, with the rewrite of the
-path applied), each with a button to copy it. Each card has **Edit**, **Duplicate** and **Delete**.
+path applied), each with a button to copy it. Each card has **Maintenance** (the wrench, see
+[Maintenance](#maintenance)), **Edit**, **Duplicate** and **Delete**.
 The search at the top filters by name, path or URI, in the browser.
 
 ![No routes yet](design/screens/05-routes-empty.png)
@@ -133,7 +135,8 @@ Asks first, with the route it deletes: requests to its path stop being forwarded
 ### Backup and restore
 
 **Backup** downloads every route as a JSON file, `routes-backup-<date>.json`: a list with the same
-fields as the form.
+fields as the form, and the maintenance of each route. The maintenance of the whole gateway is not
+in it.
 
 ![Restore routes](design/screens/10-routes-restore.png)
 
@@ -144,10 +147,48 @@ list of routes, or that repeats a name (case-sensitive, like the API), says why 
 
 Then it asks to confirm, with the routes there are now and the ones in the file side by side:
 **every current route is removed** and replaced with the ones in the file, all or nothing. The
-routes get new ids, so the logs of the old ones no longer find them by route.
+routes get new ids, so the logs of the old ones no longer find them by route. Each route gets the
+maintenance it has in the file; one without it keeps the one it had.
 
 **Behind it:** [`GET /_admin/routes`](api.md#list-routes) for the backup and
 [`PUT /_admin/routes`](api.md#replace-every-route) to restore.
+
+## Maintenance
+
+A route in maintenance answers every request with a `503` without reaching its service; the whole
+gateway can be put in maintenance too, and then every route does. The console, `/health` and the
+admin API keep working.
+
+![A route in maintenance](design/screens/21-maintenance-route.png)
+
+A route in maintenance has an orange border, its wrench lit, and under its URLs what its callers
+get: the message and when it is back. The count at the top says how many routes are in maintenance.
+
+![Maintenance of a route](design/screens/22-maintenance-route-dialog.png)
+
+The wrench of a card opens its maintenance; **Maintenance** in the rail opens the one of the whole
+gateway. Both have the same fields:
+
+| Field           | What it is                                                                                              |
+|-----------------|---------------------------------------------------------------------------------------------------------|
+| **In maintenance** | On or off. Off keeps the message and the time for next time                                          |
+| **Message**     | Optional, up to 500 characters. Empty, callers get "The service is under maintenance, try again later" |
+| **Back at**     | Optional. Callers get it as `Retry-After` (seconds) until then. It never turns maintenance off by itself |
+
+Below them, **what callers get**: the `503`, the `Retry-After` if there is one, and the message.
+When a route and the whole gateway are both on, the route answers with its own message and time,
+and its dialog says so.
+
+![The whole gateway in maintenance](design/screens/23-maintenance-gateway.png)
+
+While the whole gateway is in maintenance, a banner on every screen says so, with when it is back,
+**Edit** and **Turn off** (which keeps the message and the time); **Maintenance** in the rail shows
+**ON**, or a dot when the rail is folded.
+
+![Maintenance of the whole gateway](design/screens/24-maintenance-gateway-dialog.png)
+
+**Behind it:** [`PUT /_admin/routes/{id}/maintenance`](api.md#maintenance) for a route, and
+[`GET` and `PUT /_admin/maintenance`](api.md#maintenance) for the whole gateway.
 
 ## Http logs
 

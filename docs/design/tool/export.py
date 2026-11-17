@@ -46,6 +46,11 @@ SCREENS = [
     ('States', 'session-expired', 'Routes', 'Session expired: log in again', 'state=session'),
     ('States', 'not-found', 'NotFound', 'A URL that doesn\'t exist', ''),
     ('Navigation', 'rail-expanded', 'Routes', 'Navigation rail, expanded', 'menu=true'),
+    ('Maintenance', 'maintenance-route', 'MaintRoute', 'A route in maintenance', ''),
+    ('Maintenance', 'maintenance-route-dialog', 'MaintRouteDialog', 'Maintenance of a route', ''),
+    ('Maintenance', 'maintenance-gateway', 'MaintGlobal', 'The whole gateway in maintenance', ''),
+    ('Maintenance', 'maintenance-gateway-dialog', 'MaintGlobalDialog', 'Maintenance of the whole gateway',
+     ''),
 ]
 
 # (file name, artboard, props): the brand images, at their size on the canvas
@@ -109,7 +114,9 @@ def main(source: Path) -> None:
         pages.append(f'<div class="p"><div><div class="s">{section}</div><h1>{caption}</h1></div>'
                      f'<img src="{out.as_uri()}"></div>')
 
-    images = fresh(DESIGN / 'brand/images')
+    # Not emptied: brand/images also holds banner.png, cropped by hand
+    images = DESIGN / 'brand/images'
+    images.mkdir(parents=True, exist_ok=True)
     for name, board, props in BRAND:
         frame = canvas['boards'][f'{board}.dc.html']
         shot(port, board, props, frame['w'], frame['h'], images / name, spare=40)
