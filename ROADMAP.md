@@ -15,14 +15,16 @@ Rules:
 ## Gateway features
 
 After 6.0.0, in priority order. Impact and effort are estimates from how the project is built
-today. Every new option of the gateway or of a route is a key of the `setting` table (no
-migration, see decision 17 in `DECISIONS.md`), a field in the admin API, the console form, and
-GraalVM reflection hints for its value and the predicates and filters it uses.
+today. An option of a route or of the gateway is an add-on: a new `type` of the `addon` table
+(no migration, see decision 17 in `DECISIONS.md`), its own endpoints under `addons/`, its key in
+`addons`, its block in the console's route panel, and GraalVM reflection hints for its records and
+the predicates and filters it uses.
 
 1. [ ] **Rate limiting per route.** Requests per IP (or API key) per route, `429` with
    `Retry-After`; protects the services from abuse and spikes. Impact: high, the first thing
-   expected from a gateway. Effort: medium. Migration (limit and window per route), API, console
-   fields, native hints. In memory is enough for one instance; Redis if there are ever several.
+   expected from a gateway. Effort: medium. An add-on (`rate_limit`: limit, per second/minute/hour,
+   burst), its endpoints, its block in the route panel, native hints. Counters in memory are enough
+   for one instance; Redis if there are ever several.
 2. [ ] **Authentication towards the services (JWT / API key).** The gateway validates the token
    before passing the request and forwards the identity in headers (`X-User-Id`), so the services
    stop validating it each on their own. Impact: high. Effort: high. Design (issuer, JWKS, keys),
@@ -63,8 +65,13 @@ GraalVM reflection hints for its value and the predicates and filters it uses.
 - [ ] Gateway: **HTML maintenance page.** Today a route in maintenance answers a Problem Details
   (JSON) to everyone. A browser (`Accept: text/html`) could get a page instead: first one built-in
   template (title, message, return time, in the request's language, no template engine), later the
-  admin's own HTML as another key of `setting` (served as is to the end users: review it as a
+  admin's own HTML in the maintenance add-on (served as is to the end users: review it as a
   security change).
+
+- [ ] Gateway: **Health check add-on.** Each route can have a health check (`health_check`: path,
+  every 10 s to 1 h): a scheduler calls it and keeps the last result (time, status, ms) in the
+  add-on's `state`; the console shows LIVE / DOWN and a "Run now". The gateway calling the services
+  on its own: review it as a security change. A history (uptime) would be a new table.
 
 - [ ] Gateway: **HTTP/2 and gRPC** support, for a later version (not 6.0.0). gRPC needs HTTP/2 end
   to end (trailers, multiplexed streams): enable it on the gateway server (`server.http2.enabled`)

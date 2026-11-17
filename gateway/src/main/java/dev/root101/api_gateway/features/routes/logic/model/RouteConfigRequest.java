@@ -1,6 +1,6 @@
 package dev.root101.api_gateway.features.routes.logic.model;
 
-import dev.root101.api_gateway.features.maintenance.logic.model.Maintenance;
+import dev.root101.api_gateway.features.addons.logic.model.AddonsRequest;
 import dev.root101.api_gateway.features.routes.utils.ValidRoute;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
@@ -54,9 +54,9 @@ public class RouteConfigRequest {
     private String description;
 
     /**
-     * The maintenance of the route, only applied by the restore (`PUT /routes`): create, edit and multi-add ignore
-     * it (it has its own endpoint). Can be null: the restore keeps the current one.
+     * The add-ons of the route, only applied by the restore (`PUT /routes`): create, edit and multi-add ignore them
+     * (each type has its own endpoints). Null: the restore keeps the current ones.
      */
     @Valid
-    private Maintenance maintenance;
+    private AddonsRequest addons;
 }

@@ -1008,7 +1008,7 @@
           ]
         },
         {
-          "name": "maintenance - on",
+          "name": "maintenance - set",
           "request": {
             "method": "PUT",
             "header": [
@@ -1018,7 +1018,7 @@
               }
             ],
             "url": {
-              "raw": "{{gateway-url}}/{{gateway-admin-path}}/routes/{{route-id}}/maintenance",
+              "raw": "{{gateway-url}}/{{gateway-admin-path}}/routes/{{route-id}}/addons/maintenance",
               "host": [
                 "{{gateway-url}}"
               ],
@@ -1026,6 +1026,7 @@
                 "{{gateway-admin-path}}",
                 "routes",
                 "{{route-id}}",
+                "addons",
                 "maintenance"
               ]
             },
@@ -1048,8 +1049,11 @@
                 "exec": [
                   "pm.test('status is 200', () => pm.response.to.have.status(200));",
                   "pm.test('returns the saved maintenance', () => {",
-                  "    pm.expect(pm.response.json().enabled).to.eql(true);",
-                  "    pm.expect(pm.response.json().message).to.eql('Back at 14:00');",
+                  "    const r = pm.response.json();",
+                  "    pm.expect(r.enabled).to.eql(true);",
+                  "    pm.expect(r.message).to.eql('Back at 14:00');",
+                  "    pm.expect(r.default_message).to.be.a('string');",
+                  "    pm.expect(r.state.enabled_at).to.be.a('string');",
                   "});"
                 ]
               }
@@ -1081,24 +1085,19 @@
                 "type": "text/javascript",
                 "exec": [
                   "pm.test('status is 200', () => pm.response.to.have.status(200));",
-                  "pm.test('the route is in maintenance', () => pm.expect(pm.response.json().maintenance.enabled).to.eql(true));"
+                  "pm.test('the route is in maintenance', () => pm.expect(pm.response.json().addons.maintenance.enabled).to.eql(true));"
                 ]
               }
             }
           ]
         },
         {
-          "name": "maintenance - off",
+          "name": "maintenance - disable",
           "request": {
-            "method": "PUT",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
+            "method": "POST",
+            "header": [],
             "url": {
-              "raw": "{{gateway-url}}/{{gateway-admin-path}}/routes/{{route-id}}/maintenance",
+              "raw": "{{gateway-url}}/{{gateway-admin-path}}/routes/{{route-id}}/addons/maintenance/disable",
               "host": [
                 "{{gateway-url}}"
               ],
@@ -1106,17 +1105,10 @@
                 "{{gateway-admin-path}}",
                 "routes",
                 "{{route-id}}",
-                "maintenance"
+                "addons",
+                "maintenance",
+                "disable"
               ]
-            },
-            "body": {
-              "mode": "raw",
-              "raw": "{\n    \"enabled\": false,\n    \"message\": \"Back at 14:00\"\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
             }
           },
           "response": [],
@@ -1128,9 +1120,45 @@
                 "exec": [
                   "pm.test('status is 200', () => pm.response.to.have.status(200));",
                   "pm.test('off, the message is kept', () => {",
-                  "    pm.expect(pm.response.json().enabled).to.eql(false);",
-                  "    pm.expect(pm.response.json().message).to.eql('Back at 14:00');",
+                  "    const r = pm.response.json();",
+                  "    pm.expect(r.enabled).to.eql(false);",
+                  "    pm.expect(r.message).to.eql('Back at 14:00');",
+                  "    pm.expect(r.state.disabled_at).to.be.a('string');",
                   "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "maintenance - enable",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{gateway-url}}/{{gateway-admin-path}}/routes/{{route-id}}/addons/maintenance/enable",
+              "host": [
+                "{{gateway-url}}"
+              ],
+              "path": [
+                "{{gateway-admin-path}}",
+                "routes",
+                "{{route-id}}",
+                "addons",
+                "maintenance",
+                "enable"
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 200', () => pm.response.to.have.status(200));",
+                  "pm.test('on again', () => pm.expect(pm.response.json().enabled).to.eql(true));"
                 ]
               }
             }
@@ -1147,7 +1175,7 @@
               }
             ],
             "url": {
-              "raw": "{{gateway-url}}/{{gateway-admin-path}}/routes/{{route-id}}/maintenance",
+              "raw": "{{gateway-url}}/{{gateway-admin-path}}/routes/{{route-id}}/addons/maintenance",
               "host": [
                 "{{gateway-url}}"
               ],
@@ -1155,6 +1183,7 @@
                 "{{gateway-admin-path}}",
                 "routes",
                 "{{route-id}}",
+                "addons",
                 "maintenance"
               ]
             },
@@ -1177,6 +1206,71 @@
                 "exec": [
                   "pm.test('status is 422', () => pm.response.to.have.status(422));",
                   "pm.test('names the field', () => pm.expect(pm.response.json().violations[0].fieldName).to.eql('enabled'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "maintenance - delete",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{gateway-url}}/{{gateway-admin-path}}/routes/{{route-id}}/addons/maintenance",
+              "host": [
+                "{{gateway-url}}"
+              ],
+              "path": [
+                "{{gateway-admin-path}}",
+                "routes",
+                "{{route-id}}",
+                "addons",
+                "maintenance"
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 204', () => pm.response.to.have.status(204));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "maintenance - enable deleted",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{gateway-url}}/{{gateway-admin-path}}/routes/{{route-id}}/addons/maintenance/enable",
+              "host": [
+                "{{gateway-url}}"
+              ],
+              "path": [
+                "{{gateway-admin-path}}",
+                "routes",
+                "{{route-id}}",
+                "addons",
+                "maintenance",
+                "enable"
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 404', () => pm.response.to.have.status(404));"
                 ]
               }
             }
@@ -1355,8 +1449,8 @@
       ]
     },
     {
-      "name": "maintenance",
-      "description": "The maintenance of the whole gateway. Only read here: turning it on stops the traffic of every route of the environment the collection runs against. The one of a route is in `routes`.",
+      "name": "addons",
+      "description": "The add-ons of the whole gateway. Only read here: turning its maintenance on stops the traffic of every route of the environment the collection runs against. The ones of a route are in `routes`.",
       "item": [
         {
           "name": "get",
@@ -1364,13 +1458,13 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{gateway-url}}/{{gateway-admin-path}}/maintenance",
+              "raw": "{{gateway-url}}/{{gateway-admin-path}}/addons",
               "host": [
                 "{{gateway-url}}"
               ],
               "path": [
                 "{{gateway-admin-path}}",
-                "maintenance"
+                "addons"
               ]
             }
           },
@@ -1382,9 +1476,9 @@
                 "type": "text/javascript",
                 "exec": [
                   "pm.test('status is 200', () => pm.response.to.have.status(200));",
-                  "pm.test('null, or an object with enabled', () => {",
-                  "    const r = pm.response.json();",
-                  "    pm.expect(r === null || typeof r.enabled === 'boolean').to.be.true;",
+                  "pm.test('every type, null or an object with enabled', () => {",
+                  "    const m = pm.response.json().maintenance;",
+                  "    pm.expect(m === null || typeof m.enabled === 'boolean').to.be.true;",
                   "});"
                 ]
               }
@@ -1392,7 +1486,7 @@
           ]
         },
         {
-          "name": "set - invalid",
+          "name": "maintenance - set invalid",
           "request": {
             "method": "PUT",
             "header": [
@@ -1402,12 +1496,13 @@
               }
             ],
             "url": {
-              "raw": "{{gateway-url}}/{{gateway-admin-path}}/maintenance",
+              "raw": "{{gateway-url}}/{{gateway-admin-path}}/addons/maintenance",
               "host": [
                 "{{gateway-url}}"
               ],
               "path": [
                 "{{gateway-admin-path}}",
+                "addons",
                 "maintenance"
               ]
             },

@@ -8,8 +8,8 @@ The gateway serves two things on the same port (8080 by default):
 
 - **Proxied traffic** at any path: each request goes to the service of the [route](#how-a-request-is-routed)
   whose path matches.
-- **Admin API** at `/{ADMIN_PATH}` (`/_admin` by default): log in, manage the routes, put them in
-  maintenance, search the logs. Always JSON in and out; errors are [Problem Details](#errors). Don't give a route a path
+- **Admin API** at `/{ADMIN_PATH}` (`/_admin` by default): log in, manage the routes and their
+  [add-ons](#add-ons) (maintenance), search the logs. Always JSON in and out; errors are [Problem Details](#errors). Don't give a route a path
   under it.
 
 The examples use the default `ADMIN_PATH`; change it and every path below changes with it. Keys
@@ -261,9 +261,9 @@ A route that comes back also has:
 |--------------|--------|-----------------------------------------------------------------------------|
 | `id`         | string | A UUID, given by the gateway                                                |
 | `created_at` | string | When it was created. Kept on an edit, and on a [replace](#replace-every-route) of a route with the same name |
-| `maintenance` | object | Its [maintenance](#maintenance), `null` when it was never set |
+| `addons`     | object | Its [add-ons](#add-ons): every type, `null` when not configured            |
 
-`rewrite_path`, `description` and `maintenance` come back as `null` when the route has none. Unknown fields in a
+`rewrite_path` and `description` come back as `null` when the route has none. Unknown fields in a
 body are ignored.
 
 ## List routes
@@ -482,8 +482,13 @@ are deleted. How the console restores a backup (the body of a backup is the answ
 [list routes](#list-routes); `id` and `created_at` are ignored). All or nothing: on any error the
 current routes stay as they were. A route whose **name** already exists keeps its `id` and
 `created_at`, so its logs still find it; the others get a new id. `[]` deletes every route. The same
-name twice is a `409 Duplicated route: …`. The `maintenance` of each route is saved when it comes
-(a backup has it); a route without it keeps the one it had.
+name twice is a `409 Duplicated route: …`.
+
+The [add-ons](#add-ons) of each route (a backup has them): a route without `addons` keeps the ones
+it had; in `addons`, a key with a value is saved, a key `null` deletes that add-on, a key left out is
+kept, and a key this version doesn't know is ignored (a backup of a newer gateway), as the read-only
+`default_message` and `state`. Their errors name the route: `[0].addons.maintenance.enabled`. A route
+not in the body is deleted with its add-ons.
 
 ```json
 [
@@ -524,7 +529,7 @@ Content-Type: application/json
 ```
 
 `200` with the edited route. Every field is replaced (a field left out becomes `null`); the `id`,
-`created_at` and `maintenance` stay.
+`created_at` and `addons` stay.
 
 ```json
 {
@@ -557,48 +562,88 @@ the second time):
 {"type":"about:blank","title":"Not Found","status":404,"detail":"Route does not exist: f5f1ab1b-0430-4c01-b653-7dd0ebf3bb11","instance":"/_admin/routes/f5f1ab1b-0430-4c01-b653-7dd0ebf3bb11"}
 ```
 
-The logs of a deleted route stay, with its id and name. Its maintenance is deleted with it.
+The logs of a deleted route stay, with its id and name. Its add-ons are deleted with it.
 
-## Maintenance
+## Add-ons
+
+Optional features of a route, or of the whole gateway, on top of the routing. Each type has its own
+endpoints and its own object; every route comes with all of them in `addons`, and the gateway's are
+at `GET /_admin/addons`:
+
+```json
+"addons": {"maintenance": null}
+```
+
+Every type this version knows is there, `null` when it isn't configured (today only `maintenance`;
+a newer gateway adds keys, so ignore the ones you don't know). Create, edit and create several
+ignore `addons` in the body (an edit keeps them); [replace every route](#replace-every-route)
+restores them.
+
+```http
+GET /_admin/addons
+```
+
+`200` with the add-ons of the gateway: `{"maintenance": null}` until its maintenance is set.
+
+### Maintenance
 
 A route in maintenance answers every request with a `503` right away, without reaching its
 service: for maintenance windows, or to take a service out for a while. The whole gateway can be
-put in maintenance too. The same object for both:
+put in maintenance too. What you send, for both:
 
 | Field         | Type    | Rules                                   | Description                                                            |
 |---------------|---------|-----------------------------------------|------------------------------------------------------------------------|
-| `enabled`     | boolean | Required                                | `true` stops the requests, `false` lets them through again             |
-| `message`     | string  | Optional, up to 500                     | The `detail` of the `503`; a default text in the request's language when missing |
-| `retry_after` | string  | Optional, an ISO 8601 date with offset  | When the service is expected back: the `Retry-After` header            |
+| `enabled`     | boolean | Required                                | `true` stops the requests, `false` lets them through                   |
+| `message`     | string  | Optional, up to 500                     | The `detail` of the `503`; `default_message` when missing              |
+| `retry_after` | string  | Optional, an ISO 8601 date with offset  | When the service is expected back: the `Retry-After` header. A past one is accepted |
 
-In maintenance only when the object exists **and** `enabled` is `true`: `null` (never set) and
-`enabled: false` both let the requests through. Turned off, `message` and `retry_after` are kept for
-the next time. It never turns off by itself, not even once `retry_after` passed.
+What comes back also has two read-only fields (ignored when sent):
 
-Put a route in maintenance, or take it out with `"enabled": false`:
+| Field             | Type   | Description                                                                      |
+|-------------------|--------|----------------------------------------------------------------------------------|
+| `default_message` | string | The `detail` of the `503` when there is no `message`, in the request's language |
+| `state`           | object | `enabled_at` and `disabled_at`: the last time it was turned on and off, `null` until then. Written only when `enabled` really changes, not on a message edit |
 
-```http
-PUT /_admin/routes/687b86ec-7c3b-4c78-9f82-69e82ebb8338/maintenance
-Content-Type: application/json
-
-{"enabled": true, "message": "Back at 14:00", "retry_after": "2026-11-20T14:00:00Z"}
+```json
+{
+  "enabled": true,
+  "message": "Back at 14:00",
+  "retry_after": "2026-11-20T14:00:00Z",
+  "default_message": "The service is under maintenance, try again later",
+  "state": {"enabled_at": "2026-11-20T12:00:03.112093Z", "disabled_at": null}
+}
 ```
 
-`200` with the maintenance as saved, in use right away. `404` when the route doesn't exist, `400`
-when the id isn't a UUID, `422` with the broken fields. The route then shows it in
-[list routes](#list-routes) and [get a route](#get-a-route) (`"maintenance": null` when it was never
-set). Create, edit and create several ignore a `maintenance` in the body (an edit keeps the current
-one); [replace every route](#replace-every-route) saves it.
+In maintenance only when it exists **and** `enabled` is `true`. `null` means it isn't configured;
+turned off, `message` and `retry_after` are kept for the next time. It never turns off by itself,
+not even once `retry_after` passed.
 
-The whole gateway, the same way:
+The maintenance of a route:
 
 ```http
-GET /_admin/maintenance
-PUT /_admin/maintenance
+PUT    /_admin/routes/{id}/addons/maintenance
+DELETE /_admin/routes/{id}/addons/maintenance
+POST   /_admin/routes/{id}/addons/maintenance/enable
+POST   /_admin/routes/{id}/addons/maintenance/disable
 ```
 
-`GET` answers the object, or `null` when it was never set; `PUT` takes the object and answers it as
-saved.
+- `PUT` creates or replaces it, with the object above: `200` with it as saved, in use right away.
+  `422` with the broken fields (`enabled`, `message`), `400 Invalid value for retry_after` when the
+  date can't be read.
+- `DELETE` removes it, back to `null`: `204`, also when there was none.
+- `enable` and `disable` turn it on or off without a body, keeping the rest: `200` with it. Calling
+  one twice changes nothing. `404 The route has no maintenance configured: …` when it isn't set.
+- All of them: `404` when the route doesn't exist, `400` when the id isn't a UUID.
+
+The maintenance of the gateway, the same way, without `DELETE`:
+
+```http
+PUT  /_admin/addons/maintenance
+POST /_admin/addons/maintenance/enable
+POST /_admin/addons/maintenance/disable
+```
+
+`enable` and `disable` answer `404 The gateway has no maintenance configured` until it is set.
 
 What a client of a route in maintenance gets (the `Retry-After` only while `retry_after` is ahead,
 in seconds, rounded up):
@@ -611,7 +656,8 @@ Content-Type: application/problem+json
 {"type":"about:blank","title":"Service Unavailable","status":503,"detail":"Back at 14:00","instance":"/users/42"}
 ```
 
-- When both are on, the route's own maintenance wins: its message and its `retry_after`.
+- The gateway's maintenance wins: while it is on, every route answers with the gateway's message
+  and `retry_after`. Each route keeps its own one, in use again once the gateway's is off.
 - Only the proxied traffic stops: the admin API, the console and the [health check](#health) keep
   answering, and a path with no route is still a `404`.
 - The requests are [logged](#what-gets-logged), with their `503`.

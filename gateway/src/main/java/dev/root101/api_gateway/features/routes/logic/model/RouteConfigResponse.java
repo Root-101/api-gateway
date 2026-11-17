@@ -1,6 +1,6 @@
 package dev.root101.api_gateway.features.routes.logic.model;
 
-import dev.root101.api_gateway.features.maintenance.logic.model.Maintenance;
+import dev.root101.api_gateway.features.addons.logic.model.Addons;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -54,7 +54,7 @@ public class RouteConfigResponse {
     private OffsetDateTime createdAt;
 
     /**
-     * The maintenance of the route, null if it was never set. In maintenance only when `enabled`.
+     * The add-ons of the route: every type this version knows, `null` when not configured
      */
-    private Maintenance maintenance;
+    private Addons addons;
 }

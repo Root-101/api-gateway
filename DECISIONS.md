@@ -167,15 +167,27 @@ log once the request ends, and the errors already have their status by then: the
 After it, the 401 of a missing or wrong credential and the 429 of the lockout ended the request
 before the filter ran: guessing the password over Basic left no trace.
 
-## 17. Settings in one table, a row per feature
+## 17. Add-ons in one table, a row per type
 
-The maintenance of the gateway and of each route live in `setting`: `route_id` (null = the whole
-gateway), `key` (`maintenance`) and `value` (`jsonb`), unique per route and key. The next options
-(rate limiting...) are new keys of the same table.
+The optional features of the gateway and of each route (maintenance today; rate limit and health
+check next) live in `addon`: `route_id` (null = the whole gateway), `type` (`maintenance`),
+`config` and `state` (`jsonb`), unique per route and type. A new add-on is a new `type`, without a
+migration: there is no `CHECK` on it, the code owns the valid types and the shape of each json (a
+record with `@Valid`).
 
-A column per feature in `route` would need a migration for each one, and the gateway's own values
-would need another table. One `jsonb` column with every feature inside would make two changes to
-different features of the same route overwrite each other. Here each feature is its own row; the
-code validates the shape of each value (a record with `@Valid`), and deleting a route deletes its
-settings (`ON DELETE CASCADE`). They are read into memory at startup and after each change: a
-proxied request never waits for the database.
+- A column per feature in `route` would need a migration for each one, and the gateway's own values
+  another table. One `jsonb` with every feature inside would make two changes to different features
+  of the same route overwrite each other: here each one is its own row.
+- `config` is what the admin sets, `state` what the gateway writes (when the maintenance was turned
+  on and off; the last result of a health check). Apart, a job that updates the state every few
+  seconds never overwrites an edit of the admin, a backup never carries runtime data, and
+  `updated_at` keeps meaning "the admin changed it".
+- Each type has its own endpoints (`/routes/{id}/addons/maintenance`), not a generic `{type}`: its own
+  body, its own validation, its own actions (`enable`/`disable`). Every route comes with all of them
+  in `addons`, `null` when not configured, so the console knows what can be added.
+- Reading never stops the gateway: a row of a type this version doesn't know (after a downgrade) or
+  with a json it can't read is skipped with a warning, as if it wasn't configured. A new field is
+  always optional, so the old rows read without a migration.
+- Deleting a route deletes its add-ons (`ON DELETE CASCADE`). They are read into memory at startup
+  and after each change: a proxied request never waits for the database. Counters (rate limit) stay
+  in memory too, never a write per request.

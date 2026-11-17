@@ -1,7 +1,7 @@
 package dev.root101.api_gateway.features.routes.logic.usecase;
 
-import dev.root101.api_gateway.features.maintenance.logic.model.Maintenance;
-import dev.root101.api_gateway.features.maintenance.logic.usecase.MaintenanceUseCase;
+import dev.root101.api_gateway.features.addons.logic.model.AddonsRequest;
+import dev.root101.api_gateway.features.addons.logic.usecase.AddonsUseCase;
 import dev.root101.api_gateway.features.routes.data.entity.RouteEntity;
 import dev.root101.api_gateway.features.routes.data.repo.RouteRepo;
 import dev.root101.api_gateway.features.routes.logic.model.RewritePathModel;
@@ -50,7 +50,7 @@ class RouteUseCaseImpl implements RouteUseCase, SmartInitializingSingleton {
 
     private final TransactionalOperator tx;
 
-    private final MaintenanceUseCase maintenanceUseCase;
+    private final AddonsUseCase addonsUseCase;
 
     private final Map<String, RouteEntity> cache = new ConcurrentHashMap<>();
 
@@ -60,13 +60,13 @@ class RouteUseCaseImpl implements RouteUseCase, SmartInitializingSingleton {
             RouteUpdater routeUpdater,
             RouteRepo routeRepo,
             TransactionalOperator tx,
-            MaintenanceUseCase maintenanceUseCase
+            AddonsUseCase addonsUseCase
     ) {
         this.routeDefinitionWriter = routeDefinitionWriter;
         this.routeUpdater = routeUpdater;
         this.routeRepo = routeRepo;
         this.tx = tx;
-        this.maintenanceUseCase = maintenanceUseCase;
+        this.addonsUseCase = addonsUseCase;
     }
 
     /**
@@ -124,8 +124,9 @@ class RouteUseCaseImpl implements RouteUseCase, SmartInitializingSingleton {
 
     /**
      * Replace every route with the given ones, all or nothing. A route whose name already exists keeps its id
-     * (and its creation date), so its logs still find it; the others get new ids. The maintenance of a route is
-     * saved when it comes (a backup), and kept when it doesn't.
+     * (its creation date and its add-ons), so its logs still find it; the others get new ids. The add-ons of each
+     * route: a key with a value is saved, a key `null` is deleted, a key or `addons` not sent is kept (see
+     * {@link AddonsUseCase#restore}).
      *
      * @param requests The routes that will exist after the call
      * @return The routes, as saved
@@ -149,34 +150,26 @@ class RouteUseCaseImpl implements RouteUseCase, SmartInitializingSingleton {
                                     return routeRepo.deleteAll(removed)
                                             .thenMany(routeRepo.saveAll(entities))
                                             .collectList()
-                                            .flatMap(saved -> saveMaintenance(saved, requests).thenReturn(saved))
+                                            .flatMap(saved -> restoreAddons(saved, requests).thenReturn(saved))
                                             .as(tx::transactional)
-                                            .flatMap(saved -> maintenanceUseCase.reload()
+                                            .flatMap(saved -> addonsUseCase.reload()
                                                     .then(Mono.defer(() -> apply(saved, removed))));
                                 })
                 );
     }
 
     /**
-     * The maintenance that comes with each route (by name), in the transaction of the caller
+     * The add-ons that come with each route (by name), in the transaction of the caller
      */
-    private Mono<Void> saveMaintenance(List<RouteEntity> saved, List<RouteConfigRequest> requests) {
-        Map<String, Maintenance> byName = new HashMap<>();
+    private Mono<Void> restoreAddons(List<RouteEntity> saved, List<RouteConfigRequest> requests) {
+        Map<String, AddonsRequest> byName = new HashMap<>();
         for (RouteConfigRequest request : requests) {
-            if (request.getMaintenance() != null) byName.put(request.getName(), request.getMaintenance());
+            if (request.getAddons() != null) byName.put(request.getName(), request.getAddons());
         }
         return Flux.fromIterable(saved)
                 .filter(entity -> byName.containsKey(entity.getName()))
-                .concatMap(entity -> maintenanceUseCase.save(entity.getRouteId(), byName.get(entity.getName())))
+                .concatMap(entity -> addonsUseCase.restore(entity.getRouteId(), byName.get(entity.getName())))
                 .then();
-    }
-
-    @Override
-    public Mono<Maintenance> setMaintenance(String routeId, Maintenance maintenance) {
-        return findEntity(routeId)
-                .flatMap(route -> maintenanceUseCase.save(route.getRouteId(), maintenance))
-                .then(maintenanceUseCase.reload())
-                .thenReturn(maintenance);
     }
 
     /**
@@ -252,14 +245,7 @@ class RouteUseCaseImpl implements RouteUseCase, SmartInitializingSingleton {
      * The route with this id: `400` if the id isn't a UUID, `404` if there is none
      */
     private Mono<RouteEntity> findEntity(String routeId) {
-        UUID id;
-        try {
-            id = UUID.fromString(routeId);
-        } catch (IllegalArgumentException e) {
-            return Mono.error(new LocalizedException(HttpStatus.BAD_REQUEST, "route.id.invalid", routeId));
-        }
-        return routeRepo.findById(id)
-                .switchIfEmpty(Mono.error(new LocalizedException(HttpStatus.NOT_FOUND, "route.not_found", routeId)));
+        return routeRepo.findExisting(routeId);
     }
 
     /**
@@ -294,8 +280,8 @@ class RouteUseCaseImpl implements RouteUseCase, SmartInitializingSingleton {
                             );
                 })
                 .then(Mono.defer(routeUpdater::updateRoutes)) // Update route after all changes
-                //its maintenance was deleted with it in db (cascade)
-                .then(maintenanceUseCase.reload());
+                //its add-ons were deleted with it in db (cascade)
+                .then(addonsUseCase.reload());
     }
 
     /**
@@ -353,7 +339,7 @@ class RouteUseCaseImpl implements RouteUseCase, SmartInitializingSingleton {
                 entity.getRewritePathFrom() != null && entity.getRewritePathTo() != null ? new RewritePathModel(entity.getRewritePathFrom(), entity.getRewritePathTo()) : null,
                 entity.getDescription(),
                 entity.getCreatedAt(),
-                maintenanceUseCase.ofRoute(entity.getRouteId().toString())
+                null//added by the controller, in the request's language
         );
     }
 }

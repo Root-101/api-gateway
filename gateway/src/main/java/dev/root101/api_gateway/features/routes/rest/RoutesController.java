@@ -1,6 +1,7 @@
 package dev.root101.api_gateway.features.routes.rest;
 
-import dev.root101.api_gateway.features.maintenance.logic.model.Maintenance;
+import dev.root101.api_gateway.config.I18n;
+import dev.root101.api_gateway.features.addons.logic.usecase.AddonsUseCase;
 import dev.root101.api_gateway.features.routes.logic.model.RouteConfigRequest;
 import dev.root101.api_gateway.features.routes.logic.model.RouteConfigResponse;
 import dev.root101.api_gateway.features.routes.logic.usecase.RouteUseCase;
@@ -8,10 +9,12 @@ import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.util.List;
+import java.util.Locale;
 
 /**
  * Route controller for managing the routes of gateway.
@@ -22,10 +25,23 @@ import java.util.List;
 public class RoutesController {
 
     private final RouteUseCase routeUseCase;
+    private final AddonsUseCase addonsUseCase;
 
     @Autowired
-    public RoutesController(RouteUseCase routeUseCase) {
+    public RoutesController(RouteUseCase routeUseCase, AddonsUseCase addonsUseCase) {
         this.routeUseCase = routeUseCase;
+        this.addonsUseCase = addonsUseCase;
+    }
+
+    //the add-ons are added here: their texts are in the request's language
+    private RouteConfigResponse withAddons(RouteConfigResponse route, Locale locale) {
+        route.setAddons(addonsUseCase.ofRoute(route.getId(), locale));
+        return route;
+    }
+
+    private List<RouteConfigResponse> withAddons(List<RouteConfigResponse> routes, Locale locale) {
+        routes.forEach(route -> withAddons(route, locale));
+        return routes;
     }
 
     /**
@@ -34,8 +50,9 @@ public class RoutesController {
      * @return Flux with all the routes
      */
     @GetMapping
-    public Flux<RouteConfigResponse> getRoutes() {
-        return routeUseCase.getRoutes();
+    public Flux<RouteConfigResponse> getRoutes(ServerWebExchange exchange) {
+        Locale locale = I18n.locale(exchange);
+        return routeUseCase.getRoutes().map(route -> withAddons(route, locale));
     }
 
     /**
@@ -46,8 +63,8 @@ public class RoutesController {
      */
     @PostMapping("/batch")
     @ResponseStatus(HttpStatus.CREATED)
-    public Mono<List<RouteConfigResponse>> addAllRoutes(@RequestBody List<@Valid RouteConfigRequest> routeDefinition) {
-        return routeUseCase.addAllRoutes(routeDefinition);
+    public Mono<List<RouteConfigResponse>> addAllRoutes(@RequestBody List<@Valid RouteConfigRequest> routeDefinition, ServerWebExchange exchange) {
+        return routeUseCase.addAllRoutes(routeDefinition).map(routes -> withAddons(routes, I18n.locale(exchange)));
     }
 
     /**
@@ -57,8 +74,8 @@ public class RoutesController {
      * @return The routes, as saved
      */
     @PutMapping
-    public Mono<List<RouteConfigResponse>> replaceAllRoutes(@RequestBody List<@Valid RouteConfigRequest> routeDefinition) {
-        return routeUseCase.replaceAllRoutes(routeDefinition);
+    public Mono<List<RouteConfigResponse>> replaceAllRoutes(@RequestBody List<@Valid RouteConfigRequest> routeDefinition, ServerWebExchange exchange) {
+        return routeUseCase.replaceAllRoutes(routeDefinition).map(routes -> withAddons(routes, I18n.locale(exchange)));
     }
 
     /**
@@ -69,8 +86,8 @@ public class RoutesController {
      */
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public Mono<RouteConfigResponse> addRoute(@Valid @RequestBody RouteConfigRequest routeDefinition) {
-        return routeUseCase.addRoute(routeDefinition);
+    public Mono<RouteConfigResponse> addRoute(@Valid @RequestBody RouteConfigRequest routeDefinition, ServerWebExchange exchange) {
+        return routeUseCase.addRoute(routeDefinition).map(route -> withAddons(route, I18n.locale(exchange)));
     }
 
     /**
@@ -94,8 +111,8 @@ public class RoutesController {
      * @return The route
      */
     @GetMapping("/{route-id}")
-    public Mono<RouteConfigResponse> getRoute(@PathVariable("route-id") String routeId) {
-        return routeUseCase.findById(routeId);
+    public Mono<RouteConfigResponse> getRoute(@PathVariable("route-id") String routeId, ServerWebExchange exchange) {
+        return routeUseCase.findById(routeId).map(route -> withAddons(route, I18n.locale(exchange)));
     }
 
     /**
@@ -106,20 +123,8 @@ public class RoutesController {
      * @return The edited route
      */
     @PutMapping("/{route-id}")
-    public Mono<RouteConfigResponse> editRoute(@PathVariable("route-id") String routeId, @Valid @RequestBody RouteConfigRequest routeDefinition) {
-        return routeUseCase.editRoute(routeId, routeDefinition);
-    }
-
-    /**
-     * Puts a route in maintenance (`enabled: true`) or takes it out (`enabled: false`), right away
-     *
-     * @param routeId     The id of the route
-     * @param maintenance Its maintenance
-     * @return The saved maintenance
-     */
-    @PutMapping("/{route-id}/maintenance")
-    public Mono<Maintenance> setMaintenance(@PathVariable("route-id") String routeId, @Valid @RequestBody Maintenance maintenance) {
-        return routeUseCase.setMaintenance(routeId, maintenance);
+    public Mono<RouteConfigResponse> editRoute(@PathVariable("route-id") String routeId, @Valid @RequestBody RouteConfigRequest routeDefinition, ServerWebExchange exchange) {
+        return routeUseCase.editRoute(routeId, routeDefinition).map(route -> withAddons(route, I18n.locale(exchange)));
     }
 
     /**

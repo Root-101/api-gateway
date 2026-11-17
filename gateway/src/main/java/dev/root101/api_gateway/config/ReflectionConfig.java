@@ -5,7 +5,11 @@ import dev.root101.api_gateway.features.auth.logic.model.LoginResponse;
 import dev.root101.api_gateway.features.http_logs.data.entity.HttpLogEntity;
 import dev.root101.api_gateway.features.http_logs.logic.model.HttpLogResponse;
 import dev.root101.api_gateway.features.http_logs.logic.model.HttpLogSearchResponse;
+import dev.root101.api_gateway.features.addons.logic.model.Addons;
+import dev.root101.api_gateway.features.addons.logic.model.AddonsRequest;
 import dev.root101.api_gateway.features.maintenance.logic.model.Maintenance;
+import dev.root101.api_gateway.features.maintenance.logic.model.MaintenanceResponse;
+import dev.root101.api_gateway.features.maintenance.logic.model.MaintenanceState;
 import dev.root101.api_gateway.features.routes.logic.model.RewritePathModel;
 import dev.root101.api_gateway.features.routes.logic.model.RouteConfigRequest;
 import dev.root101.api_gateway.features.routes.logic.model.RouteConfigResponse;
@@ -24,9 +28,10 @@ import java.time.OffsetDateTime;
         //the validator of @ValidRoute, created by hibernate validator
         RouteRules.class,
         OffsetDateTime.class,
-        //--------- MAINTENANCE ---------\
+        //--------- ADD-ONS ---------\\
+        Addons.class, AddonsRequest.class,
         //also written to and read from the db as json
-        Maintenance.class,
+        Maintenance.class, MaintenanceState.class, MaintenanceResponse.class,
         //--------- AUTH ---------\\
         LoginRequest.class, LoginResponse.class,
         //--------- HTTP LOGS ---------\\

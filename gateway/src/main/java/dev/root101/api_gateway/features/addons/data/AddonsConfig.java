@@ -1,6 +1,6 @@
-package dev.root101.api_gateway.features.settings.data;
+package dev.root101.api_gateway.features.addons.data;
 
-import dev.root101.api_gateway.features.settings.data.entity.SettingValue;
+import dev.root101.api_gateway.features.addons.data.entity.AddonJson;
 import io.r2dbc.postgresql.codec.Json;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -13,27 +13,27 @@ import org.springframework.data.r2dbc.dialect.PostgresDialect;
 import java.util.List;
 
 @Configuration
-public class SettingsConfig {
+public class AddonsConfig {
 
-    //replaces boot's empty one: the jsonb of `setting.value`
+    //replaces boot's empty one: the jsonb columns of `addon`
     @Bean
     public R2dbcCustomConversions r2dbcCustomConversions() {
         return R2dbcCustomConversions.of(PostgresDialect.INSTANCE, List.of(new ToJson(), new FromJson()));
     }
 
     @WritingConverter
-    static class ToJson implements Converter<SettingValue, Json> {
+    static class ToJson implements Converter<AddonJson, Json> {
         @Override
-        public Json convert(SettingValue source) {
+        public Json convert(AddonJson source) {
             return Json.of(source.json());
         }
     }
 
     @ReadingConverter
-    static class FromJson implements Converter<Json, SettingValue> {
+    static class FromJson implements Converter<Json, AddonJson> {
         @Override
-        public SettingValue convert(Json source) {
-            return new SettingValue(source.asString());
+        public AddonJson convert(Json source) {
+            return new AddonJson(source.asString());
         }
     }
 }

@@ -181,9 +181,12 @@ dates in UTC, and every error a Problem Details (RFC 9457), with its `violations
 | `PUT`    | `/_admin/routes`        | Replaces every route with the ones in the body (same name, same id) |
 | `PUT`    | `/_admin/routes/{id}`   | Edits a route                                                       |
 | `DELETE` | `/_admin/routes/{id}`   | Deletes a route: `204`                                              |
-| `PUT`    | `/_admin/routes/{id}/maintenance` | Puts a route in maintenance (`503` to its clients) or takes it out |
-| `GET`    | `/_admin/maintenance`   | The maintenance of the whole gateway, or `null`                     |
-| `PUT`    | `/_admin/maintenance`   | Puts the whole gateway in maintenance or takes it out               |
+| `PUT`    | `/_admin/routes/{id}/addons/maintenance` | Sets the maintenance of a route (`503` to its clients while on) |
+| `DELETE` | `/_admin/routes/{id}/addons/maintenance` | Removes it: `204`                                        |
+| `POST`   | `/_admin/routes/{id}/addons/maintenance/enable` | Turns it on (`/disable`: off), keeping the rest   |
+| `GET`    | `/_admin/addons`        | The add-ons of the whole gateway: `{"maintenance": …}`              |
+| `PUT`    | `/_admin/addons/maintenance` | Sets the maintenance of the whole gateway                      |
+| `POST`   | `/_admin/addons/maintenance/enable` | Turns it on (`/disable`: off)                           |
 | `GET`    | `/_admin/http-logs`     | Searches the HTTP logs: page and filters in the query               |
 
 Every call, with real requests and responses and its errors: [`docs/api.md`](docs/api.md). The
