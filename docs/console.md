@@ -47,7 +47,7 @@ tries from the same IP, the gateway stops taking its logins for `ADMIN_LOCKOUT_M
 whose message says how long to wait). In a narrow
 window the brand goes above the form.
 
-Logged out, any URL brings you here; logged in, this one takes you to Routes.
+Logged out, any URL brings you here; logged in, this one takes you to the [Gateway map](#gateway-map), the start screen.
 
 **Behind it:** [`GET /_admin/health`](api.md#health) for the badge, and
 [`POST /_admin/auth/login`](api.md#log-in) with `{"username", "password"}`, which answers the token
@@ -160,7 +160,7 @@ its add-ons; a new name is a new route.
 
 ![Gateway map](design/screens/21-gateway-map.png)
 
-**URL:** `/#/map` · experimental
+**URL:** `/#/map` · the start screen
 
 The gateway as a diagram: its public URL on top, the gateway below it and a branch to each route,
 with the path of the route on it. Each route card shows its name, description, the host it
@@ -197,7 +197,8 @@ The console, `/health` and the admin API keep working. It never turns off by its
 | **Edit** (pencil)   | **503 message**, optional, up to 500 characters (empty: the default one, marked *default*), and **Back around**, optional: callers get it as `Retry-After` while it's ahead |
 | **Remove** (trash)  | Asks in the block itself, then removes it with its message and time (routes only)                   |
 
-Under its state, how long it has been on, or how long the last window lasted.
+Under its state, how long it has been on, or how long the last window lasted, in large units (`2h 30 min`,
+`1d 3h`); it moves on by itself every 10 seconds, like the gateway node of the map and the banner's countdown.
 
 ![Gateway map, the gateway in maintenance](design/screens/22-gateway-map-maintenance.png)
 
@@ -282,5 +283,5 @@ environment variables of the credentials.
 
 **URL:** `/#/not-found?path=…`
 
-A URL of the console that doesn't exist, with the one asked for and buttons to Routes and Http
+A URL of the console that doesn't exist, with the one asked for and buttons to the Gateway map and Http
 logs.

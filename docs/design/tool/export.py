@@ -46,11 +46,11 @@ SCREENS = [
     ('States', 'session-expired', 'Routes', 'Session expired: log in again', 'state=session'),
     ('States', 'not-found', 'NotFound', 'A URL that doesn\'t exist', ''),
     ('Navigation', 'rail-expanded', 'Routes', 'Navigation rail, expanded', 'menu=true'),
-    ('Gateway map', 'gateway-map', 'GatewayMapScreen', 'Gateway map', ''),
+    ('Gateway map', 'gateway-map', 'GatewayMapScreen', 'Gateway map', 'routeCount=3'),
     ('Gateway map', 'gateway-map-maintenance', 'GatewayMapScreen', 'Gateway map: the gateway in maintenance',
-     'gatewayMaint=true'),
+     'gatewayMaint=true&routeCount=3'),
     ('Gateway map', 'gateway-map-empty', 'GatewayMapScreen', 'Gateway map: no routes yet', 'routeCount=0'),
-    ('Gateway map', 'routes-gateway-maintenance', 'GatewayRoutes',
+    ('Gateway map', 'routes-gateway-maintenance', 'Routes',
      'Routes while the gateway is in maintenance: every route paused', 'gatewayMaint=true'),
 ]
 
