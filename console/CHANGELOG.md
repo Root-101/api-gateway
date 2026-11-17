@@ -9,6 +9,15 @@
           route shows `PAUSED` and its slide is locked. API: `addons` in each route, `GET /addons`, and `PUT`,
           `DELETE`, `POST .../enable` and `.../disable` under `/routes/{id}/addons/maintenance` and
           `/addons/maintenance`.
+        * **Health check** :heartpulse: : A second add-on, routes only: the gateway calls a path of the route's
+          service every 10 s to 1 h and the console shows the last result. `LIVE` (a 2xx) or `DOWN` next to the
+          name (maintenance wins), a `Health · every 30 s` badge on the card, a chip on the map node, and a red,
+          still branch in the map while it is down (it still gets its requests). Its block in the panel shows the
+          endpoint, the interval and the last check ("12 s ago · 200 in 18 ms"), with "Run now", edit in place
+          (endpoint, one of 10 s / 30 s / 1 min / 5 min / 15 min / 1 h, on or off) and remove. Added as
+          `/health` every 30 s, on. The routes are reread every 10 s while one has it on (the gateway doesn't
+          push). "Add to this route" lists the types the route's `addons` has as keys. API: `PUT`, `DELETE` and
+          `POST .../run` under `/routes/{id}/addons/health-check`.
         * **Gateway map** :world_map: : New first entry of the rail: the gateway's URL, the gateway
           and a branch per route with its path, dashed and moving while it forwards, dotted orange while it answers
           `503`. Drag, wheel zoom, `Fit`, an "Add route" card when there are none, and the panel of a route or of the

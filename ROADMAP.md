@@ -71,9 +71,9 @@ the predicates and filters it uses.
 - [x] Gateway: **Health check add-on.** Each route can have a health check (`health_check`: path,
   every 10 s to 1 h): a scheduler calls it and keeps the last result (time, status, ms) in the
   add-on's `state`. Reviewed as a security change: decision 18 in `DECISIONS.md`. Done in 6.1.0.
-- [ ] Console: **Health check add-on.** The gateway side is done (`docs/api.md`, "Health check"):
-  show LIVE / DOWN per route from `addons.health_check.state`, set it (path, interval, on/off) and a
-  "Run now" (`POST .../health-check/run`). A history (uptime) would be a new table in the gateway.
+- [x] Console: **Health check add-on.** LIVE / DOWN per route from `addons.health_check.state`, set
+  it (path, interval, on/off) and a "Run now" (`POST .../health-check/run`). Done in 6.1.0. A history
+  (uptime) would be a new table in the gateway.
 
 - [ ] Gateway: **HTTP/2 and gRPC** support, for a later version (not 6.0.0). gRPC needs HTTP/2 end
   to end (trailers, multiplexed streams): enable it on the gateway server (`server.http2.enabled`)

@@ -10,6 +10,7 @@ class RouteModel {
   final RewritePathModel? rewritePath;
   final String description;
   final MaintenanceModel? maintenance;
+  final HealthCheckModel? healthCheck;
 
   ///every add-on as the api sent it (`null` the ones not configured, unknown ones too), for the backup
   final Map<String, dynamic> addons;
@@ -18,6 +19,9 @@ class RouteModel {
 
   ///its own maintenance is on (the gateway's may still win, see [RouteStatus])
   bool get inMaintenance => maintenance?.enabled ?? false;
+
+  ///the add-on types this route can have: the keys the api sends (null = not configured yet)
+  bool canHave(String addon) => addons.containsKey(addon);
 
   String get enterPoint => '${gatewayUrl ?? ''}$path';
 
@@ -34,6 +38,7 @@ class RouteModel {
     required this.createdAt,
     this.rewritePath,
     this.maintenance,
+    this.healthCheck,
     this.addons = const {},
     this.gatewayUrl,
   });

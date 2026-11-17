@@ -84,6 +84,24 @@ class RoutesClient extends BaseClient {
     );
     return MaintenanceEntity.fromJson(rawResponse.data as Map<String, dynamic>);
   }
+
+  ///creates or replaces it (keeps the last state); 422 fields `enabled`, `path`, `interval_seconds`
+  Future putHealthCheck({
+    required String routeId,
+    required HealthCheckEntity model,
+  }) async {
+    await dio.put('${_addons(routeId)}/health-check', data: model.toJson());
+  }
+
+  ///204, also when there is none
+  Future deleteHealthCheck({required String routeId}) async {
+    await dio.delete('${_addons(routeId)}/health-check');
+  }
+
+  ///waits for the call (up to ~5 s); 404 when it isn't configured
+  Future runHealthCheck({required String routeId}) async {
+    await dio.post('${_addons(routeId)}/health-check/run');
+  }
 }
 
 class RouteRequest {
@@ -145,6 +163,9 @@ class RouteResponse {
 
   MaintenanceEntity? get maintenance =>
       MaintenanceEntity.tryFromJson(addons['maintenance']);
+
+  HealthCheckEntity? get healthCheck =>
+      HealthCheckEntity.tryFromJson(addons['health_check']);
 
   RouteResponse({
     required this.name,
@@ -212,6 +233,57 @@ class MaintenanceEntity {
   ///only what the admin writes: `default_message` and `state` are read-only
   Map<String, dynamic> toJson() {
     return {'enabled': enabled, 'message': message, 'retry_after': retryAfter};
+  }
+}
+
+class HealthCheckEntity {
+  final bool enabled;
+  final String path;
+  final int intervalSeconds;
+
+  //read-only `state`, written by the gateway; null until the first call
+  final String? checkedAt;
+  final bool? up;
+  final int? status;
+  final int? millis;
+
+  HealthCheckEntity({
+    required this.enabled,
+    required this.path,
+    required this.intervalSeconds,
+    this.checkedAt,
+    this.up,
+    this.status,
+    this.millis,
+  });
+
+  ///null when it isn't configured (`health_check: null`) or the route can't have one (no key)
+  static HealthCheckEntity? tryFromJson(dynamic json) {
+    if (json is! Map<String, dynamic> ||
+        json['enabled'] is! bool ||
+        json['path'] is! String ||
+        json['interval_seconds'] is! int) {
+      return null;
+    }
+    final state = json['state'];
+    return HealthCheckEntity(
+      enabled: json['enabled'] as bool,
+      path: json['path'] as String,
+      intervalSeconds: json['interval_seconds'] as int,
+      checkedAt: state is Map ? state['checked_at'] as String? : null,
+      up: state is Map ? state['up'] as bool? : null,
+      status: state is Map ? state['status'] as int? : null,
+      millis: state is Map ? state['millis'] as int? : null,
+    );
+  }
+
+  ///only what the admin writes: `state` is read-only
+  Map<String, dynamic> toJson() {
+    return {
+      'enabled': enabled,
+      'path': path,
+      'interval_seconds': intervalSeconds,
+    };
   }
 }
 

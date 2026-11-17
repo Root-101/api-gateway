@@ -148,6 +148,7 @@ class _RoutesScreenState extends State<RoutesScreen> {
     final intl = context.intl;
     final count = cubit.routes.length;
     final inMaintenance = cubit.routes.where((r) => r.inMaintenance).length;
+    final down = cubit.routes.where((r) => r.healthCheck?.down ?? false).length;
     return Wrap(
       alignment: WrapAlignment.spaceBetween,
       crossAxisAlignment: WrapCrossAlignment.end,
@@ -174,6 +175,7 @@ class _RoutesScreenState extends State<RoutesScreen> {
                     : intl.routes.manyRoutes(count: count),
                 if (inMaintenance > 0)
                   intl.maintenance.inCount(count: inMaintenance),
+                if (down > 0) intl.health.downCount(count: down),
               ].join(' · '),
               style: TextStyle(fontSize: 13, color: c.textSecondary),
             ),
@@ -563,11 +565,21 @@ class _AddonsFooter extends StatelessWidget {
     final c = app.colors;
     final intl = context.intl;
     final maintenance = route.maintenance;
+    final health = route.healthCheck;
     void open() => RoutePanelSheet.show(context, route);
     return Wrap(
       spacing: 8,
       runSpacing: 8,
       children: [
+        if (health != null)
+          _Badge(
+            icon: app.assets.icons.general.activity,
+            label: health.enabled
+                ? intl.health.badge(time: intervalText(health.intervalSeconds))
+                : intl.health.badgeOff,
+            color: health.down ? c.dangerText : c.label,
+            onPressed: open,
+          ),
         if (maintenance != null)
           _Badge(
             icon: app.assets.icons.general.wrench,

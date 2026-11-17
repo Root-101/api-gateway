@@ -241,6 +241,12 @@ class _GatewayMapScreenState extends State<GatewayMapScreen>
             color: c.maintenance,
             dash: const [3, 4],
           ),
+          const SizedBox(width: 16),
+          _LegendItem(
+            label: intl.health.legendDown,
+            color: c.danger,
+            dash: const [3, 4],
+          ),
           Container(
             width: 1,
             height: 24,
@@ -492,8 +498,10 @@ class _Branch {
     required this.dimmed,
   });
 
-  bool get maintenance =>
-      status == RouteStatus.maintenance || status == RouteStatus.paused;
+  bool get maintenance => status?.inMaintenance ?? false;
+
+  ///forwarding with nothing wrong: the moving branch (as in the canvas, DOWN stands still)
+  bool get flowing => status == RouteStatus.none || status == RouteStatus.live;
 }
 
 class _BranchesPainter extends CustomPainter {
@@ -532,16 +540,17 @@ class _BranchesPainter extends CustomPainter {
           ? app.colors.textTertiary
           : b.maintenance
           ? maint
+          : b.status == RouteStatus.down
+          ? app.colors.danger
           : _Branch.redirectColor;
       final paint = Paint()
         ..color = color.withValues(alpha: b.dimmed ? 0.3 : 1)
         ..strokeWidth = 1.6
         ..style = PaintingStyle.stroke
         ..strokeCap = StrokeCap.round;
-      //redirects flow; maintenance (nothing goes through) and the empty branch stand still
-      final moving = b.status == RouteStatus.none;
-      final dash = b.status == RouteStatus.none ? [6.0, 5.0] : [3.0, 4.0];
-      _dashed(canvas, path, paint, dash, moving ? flow.value : 0);
+      //redirects flow; maintenance (nothing goes through), DOWN and the empty branch stand still
+      final dash = b.flowing ? [6.0, 5.0] : [3.0, 4.0];
+      _dashed(canvas, path, paint, dash, b.flowing ? flow.value : 0);
       _arrow(canvas, end, paint);
     }
   }
@@ -916,13 +925,18 @@ class _RouteNode extends StatelessWidget {
     final status = RouteStatus.of(route, gatewayOn: gatewayOn);
     final ownOn = status == RouteStatus.maintenance;
     final maintenance = route.maintenance;
+    final health = route.healthCheck;
     final host = Uri.tryParse(route.uri)?.host;
     return _Node(
       onTap: onTap,
       selected: selected,
       dashed: ownOn,
       background: ownOn ? const Color(0xff221b1f) : c.card,
-      border: ownOn ? c.maintenance : c.outlineCard,
+      border: ownOn
+          ? c.maintenance
+          : status == RouteStatus.down
+          ? c.danger.withValues(alpha: 0.6)
+          : c.outlineCard,
       semanticLabel: '${route.name} ${route.path}',
       child: Padding(
         padding: const EdgeInsets.fromLTRB(14, 12, 14, 10),
@@ -971,17 +985,34 @@ class _RouteNode extends StatelessWidget {
             const Spacer(),
             Container(height: 1, color: c.outlineSoft),
             const SizedBox(height: 8),
-            if (maintenance == null)
+            if (maintenance == null && health == null)
               Text(
                 intl.maintenance.redirectOnly,
                 style: TextStyle(fontSize: 12, color: c.textTertiary),
               )
             else
-              _Chip(
-                on: maintenance.enabled,
-                label: maintenance.enabled
-                    ? intl.maintenance.chipOn
-                    : intl.maintenance.chipOff,
+              Row(
+                children: [
+                  if (health != null) ...[
+                    _Chip(
+                      icon: app.assets.icons.general.activity,
+                      color: health.down ? c.dangerText : null,
+                      label: health.enabled
+                          ? intervalText(health.intervalSeconds)
+                                .replaceAll(' ', '')
+                          : intl.maintenance.chipOff,
+                    ),
+                    const SizedBox(width: 6),
+                  ],
+                  if (maintenance != null)
+                    _Chip(
+                      icon: app.assets.icons.general.wrench,
+                      color: maintenance.enabled ? c.maintenance : null,
+                      label: maintenance.enabled
+                          ? intl.maintenance.chipOn
+                          : intl.maintenance.chipOff,
+                    ),
+                ],
               ),
           ],
         ),
@@ -990,30 +1021,33 @@ class _RouteNode extends StatelessWidget {
   }
 }
 
+///an add-on of the node; [color] null = plain (off, or nothing to flag)
 class _Chip extends StatelessWidget {
-  final bool on;
+  final SvgAsset icon;
+  final Color? color;
   final String label;
 
-  const _Chip({required this.on, required this.label});
+  const _Chip({required this.icon, required this.color, required this.label});
 
   @override
   Widget build(BuildContext context) {
     final c = app.colors;
-    final color = on ? c.maintenance : c.label;
+    final accent = this.color;
+    final color = accent ?? c.label;
     return Container(
       height: 24,
       padding: const EdgeInsets.symmetric(horizontal: 8),
       decoration: BoxDecoration(
-        color: on ? c.maintenance.withValues(alpha: 0.10) : Colors.transparent,
+        color: accent?.withValues(alpha: 0.10) ?? Colors.transparent,
         borderRadius: BorderRadius.circular(7),
         border: Border.all(
-          color: on ? c.maintenance.withValues(alpha: 0.6) : c.outlineCard,
+          color: accent?.withValues(alpha: 0.6) ?? c.outlineCard,
         ),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          app.assets.icons.general.wrench.build(size: 12, color: color),
+          icon.build(size: 12, color: color),
           const SizedBox(width: 5),
           Text(label, style: TextStyle(fontSize: 12, color: color)),
         ],

@@ -35,6 +35,13 @@ class RoutesCubit extends Cubit<RoutesState>
     onBus<MaintenanceSaveOkState>((event) {
       if (event.route != null) search(emitLoading: false);
     });
+    //same for its health check ("Run now" too: the new state is in the route)
+    onBus<HealthCheckSaveOkState>((event) => search(emitLoading: false));
+    onBus<HealthCheckSaveErrorState>((event) {
+      if (event.exception.type != GlobalExceptionType.validation) {
+        search(emitLoading: false);
+      }
+    });
     onBus<MaintenanceSaveErrorState>((event) {
       if (event.route != null &&
           event.exception.type != GlobalExceptionType.validation) {

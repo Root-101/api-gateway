@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:console/app_exporter.dart';
 import 'package:console/features/language/view/language_widget.dart';
 import 'package:flutter/material.dart';
@@ -22,10 +24,45 @@ class _BaseScreenState extends State<BaseScreen> {
   bool _open = false;
   final MaintenanceCubit _maintenance = app.di.find();
 
+  ///the gateway writes each health check's result on its own (no push): reread the routes
+  Timer? _healthPoll;
+
   @override
   void initState() {
     super.initState();
     _maintenance.load();
+    _healthPoll = Timer.periodic(const Duration(seconds: 10), (_) {
+      final routes = app.di.find<RoutesCubit>();
+      if (app.di.find<GatewayStatusCubit>().state.offline ||
+          !routes.routes.any((r) => r.healthCheck?.enabled ?? false)) {
+        return;
+      }
+      routes.search(emitLoading: false);
+    });
+  }
+
+  @override
+  void dispose() {
+    _healthPoll?.cancel();
+    super.dispose();
+  }
+
+  void _onHealthCheck(BuildContext context, HealthCheckState state) {
+    final intl = context.intl.health;
+    if (state is HealthCheckSaveOkState) {
+      final name = state.route.name;
+      final message = switch (state.action) {
+        HealthCheckAction.added => intl.added(name: name),
+        HealthCheckAction.saved => intl.saved(name: name),
+        HealthCheckAction.deleted => intl.removed(name: name),
+        //the block shows the result
+        HealthCheckAction.checked => null,
+      };
+      if (message != null) app.snack.showSuccess(message: message);
+    } else if (state is HealthCheckSaveErrorState &&
+        state.exception.type != GlobalExceptionType.validation) {
+      app.snack.showError(message: state.message);
+    }
   }
 
   void _onGatewayChange(BuildContext context, GatewayStatus status) {
@@ -74,6 +111,9 @@ class _BaseScreenState extends State<BaseScreen> {
         ),
         BlocListener<MaintenanceCubit, MaintenanceState>(
           listener: _onMaintenance,
+        ),
+        BlocListener<HealthCheckCubit, HealthCheckState>(
+          listener: _onHealthCheck,
         ),
       ],
       child: Scaffold(

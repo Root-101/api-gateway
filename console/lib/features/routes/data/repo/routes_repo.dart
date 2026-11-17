@@ -134,6 +134,41 @@ class RoutesRepo {
     }
   }
 
+  ///a 422 arrives as a validation GlobalException (fields `enabled`, `path`, `interval_seconds`)
+  Future putHealthCheck({
+    required String routeId,
+    required HealthCheckModel model,
+  }) async {
+    try {
+      await client.putHealthCheck(
+        routeId: routeId,
+        model: HealthCheckEntity(
+          enabled: model.enabled,
+          path: model.path.trim(),
+          intervalSeconds: model.intervalSeconds,
+        ),
+      );
+    } on Exception catch (exc) {
+      throw ExceptionConverter.parse(exc);
+    }
+  }
+
+  Future deleteHealthCheck({required String routeId}) async {
+    try {
+      await client.deleteHealthCheck(routeId: routeId);
+    } on Exception catch (exc) {
+      throw ExceptionConverter.parse(exc);
+    }
+  }
+
+  Future runHealthCheck({required String routeId}) async {
+    try {
+      await client.runHealthCheck(routeId: routeId);
+    } on Exception catch (exc) {
+      throw ExceptionConverter.parse(exc);
+    }
+  }
+
   Future<RouteModel> details({required String routeId}) async {
     try {
       RouteResponse response = await client.details(routeId: routeId);
@@ -174,6 +209,18 @@ extension RouteModelParser on RouteResponse {
             replaceTo: rewritePath!.replaceTo,
           ),
     maintenance: maintenance?.toModel(),
+    healthCheck: switch (healthCheck) {
+      null => null,
+      final h => HealthCheckModel(
+        enabled: h.enabled,
+        path: h.path,
+        intervalSeconds: h.intervalSeconds,
+        checkedAt: DateTime.tryParse(h.checkedAt ?? ''),
+        up: h.up,
+        status: h.status,
+        millis: h.millis,
+      ),
+    },
     addons: addons,
     gatewayUrl: gatewayUrl,
   );

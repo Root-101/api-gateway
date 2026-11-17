@@ -99,6 +99,8 @@ class AppMessagesEs
   late final AppMessages$maintenance$es maintenance =
       AppMessages$maintenance$es._(_root);
   @override
+  late final AppMessages$health$es health = AppMessages$health$es._(_root);
+  @override
   late final AppMessages$map$es map = AppMessages$map$es._(_root);
   @override
   late final AppMessages$panel$es panel = AppMessages$panel$es._(_root);
@@ -814,6 +816,84 @@ class AppMessages$maintenance$es implements AppMessages$maintenance$en {
   String get gatewayOff => 'Mantenimiento del gateway apagado';
 }
 
+// Path: health
+class AppMessages$health$es implements AppMessages$health$en {
+  AppMessages$health$es._(this._root);
+
+  final AppMessagesEs _root; // ignore: unused_field
+
+  // Translations
+  @override
+  String get title => 'Health check';
+  @override
+  String get live => 'LIVE';
+  @override
+  String get down => 'CAÍDA';
+  @override
+  String get off => 'OFF';
+  @override
+  String get endpoint => 'Endpoint';
+  @override
+  String get every => 'Cada';
+  @override
+  String get lastCheck => 'Última';
+  @override
+  String everyValue({required Object time}) => 'Cada ${time}';
+  @override
+  String offValue({required Object time}) => 'Apagado · cada ${time}';
+  @override
+  String get waiting => 'Esperando la primera comprobación';
+  @override
+  String get checking => 'Comprobando…';
+  @override
+  String get justNow => 'Ahora mismo';
+  @override
+  String ago({required Object time}) => 'Hace ${time}';
+  @override
+  String answered({
+    required Object ago,
+    required Object status,
+    required Object millis,
+  }) => '${ago} · ${status} en ${millis} ms';
+  @override
+  String noAnswer({required Object ago}) => '${ago} · sin respuesta';
+  @override
+  String get runNow => 'Comprobar ahora';
+  @override
+  String calledOn({required Object host}) =>
+      'Se llama en ${host}; cualquier 2xx cuenta como activo.';
+  @override
+  String get checkEvery => 'Comprobar cada';
+  @override
+  String get enabled => 'Comprobar periódicamente';
+  @override
+  String get enabledHint =>
+      'Apagado: no se llama, Comprobar ahora sigue funcionando.';
+  @override
+  String get removeTitle => '¿Quitar el health check?';
+  @override
+  String get removeBody =>
+      'Se pierden su endpoint, su intervalo y el último resultado. Puedes volver a añadirlo después.';
+  @override
+  String get add => 'Health check';
+  @override
+  String get addHint => 'Comprueba una ruta periódicamente, LIVE o CAÍDA';
+  @override
+  String badge({required Object time}) => 'Health · cada ${time}';
+  @override
+  String get badgeOff => 'Health · off';
+  @override
+  String downCount({required Object count}) => '${count} caídas';
+  @override
+  String get legendDown => 'Caída';
+  @override
+  String added({required Object name}) => '"${name}": health check añadido';
+  @override
+  String saved({required Object name}) => '"${name}": health check guardado';
+  @override
+  String removed({required Object name}) => '"${name}": health check quitado';
+}
+
 // Path: map
 class AppMessages$map$es implements AppMessages$map$en {
   AppMessages$map$es._(this._root);
@@ -1282,6 +1362,50 @@ extension on AppMessagesEs {
       'maintenance.gatewaySaved' => 'Mantenimiento del gateway guardado',
       'maintenance.gatewayOn' => 'Gateway en mantenimiento',
       'maintenance.gatewayOff' => 'Mantenimiento del gateway apagado',
+      'health.title' => 'Health check',
+      'health.live' => 'LIVE',
+      'health.down' => 'CAÍDA',
+      'health.off' => 'OFF',
+      'health.endpoint' => 'Endpoint',
+      'health.every' => 'Cada',
+      'health.lastCheck' => 'Última',
+      'health.everyValue' => ({required Object time}) => 'Cada ${time}',
+      'health.offValue' => ({required Object time}) => 'Apagado · cada ${time}',
+      'health.waiting' => 'Esperando la primera comprobación',
+      'health.checking' => 'Comprobando…',
+      'health.justNow' => 'Ahora mismo',
+      'health.ago' => ({required Object time}) => 'Hace ${time}',
+      'health.answered' => ({
+        required Object ago,
+        required Object status,
+        required Object millis,
+      }) => '${ago} · ${status} en ${millis} ms',
+      'health.noAnswer' => ({required Object ago}) => '${ago} · sin respuesta',
+      'health.runNow' => 'Comprobar ahora',
+      'health.calledOn' => ({
+        required Object host,
+      }) => 'Se llama en ${host}; cualquier 2xx cuenta como activo.',
+      'health.checkEvery' => 'Comprobar cada',
+      'health.enabled' => 'Comprobar periódicamente',
+      'health.enabledHint' =>
+        'Apagado: no se llama, Comprobar ahora sigue funcionando.',
+      'health.removeTitle' => '¿Quitar el health check?',
+      'health.removeBody' => 'Se pierden su endpoint, su intervalo y el último resultado. Puedes volver a añadirlo después.',
+      'health.add' => 'Health check',
+      'health.addHint' => 'Comprueba una ruta periódicamente, LIVE o CAÍDA',
+      'health.badge' => ({required Object time}) => 'Health · cada ${time}',
+      'health.badgeOff' => 'Health · off',
+      'health.downCount' => ({required Object count}) => '${count} caídas',
+      'health.legendDown' => 'Caída',
+      'health.added' => ({
+        required Object name,
+      }) => '"${name}": health check añadido',
+      'health.saved' => ({
+        required Object name,
+      }) => '"${name}": health check guardado',
+      'health.removed' => ({
+        required Object name,
+      }) => '"${name}": health check quitado',
       'map.title' => 'Mapa del gateway',
       'map.legendRedirect' => 'Solo redirección',
       'map.legendMaintenance' => 'Mantenimiento',

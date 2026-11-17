@@ -12,5 +12,6 @@ class RoutesInit {
     app.di.put(cubit);
 
     app.di.put(MaintenanceCubit(repo: repo));
+    app.di.put(HealthCheckCubit(repo: repo));
   }
 }

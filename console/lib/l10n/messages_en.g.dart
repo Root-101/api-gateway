@@ -75,6 +75,7 @@ class AppMessages with BaseTranslations<AppMessagesLocale, AppMessages> {
   );
   late final AppMessages$maintenance$en maintenance =
       AppMessages$maintenance$en._(_root);
+  late final AppMessages$health$en health = AppMessages$health$en._(_root);
   late final AppMessages$map$en map = AppMessages$map$en._(_root);
   late final AppMessages$panel$en panel = AppMessages$panel$en._(_root);
 }
@@ -1037,6 +1038,114 @@ class AppMessages$maintenance$en {
   String get gatewayOff => 'Gateway maintenance off';
 }
 
+// Path: health
+class AppMessages$health$en {
+  AppMessages$health$en._(this._root);
+
+  final AppMessages _root; // ignore: unused_field
+
+  // Translations
+
+  /// en: 'Health check'
+  String get title => 'Health check';
+
+  /// en: 'LIVE'
+  String get live => 'LIVE';
+
+  /// en: 'DOWN'
+  String get down => 'DOWN';
+
+  /// en: 'OFF'
+  String get off => 'OFF';
+
+  /// en: 'Endpoint'
+  String get endpoint => 'Endpoint';
+
+  /// en: 'Every'
+  String get every => 'Every';
+
+  /// en: 'Last check'
+  String get lastCheck => 'Last check';
+
+  /// en: 'Every {time: String}'
+  String everyValue({required String time}) => 'Every ${time}';
+
+  /// en: 'Off · every {time: String}'
+  String offValue({required String time}) => 'Off · every ${time}';
+
+  /// en: 'Waiting for the first check'
+  String get waiting => 'Waiting for the first check';
+
+  /// en: 'Checking…'
+  String get checking => 'Checking…';
+
+  /// en: 'Just now'
+  String get justNow => 'Just now';
+
+  /// en: '{time: String} ago'
+  String ago({required String time}) => '${time} ago';
+
+  /// en: '{ago: String} · {status: int} in {millis: int} ms'
+  String answered({
+    required String ago,
+    required int status,
+    required int millis,
+  }) => '${ago} · ${status} in ${millis} ms';
+
+  /// en: '{ago: String} · no answer'
+  String noAnswer({required String ago}) => '${ago} · no answer';
+
+  /// en: 'Run now'
+  String get runNow => 'Run now';
+
+  /// en: 'Called on {host: String}; any 2xx counts as live.'
+  String calledOn({required String host}) =>
+      'Called on ${host}; any 2xx counts as live.';
+
+  /// en: 'Check every'
+  String get checkEvery => 'Check every';
+
+  /// en: 'Check on a schedule'
+  String get enabled => 'Check on a schedule';
+
+  /// en: 'Off: no calls, Run now still works.'
+  String get enabledHint => 'Off: no calls, Run now still works.';
+
+  /// en: 'Remove health check?'
+  String get removeTitle => 'Remove health check?';
+
+  /// en: 'Its endpoint, interval and last result are lost. You can add it again later.'
+  String get removeBody =>
+      'Its endpoint, interval and last result are lost. You can add it again later.';
+
+  /// en: 'Health check'
+  String get add => 'Health check';
+
+  /// en: 'Check a path on a schedule, LIVE or DOWN'
+  String get addHint => 'Check a path on a schedule, LIVE or DOWN';
+
+  /// en: 'Health · every {time: String}'
+  String badge({required String time}) => 'Health · every ${time}';
+
+  /// en: 'Health · off'
+  String get badgeOff => 'Health · off';
+
+  /// en: '{count: int} down'
+  String downCount({required int count}) => '${count} down';
+
+  /// en: 'Down'
+  String get legendDown => 'Down';
+
+  /// en: '"{name: String}": health check added'
+  String added({required String name}) => '"${name}": health check added';
+
+  /// en: '"{name: String}": health check saved'
+  String saved({required String name}) => '"${name}": health check saved';
+
+  /// en: '"{name: String}": health check removed'
+  String removed({required String name}) => '"${name}": health check removed';
+}
+
 // Path: map
 class AppMessages$map$en {
   AppMessages$map$en._(this._root);
@@ -1548,6 +1657,49 @@ extension on AppMessages {
       'maintenance.gatewaySaved' => 'Gateway maintenance saved',
       'maintenance.gatewayOn' => 'Gateway in maintenance',
       'maintenance.gatewayOff' => 'Gateway maintenance off',
+      'health.title' => 'Health check',
+      'health.live' => 'LIVE',
+      'health.down' => 'DOWN',
+      'health.off' => 'OFF',
+      'health.endpoint' => 'Endpoint',
+      'health.every' => 'Every',
+      'health.lastCheck' => 'Last check',
+      'health.everyValue' => ({required String time}) => 'Every ${time}',
+      'health.offValue' => ({required String time}) => 'Off · every ${time}',
+      'health.waiting' => 'Waiting for the first check',
+      'health.checking' => 'Checking…',
+      'health.justNow' => 'Just now',
+      'health.ago' => ({required String time}) => '${time} ago',
+      'health.answered' => ({
+        required String ago,
+        required int status,
+        required int millis,
+      }) => '${ago} · ${status} in ${millis} ms',
+      'health.noAnswer' => ({required String ago}) => '${ago} · no answer',
+      'health.runNow' => 'Run now',
+      'health.calledOn' => ({
+        required String host,
+      }) => 'Called on ${host}; any 2xx counts as live.',
+      'health.checkEvery' => 'Check every',
+      'health.enabled' => 'Check on a schedule',
+      'health.enabledHint' => 'Off: no calls, Run now still works.',
+      'health.removeTitle' => 'Remove health check?',
+      'health.removeBody' => 'Its endpoint, interval and last result are lost. You can add it again later.',
+      'health.add' => 'Health check',
+      'health.addHint' => 'Check a path on a schedule, LIVE or DOWN',
+      'health.badge' => ({required String time}) => 'Health · every ${time}',
+      'health.badgeOff' => 'Health · off',
+      'health.downCount' => ({required int count}) => '${count} down',
+      'health.legendDown' => 'Down',
+      'health.added' => ({
+        required String name,
+      }) => '"${name}": health check added',
+      'health.saved' => ({
+        required String name,
+      }) => '"${name}": health check saved',
+      'health.removed' => ({
+        required String name,
+      }) => '"${name}": health check removed',
       'map.title' => 'Gateway map',
       'map.legendRedirect' => 'Redirect only',
       'map.legendMaintenance' => 'Maintenance',

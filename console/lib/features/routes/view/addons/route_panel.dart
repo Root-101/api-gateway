@@ -1,13 +1,16 @@
 import 'package:console/app_exporter.dart';
+import 'package:console/features/routes/view/addons/health_check_block.dart';
 import 'package:console/features/routes/view/addons/maintenance_block.dart';
 import 'package:console/features/routes/view/form/routes_form_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-///what a route shows by its name: the gateway's maintenance wins over its own
+///what a route shows by its name: maintenance (the gateway's first) beats its health check
 enum RouteStatus {
   paused,
   maintenance,
+  live,
+  down,
   none;
 
   static RouteStatus of(RouteModel route, {required bool gatewayOn}) =>
@@ -15,10 +18,19 @@ enum RouteStatus {
       ? paused
       : route.inMaintenance
       ? maintenance
+      : route.healthCheck?.live == true
+      ? live
+      : route.healthCheck?.down == true
+      ? down
       : none;
+
+  bool get inMaintenance => this == paused || this == maintenance;
+
+  ///requests reach the service (a DOWN route still gets them)
+  bool get forwards => !inMaintenance;
 }
 
-///PAUSED / MAINT pill next to a name
+///PAUSED / MAINT / LIVE / DOWN pill next to a name
 class StatusTag extends StatelessWidget {
   final RouteStatus status;
 
@@ -29,11 +41,17 @@ class StatusTag extends StatelessWidget {
     if (status == RouteStatus.none) return const SizedBox.shrink();
     final c = app.colors;
     final intl = context.intl;
+    final (color, text) = switch (status) {
+      RouteStatus.paused => (c.maintenance, intl.maintenance.tagPaused),
+      RouteStatus.maintenance => (c.maintenance, intl.maintenance.tagMaint),
+      RouteStatus.live => (c.success, intl.health.live),
+      _ => (c.dangerText, intl.health.down),
+    };
     return Container(
       height: 22,
       padding: const EdgeInsets.symmetric(horizontal: 8),
       decoration: BoxDecoration(
-        color: c.maintenance.withValues(alpha: 0.15),
+        color: color.withValues(alpha: 0.15),
         borderRadius: BorderRadius.circular(11),
       ),
       child: Row(
@@ -42,21 +60,16 @@ class StatusTag extends StatelessWidget {
           Container(
             width: 6,
             height: 6,
-            decoration: BoxDecoration(
-              color: c.maintenance,
-              shape: BoxShape.circle,
-            ),
+            decoration: BoxDecoration(color: color, shape: BoxShape.circle),
           ),
           const SizedBox(width: 5),
           Text(
-            status == RouteStatus.paused
-                ? intl.maintenance.tagPaused
-                : intl.maintenance.tagMaint,
+            text,
             style: TextStyle(
               fontSize: 11,
               fontWeight: FontWeight.w700,
               letterSpacing: 0.5,
-              color: c.maintenance,
+              color: color,
             ),
           ),
         ],
@@ -219,31 +232,22 @@ class RoutePanel extends StatelessWidget {
                     _EntryBlock(url: Environment.gatewayUrl),
                     const SizedBox(height: 12),
                   ],
+                  if (route?.healthCheck case final health?) ...[
+                    HealthCheckBlock(
+                      key: ValueKey('health-${route!.id}'),
+                      route: route,
+                      model: health,
+                    ),
+                    const SizedBox(height: 12),
+                  ],
                   if (own != null)
                     MaintenanceBlock(
                       key: ValueKey('maint-${route?.id ?? 'gateway'}'),
                       route: route,
                       model: own,
                       locked: route != null && gatewayOn,
-                    )
-                  else ...[
-                    const SizedBox(height: 6),
-                    CaptionText(
-                      route == null
-                          ? intl.panel.addToGateway
-                          : intl.panel.addToRoute,
-                      size: 11,
                     ),
-                    const SizedBox(height: 8),
-                    _AddTile(
-                      onPressed: () => app.di.find<MaintenanceCubit>().put(
-                        route: route,
-                        action: MaintenanceAction.added,
-                        //off with the gateway's default message: ready to edit
-                        model: MaintenanceModel(enabled: false),
-                      ),
-                    ),
-                  ],
+                  ..._addable(context, route, own),
                 ],
               ),
             ),
@@ -251,6 +255,59 @@ class RoutePanel extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  ///"Add to this route": the types the route can have (keys the api sent) that aren't set yet
+  List<Widget> _addable(
+    BuildContext context,
+    RouteModel? route,
+    MaintenanceModel? own,
+  ) {
+    final c = app.colors;
+    final intl = context.intl;
+    final tiles = [
+      if (route != null &&
+          route.healthCheck == null &&
+          route.canHave('health_check'))
+        _AddTile(
+          icon: app.assets.icons.general.activity,
+          color: c.success,
+          label: intl.health.add,
+          hint: intl.health.addHint,
+          onPressed: () => app.di.find<HealthCheckCubit>().put(
+            route: route,
+            action: HealthCheckAction.added,
+            //as in the canvas: /health every 30 s, on
+            model: HealthCheckModel(
+              enabled: true,
+              path: '/health',
+              intervalSeconds: 30,
+            ),
+          ),
+        ),
+      if (own == null && (route == null || route.canHave('maintenance')))
+        _AddTile(
+          icon: app.assets.icons.general.wrench,
+          color: c.maintenance,
+          label: intl.panel.addMaintenance,
+          hint: intl.panel.addMaintenanceHint,
+          onPressed: () => app.di.find<MaintenanceCubit>().put(
+            route: route,
+            action: MaintenanceAction.added,
+            //off with the gateway's default message: ready to edit
+            model: MaintenanceModel(enabled: false),
+          ),
+        ),
+    ];
+    if (tiles.isEmpty) return const [];
+    return [
+      SizedBox(height: own == null ? 6 : 18),
+      CaptionText(
+        route == null ? intl.panel.addToGateway : intl.panel.addToRoute,
+        size: 11,
+      ),
+      for (final tile in tiles) ...[const SizedBox(height: 8), tile],
+    ];
   }
 }
 
@@ -372,14 +429,23 @@ class _EntryBlock extends StatelessWidget {
 }
 
 class _AddTile extends StatelessWidget {
+  final SvgAsset icon;
+  final Color color;
+  final String label;
+  final String hint;
   final VoidCallback onPressed;
 
-  const _AddTile({required this.onPressed});
+  const _AddTile({
+    required this.icon,
+    required this.color,
+    required this.label,
+    required this.hint,
+    required this.onPressed,
+  });
 
   @override
   Widget build(BuildContext context) {
     final c = app.colors;
-    final intl = context.intl;
     //dashed 1.5 px border, as in the canvas
     return CustomPaint(
       foregroundPainter: DashedBorder(
@@ -402,13 +468,10 @@ class _AddTile extends StatelessWidget {
                   height: 34,
                   alignment: Alignment.center,
                   decoration: BoxDecoration(
-                    color: c.maintenance.withValues(alpha: 0.12),
+                    color: color.withValues(alpha: 0.12),
                     borderRadius: BorderRadius.circular(10),
                   ),
-                  child: app.assets.icons.general.wrench.build(
-                    size: 16,
-                    color: c.maintenance,
-                  ),
+                  child: icon.build(size: 16, color: color),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
@@ -416,7 +479,7 @@ class _AddTile extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        intl.panel.addMaintenance,
+                        label,
                         style: TextStyle(
                           fontSize: 14,
                           fontWeight: FontWeight.w500,
@@ -424,7 +487,7 @@ class _AddTile extends StatelessWidget {
                         ),
                       ),
                       Text(
-                        intl.panel.addMaintenanceHint,
+                        hint,
                         style: TextStyle(fontSize: 12, color: c.textTertiary),
                       ),
                     ],

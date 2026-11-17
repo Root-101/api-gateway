@@ -76,9 +76,10 @@ mouse or keyboard activity.
 Every route of the gateway as a card: its name and description, **FROM** (the public URL it
 answers, the gateway's URL plus its path) and **TO** (where it forwards, with the rewrite of the
 path applied), each with a button to copy it. Each card has **Edit**, **Duplicate** and
-**Delete**, and at its foot a badge per add-on (**Maintenance · on/off**) and **+ Add-ons**; both
-open the panel of the route on the right (see [Add-ons](#add-ons)). Next to the name, **MAINT** when
-its maintenance is on, or **PAUSED** for every route while the whole gateway is in maintenance.
+**Delete**, and at its foot a badge per add-on (**Health · every 30 s**, **Maintenance · on/off**)
+and **+ Add-ons**; both open the panel of the route on the right (see [Add-ons](#add-ons)). Next to
+the name, **MAINT** when its maintenance is on, or **PAUSED** for every route while the whole
+gateway is in maintenance; otherwise **LIVE** or **DOWN** from its [health check](#health-check).
 The search at the top filters by name, path or URI, in the browser.
 
 ![No routes yet](design/screens/05-routes-empty.png)
@@ -165,7 +166,8 @@ its add-ons; a new name is a new route.
 The gateway as a diagram: its public URL on top, the gateway below it and a branch to each route,
 with the path of the route on it. Each route card shows its name, description, the host it
 forwards to and its add-ons (**Redirect only** when it has none). A branch is dashed lilac and
-moving while the route forwards, dotted orange while it answers `503`. Drag to move, the wheel to
+moving while the route forwards, dotted orange while it answers `503`, dotted red while its health
+check says **DOWN** (it still forwards). Drag to move, the wheel to
 zoom (40 % to 200 %), or the **−**, **+** and **Fit** buttons. **Create route** opens the usual
 form.
 
@@ -180,9 +182,30 @@ Without routes the map shows an **Add route** card that opens the form.
 ## Add-ons
 
 Every route forwards its requests; everything else is an add-on, added, edited, turned on or off
-and removed on its own. This version has one: **maintenance**. The panel of a route (from the map,
-or from the badges and **+ Add-ons** of its card in Routes) shows its redirect, its add-ons and,
-under **Add to this route**, the ones it doesn't have yet.
+and removed on its own. This version has two: **health check** (routes only) and **maintenance**.
+The panel of a route (from the map, or from the badges and **+ Add-ons** of its card in Routes)
+shows its redirect, its add-ons and, under **Add to this route**, the ones it doesn't have yet (the
+types the gateway lists for it).
+
+### Health check
+
+The gateway calls a path of the route's service on its own, every so often, and keeps the last
+result: **LIVE** when it answered a 2xx, **DOWN** otherwise. It never changes the routing: a route
+that is down still gets its requests.
+
+| In the block                          | What it does                                                                     |
+|---------------------------------------|----------------------------------------------------------------------------------|
+| **Add to this route → Health check**  | Adds it, on, calling `/health` every 30 s                                        |
+| **Run now** (play)                    | Calls it now and shows the result (up to 5 s), also while it's off               |
+| **Edit** (pencil)                     | **Endpoint** (added to the route's URI), **Check every** (10 s to 1 h) and **Check on a schedule** (off: no calls, it shows **OFF**) |
+| **Remove** (trash)                    | Asks in the block itself, then removes it with its last result                   |
+
+The block shows the endpoint, the interval and the **Last check** (`12 s ago · 200 in 18 ms`, `no
+answer` when the service couldn't be reached or didn't answer in 5 s). The gateway doesn't push the
+results: the console rereads the routes every 10 seconds while one of them has it on.
+
+**Behind it:** the [health check endpoints](api.md#health-check) of a route
+(`/_admin/routes/{id}/addons/health-check`: `PUT`, `DELETE`, `POST …/run`).
 
 ### Maintenance
 

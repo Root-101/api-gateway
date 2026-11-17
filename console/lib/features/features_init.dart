@@ -73,6 +73,9 @@ class FeaturesInit {
     BlocProvider<MaintenanceCubit>(
       create: (context) => app.di.find<MaintenanceCubit>(),
     ),
+    BlocProvider<HealthCheckCubit>(
+      create: (context) => app.di.find<HealthCheckCubit>(),
+    ),
     //LOGS
     BlocProvider<LogsCubit>(create: (context) => app.di.find<LogsCubit>()),
     //GATEWAY STATUS
