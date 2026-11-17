@@ -46,11 +46,12 @@ SCREENS = [
     ('States', 'session-expired', 'Routes', 'Session expired: log in again', 'state=session'),
     ('States', 'not-found', 'NotFound', 'A URL that doesn\'t exist', ''),
     ('Navigation', 'rail-expanded', 'Routes', 'Navigation rail, expanded', 'menu=true'),
-    ('Maintenance', 'maintenance-route', 'MaintRoute', 'A route in maintenance', ''),
-    ('Maintenance', 'maintenance-route-dialog', 'MaintRouteDialog', 'Maintenance of a route', ''),
-    ('Maintenance', 'maintenance-gateway', 'MaintGlobal', 'The whole gateway in maintenance', ''),
-    ('Maintenance', 'maintenance-gateway-dialog', 'MaintGlobalDialog', 'Maintenance of the whole gateway',
-     ''),
+    ('Gateway map', 'gateway-map', 'GatewayMapScreen', 'Gateway map', ''),
+    ('Gateway map', 'gateway-map-maintenance', 'GatewayMapScreen', 'Gateway map: the gateway in maintenance',
+     'gatewayMaint=true'),
+    ('Gateway map', 'gateway-map-empty', 'GatewayMapScreen', 'Gateway map: no routes yet', 'routeCount=0'),
+    ('Gateway map', 'routes-gateway-maintenance', 'GatewayRoutes',
+     'Routes while the gateway is in maintenance: every route paused', 'gatewayMaint=true'),
 ]
 
 # (file name, artboard, props): the brand images, at their size on the canvas
