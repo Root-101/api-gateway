@@ -75,6 +75,8 @@ class AppMessages with BaseTranslations<AppMessagesLocale, AppMessages> {
   );
   late final AppMessages$maintenance$en maintenance =
       AppMessages$maintenance$en._(_root);
+  late final AppMessages$map$en map = AppMessages$map$en._(_root);
+  late final AppMessages$panel$en panel = AppMessages$panel$en._(_root);
 }
 
 // Path: app
@@ -946,11 +948,11 @@ class AppMessages$maintenance$en {
   /// en: 'Maintenance'
   String get maintenance => 'Maintenance';
 
-  /// en: 'Maintenance: on'
-  String get railOn => 'Maintenance: on';
+  /// en: 'MAINT'
+  String get tagMaint => 'MAINT';
 
-  /// en: 'ON'
-  String get on => 'ON';
+  /// en: 'PAUSED'
+  String get tagPaused => 'PAUSED';
 
   /// en: 'The gateway is in maintenance.'
   String get bannerTitle => 'The gateway is in maintenance.';
@@ -973,91 +975,12 @@ class AppMessages$maintenance$en {
   /// en: 'Turn off'
   String get turnOff => 'Turn off';
 
-  /// en: 'Route maintenance'
-  String get routeTitle => 'Route maintenance';
-
-  /// en: 'Gateway maintenance'
-  String get globalTitle => 'Gateway maintenance';
-
-  /// en: 'Every route answers 503 while it’s on'
-  String get globalSubtitle => 'Every route answers 503 while it’s on';
-
-  /// en: 'In maintenance'
-  String get inMaintenance => 'In maintenance';
-
-  /// en: 'Requests to this route get a 503 instead of reaching the service.'
-  String get routeOnHint =>
-      'Requests to this route get a 503 instead of reaching the service.';
-
-  /// en: 'Requests to any route get a 503. The console and /health keep working.'
-  String get globalOnHint =>
-      'Requests to any route get a 503. The console and /health keep working.';
-
-  /// en: 'Off. The message and time are kept for next time.'
-  String get offHint => 'Off. The message and time are kept for next time.';
-
-  /// en: 'The whole gateway is in maintenance too. This route answers with its own message and time.'
-  String get bothOn =>
-      'The whole gateway is in maintenance too. This route answers with its own message and time.';
-
-  /// en: 'Message'
-  String get message => 'Message';
-
-  /// en: '{count: int} / {max: int}'
-  String count({required int count, required int max}) => '${count} / ${max}';
-
-  /// en: 'Empty: “The service is under maintenance, try again later”'
-  String get messageHint =>
-      'Empty: “The service is under maintenance, try again later”';
-
   /// en: 'The service is under maintenance, try again later'
   String get defaultMessage =>
       'The service is under maintenance, try again later';
 
-  /// en: 'At most {max: int} characters.'
-  String tooLong({required int max}) => 'At most ${max} characters.';
-
-  /// en: 'Back at'
-  String get backAt => 'Back at';
-
-  /// en: '(optional)'
-  String get optional => '(optional)';
-
-  /// en: 'Pick a date and time'
-  String get pickTime => 'Pick a date and time';
-
-  /// en: 'Clear'
-  String get clear => 'Clear';
-
-  /// en: 'No time: callers get no Retry-After. Maintenance never ends by itself.'
-  String get noTime =>
-      'No time: callers get no Retry-After. Maintenance never ends by itself.';
-
-  /// en: 'That time has passed: no Retry-After is sent. It stays on until you turn it off.'
-  String get timePassed =>
-      'That time has passed: no Retry-After is sent. It stays on until you turn it off.';
-
-  /// en: 'Callers get Retry-After: {seconds: int} (in {left: String}). It won’t turn off by itself.'
-  String retryAfter({required int seconds, required String left}) =>
-      'Callers get Retry-After: ${seconds} (in ${left}). It won’t turn off by itself.';
-
-  /// en: 'WHAT CALLERS GET'
-  String get callersGet => 'WHAT CALLERS GET';
-
-  /// en: 'WHAT CALLERS WOULD GET'
-  String get callersWouldGet => 'WHAT CALLERS WOULD GET';
-
-  /// en: 'Service Unavailable'
-  String get serviceUnavailable => 'Service Unavailable';
-
-  /// en: 'Save'
-  String get save => 'Save';
-
-  /// en: 'Save, turned off'
-  String get saveOff => 'Save, turned off';
-
-  /// en: 'Turn on for every route'
-  String get turnOnAll => 'Turn on for every route';
+  /// en: '{count: int} in maintenance'
+  String inCount({required int count}) => '${count} in maintenance';
 
   /// en: 'IN MAINTENANCE · 503'
   String get cardTitle => 'IN MAINTENANCE · 503';
@@ -1068,11 +991,32 @@ class AppMessages$maintenance$en {
   /// en: 'No return time'
   String get cardNoTime => 'No return time';
 
-  /// en: 'Maintenance of {name: String}'
-  String ofRoute({required String name}) => 'Maintenance of ${name}';
+  /// en: 'Add-ons'
+  String get addons => 'Add-ons';
 
-  /// en: '{count: int} in maintenance'
-  String inCount({required int count}) => '${count} in maintenance';
+  /// en: 'Maintenance · on'
+  String get badgeOn => 'Maintenance · on';
+
+  /// en: 'Maintenance · off'
+  String get badgeOff => 'Maintenance · off';
+
+  /// en: 'On'
+  String get chipOn => 'On';
+
+  /// en: 'Off'
+  String get chipOff => 'Off';
+
+  /// en: 'Redirect only'
+  String get redirectOnly => 'Redirect only';
+
+  /// en: '"{name: String}": maintenance added'
+  String added({required String name}) => '"${name}": maintenance added';
+
+  /// en: '"{name: String}": maintenance saved'
+  String saved({required String name}) => '"${name}": maintenance saved';
+
+  /// en: '"{name: String}": maintenance removed'
+  String removed({required String name}) => '"${name}": maintenance removed';
 
   /// en: '"{name: String}" in maintenance'
   String routeOn({required String name}) => '"${name}" in maintenance';
@@ -1080,11 +1024,198 @@ class AppMessages$maintenance$en {
   /// en: '"{name: String}" back in service'
   String routeOff({required String name}) => '"${name}" back in service';
 
+  /// en: 'Gateway maintenance added'
+  String get gatewayAdded => 'Gateway maintenance added';
+
+  /// en: 'Gateway maintenance saved'
+  String get gatewaySaved => 'Gateway maintenance saved';
+
   /// en: 'Gateway in maintenance'
-  String get globalOn => 'Gateway in maintenance';
+  String get gatewayOn => 'Gateway in maintenance';
 
   /// en: 'Gateway maintenance off'
-  String get globalOff => 'Gateway maintenance off';
+  String get gatewayOff => 'Gateway maintenance off';
+}
+
+// Path: map
+class AppMessages$map$en {
+  AppMessages$map$en._(this._root);
+
+  final AppMessages _root; // ignore: unused_field
+
+  // Translations
+
+  /// en: 'Gateway map'
+  String get title => 'Gateway map';
+
+  /// en: 'EXPERIMENTAL'
+  String get experimental => 'EXPERIMENTAL';
+
+  /// en: 'Redirect only'
+  String get legendRedirect => 'Redirect only';
+
+  /// en: 'Maintenance'
+  String get legendMaintenance => 'Maintenance';
+
+  /// en: 'Zoom in'
+  String get zoomIn => 'Zoom in';
+
+  /// en: 'Zoom out'
+  String get zoomOut => 'Zoom out';
+
+  /// en: 'Fit'
+  String get fit => 'Fit';
+
+  /// en: 'Drag to move · scroll to zoom · click a route to configure it'
+  String get hint =>
+      'Drag to move · scroll to zoom · click a route to configure it';
+
+  /// en: 'Add route'
+  String get addRoute => 'Add route';
+
+  /// en: 'No routes yet'
+  String get noRoutesYet => 'No routes yet';
+
+  /// en: '1 route'
+  String get oneRoute => '1 route';
+
+  /// en: '{count: int} routes'
+  String manyRoutes({required int count}) => '${count} routes';
+
+  /// en: 'In maintenance'
+  String get gatewayInMaintenance => 'In maintenance';
+
+  /// en: '503 on all {count: int} routes'
+  String gatewayAll({required int count}) => '503 on all ${count} routes';
+}
+
+// Path: panel
+class AppMessages$panel$en {
+  AppMessages$panel$en._(this._root);
+
+  final AppMessages _root; // ignore: unused_field
+
+  // Translations
+
+  /// en: 'ROUTE'
+  String get route => 'ROUTE';
+
+  /// en: 'GATEWAY'
+  String get gateway => 'GATEWAY';
+
+  /// en: 'Where every request comes in'
+  String get gatewayDescription => 'Where every request comes in';
+
+  /// en: 'Redirect'
+  String get redirect => 'Redirect';
+
+  /// en: 'Open in Routes'
+  String get openInRoutes => 'Open in Routes';
+
+  /// en: 'Edit route'
+  String get editRoute => 'Edit route';
+
+  /// en: 'Maintenance'
+  String get maintenance => 'Maintenance';
+
+  /// en: 'Off · requests are forwarded normally'
+  String get offRoute => 'Off · requests are forwarded normally';
+
+  /// en: 'Off · every route forwards normally'
+  String get offGateway => 'Off · every route forwards normally';
+
+  /// en: 'On · callers get a 503 with this message'
+  String get onRoute => 'On · callers get a 503 with this message';
+
+  /// en: 'On · every route answers 503 with this message'
+  String get onGateway => 'On · every route answers 503 with this message';
+
+  /// en: 'On for {time: String}'
+  String onFor({required String time}) => 'On for ${time}';
+
+  /// en: 'Last window: {time: String}'
+  String lastWindow({required String time}) => 'Last window: ${time}';
+
+  /// en: '503 MESSAGE'
+  String get message503 => '503 MESSAGE';
+
+  /// en: 'default'
+  String get defaultTag => 'default';
+
+  /// en: 'No return time'
+  String get noReturn => 'No return time';
+
+  /// en: 'Back around {date: String}'
+  String backAround({required String date}) => 'Back around ${date}';
+
+  /// en: 'Slide right to turn on maintenance'
+  String get slideOn => 'Slide right to turn on maintenance';
+
+  /// en: 'Slide left to turn off'
+  String get slideOff => 'Slide left to turn off';
+
+  /// en: 'Drag the handle, or use the arrow keys'
+  String get slideHint => 'Drag the handle, or use the arrow keys';
+
+  /// en: 'Controlled by the gateway'
+  String get locked => 'Controlled by the gateway';
+
+  /// en: 'The whole gateway is in maintenance: every route answers its message until it is turned off.'
+  String get lockedHint =>
+      'The whole gateway is in maintenance: every route answers its message until it is turned off.';
+
+  /// en: 'Edit'
+  String get edit => 'Edit';
+
+  /// en: 'Remove'
+  String get remove => 'Remove';
+
+  /// en: 'Remove maintenance?'
+  String get removeTitle => 'Remove maintenance?';
+
+  /// en: 'Its message and return time are lost. You can add it again later.'
+  String get removeBody =>
+      'Its message and return time are lost. You can add it again later.';
+
+  /// en: 'Save'
+  String get save => 'Save';
+
+  /// en: 'ADD TO THIS ROUTE'
+  String get addToRoute => 'ADD TO THIS ROUTE';
+
+  /// en: 'ADD TO THE GATEWAY'
+  String get addToGateway => 'ADD TO THE GATEWAY';
+
+  /// en: 'Maintenance mode'
+  String get addMaintenance => 'Maintenance mode';
+
+  /// en: 'Answer 503 with a message while it is on'
+  String get addMaintenanceHint => 'Answer 503 with a message while it is on';
+
+  /// en: '503 message'
+  String get messageLabel => '503 message';
+
+  /// en: 'Empty: “{text: String}”'
+  String messageHint({required String text}) => 'Empty: “${text}”';
+
+  /// en: '{count: int} / {max: int}'
+  String count({required int count, required int max}) => '${count} / ${max}';
+
+  /// en: 'At most {max: int} characters.'
+  String tooLong({required int max}) => 'At most ${max} characters.';
+
+  /// en: 'Back around'
+  String get backLabel => 'Back around';
+
+  /// en: 'Optional. Sent as Retry-After while it is ahead; it never turns off by itself.'
+  String get backHint =>
+      'Optional. Sent as Retry-After while it is ahead; it never turns off by itself.';
+
+  /// en: 'Pick a date and time'
+  String get pickTime => 'Pick a date and time';
+
+  /// en: 'Clear'
+  String get clear => 'Clear';
 }
 
 /// The flat map containing all translations for locale <en>.
@@ -1375,8 +1506,8 @@ extension on AppMessages {
       'calendar.hintEnd' => 'Now pick the end date',
       'calendar.hintRestart' => 'Click a day to start a new range',
       'maintenance.maintenance' => 'Maintenance',
-      'maintenance.railOn' => 'Maintenance: on',
-      'maintenance.on' => 'ON',
+      'maintenance.tagMaint' => 'MAINT',
+      'maintenance.tagPaused' => 'PAUSED',
       'maintenance.bannerTitle' => 'The gateway is in maintenance.',
       'maintenance.bannerDetail' =>
         'Every route answers 503. The console and /health keep working.',
@@ -1387,61 +1518,99 @@ extension on AppMessages {
       'maintenance.bannerPassed' => 'Every route answers 503 (the return time has passed, it stays on until you turn it off). The console and /health keep working.',
       'maintenance.edit' => 'Edit',
       'maintenance.turnOff' => 'Turn off',
-      'maintenance.routeTitle' => 'Route maintenance',
-      'maintenance.globalTitle' => 'Gateway maintenance',
-      'maintenance.globalSubtitle' => 'Every route answers 503 while it’s on',
-      'maintenance.inMaintenance' => 'In maintenance',
-      'maintenance.routeOnHint' =>
-        'Requests to this route get a 503 instead of reaching the service.',
-      'maintenance.globalOnHint' => 'Requests to any route get a 503. The console and /health keep working.',
-      'maintenance.offHint' =>
-        'Off. The message and time are kept for next time.',
-      'maintenance.bothOn' => 'The whole gateway is in maintenance too. This route answers with its own message and time.',
-      'maintenance.message' => 'Message',
-      'maintenance.count' => ({
-        required int count,
-        required int max,
-      }) => '${count} / ${max}',
-      'maintenance.messageHint' =>
-        'Empty: “The service is under maintenance, try again later”',
       'maintenance.defaultMessage' =>
         'The service is under maintenance, try again later',
-      'maintenance.tooLong' => ({
-        required int max,
-      }) => 'At most ${max} characters.',
-      'maintenance.backAt' => 'Back at',
-      'maintenance.optional' => '(optional)',
-      'maintenance.pickTime' => 'Pick a date and time',
-      'maintenance.clear' => 'Clear',
-      'maintenance.noTime' => 'No time: callers get no Retry-After. Maintenance never ends by itself.',
-      'maintenance.timePassed' => 'That time has passed: no Retry-After is sent. It stays on until you turn it off.',
-      'maintenance.retryAfter' => ({
-        required int seconds,
-        required String left,
-      }) => 'Callers get Retry-After: ${seconds} (in ${left}). It won’t turn off by itself.',
-      'maintenance.callersGet' => 'WHAT CALLERS GET',
-      'maintenance.callersWouldGet' => 'WHAT CALLERS WOULD GET',
-      'maintenance.serviceUnavailable' => 'Service Unavailable',
-      'maintenance.save' => 'Save',
-      'maintenance.saveOff' => 'Save, turned off',
-      'maintenance.turnOnAll' => 'Turn on for every route',
-      'maintenance.cardTitle' => 'IN MAINTENANCE · 503',
-      'maintenance.cardBack' => ({required String date}) => 'Back ${date}',
-      'maintenance.cardNoTime' => 'No return time',
-      'maintenance.ofRoute' => ({
-        required String name,
-      }) => 'Maintenance of ${name}',
       'maintenance.inCount' => ({
         required int count,
       }) => '${count} in maintenance',
+      'maintenance.cardTitle' => 'IN MAINTENANCE · 503',
+      'maintenance.cardBack' => ({required String date}) => 'Back ${date}',
+      'maintenance.cardNoTime' => 'No return time',
+      'maintenance.addons' => 'Add-ons',
+      'maintenance.badgeOn' => 'Maintenance · on',
+      'maintenance.badgeOff' => 'Maintenance · off',
+      'maintenance.chipOn' => 'On',
+      'maintenance.chipOff' => 'Off',
+      'maintenance.redirectOnly' => 'Redirect only',
+      'maintenance.added' => ({
+        required String name,
+      }) => '"${name}": maintenance added',
+      'maintenance.saved' => ({
+        required String name,
+      }) => '"${name}": maintenance saved',
+      'maintenance.removed' => ({
+        required String name,
+      }) => '"${name}": maintenance removed',
       'maintenance.routeOn' => ({
         required String name,
       }) => '"${name}" in maintenance',
       'maintenance.routeOff' => ({
         required String name,
       }) => '"${name}" back in service',
-      'maintenance.globalOn' => 'Gateway in maintenance',
-      'maintenance.globalOff' => 'Gateway maintenance off',
+      'maintenance.gatewayAdded' => 'Gateway maintenance added',
+      'maintenance.gatewaySaved' => 'Gateway maintenance saved',
+      'maintenance.gatewayOn' => 'Gateway in maintenance',
+      'maintenance.gatewayOff' => 'Gateway maintenance off',
+      'map.title' => 'Gateway map',
+      'map.experimental' => 'EXPERIMENTAL',
+      'map.legendRedirect' => 'Redirect only',
+      'map.legendMaintenance' => 'Maintenance',
+      'map.zoomIn' => 'Zoom in',
+      'map.zoomOut' => 'Zoom out',
+      'map.fit' => 'Fit',
+      'map.hint' =>
+        'Drag to move · scroll to zoom · click a route to configure it',
+      'map.addRoute' => 'Add route',
+      'map.noRoutesYet' => 'No routes yet',
+      'map.oneRoute' => '1 route',
+      'map.manyRoutes' => ({required int count}) => '${count} routes',
+      'map.gatewayInMaintenance' => 'In maintenance',
+      'map.gatewayAll' => ({
+        required int count,
+      }) => '503 on all ${count} routes',
+      'panel.route' => 'ROUTE',
+      'panel.gateway' => 'GATEWAY',
+      'panel.gatewayDescription' => 'Where every request comes in',
+      'panel.redirect' => 'Redirect',
+      'panel.openInRoutes' => 'Open in Routes',
+      'panel.editRoute' => 'Edit route',
+      'panel.maintenance' => 'Maintenance',
+      'panel.offRoute' => 'Off · requests are forwarded normally',
+      'panel.offGateway' => 'Off · every route forwards normally',
+      'panel.onRoute' => 'On · callers get a 503 with this message',
+      'panel.onGateway' => 'On · every route answers 503 with this message',
+      'panel.onFor' => ({required String time}) => 'On for ${time}',
+      'panel.lastWindow' => ({required String time}) => 'Last window: ${time}',
+      'panel.message503' => '503 MESSAGE',
+      'panel.defaultTag' => 'default',
+      'panel.noReturn' => 'No return time',
+      'panel.backAround' => ({required String date}) => 'Back around ${date}',
+      'panel.slideOn' => 'Slide right to turn on maintenance',
+      'panel.slideOff' => 'Slide left to turn off',
+      'panel.slideHint' => 'Drag the handle, or use the arrow keys',
+      'panel.locked' => 'Controlled by the gateway',
+      'panel.lockedHint' => 'The whole gateway is in maintenance: every route answers its message until it is turned off.',
+      'panel.edit' => 'Edit',
+      'panel.remove' => 'Remove',
+      'panel.removeTitle' => 'Remove maintenance?',
+      'panel.removeBody' =>
+        'Its message and return time are lost. You can add it again later.',
+      'panel.save' => 'Save',
+      'panel.addToRoute' => 'ADD TO THIS ROUTE',
+      'panel.addToGateway' => 'ADD TO THE GATEWAY',
+      'panel.addMaintenance' => 'Maintenance mode',
+      'panel.addMaintenanceHint' => 'Answer 503 with a message while it is on',
+      'panel.messageLabel' => '503 message',
+      'panel.messageHint' => ({required String text}) => 'Empty: “${text}”',
+      'panel.count' => ({
+        required int count,
+        required int max,
+      }) => '${count} / ${max}',
+      'panel.tooLong' => ({required int max}) => 'At most ${max} characters.',
+      'panel.backLabel' => 'Back around',
+      'panel.backHint' => 'Optional. Sent as Retry-After while it is ahead; it never turns off by itself.',
+      'panel.pickTime' => 'Pick a date and time',
+      'panel.clear' => 'Clear',
       _ => null,
     };
   }

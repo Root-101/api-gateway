@@ -233,10 +233,19 @@ class _RoutesScreenState extends State<RoutesScreen> {
         ),
       );
     }
-    return _buildGrid([
-      for (final route in visible)
-        _RouteCard(route: route, onDelete: () => _confirmDelete(route)),
-    ]);
+    return BlocBuilder<MaintenanceCubit, MaintenanceState>(
+      builder: (context, _) {
+        final gatewayOn = app.di.find<MaintenanceCubit>().gatewayOn;
+        return _buildGrid([
+          for (final route in visible)
+            _RouteCard(
+              route: route,
+              gatewayOn: gatewayOn,
+              onDelete: () => _confirmDelete(route),
+            ),
+        ]);
+      },
+    );
   }
 
   ///like a css auto-fill grid: as many 400 px+ columns as fit, cards of a row share their height
@@ -284,9 +293,14 @@ class _RoutesScreenState extends State<RoutesScreen> {
 
 class _RouteCard extends StatefulWidget {
   final RouteModel route;
+  final bool gatewayOn;
   final VoidCallback onDelete;
 
-  const _RouteCard({required this.route, required this.onDelete});
+  const _RouteCard({
+    required this.route,
+    required this.gatewayOn,
+    required this.onDelete,
+  });
 
   @override
   State<_RouteCard> createState() => _RouteCardState();
@@ -330,16 +344,26 @@ class _RouteCardState extends State<_RouteCard> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        route.name,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                          fontSize: 19,
-                          height: 26 / 19,
-                          fontWeight: FontWeight.w500,
-                          color: c.text,
-                        ),
+                      Row(
+                        children: [
+                          Flexible(
+                            child: Text(
+                              route.name,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                fontSize: 19,
+                                height: 26 / 19,
+                                fontWeight: FontWeight.w500,
+                                color: c.text,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          StatusTag(
+                            RouteStatus.of(route, gatewayOn: widget.gatewayOn),
+                          ),
+                        ],
                       ),
                       const SizedBox(height: 2),
                       Text(
@@ -358,21 +382,6 @@ class _RouteCardState extends State<_RouteCard> {
                   ),
                 ),
                 const SizedBox(width: 12),
-                Semantics(
-                  toggled: maintenance,
-                  child: AppIconButton(
-                    icon: app.assets.icons.general.wrench,
-                    tooltip: maintenance
-                        ? intl.maintenance.inMaintenance
-                        : intl.maintenance.ofRoute(name: route.name),
-                    color: maintenance ? c.maintenance : null,
-                    background: maintenance
-                        ? c.maintenance.withValues(alpha: 0.16)
-                        : null,
-                    hoverColor: maintenance ? c.maintenance : null,
-                    onPressed: () => MaintenanceDialog.show(route: route),
-                  ),
-                ),
                 AppIconButton(
                   icon: app.assets.icons.actions.edit,
                   tooltip: intl.routes.edit,
@@ -433,6 +442,12 @@ class _RouteCardState extends State<_RouteCard> {
               const SizedBox(height: 12),
               _MaintenanceBlock(route.maintenance!),
             ],
+            Container(
+              height: 1,
+              margin: const EdgeInsets.symmetric(vertical: 12),
+              color: c.outlineSoft,
+            ),
+            _AddonsFooter(route: route),
           ],
         ),
       ),
@@ -482,7 +497,6 @@ class _MaintenanceBlock extends StatelessWidget {
     final c = app.colors;
     final intl = context.intl;
     final retry = maintenance.retryAfter?.toLocal();
-    final message = maintenance.message ?? '';
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
@@ -524,14 +538,97 @@ class _MaintenanceBlock extends StatelessWidget {
           ),
           const SizedBox(height: 4),
           Text(
-            message.isEmpty ? intl.maintenance.defaultMessage : message,
+            maintenance.shownMessage(intl.maintenance.defaultMessage),
             style: TextStyle(
               fontSize: 13,
               height: 18 / 13,
-              color: message.isEmpty ? c.textTertiary : c.text,
+              color: maintenance.hasOwnMessage ? c.text : c.textTertiary,
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+///a badge per add-on of the route, then + Add-ons; both open the route's panel
+class _AddonsFooter extends StatelessWidget {
+  final RouteModel route;
+
+  const _AddonsFooter({required this.route});
+
+  @override
+  Widget build(BuildContext context) {
+    final c = app.colors;
+    final intl = context.intl;
+    final maintenance = route.maintenance;
+    void open() => RoutePanelSheet.show(context, route);
+    return Wrap(
+      spacing: 8,
+      runSpacing: 8,
+      children: [
+        if (maintenance != null)
+          _Badge(
+            icon: app.assets.icons.general.wrench,
+            label: maintenance.enabled
+                ? intl.maintenance.badgeOn
+                : intl.maintenance.badgeOff,
+            color: maintenance.enabled ? c.maintenance : c.label,
+            onPressed: open,
+          ),
+        _Badge(
+          icon: app.assets.icons.actions.add,
+          label: intl.maintenance.addons,
+          color: c.label,
+          dashed: true,
+          onPressed: open,
+        ),
+      ],
+    );
+  }
+}
+
+class _Badge extends StatelessWidget {
+  final SvgAsset icon;
+  final String label;
+  final Color color;
+  final bool dashed;
+  final VoidCallback onPressed;
+
+  const _Badge({
+    required this.icon,
+    required this.label,
+    required this.color,
+    required this.onPressed,
+    this.dashed = false,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final c = app.colors;
+    final accent = color != c.label;
+    return Material(
+      color: accent ? color.withValues(alpha: 0.10) : Colors.transparent,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(8),
+        side: BorderSide(
+          color: accent ? color.withValues(alpha: 0.5) : c.outlineCard,
+        ),
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: onPressed,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              icon.build(size: 13, color: color),
+              const SizedBox(width: 6),
+              Text(label, style: TextStyle(fontSize: 12, color: color)),
+            ],
+          ),
+        ),
       ),
     );
   }

@@ -1,16 +1,29 @@
 * 6.x:
     * 6.1.0:
-        * **Maintenance** :construction: : API layer for maintenance mode (needs the gateway `6.1.0`): the
-          `maintenance` of each route in `GET /routes` and `GET /routes/{id}`, `PUT /routes/{id}/maintenance`,
-          and the global one with `GET` and `PUT /maintenance`. Backups now keep each route's `maintenance` and
-          restore sends it back.
-        * **Maintenance** :construction: : Screens for maintenance mode. A wrench on each route card opens its
-          dialog: an on/off switch, a message (up to 500 characters), an optional return time and a preview of
-          the `503` callers get. A route in maintenance has an orange border and shows its message and return
-          time, and the routes header counts them. `Maintenance` in the rail opens the same dialog for the
-          whole gateway; while it's on, the rail shows `ON` and a banner on every screen offers `Edit` and
-          `Turn off`. Turning it off keeps the message and time. Documented in `docs/console.md`, with four
-          new screens in `docs/design`.
+        * **Add-ons** :jigsaw: : Each route forwards its requests; everything else is an add-on, added, turned
+          on or off, edited and removed on its own (needs the gateway `6.1.0`). This version has one: maintenance,
+          per route and for the whole gateway. Its panel (the same one in the map and in Routes) shows the redirect,
+          the add-ons with an in-place editor and a slide to turn them on or off, and "Add to this route" with the
+          ones missing. The 503 message is optional (empty, the gateway's own, marked "default"), and the panel
+          shows how long it has been on or the last window. While the gateway is in maintenance it wins: every
+          route shows `PAUSED` and its slide is locked. API: `addons` in each route, `GET /addons`, and `PUT`,
+          `DELETE`, `POST .../enable` and `.../disable` under `/routes/{id}/addons/maintenance` and
+          `/addons/maintenance`.
+        * **Gateway map** :world_map: : New first entry of the rail (experimental): the gateway's URL, the gateway
+          and a branch per route with its path, dashed and moving while it forwards, dotted orange while it answers
+          `503`. Drag, wheel zoom, `Fit`, an "Add route" card when there are none, and the panel of a route or of the
+          gateway on a click. `Open in Routes` filters Routes by that route.
+        * **Routes** :twisted_rightwards_arrows: : Each card has the `MAINT` / `PAUSED` tag, a badge per add-on and
+          `+ Add-ons`. Backups keep the `addons` of each route as the gateway sends them (unknown ones too, without
+          `default_message` and `state`), and restore sends them back.
+        * **Maintenance** :construction: : The banner stays on every screen while the gateway is in maintenance:
+          `Edit` opens the map with the gateway's panel, `Turn off` calls `disable`. The first 6.1.0 version (rail
+          entry, dialog and wrench on the card, never released) was replaced by the add-ons.
+        * **Fix** :bug: : No toast showed after an action with the loading layer (delete, backup, restore, save a
+          route): the `loader_overlay` package painted above the app. The loading layer is now drawn under the
+          toast, and the dependency was removed.
+        * **Docs** :books: : `docs/console.md` has the Gateway map and Add-ons sections; `docs/design` screens 21–24
+          are the map, and every screen shows the rail and cards as built.
     * 6.0.0:
         * **DATE** :date: : 2026-11-12.
         * **Redesign** :art: : New visual identity and rebuilt screens: login, side menu with notch, route cards,

@@ -1,27 +1,29 @@
 import 'package:console/app_exporter.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-///maintenance of the whole gateway (shown in the rail and the banner) and saving it, or a route's
+enum MaintenanceAction { added, saved, enabled, disabled, deleted }
+
+///the maintenance add-on: the gateway's (rail, map, banner) and saving it, or a route's
 class MaintenanceCubit extends Cubit<MaintenanceState>
     with GlobalEventBusCommunication<MaintenanceState> {
   final RoutesRepo repo;
 
-  ///null when it was never set
-  MaintenanceModel? global;
+  ///null when it isn't configured
+  MaintenanceModel? gateway;
 
-  bool get globalOn => global?.enabled ?? false;
+  bool get gatewayOn => gateway?.enabled ?? false;
 
   MaintenanceCubit({required this.repo})
     : super(const MaintenanceInitialState());
 
   void reset() {
-    global = null;
+    gateway = null;
     emit(const MaintenanceInitialState());
   }
 
   Future load() async {
     try {
-      global = await repo.findGlobalMaintenance();
+      gateway = await repo.findGatewayMaintenance();
       emit(MaintenanceLoadedState());
     } on Exception catch (exc) {
       //no banner is better than a broken screen: the next load or save fixes it
@@ -29,18 +31,52 @@ class MaintenanceCubit extends Cubit<MaintenanceState>
     }
   }
 
-  ///[route] null saves the global one
-  Future save({required MaintenanceModel model, RouteModel? route}) async {
+  ///creates ([MaintenanceAction.added]) or replaces it; [route] null = the gateway's
+  Future<GlobalException?> put({
+    required MaintenanceModel model,
+    RouteModel? route,
+    MaintenanceAction action = MaintenanceAction.saved,
+  }) => _run(
+    route,
+    action,
+    () => repo.putMaintenance(routeId: route?.id, model: model),
+  );
+
+  Future<GlobalException?> setEnabled({
+    required bool enabled,
+    RouteModel? route,
+  }) => _run(
+    route,
+    enabled ? MaintenanceAction.enabled : MaintenanceAction.disabled,
+    () => repo.setMaintenanceEnabled(routeId: route?.id, enabled: enabled),
+  );
+
+  Future<GlobalException?> delete({required RouteModel route}) =>
+      _run(route, MaintenanceAction.deleted, () async {
+        await repo.deleteMaintenance(routeId: route.id);
+        return null;
+      });
+
+  ///null when it worked; the error is also emitted, for the toast
+  Future<GlobalException?> _run(
+    RouteModel? route,
+    MaintenanceAction action,
+    Future<MaintenanceModel?> Function() call,
+  ) async {
     try {
       emit(MaintenanceSavingState());
-      if (route == null) {
-        global = await repo.setGlobalMaintenance(model: model);
-      } else {
-        await repo.setMaintenance(routeId: route.id, model: model);
-      }
-      emit(MaintenanceSaveOkState(route: route, model: model));
+      final saved = await call();
+      if (route == null) gateway = saved;
+      emit(MaintenanceSaveOkState(route: route, action: action, model: saved));
+      return null;
     } on Exception catch (exc) {
-      emit(MaintenanceSaveErrorState(ExceptionConverter.parse(exc)));
+      final error = ExceptionConverter.parse(exc);
+      emit(MaintenanceSaveErrorState(error, route: route));
+      //someone else may have changed it meanwhile (a 404): show what's there now
+      if (error.type != GlobalExceptionType.validation) {
+        if (route == null) load();
+      }
+      return error;
     }
   }
 }
@@ -68,17 +104,25 @@ class MaintenanceSavingState extends MaintenanceState {
 }
 
 class MaintenanceSaveOkState extends MaintenanceState {
-  ///null when the global one was saved
+  ///null when it was the gateway's
   final RouteModel? route;
-  final MaintenanceModel model;
+  final MaintenanceAction action;
 
-  MaintenanceSaveOkState({required this.route, required this.model});
+  ///null after a delete
+  final MaintenanceModel? model;
+
+  MaintenanceSaveOkState({
+    required this.route,
+    required this.action,
+    required this.model,
+  });
 }
 
 class MaintenanceSaveErrorState extends MaintenanceState {
   final GlobalException exception;
+  final RouteModel? route;
 
-  MaintenanceSaveErrorState(this.exception);
+  MaintenanceSaveErrorState(this.exception, {this.route});
 
   ///a 422 names what's wrong in its violations, the rest in the message
   String get message {

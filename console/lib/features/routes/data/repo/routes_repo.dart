@@ -86,13 +86,22 @@ class RoutesRepo {
     }
   }
 
-  ///422 arrives as a validation GlobalException (fields `enabled`, `message`, `retry_after`)
-  Future<MaintenanceModel> setMaintenance({
-    required String routeId,
+  ///[routeId] null = the gateway; null when it isn't configured
+  Future<MaintenanceModel?> findGatewayMaintenance() async {
+    try {
+      return (await client.findGatewayMaintenance())?.toModel();
+    } on Exception catch (exc) {
+      throw ExceptionConverter.parse(exc);
+    }
+  }
+
+  ///creates or replaces it; a 422 arrives as a validation GlobalException (fields `enabled`, `message`)
+  Future<MaintenanceModel> putMaintenance({
     required MaintenanceModel model,
+    String? routeId,
   }) async {
     try {
-      final response = await client.setMaintenance(
+      final response = await client.putMaintenance(
         routeId: routeId,
         model: model.toEntity(),
       );
@@ -102,21 +111,22 @@ class RoutesRepo {
     }
   }
 
-  ///null when it was never set
-  Future<MaintenanceModel?> findGlobalMaintenance() async {
+  Future deleteMaintenance({required String routeId}) async {
     try {
-      return (await client.findGlobalMaintenance())?.toModel();
+      await client.deleteMaintenance(routeId: routeId);
     } on Exception catch (exc) {
       throw ExceptionConverter.parse(exc);
     }
   }
 
-  Future<MaintenanceModel> setGlobalMaintenance({
-    required MaintenanceModel model,
+  Future<MaintenanceModel> setMaintenanceEnabled({
+    required bool enabled,
+    String? routeId,
   }) async {
     try {
-      final response = await client.setGlobalMaintenance(
-        model: model.toEntity(),
+      final response = await client.setMaintenanceEnabled(
+        routeId: routeId,
+        enabled: enabled,
       );
       return response.toModel();
     } on Exception catch (exc) {
@@ -164,6 +174,7 @@ extension RouteModelParser on RouteResponse {
             replaceTo: rewritePath!.replaceTo,
           ),
     maintenance: maintenance?.toModel(),
+    addons: addons,
     gatewayUrl: gatewayUrl,
   );
 }
@@ -172,20 +183,23 @@ extension MaintenanceModelParser on MaintenanceEntity {
   MaintenanceModel toModel() => MaintenanceModel(
     enabled: enabled,
     message: message,
-    retryAfter: retryAfter == null ? null : DateTime.parse(retryAfter!),
+    retryAfter: DateTime.tryParse(retryAfter ?? ''),
+    defaultMessage: defaultMessage,
+    enabledAt: DateTime.tryParse(enabledAt ?? ''),
+    disabledAt: DateTime.tryParse(disabledAt ?? ''),
   );
 }
 
 extension MaintenanceEntityParser on MaintenanceModel {
   MaintenanceEntity toEntity() => MaintenanceEntity(
     enabled: enabled,
-    message: message,
+    message: hasOwnMessage ? message!.trim() : null,
     retryAfter: retryAfter?.toUtc().toIso8601String(),
   );
 }
 
 extension RouteModelListParser on List<RouteResponse> {
-  List<RouteModel> toModel({String? gatewayUrl}) => map(
-    (singleResponse) => singleResponse.toModel(gatewayUrl: gatewayUrl),
-  ).toList();
+  List<RouteModel> toModel({String? gatewayUrl}) =>
+      map((singleResponse) => singleResponse.toModel(gatewayUrl: gatewayUrl))
+          .toList();
 }

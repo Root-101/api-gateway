@@ -32,6 +32,16 @@ class RouteConfig {
         branches: [
           StatefulShellBranch(
             routes: <RouteBase>[
+              ///   /map (experimental)
+              GoRoute(
+                name: GatewayMapScreen.navigator.name,
+                path: GatewayMapScreen.navigator.path,
+                builder: GatewayMapScreen.navigator.builder,
+              ),
+            ],
+          ),
+          StatefulShellBranch(
+            routes: <RouteBase>[
               ///   /routes
               GoRoute(
                 name: RoutesScreen.navigator.name,

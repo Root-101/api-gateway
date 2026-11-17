@@ -31,9 +31,15 @@ class RoutesCubit extends Cubit<RoutesState>
       search(emitLoading: false);
     });
 
-    //if a route's maintenance changes, update
+    //if a route's maintenance changes (or failed: someone may have changed it meanwhile), update
     onBus<MaintenanceSaveOkState>((event) {
       if (event.route != null) search(emitLoading: false);
+    });
+    onBus<MaintenanceSaveErrorState>((event) {
+      if (event.route != null &&
+          event.exception.type != GlobalExceptionType.validation) {
+        search(emitLoading: false);
+      }
     });
   }
 

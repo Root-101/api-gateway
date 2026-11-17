@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:ui';
 
 import 'package:console/app_exporter.dart';
 import 'package:flutter/material.dart';
@@ -44,6 +45,20 @@ class ToastHost extends StatelessWidget {
     return Stack(
       children: [
         child,
+        //while an action runs: blocks the app, under the toast that reports it
+        Positioned.fill(
+          child: ValueListenableBuilder<bool>(
+            valueListenable: app.loading.visible,
+            builder: (context, loading, _) => loading
+                ? AbsorbPointer(
+                    child: BackdropFilter(
+                      filter: ImageFilter.blur(sigmaX: 4.5, sigmaY: 4.5),
+                      child: const Center(child: CircularProgressIndicator()),
+                    ),
+                  )
+                : const SizedBox.shrink(),
+          ),
+        ),
         Positioned(
           right: 20,
           bottom: 20,

@@ -37,24 +37,28 @@ class _BaseScreenState extends State<BaseScreen> {
     if (logs.state is! LogsInitialState) logs.search();
   }
 
-  ///the dialog or the banner saved it: this shell is the one always there
+  ///a panel or the banner changed a maintenance: this shell is the one always there.
+  ///No loading overlay: the slide and the panel show their own progress
   void _onMaintenance(BuildContext context, MaintenanceState state) {
-    final intl = context.intl;
-    if (state is MaintenanceSavingState) {
-      app.loading.show();
-    } else if (state is MaintenanceSaveOkState) {
-      app.loading.hide();
-      final on = state.model.enabled;
-      final route = state.route;
+    final intl = context.intl.maintenance;
+    if (state is MaintenanceSaveOkState) {
+      final name = state.route?.name;
       app.snack.showSuccess(
-        message: route == null
-            ? (on ? intl.maintenance.globalOn : intl.maintenance.globalOff)
-            : (on
-                  ? intl.maintenance.routeOn(name: route.name)
-                  : intl.maintenance.routeOff(name: route.name)),
+        message: switch (state.action) {
+          MaintenanceAction.added =>
+            name == null ? intl.gatewayAdded : intl.added(name: name),
+          MaintenanceAction.saved =>
+            name == null ? intl.gatewaySaved : intl.saved(name: name),
+          MaintenanceAction.enabled =>
+            name == null ? intl.gatewayOn : intl.routeOn(name: name),
+          MaintenanceAction.disabled =>
+            name == null ? intl.gatewayOff : intl.routeOff(name: name),
+          MaintenanceAction.deleted => intl.removed(name: name ?? ''),
+        },
       );
-    } else if (state is MaintenanceSaveErrorState) {
-      app.loading.hide();
+    } else if (state is MaintenanceSaveErrorState &&
+        state.exception.type != GlobalExceptionType.validation) {
+      //a 422 is shown under its field, in the panel
       app.snack.showError(message: state.message);
     }
   }
@@ -86,8 +90,8 @@ class _BaseScreenState extends State<BaseScreen> {
                     children: [
                       if (status.offline) _OfflineBanner(status),
                       BlocBuilder<MaintenanceCubit, MaintenanceState>(
-                        builder: (context, _) => _maintenance.globalOn
-                            ? _MaintenanceBanner(_maintenance.global!)
+                        builder: (context, _) => _maintenance.gatewayOn
+                            ? _MaintenanceBanner(_maintenance.gateway!)
                             : const SizedBox.shrink(),
                       ),
                       Expanded(
@@ -163,11 +167,19 @@ class _BaseScreenState extends State<BaseScreen> {
             color: c.raised,
           ),
           _RailItem(
-            icon: app.assets.icons.routes,
-            label: intl.routes.routes,
+            icon: app.assets.icons.gateway,
+            label: intl.map.title,
             open: _open,
             selected: index == 0,
             onTap: () => widget.navigationShell.goBranch(0),
+          ),
+          const SizedBox(height: 4),
+          _RailItem(
+            icon: app.assets.icons.routes,
+            label: intl.routes.routes,
+            open: _open,
+            selected: index == 1,
+            onTap: () => widget.navigationShell.goBranch(1),
             trailing: BlocBuilder<RoutesCubit, RoutesState>(
               builder: (context, _) =>
                   _CountBadge(app.di.find<RoutesCubit>().routes.length),
@@ -178,30 +190,8 @@ class _BaseScreenState extends State<BaseScreen> {
             icon: app.assets.icons.logs,
             label: intl.logs.logs,
             open: _open,
-            selected: index == 1,
-            onTap: () => widget.navigationShell.goBranch(1),
-          ),
-          Container(
-            height: 1,
-            margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            color: c.raised,
-          ),
-          BlocBuilder<MaintenanceCubit, MaintenanceState>(
-            builder: (context, _) {
-              final on = _maintenance.globalOn;
-              return _RailItem(
-                icon: app.assets.icons.general.wrench,
-                label: intl.maintenance.maintenance,
-                tooltip: on ? intl.maintenance.railOn : null,
-                open: _open,
-                selected: false,
-                color: on ? c.maintenance : null,
-                background: on ? c.maintenance.withValues(alpha: 0.12) : null,
-                dot: on,
-                onTap: () => MaintenanceDialog.show(),
-                trailing: on ? const _OnPill() : null,
-              );
-            },
+            selected: index == 2,
+            onTap: () => widget.navigationShell.goBranch(2),
           ),
           const Spacer(),
           _buildFooter(context, duration),
@@ -337,14 +327,6 @@ class _RailItem extends StatelessWidget {
   final VoidCallback onTap;
   final Widget? trailing;
 
-  ///tooltip when collapsed, [label] by default
-  final String? tooltip;
-  final Color? color;
-  final Color? background;
-
-  ///a dot on the icon while collapsed, where [trailing] is hidden
-  final bool dot;
-
   const _RailItem({
     required this.icon,
     required this.label,
@@ -352,20 +334,16 @@ class _RailItem extends StatelessWidget {
     required this.selected,
     required this.onTap,
     this.trailing,
-    this.tooltip,
-    this.color,
-    this.background,
-    this.dot = false,
   });
 
   @override
   Widget build(BuildContext context) {
     final c = app.colors;
-    final color = this.color ?? (selected ? c.onSelected : c.label);
+    final color = selected ? c.onSelected : c.label;
     final item = Padding(
       padding: const EdgeInsets.symmetric(horizontal: 12),
       child: Material(
-        color: selected ? c.selected : background ?? Colors.transparent,
+        color: selected ? c.selected : Colors.transparent,
         borderRadius: BorderRadius.circular(24),
         clipBehavior: Clip.antiAlias,
         child: InkWell(
@@ -382,33 +360,7 @@ class _RailItem extends StatelessWidget {
                   children: [
                     SizedBox(
                       width: 56,
-                      height: 48,
-                      child: Stack(
-                        children: [
-                          Center(child: icon.build(size: 22, color: color)),
-                          if (dot)
-                            Positioned(
-                              left: 36,
-                              top: 10,
-                              child: AnimatedOpacity(
-                                opacity: open ? 0 : 1,
-                                duration: motion(
-                                  context,
-                                  const Duration(milliseconds: 200),
-                                ),
-                                child: Container(
-                                  width: 9,
-                                  height: 9,
-                                  decoration: BoxDecoration(
-                                    color: color,
-                                    shape: BoxShape.circle,
-                                    border: Border.all(color: c.rail, width: 2),
-                                  ),
-                                ),
-                              ),
-                            ),
-                        ],
-                      ),
+                      child: Center(child: icon.build(size: 22, color: color)),
                     ),
                     Expanded(
                       child: _RailLabel(
@@ -439,7 +391,7 @@ class _RailItem extends StatelessWidget {
     );
     return Semantics(
       selected: selected,
-      child: open ? item : Tooltip(message: tooltip ?? label, child: item),
+      child: open ? item : Tooltip(message: label, child: item),
     );
   }
 }
@@ -467,33 +419,6 @@ class _CountBadge extends StatelessWidget {
           fontSize: 12,
           fontWeight: FontWeight.w600,
           color: c.lilac,
-        ),
-      ),
-    );
-  }
-}
-
-class _OnPill extends StatelessWidget {
-  const _OnPill();
-
-  @override
-  Widget build(BuildContext context) {
-    final c = app.colors;
-    return Container(
-      height: 22,
-      padding: const EdgeInsets.symmetric(horizontal: 8),
-      alignment: Alignment.center,
-      decoration: BoxDecoration(
-        color: c.maintenance,
-        borderRadius: BorderRadius.circular(11),
-      ),
-      child: Text(
-        context.intl.maintenance.on,
-        style: TextStyle(
-          fontSize: 11,
-          fontWeight: FontWeight.w700,
-          letterSpacing: 0.4,
-          color: c.onMaintenance,
         ),
       ),
     );
@@ -556,7 +481,7 @@ class _MaintenanceBanner extends StatelessWidget {
             ),
             const SizedBox(width: 12),
             OutlinedButton(
-              onPressed: () => MaintenanceDialog.show(),
+              onPressed: GatewayMapScreen.navigator.openGateway,
               style: OutlinedButton.styleFrom(
                 foregroundColor: c.maintenance,
                 side: BorderSide(color: c.maintenance.withValues(alpha: 0.6)),
@@ -582,13 +507,8 @@ class _MaintenanceBanner extends StatelessWidget {
               radius: 10,
               fontSize: 13,
               //keeps the message and time for next time
-              onPressed: () => app.di.find<MaintenanceCubit>().save(
-                model: MaintenanceModel(
-                  enabled: false,
-                  message: maintenance.message,
-                  retryAfter: maintenance.retryAfter,
-                ),
-              ),
+              onPressed: () =>
+                  app.di.find<MaintenanceCubit>().setEnabled(enabled: false),
             ),
           ],
         ),
