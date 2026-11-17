@@ -61,6 +61,10 @@ class AppColors {
   Color get dangerFill => const Color(0xffc8352f);
   Color get offline => const Color(0xfffdca3c);
 
+  ///maintenance mode (a route or the whole gateway answering 503)
+  Color get maintenance => const Color(0xffffb68a);
+  Color get onMaintenance => const Color(0xff4a1f00);
+
   ///pill colors of an HTTP status, by its family
   ({Color bg, Color fg}) statusTone(int status) => switch (status ~/ 100) {
     2 => (bg: successDot.withValues(alpha: 0.14), fg: success),

@@ -42,6 +42,9 @@ class DateFormatter {
   ///dd MMM yyyy
   late DateFormat logsTimeS;
 
+  ///dd MMM, HH:mm (the return time of a maintenance)
+  late DateFormat dayTime;
+
   ///month and day names, and number separators, follow the language of the app
   Future<void> setLocale(String languageKey) async {
     await initializeDateFormatting(languageKey);
@@ -60,6 +63,7 @@ class DateFormatter {
     month = DateFormat('MMMM yyyy');
     fileStamp = DateFormat('yyyy-MM-dd_HH_mm_ss.SSS', 'en_US');
     logsTimeS = DateFormat('dd MMM yyyy');
+    dayTime = DateFormat('dd MMM, HH:mm');
   }
 }
 

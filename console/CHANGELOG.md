@@ -1,4 +1,16 @@
 * 6.x:
+    * 6.1.0:
+        * **Maintenance** :construction: : API layer for maintenance mode (needs the gateway `6.1.0`): the
+          `maintenance` of each route in `GET /routes` and `GET /routes/{id}`, `PUT /routes/{id}/maintenance`,
+          and the global one with `GET` and `PUT /maintenance`. Backups now keep each route's `maintenance` and
+          restore sends it back.
+        * **Maintenance** :construction: : Screens for maintenance mode. A wrench on each route card opens its
+          dialog: an on/off switch, a message (up to 500 characters), an optional return time and a preview of
+          the `503` callers get. A route in maintenance has an orange border and shows its message and return
+          time, and the routes header counts them. `Maintenance` in the rail opens the same dialog for the
+          whole gateway; while it's on, the rail shows `ON` and a banner on every screen offers `Edit` and
+          `Turn off`. Turning it off keeps the message and time. Documented in `docs/console.md`, with four
+          new screens in `docs/design`.
     * 6.0.0:
         * **DATE** :date: : 2026-11-12.
         * **Redesign** :art: : New visual identity and rebuilt screens: login, side menu with notch, route cards,

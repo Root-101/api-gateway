@@ -20,20 +20,58 @@ class _BaseScreenState extends State<BaseScreen> {
   static const double _expanded = 256;
 
   bool _open = false;
+  final MaintenanceCubit _maintenance = app.di.find();
+
+  @override
+  void initState() {
+    super.initState();
+    _maintenance.load();
+  }
 
   void _onGatewayChange(BuildContext context, GatewayStatus status) {
     if (status.offline) return;
     app.snack.showSuccess(message: context.intl.offline.restored);
     app.di.find<RoutesCubit>().search(emitLoading: false);
+    _maintenance.load();
     final logs = app.di.find<LogsCubit>();
     if (logs.state is! LogsInitialState) logs.search();
   }
 
+  ///the dialog or the banner saved it: this shell is the one always there
+  void _onMaintenance(BuildContext context, MaintenanceState state) {
+    final intl = context.intl;
+    if (state is MaintenanceSavingState) {
+      app.loading.show();
+    } else if (state is MaintenanceSaveOkState) {
+      app.loading.hide();
+      final on = state.model.enabled;
+      final route = state.route;
+      app.snack.showSuccess(
+        message: route == null
+            ? (on ? intl.maintenance.globalOn : intl.maintenance.globalOff)
+            : (on
+                  ? intl.maintenance.routeOn(name: route.name)
+                  : intl.maintenance.routeOff(name: route.name)),
+      );
+    } else if (state is MaintenanceSaveErrorState) {
+      app.loading.hide();
+      app.snack.showError(message: state.message);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    return BlocListener<GatewayStatusCubit, GatewayStatus>(
-      listenWhen: (previous, current) => previous.offline != current.offline,
-      listener: _onGatewayChange,
+    return MultiBlocListener(
+      listeners: [
+        BlocListener<GatewayStatusCubit, GatewayStatus>(
+          listenWhen: (previous, current) =>
+              previous.offline != current.offline,
+          listener: _onGatewayChange,
+        ),
+        BlocListener<MaintenanceCubit, MaintenanceState>(
+          listener: _onMaintenance,
+        ),
+      ],
       child: Scaffold(
         body: Row(
           children: [
@@ -47,6 +85,11 @@ class _BaseScreenState extends State<BaseScreen> {
                   builder: (context, status) => Column(
                     children: [
                       if (status.offline) _OfflineBanner(status),
+                      BlocBuilder<MaintenanceCubit, MaintenanceState>(
+                        builder: (context, _) => _maintenance.globalOn
+                            ? _MaintenanceBanner(_maintenance.global!)
+                            : const SizedBox.shrink(),
+                      ),
                       Expanded(
                         child: IgnorePointer(
                           ignoring: status.offline,
@@ -137,6 +180,28 @@ class _BaseScreenState extends State<BaseScreen> {
             open: _open,
             selected: index == 1,
             onTap: () => widget.navigationShell.goBranch(1),
+          ),
+          Container(
+            height: 1,
+            margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            color: c.raised,
+          ),
+          BlocBuilder<MaintenanceCubit, MaintenanceState>(
+            builder: (context, _) {
+              final on = _maintenance.globalOn;
+              return _RailItem(
+                icon: app.assets.icons.general.wrench,
+                label: intl.maintenance.maintenance,
+                tooltip: on ? intl.maintenance.railOn : null,
+                open: _open,
+                selected: false,
+                color: on ? c.maintenance : null,
+                background: on ? c.maintenance.withValues(alpha: 0.12) : null,
+                dot: on,
+                onTap: () => MaintenanceDialog.show(),
+                trailing: on ? const _OnPill() : null,
+              );
+            },
           ),
           const Spacer(),
           _buildFooter(context, duration),
@@ -272,6 +337,14 @@ class _RailItem extends StatelessWidget {
   final VoidCallback onTap;
   final Widget? trailing;
 
+  ///tooltip when collapsed, [label] by default
+  final String? tooltip;
+  final Color? color;
+  final Color? background;
+
+  ///a dot on the icon while collapsed, where [trailing] is hidden
+  final bool dot;
+
   const _RailItem({
     required this.icon,
     required this.label,
@@ -279,16 +352,20 @@ class _RailItem extends StatelessWidget {
     required this.selected,
     required this.onTap,
     this.trailing,
+    this.tooltip,
+    this.color,
+    this.background,
+    this.dot = false,
   });
 
   @override
   Widget build(BuildContext context) {
     final c = app.colors;
-    final color = selected ? c.onSelected : c.label;
+    final color = this.color ?? (selected ? c.onSelected : c.label);
     final item = Padding(
       padding: const EdgeInsets.symmetric(horizontal: 12),
       child: Material(
-        color: selected ? c.selected : Colors.transparent,
+        color: selected ? c.selected : background ?? Colors.transparent,
         borderRadius: BorderRadius.circular(24),
         clipBehavior: Clip.antiAlias,
         child: InkWell(
@@ -305,7 +382,33 @@ class _RailItem extends StatelessWidget {
                   children: [
                     SizedBox(
                       width: 56,
-                      child: Center(child: icon.build(size: 22, color: color)),
+                      height: 48,
+                      child: Stack(
+                        children: [
+                          Center(child: icon.build(size: 22, color: color)),
+                          if (dot)
+                            Positioned(
+                              left: 36,
+                              top: 10,
+                              child: AnimatedOpacity(
+                                opacity: open ? 0 : 1,
+                                duration: motion(
+                                  context,
+                                  const Duration(milliseconds: 200),
+                                ),
+                                child: Container(
+                                  width: 9,
+                                  height: 9,
+                                  decoration: BoxDecoration(
+                                    color: color,
+                                    shape: BoxShape.circle,
+                                    border: Border.all(color: c.rail, width: 2),
+                                  ),
+                                ),
+                              ),
+                            ),
+                        ],
+                      ),
                     ),
                     Expanded(
                       child: _RailLabel(
@@ -336,7 +439,7 @@ class _RailItem extends StatelessWidget {
     );
     return Semantics(
       selected: selected,
-      child: open ? item : Tooltip(message: label, child: item),
+      child: open ? item : Tooltip(message: tooltip ?? label, child: item),
     );
   }
 }
@@ -364,6 +467,130 @@ class _CountBadge extends StatelessWidget {
           fontSize: 12,
           fontWeight: FontWeight.w600,
           color: c.lilac,
+        ),
+      ),
+    );
+  }
+}
+
+class _OnPill extends StatelessWidget {
+  const _OnPill();
+
+  @override
+  Widget build(BuildContext context) {
+    final c = app.colors;
+    return Container(
+      height: 22,
+      padding: const EdgeInsets.symmetric(horizontal: 8),
+      alignment: Alignment.center,
+      decoration: BoxDecoration(
+        color: c.maintenance,
+        borderRadius: BorderRadius.circular(11),
+      ),
+      child: Text(
+        context.intl.maintenance.on,
+        style: TextStyle(
+          fontSize: 11,
+          fontWeight: FontWeight.w700,
+          letterSpacing: 0.4,
+          color: c.onMaintenance,
+        ),
+      ),
+    );
+  }
+}
+
+///the whole gateway answers 503: edit or turn it off from any screen
+class _MaintenanceBanner extends StatelessWidget {
+  final MaintenanceModel maintenance;
+
+  const _MaintenanceBanner(this.maintenance);
+
+  @override
+  Widget build(BuildContext context) {
+    final c = app.colors;
+    final intl = context.intl;
+    final retry = maintenance.retryAfter?.toLocal();
+    final seconds = maintenance.retrySeconds;
+    final detail = retry == null
+        ? intl.maintenance.bannerDetail
+        : seconds == 0
+        ? intl.maintenance.bannerPassed
+        : intl.maintenance.bannerUntil(
+            date: app.dateFormatter.dayTime.format(retry),
+            left: durationText(seconds),
+          );
+    return Semantics(
+      liveRegion: true,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
+        decoration: BoxDecoration(
+          color: c.maintenance.withValues(alpha: 0.10),
+          border: Border(
+            bottom: BorderSide(color: c.maintenance.withValues(alpha: 0.45)),
+          ),
+        ),
+        child: Row(
+          children: [
+            app.assets.icons.general.wrench.build(
+              size: 18,
+              color: c.maintenance,
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text.rich(
+                TextSpan(
+                  children: [
+                    TextSpan(
+                      text: '${intl.maintenance.bannerTitle}  ',
+                      style: TextStyle(
+                        color: c.maintenance,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    TextSpan(text: detail),
+                  ],
+                ),
+                style: TextStyle(fontSize: 13, height: 18 / 13, color: c.text),
+              ),
+            ),
+            const SizedBox(width: 12),
+            OutlinedButton(
+              onPressed: () => MaintenanceDialog.show(),
+              style: OutlinedButton.styleFrom(
+                foregroundColor: c.maintenance,
+                side: BorderSide(color: c.maintenance.withValues(alpha: 0.6)),
+                minimumSize: const Size(0, 34),
+                //web's compact density would make it shorter than Turn off
+                visualDensity: VisualDensity.standard,
+                padding: const EdgeInsets.symmetric(horizontal: 14),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                textStyle: const TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              child: Text(intl.maintenance.edit),
+            ),
+            const SizedBox(width: 8),
+            AppButton(
+              label: intl.maintenance.turnOff,
+              kind: AppButtonKind.maintenance,
+              height: 34,
+              radius: 10,
+              fontSize: 13,
+              //keeps the message and time for next time
+              onPressed: () => app.di.find<MaintenanceCubit>().save(
+                model: MaintenanceModel(
+                  enabled: false,
+                  message: maintenance.message,
+                  retryAfter: maintenance.retryAfter,
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );

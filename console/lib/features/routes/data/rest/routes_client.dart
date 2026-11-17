@@ -42,6 +42,36 @@ class RoutesClient extends BaseClient {
     Response rawResponse = await dio.get('$baseUrl/$routeId');
     return RouteResponse.fromJson(rawResponse.data! as Map<String, dynamic>);
   }
+
+  ///200 with the saved object, 404 when the route doesn't exist, 422 when [model] is invalid
+  Future<MaintenanceEntity> setMaintenance({
+    required String routeId,
+    required MaintenanceEntity model,
+  }) async {
+    Response rawResponse = await dio.put(
+      '$baseUrl/$routeId/maintenance',
+      data: model.toJson(),
+    );
+    return MaintenanceEntity.fromJson(rawResponse.data as Map<String, dynamic>);
+  }
+
+  ///the gateway-wide maintenance, null when it was never set
+  Future<MaintenanceEntity?> findGlobalMaintenance() async {
+    Response rawResponse = await dio.get(
+      '${Environment.baseApiUrl}/maintenance',
+    );
+    return MaintenanceEntity.tryFromJson(rawResponse.data);
+  }
+
+  Future<MaintenanceEntity> setGlobalMaintenance({
+    required MaintenanceEntity model,
+  }) async {
+    Response rawResponse = await dio.put(
+      '${Environment.baseApiUrl}/maintenance',
+      data: model.toJson(),
+    );
+    return MaintenanceEntity.fromJson(rawResponse.data as Map<String, dynamic>);
+  }
 }
 
 class RouteRequest {
@@ -51,6 +81,8 @@ class RouteRequest {
   //optional in the api: null = no rewrite filter
   final RewritePathEntity? rewritePath;
   final String description;
+  //only restore (PUT /routes) applies it; create, edit and validate ignore it
+  final MaintenanceEntity? maintenance;
 
   RouteRequest({
     required this.name,
@@ -58,6 +90,7 @@ class RouteRequest {
     required this.uri,
     required this.description,
     this.rewritePath,
+    this.maintenance,
   });
 
   Map<String, dynamic> toJson() {
@@ -67,6 +100,7 @@ class RouteRequest {
       'uri': uri,
       'description': description,
       'rewrite_path': rewritePath?.toJson(),
+      if (maintenance != null) 'maintenance': maintenance!.toJson(),
     };
   }
 
@@ -77,6 +111,7 @@ class RouteRequest {
       uri: json['uri'],
       rewritePath: RewritePathEntity.tryFromJson(json['rewrite_path']),
       description: json['description'] ?? '',
+      maintenance: MaintenanceEntity.tryFromJson(json['maintenance']),
     );
   }
 }
@@ -90,6 +125,7 @@ class RouteResponse {
   final String uri;
   final RewritePathEntity? rewritePath;
   final String description;
+  final MaintenanceEntity? maintenance;
 
   RouteResponse({
     required this.name,
@@ -99,6 +135,7 @@ class RouteResponse {
     required this.id,
     required this.createdAt,
     this.rewritePath,
+    this.maintenance,
   });
 
   factory RouteResponse.fromJson(Map<String, dynamic> json) {
@@ -110,7 +147,35 @@ class RouteResponse {
       rewritePath: RewritePathEntity.tryFromJson(json['rewrite_path']),
       description: json['description'] ?? '',
       createdAt: json['created_at'],
+      maintenance: MaintenanceEntity.tryFromJson(json['maintenance']),
     );
+  }
+}
+
+class MaintenanceEntity {
+  final bool enabled;
+  final String? message;
+  //ISO-8601 with offset
+  final String? retryAfter;
+
+  MaintenanceEntity({required this.enabled, this.message, this.retryAfter});
+
+  factory MaintenanceEntity.fromJson(Map<String, dynamic> json) {
+    return MaintenanceEntity(
+      enabled: json['enabled'] as bool,
+      message: json['message'] as String?,
+      retryAfter: json['retry_after'] as String?,
+    );
+  }
+
+  ///null when it was never set (api sends `maintenance: null`)
+  static MaintenanceEntity? tryFromJson(dynamic json) {
+    if (json is! Map<String, dynamic> || json['enabled'] is! bool) return null;
+    return MaintenanceEntity.fromJson(json);
+  }
+
+  Map<String, dynamic> toJson() {
+    return {'enabled': enabled, 'message': message, 'retry_after': retryAfter};
   }
 }
 

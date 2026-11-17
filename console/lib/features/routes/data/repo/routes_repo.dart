@@ -86,6 +86,44 @@ class RoutesRepo {
     }
   }
 
+  ///422 arrives as a validation GlobalException (fields `enabled`, `message`, `retry_after`)
+  Future<MaintenanceModel> setMaintenance({
+    required String routeId,
+    required MaintenanceModel model,
+  }) async {
+    try {
+      final response = await client.setMaintenance(
+        routeId: routeId,
+        model: model.toEntity(),
+      );
+      return response.toModel();
+    } on Exception catch (exc) {
+      throw ExceptionConverter.parse(exc);
+    }
+  }
+
+  ///null when it was never set
+  Future<MaintenanceModel?> findGlobalMaintenance() async {
+    try {
+      return (await client.findGlobalMaintenance())?.toModel();
+    } on Exception catch (exc) {
+      throw ExceptionConverter.parse(exc);
+    }
+  }
+
+  Future<MaintenanceModel> setGlobalMaintenance({
+    required MaintenanceModel model,
+  }) async {
+    try {
+      final response = await client.setGlobalMaintenance(
+        model: model.toEntity(),
+      );
+      return response.toModel();
+    } on Exception catch (exc) {
+      throw ExceptionConverter.parse(exc);
+    }
+  }
+
   Future<RouteModel> details({required String routeId}) async {
     try {
       RouteResponse response = await client.details(routeId: routeId);
@@ -125,12 +163,29 @@ extension RouteModelParser on RouteResponse {
             replaceFrom: rewritePath!.replaceFrom,
             replaceTo: rewritePath!.replaceTo,
           ),
+    maintenance: maintenance?.toModel(),
     gatewayUrl: gatewayUrl,
   );
 }
 
+extension MaintenanceModelParser on MaintenanceEntity {
+  MaintenanceModel toModel() => MaintenanceModel(
+    enabled: enabled,
+    message: message,
+    retryAfter: retryAfter == null ? null : DateTime.parse(retryAfter!),
+  );
+}
+
+extension MaintenanceEntityParser on MaintenanceModel {
+  MaintenanceEntity toEntity() => MaintenanceEntity(
+    enabled: enabled,
+    message: message,
+    retryAfter: retryAfter?.toUtc().toIso8601String(),
+  );
+}
+
 extension RouteModelListParser on List<RouteResponse> {
-  List<RouteModel> toModel({String? gatewayUrl}) =>
-      map((singleResponse) => singleResponse.toModel(gatewayUrl: gatewayUrl))
-          .toList();
+  List<RouteModel> toModel({String? gatewayUrl}) => map(
+    (singleResponse) => singleResponse.toModel(gatewayUrl: gatewayUrl),
+  ).toList();
 }

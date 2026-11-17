@@ -9,8 +9,11 @@ class RouteModel {
   final String uri;
   final RewritePathModel? rewritePath;
   final String description;
+  final MaintenanceModel? maintenance;
 
   final String? gatewayUrl;
+
+  bool get inMaintenance => maintenance?.enabled ?? false;
 
   String get enterPoint => '${gatewayUrl ?? ''}$path';
 
@@ -26,6 +29,7 @@ class RouteModel {
     required this.id,
     required this.createdAt,
     this.rewritePath,
+    this.maintenance,
     this.gatewayUrl,
   });
 
@@ -38,6 +42,8 @@ class RouteModel {
       'rewrite_path': rewritePath?.toJson(),
       'description': description,
       'created_at': createdAt.toIso8601String(),
+      //backups keep it so restore puts it back
+      'maintenance': maintenance?.toJson(),
     };
   }
 }

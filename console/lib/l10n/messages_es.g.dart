@@ -95,6 +95,9 @@ class AppMessagesEs
   late final AppMessages$calendar$es calendar = AppMessages$calendar$es._(
     _root,
   );
+  @override
+  late final AppMessages$maintenance$es maintenance =
+      AppMessages$maintenance$es._(_root);
 }
 
 // Path: app
@@ -736,6 +739,117 @@ class AppMessages$calendar$es implements AppMessages$calendar$en {
   String get hintRestart => 'Haz clic en un día para empezar un rango nuevo';
 }
 
+// Path: maintenance
+class AppMessages$maintenance$es implements AppMessages$maintenance$en {
+  AppMessages$maintenance$es._(this._root);
+
+  final AppMessagesEs _root; // ignore: unused_field
+
+  // Translations
+  @override
+  String get maintenance => 'Mantenimiento';
+  @override
+  String get railOn => 'Mantenimiento: activo';
+  @override
+  String get on => 'ON';
+  @override
+  String get bannerTitle => 'El gateway está en mantenimiento.';
+  @override
+  String get bannerDetail =>
+      'Todas las rutas responden 503. La consola y /health siguen funcionando.';
+  @override
+  String bannerUntil({required Object date, required Object left}) =>
+      'Todas las rutas responden 503 hasta el ${date} (en ${left}). La consola y /health siguen funcionando.';
+  @override
+  String get bannerPassed =>
+      'Todas las rutas responden 503 (la hora de vuelta ya pasó, sigue activo hasta que lo apagues). La consola y /health siguen funcionando.';
+  @override
+  String get edit => 'Editar';
+  @override
+  String get turnOff => 'Apagar';
+  @override
+  String get routeTitle => 'Mantenimiento de la ruta';
+  @override
+  String get globalTitle => 'Mantenimiento del gateway';
+  @override
+  String get globalSubtitle =>
+      'Todas las rutas responden 503 mientras está activo';
+  @override
+  String get inMaintenance => 'En mantenimiento';
+  @override
+  String get routeOnHint =>
+      'Las peticiones a esta ruta reciben un 503 en vez de llegar al servicio.';
+  @override
+  String get globalOnHint =>
+      'Las peticiones a cualquier ruta reciben un 503. La consola y /health siguen funcionando.';
+  @override
+  String get offHint =>
+      'Apagado. El mensaje y la hora se guardan para la próxima vez.';
+  @override
+  String get bothOn =>
+      'Todo el gateway también está en mantenimiento. Esta ruta responde con su propio mensaje y hora.';
+  @override
+  String get message => 'Mensaje';
+  @override
+  String count({required Object count, required Object max}) =>
+      '${count} / ${max}';
+  @override
+  String get messageHint =>
+      'Vacío: “El servicio está en mantenimiento, inténtalo más tarde”';
+  @override
+  String get defaultMessage =>
+      'El servicio está en mantenimiento, inténtalo más tarde';
+  @override
+  String tooLong({required Object max}) => 'Como máximo ${max} caracteres.';
+  @override
+  String get backAt => 'Hora de vuelta';
+  @override
+  String get optional => '(opcional)';
+  @override
+  String get pickTime => 'Elige fecha y hora';
+  @override
+  String get clear => 'Quitar';
+  @override
+  String get noTime =>
+      'Sin hora: no se envía Retry-After. El mantenimiento nunca termina solo.';
+  @override
+  String get timePassed =>
+      'Esa hora ya pasó: no se envía Retry-After. Sigue activo hasta que lo apagues.';
+  @override
+  String retryAfter({required Object seconds, required Object left}) =>
+      'Se envía Retry-After: ${seconds} (en ${left}). No se apaga solo.';
+  @override
+  String get callersGet => 'LO QUE RECIBEN LOS CLIENTES';
+  @override
+  String get callersWouldGet => 'LO QUE RECIBIRÍAN LOS CLIENTES';
+  @override
+  String get serviceUnavailable => 'Servicio no disponible';
+  @override
+  String get save => 'Guardar';
+  @override
+  String get saveOff => 'Guardar apagado';
+  @override
+  String get turnOnAll => 'Activar para todas las rutas';
+  @override
+  String get cardTitle => 'EN MANTENIMIENTO · 503';
+  @override
+  String cardBack({required Object date}) => 'Vuelve ${date}';
+  @override
+  String get cardNoTime => 'Sin hora de vuelta';
+  @override
+  String ofRoute({required Object name}) => 'Mantenimiento de ${name}';
+  @override
+  String inCount({required Object count}) => '${count} en mantenimiento';
+  @override
+  String routeOn({required Object name}) => '"${name}" en mantenimiento';
+  @override
+  String routeOff({required Object name}) => '"${name}" vuelve a dar servicio';
+  @override
+  String get globalOn => 'Gateway en mantenimiento';
+  @override
+  String get globalOff => 'Mantenimiento del gateway apagado';
+}
+
 /// The flat map containing all translations for locale <es>.
 /// Only for edge cases! For simple maps, use the map function of this library.
 ///
@@ -1029,6 +1143,73 @@ extension on AppMessagesEs {
       'calendar.hintEnd' => 'Ahora elige la fecha de fin',
       'calendar.hintRestart' =>
         'Haz clic en un día para empezar un rango nuevo',
+      'maintenance.maintenance' => 'Mantenimiento',
+      'maintenance.railOn' => 'Mantenimiento: activo',
+      'maintenance.on' => 'ON',
+      'maintenance.bannerTitle' => 'El gateway está en mantenimiento.',
+      'maintenance.bannerDetail' => 'Todas las rutas responden 503. La consola y /health siguen funcionando.',
+      'maintenance.bannerUntil' => ({
+        required Object date,
+        required Object left,
+      }) => 'Todas las rutas responden 503 hasta el ${date} (en ${left}). La consola y /health siguen funcionando.',
+      'maintenance.bannerPassed' => 'Todas las rutas responden 503 (la hora de vuelta ya pasó, sigue activo hasta que lo apagues). La consola y /health siguen funcionando.',
+      'maintenance.edit' => 'Editar',
+      'maintenance.turnOff' => 'Apagar',
+      'maintenance.routeTitle' => 'Mantenimiento de la ruta',
+      'maintenance.globalTitle' => 'Mantenimiento del gateway',
+      'maintenance.globalSubtitle' =>
+        'Todas las rutas responden 503 mientras está activo',
+      'maintenance.inMaintenance' => 'En mantenimiento',
+      'maintenance.routeOnHint' => 'Las peticiones a esta ruta reciben un 503 en vez de llegar al servicio.',
+      'maintenance.globalOnHint' => 'Las peticiones a cualquier ruta reciben un 503. La consola y /health siguen funcionando.',
+      'maintenance.offHint' =>
+        'Apagado. El mensaje y la hora se guardan para la próxima vez.',
+      'maintenance.bothOn' => 'Todo el gateway también está en mantenimiento. Esta ruta responde con su propio mensaje y hora.',
+      'maintenance.message' => 'Mensaje',
+      'maintenance.count' => ({
+        required Object count,
+        required Object max,
+      }) => '${count} / ${max}',
+      'maintenance.messageHint' =>
+        'Vacío: “El servicio está en mantenimiento, inténtalo más tarde”',
+      'maintenance.defaultMessage' =>
+        'El servicio está en mantenimiento, inténtalo más tarde',
+      'maintenance.tooLong' => ({
+        required Object max,
+      }) => 'Como máximo ${max} caracteres.',
+      'maintenance.backAt' => 'Hora de vuelta',
+      'maintenance.optional' => '(opcional)',
+      'maintenance.pickTime' => 'Elige fecha y hora',
+      'maintenance.clear' => 'Quitar',
+      'maintenance.noTime' => 'Sin hora: no se envía Retry-After. El mantenimiento nunca termina solo.',
+      'maintenance.timePassed' => 'Esa hora ya pasó: no se envía Retry-After. Sigue activo hasta que lo apagues.',
+      'maintenance.retryAfter' => ({
+        required Object seconds,
+        required Object left,
+      }) => 'Se envía Retry-After: ${seconds} (en ${left}). No se apaga solo.',
+      'maintenance.callersGet' => 'LO QUE RECIBEN LOS CLIENTES',
+      'maintenance.callersWouldGet' => 'LO QUE RECIBIRÍAN LOS CLIENTES',
+      'maintenance.serviceUnavailable' => 'Servicio no disponible',
+      'maintenance.save' => 'Guardar',
+      'maintenance.saveOff' => 'Guardar apagado',
+      'maintenance.turnOnAll' => 'Activar para todas las rutas',
+      'maintenance.cardTitle' => 'EN MANTENIMIENTO · 503',
+      'maintenance.cardBack' => ({required Object date}) => 'Vuelve ${date}',
+      'maintenance.cardNoTime' => 'Sin hora de vuelta',
+      'maintenance.ofRoute' => ({
+        required Object name,
+      }) => 'Mantenimiento de ${name}',
+      'maintenance.inCount' => ({
+        required Object count,
+      }) => '${count} en mantenimiento',
+      'maintenance.routeOn' => ({
+        required Object name,
+      }) => '"${name}" en mantenimiento',
+      'maintenance.routeOff' => ({
+        required Object name,
+      }) => '"${name}" vuelve a dar servicio',
+      'maintenance.globalOn' => 'Gateway en mantenimiento',
+      'maintenance.globalOff' => 'Mantenimiento del gateway apagado',
       _ => null,
     };
   }

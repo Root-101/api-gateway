@@ -6,6 +6,9 @@ import 'package:flutter/material.dart';
 class DialogTemplate extends StatelessWidget {
   final String title;
   final String? subtitle;
+
+  ///a subtitle that is code (a route's name and path)
+  final bool subtitleMono;
   final double width;
   final Widget body;
   final Widget? footer;
@@ -19,6 +22,7 @@ class DialogTemplate extends StatelessWidget {
     required this.title,
     required this.body,
     this.subtitle,
+    this.subtitleMono = false,
     this.width = 580,
     this.footer,
     this.alignment = Alignment.topCenter,
@@ -62,10 +66,12 @@ class DialogTemplate extends StatelessWidget {
                           padding: const EdgeInsets.only(top: 2),
                           child: Text(
                             subtitle!,
-                            style: TextStyle(
-                              fontSize: 13,
-                              color: c.textSecondary,
-                            ),
+                            style: subtitleMono
+                                ? monoStyle(size: 13, color: c.textSecondary)
+                                : TextStyle(
+                                    fontSize: 13,
+                                    color: c.textSecondary,
+                                  ),
                           ),
                         ),
                     ],

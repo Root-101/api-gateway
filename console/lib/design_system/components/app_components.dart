@@ -24,7 +24,17 @@ TextStyle monoStyle({
   letterSpacing: letterSpacing,
 );
 
-enum AppButtonKind { primary, outlined, tonal, danger, softDanger, text }
+enum AppButtonKind {
+  primary,
+  outlined,
+  tonal,
+  danger,
+  softDanger,
+  text,
+
+  ///turns maintenance on (or off, from its banner)
+  maintenance,
+}
 
 class AppButton extends StatelessWidget {
   final String label;
@@ -62,6 +72,7 @@ class AppButton extends StatelessWidget {
       AppButtonKind.danger => (c.dangerFill, c.white, null),
       AppButtonKind.softDanger => (c.softRed, c.onSoftRed, null),
       AppButtonKind.text => (Colors.transparent, c.lilac, null),
+      AppButtonKind.maintenance => (c.maintenance, c.onMaintenance, null),
     };
     final filled = kind != AppButtonKind.outlined && kind != AppButtonKind.text;
     final button = TextButton(

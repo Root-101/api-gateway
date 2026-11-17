@@ -10,5 +10,7 @@ class RoutesInit {
 
     RoutesCubit cubit = RoutesCubit(repo: repo);
     app.di.put(cubit);
+
+    app.di.put(MaintenanceCubit(repo: repo));
   }
 }

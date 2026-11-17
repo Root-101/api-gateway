@@ -146,6 +146,7 @@ class _RoutesScreenState extends State<RoutesScreen> {
     final c = app.colors;
     final intl = context.intl;
     final count = cubit.routes.length;
+    final inMaintenance = cubit.routes.where((r) => r.inMaintenance).length;
     return Wrap(
       alignment: WrapAlignment.spaceBetween,
       crossAxisAlignment: WrapCrossAlignment.end,
@@ -166,9 +167,13 @@ class _RoutesScreenState extends State<RoutesScreen> {
             ),
             const SizedBox(height: 4),
             Text(
-              count == 1
-                  ? intl.routes.oneRoute
-                  : intl.routes.manyRoutes(count: count),
+              [
+                count == 1
+                    ? intl.routes.oneRoute
+                    : intl.routes.manyRoutes(count: count),
+                if (inMaintenance > 0)
+                  intl.maintenance.inCount(count: inMaintenance),
+              ].join(' · '),
               style: TextStyle(fontSize: 13, color: c.textSecondary),
             ),
           ],
@@ -300,6 +305,10 @@ class _RouteCardState extends State<_RouteCard> {
     final c = app.colors;
     final intl = context.intl;
     final route = widget.route;
+    final maintenance = route.inMaintenance;
+    final Color border = maintenance
+        ? c.maintenance.withValues(alpha: _hovered ? 0.85 : 0.55)
+        : (_hovered ? c.textTertiary : c.outlineCard);
     return MouseRegion(
       onEnter: (_) => setState(() => _hovered = true),
       onExit: (_) => setState(() => _hovered = false),
@@ -309,7 +318,7 @@ class _RouteCardState extends State<_RouteCard> {
         decoration: BoxDecoration(
           color: c.card,
           borderRadius: BorderRadius.circular(18),
-          border: Border.all(color: _hovered ? c.textTertiary : c.outlineCard),
+          border: Border.all(color: border),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -349,6 +358,21 @@ class _RouteCardState extends State<_RouteCard> {
                   ),
                 ),
                 const SizedBox(width: 12),
+                Semantics(
+                  toggled: maintenance,
+                  child: AppIconButton(
+                    icon: app.assets.icons.general.wrench,
+                    tooltip: maintenance
+                        ? intl.maintenance.inMaintenance
+                        : intl.maintenance.ofRoute(name: route.name),
+                    color: maintenance ? c.maintenance : null,
+                    background: maintenance
+                        ? c.maintenance.withValues(alpha: 0.16)
+                        : null,
+                    hoverColor: maintenance ? c.maintenance : null,
+                    onPressed: () => MaintenanceDialog.show(route: route),
+                  ),
+                ),
                 AppIconButton(
                   icon: app.assets.icons.actions.edit,
                   tooltip: intl.routes.edit,
@@ -405,6 +429,10 @@ class _RouteCardState extends State<_RouteCard> {
                 ),
               ),
             ),
+            if (maintenance) ...[
+              const SizedBox(height: 12),
+              _MaintenanceBlock(route.maintenance!),
+            ],
           ],
         ),
       ),
@@ -439,6 +467,72 @@ class _RouteCardState extends State<_RouteCard> {
           ),
         ),
       ],
+    );
+  }
+}
+
+///what callers of a route in maintenance get, under its urls
+class _MaintenanceBlock extends StatelessWidget {
+  final MaintenanceModel maintenance;
+
+  const _MaintenanceBlock(this.maintenance);
+
+  @override
+  Widget build(BuildContext context) {
+    final c = app.colors;
+    final intl = context.intl;
+    final retry = maintenance.retryAfter?.toLocal();
+    final message = maintenance.message ?? '';
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      decoration: BoxDecoration(
+        color: c.maintenance.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: c.maintenance.withValues(alpha: 0.35)),
+      ),
+      child: Column(
+        //stretched so the return time goes to the right edge
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Wrap(
+            alignment: WrapAlignment.spaceBetween,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            spacing: 10,
+            runSpacing: 4,
+            children: [
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  app.assets.icons.general.wrench.build(
+                    size: 13,
+                    color: c.maintenance,
+                  ),
+                  const SizedBox(width: 6),
+                  CaptionText(intl.maintenance.cardTitle, color: c.maintenance),
+                ],
+              ),
+              Text(
+                retry == null
+                    ? intl.maintenance.cardNoTime
+                    : intl.maintenance.cardBack(
+                        date: app.dateFormatter.dayTime.format(retry),
+                      ),
+                style: TextStyle(fontSize: 12, height: 16 / 12, color: c.label),
+              ),
+            ],
+          ),
+          const SizedBox(height: 4),
+          Text(
+            message.isEmpty ? intl.maintenance.defaultMessage : message,
+            style: TextStyle(
+              fontSize: 13,
+              height: 18 / 13,
+              color: message.isEmpty ? c.textTertiary : c.text,
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

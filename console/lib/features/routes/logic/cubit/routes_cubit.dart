@@ -30,6 +30,11 @@ class RoutesCubit extends Cubit<RoutesState>
     onBus<RoutesRestoreOkState>((event) {
       search(emitLoading: false);
     });
+
+    //if a route's maintenance changes, update
+    onBus<MaintenanceSaveOkState>((event) {
+      if (event.route != null) search(emitLoading: false);
+    });
   }
 
   void reset() {
