@@ -298,6 +298,7 @@ class _RedirectBlock extends StatelessWidget {
               ),
               AppButton(
                 label: label,
+                trailing: app.assets.icons.general.externalLink,
                 kind: AppButtonKind.outlined,
                 height: 34,
                 fontSize: 13,
@@ -379,54 +380,59 @@ class _AddTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final c = app.colors;
     final intl = context.intl;
-    return Material(
-      color: Colors.transparent,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(14),
-        side: BorderSide(color: c.outlineCard),
+    //dashed 1.5 px border, as in the canvas
+    return CustomPaint(
+      foregroundPainter: DashedBorder(
+        color: c.outlineField,
+        radius: 14,
+        width: 1.5,
       ),
-      clipBehavior: Clip.antiAlias,
-      child: InkWell(
-        onTap: onPressed,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-          child: Row(
-            children: [
-              Container(
-                width: 34,
-                height: 34,
-                alignment: Alignment.center,
-                decoration: BoxDecoration(
-                  color: c.maintenance.withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(10),
+      child: Material(
+        color: Colors.transparent,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+        clipBehavior: Clip.antiAlias,
+        child: InkWell(
+          onTap: onPressed,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+            child: Row(
+              children: [
+                Container(
+                  width: 34,
+                  height: 34,
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(
+                    color: c.maintenance.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: app.assets.icons.general.wrench.build(
+                    size: 16,
+                    color: c.maintenance,
+                  ),
                 ),
-                child: app.assets.icons.general.wrench.build(
-                  size: 16,
-                  color: c.maintenance,
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      intl.panel.addMaintenance,
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w500,
-                        color: c.text,
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        intl.panel.addMaintenance,
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
+                          color: c.text,
+                        ),
                       ),
-                    ),
-                    Text(
-                      intl.panel.addMaintenanceHint,
-                      style: TextStyle(fontSize: 12, color: c.textTertiary),
-                    ),
-                  ],
+                      Text(
+                        intl.panel.addMaintenanceHint,
+                        style: TextStyle(fontSize: 12, color: c.textTertiary),
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-              app.assets.icons.actions.add.build(size: 18, color: c.lilac),
-            ],
+                app.assets.icons.actions.add.build(size: 18, color: c.lilac),
+              ],
+            ),
           ),
         ),
       ),

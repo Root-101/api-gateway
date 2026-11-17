@@ -1,5 +1,4 @@
 import 'dart:math';
-import 'dart:ui';
 
 import 'package:console/app_exporter.dart';
 import 'package:console/features/routes/view/form/routes_form_screen.dart';
@@ -16,6 +15,12 @@ class GatewayMapScreenNavigator {
     return const GatewayMapScreen();
   }
 
+  void neglectGo() {
+    Router.neglect(app.context, () {
+      app.navigator.go(name);
+    });
+  }
+
   ///the map with the gateway's panel open (the banner's Edit)
   void openGateway() {
     GatewayMapScreen.selected.value = GatewayMapScreen.gatewayId;
@@ -23,7 +28,7 @@ class GatewayMapScreenNavigator {
   }
 }
 
-///experimental: the gateway as a diagram, its url on top, one branch per route below.
+///the gateway as a diagram, its url on top, one branch per route below.
 ///A click on a node opens its panel on the right; drag to move, wheel to zoom
 class GatewayMapScreen extends StatefulWidget {
   static final GatewayMapScreenNavigator navigator =
@@ -84,6 +89,7 @@ class _GatewayMapScreenState extends State<GatewayMapScreen>
     with SingleTickerProviderStateMixin {
   static const double _panelW = 380;
   final TransformationController _view = TransformationController();
+  final ValueNotifier<bool> _grabbing = ValueNotifier(false);
   late final AnimationController _flow = AnimationController(
     vsync: this,
     duration: const Duration(milliseconds: 900),
@@ -120,6 +126,7 @@ class _GatewayMapScreenState extends State<GatewayMapScreen>
   void dispose() {
     GatewayMapScreen.selected.removeListener(_onSelected);
     _view.dispose();
+    _grabbing.dispose();
     _flow.dispose();
     super.dispose();
   }
@@ -222,25 +229,6 @@ class _GatewayMapScreenState extends State<GatewayMapScreen>
               color: c.text,
             ),
           ),
-          const SizedBox(width: 14),
-          Container(
-            height: 22,
-            padding: const EdgeInsets.symmetric(horizontal: 8),
-            alignment: Alignment.center,
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(6),
-              border: Border.all(color: c.lilac.withValues(alpha: 0.6)),
-            ),
-            child: Text(
-              intl.map.experimental,
-              style: TextStyle(
-                fontSize: 10.5,
-                fontWeight: FontWeight.w700,
-                letterSpacing: 0.6,
-                color: c.lilac,
-              ),
-            ),
-          ),
           const Spacer(),
           _LegendItem(
             label: intl.map.legendRedirect,
@@ -337,92 +325,110 @@ class _GatewayMapScreenState extends State<GatewayMapScreen>
         }
         return Stack(
           children: [
+            //the page grid, redrawn here so it pans and zooms with the map
+            Positioned.fill(child: GridBackground(view: _view)),
             Positioned.fill(
-              child: InteractiveViewer(
-                transformationController: _view,
-                constrained: false,
-                minScale: 0.4,
-                maxScale: 2,
-                boundaryMargin: const EdgeInsets.all(2000),
-                child: GestureDetector(
-                  //a click on the background closes the panel
-                  onTap: () => GatewayMapScreen.selected.value = null,
-                  child: SizedBox(
-                    width: layout.width,
-                    height: layout.height,
-                    child: Stack(
-                      clipBehavior: Clip.none,
-                      children: [
-                        Positioned.fill(
-                          child: CustomPaint(
-                            painter: _BranchesPainter(
-                              branches: branches,
-                              entry: Offset(layout.cx, _Layout.urlH),
-                              entryEnd: Offset(layout.cx, _Layout.gwTop - 4),
-                              flow: _flow,
-                              arrowColor: c.textTertiary,
+              //drag hand over the canvas; nodes and buttons keep their own click cursor
+              child: ValueListenableBuilder(
+                valueListenable: _grabbing,
+                builder: (context, grabbing, child) => MouseRegion(
+                  cursor: grabbing
+                      ? SystemMouseCursors.grabbing
+                      : SystemMouseCursors.grab,
+                  child: Listener(
+                    onPointerDown: (_) => _grabbing.value = true,
+                    onPointerUp: (_) => _grabbing.value = false,
+                    onPointerCancel: (_) => _grabbing.value = false,
+                    child: child,
+                  ),
+                ),
+                child: InteractiveViewer(
+                  transformationController: _view,
+                  constrained: false,
+                  minScale: 0.4,
+                  maxScale: 2,
+                  boundaryMargin: const EdgeInsets.all(2000),
+                  child: GestureDetector(
+                    //a click on the background closes the panel
+                    onTap: () => GatewayMapScreen.selected.value = null,
+                    child: SizedBox(
+                      width: layout.width,
+                      height: layout.height,
+                      child: Stack(
+                        clipBehavior: Clip.none,
+                        children: [
+                          Positioned.fill(
+                            child: CustomPaint(
+                              painter: _BranchesPainter(
+                                branches: branches,
+                                entry: Offset(layout.cx, _Layout.urlH),
+                                entryEnd: Offset(layout.cx, _Layout.gwTop - 4),
+                                flow: _flow,
+                                arrowColor: c.textTertiary,
+                              ),
                             ),
                           ),
-                        ),
-                        Positioned(
-                          left: layout.cx - _Layout.urlW / 2,
-                          top: 0,
-                          width: _Layout.urlW,
-                          height: _Layout.urlH,
-                          child: _UrlNode(url: Environment.gatewayUrl),
-                        ),
-                        Positioned(
-                          left: layout.cx - _Layout.gwW / 2,
-                          top: _Layout.gwTop,
-                          width: _Layout.gwW,
-                          height: _Layout.gwH,
-                          child: _GatewayNode(
-                            routes: routes,
-                            maintenance: maintenance.gateway,
-                            selected: panelId == GatewayMapScreen.gatewayId,
-                            onTap: () => _select(GatewayMapScreen.gatewayId),
-                          ),
-                        ),
-                        for (var i = 0; i < routes.length; i++) ...[
                           Positioned(
-                            left: (layout.startX(i) + layout.cardCenter(i)) / 2,
-                            top: layout.labelY,
-                            child: FractionalTranslation(
-                              translation: const Offset(-0.5, -0.5),
-                              child: Opacity(
-                                opacity: branches[i].dimmed ? 0.35 : 1,
-                                child: _PathLabel(
-                                  path: routes[i].path,
-                                  status: branches[i].status,
+                            left: layout.cx - _Layout.urlW / 2,
+                            top: 0,
+                            width: _Layout.urlW,
+                            height: _Layout.urlH,
+                            child: _UrlNode(url: Environment.gatewayUrl),
+                          ),
+                          Positioned(
+                            left: layout.cx - _Layout.gwW / 2,
+                            top: _Layout.gwTop,
+                            width: _Layout.gwW,
+                            height: _Layout.gwH,
+                            child: _GatewayNode(
+                              routes: routes,
+                              maintenance: maintenance.gateway,
+                              selected: panelId == GatewayMapScreen.gatewayId,
+                              onTap: () => _select(GatewayMapScreen.gatewayId),
+                            ),
+                          ),
+                          for (var i = 0; i < routes.length; i++) ...[
+                            Positioned(
+                              left:
+                                  (layout.startX(i) + layout.cardCenter(i)) / 2,
+                              top: layout.labelY,
+                              child: FractionalTranslation(
+                                translation: const Offset(-0.5, -0.5),
+                                child: Opacity(
+                                  opacity: branches[i].dimmed ? 0.35 : 1,
+                                  child: _PathLabel(
+                                    path: routes[i].path,
+                                    status: branches[i].status,
+                                  ),
                                 ),
                               ),
                             ),
-                          ),
-                          Positioned(
-                            left: layout.cardLeft(i),
-                            top: _Layout.cardTop,
-                            width: _Layout.cardW,
-                            height: _Layout.cardH,
-                            child: Opacity(
-                              opacity: branches[i].dimmed ? 0.55 : 1,
-                              child: _RouteNode(
-                                route: routes[i],
-                                gatewayOn: gatewayOn,
-                                selected: routes[i].id == selectedRoute,
-                                onTap: () => _select(routes[i].id),
+                            Positioned(
+                              left: layout.cardLeft(i),
+                              top: _Layout.cardTop,
+                              width: _Layout.cardW,
+                              height: _Layout.cardH,
+                              child: Opacity(
+                                opacity: branches[i].dimmed ? 0.55 : 1,
+                                child: _RouteNode(
+                                  route: routes[i],
+                                  gatewayOn: gatewayOn,
+                                  selected: routes[i].id == selectedRoute,
+                                  onTap: () => _select(routes[i].id),
+                                ),
                               ),
                             ),
-                          ),
+                          ],
+                          if (routes.isEmpty && _routes.loaded)
+                            Positioned(
+                              left: layout.cx - _Layout.cardW / 2,
+                              top: _Layout.cardTop,
+                              width: _Layout.cardW,
+                              height: _Layout.cardH,
+                              child: const _AddRouteNode(),
+                            ),
                         ],
-                        if (routes.isEmpty && _routes.loaded)
-                          Positioned(
-                            left: layout.cx - _Layout.cardW / 2,
-                            top: _Layout.cardTop,
-                            width: _Layout.cardW,
-                            height: _Layout.cardH,
-                            child: const _AddRouteNode(),
-                          ),
-                      ],
+                      ),
                     ),
                   ),
                 ),
@@ -572,44 +578,6 @@ class _BranchesPainter extends CustomPainter {
   @override
   bool shouldRepaint(covariant _BranchesPainter old) =>
       old.branches != branches;
-}
-
-///a border drawn in dashes, for the nodes in maintenance and the "Add route" card
-class _DashedBorder extends CustomPainter {
-  static const double radius = 16;
-  static const double width = 1.2;
-
-  final Color color;
-
-  _DashedBorder({required this.color});
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final path = Path()
-      ..addRRect(
-        RRect.fromRectAndRadius(
-          Offset.zero & size,
-          const Radius.circular(radius),
-        ).deflate(width / 2),
-      );
-    final paint = Paint()
-      ..color = color
-      ..strokeWidth = width
-      ..style = PaintingStyle.stroke;
-    for (final PathMetric metric in path.computeMetrics()) {
-      var d = 0.0;
-      while (d < metric.length) {
-        canvas.drawPath(
-          metric.extractPath(d, min(d + 4, metric.length)),
-          paint,
-        );
-        d += 7;
-      }
-    }
-  }
-
-  @override
-  bool shouldRepaint(covariant _DashedBorder old) => old.color != color;
 }
 
 class _LegendItem extends StatelessWidget {
@@ -762,7 +730,7 @@ class _NodeState extends State<_Node> {
             ),
             child: CustomPaint(
               foregroundPainter: widget.dashed && !widget.selected
-                  ? _DashedBorder(color: border)
+                  ? DashedBorder(color: border, radius: 16, width: 1.2)
                   : null,
               child: widget.child,
             ),
@@ -796,7 +764,6 @@ class _GatewayNode extends StatelessWidget {
         ? intl.map.oneRoute
         : intl.map.manyRoutes(count: count);
     final inMaint = routes.where((r) => r.inMaintenance).length;
-    final onFor = maintenance?.onFor;
     return _Node(
       onTap: onTap,
       selected: selected,
@@ -859,17 +826,22 @@ class _GatewayNode extends StatelessWidget {
                         ),
                         const SizedBox(width: 7),
                         Flexible(
-                          child: Text(
-                            onFor == null
-                                ? intl.map.gatewayInMaintenance
-                                : '${intl.map.gatewayInMaintenance} · '
-                                      '${durationText(onFor.inSeconds)}',
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: TextStyle(
-                              fontSize: 13,
-                              color: c.maintenance,
-                            ),
+                          child: Ticking(
+                            builder: (context) {
+                              final onFor = maintenance?.onFor;
+                              return Text(
+                                onFor == null
+                                    ? intl.map.gatewayInMaintenance
+                                    : '${intl.map.gatewayInMaintenance} · '
+                                          '${durationText(onFor.inSeconds)}',
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  color: c.maintenance,
+                                ),
+                              );
+                            },
                           ),
                         ),
                       ],

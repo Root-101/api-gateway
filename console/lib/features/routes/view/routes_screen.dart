@@ -33,8 +33,9 @@ class RoutesScreen extends StatefulWidget {
 }
 
 class _RoutesScreenState extends State<RoutesScreen> {
-  static const double _minCardWidth = 400;
-  static const double _gap = 16;
+  //3 columns fit with the rail expanded too
+  static const double _minCardWidth = 380;
+  static const double _gap = 12;
 
   late final RoutesCubit cubit;
   final TextEditingController _searchCtrl = TextEditingController();
@@ -607,13 +608,15 @@ class _Badge extends StatelessWidget {
   Widget build(BuildContext context) {
     final c = app.colors;
     final accent = color != c.label;
-    return Material(
+    final badge = Material(
       color: accent ? color.withValues(alpha: 0.10) : Colors.transparent,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(8),
-        side: BorderSide(
-          color: accent ? color.withValues(alpha: 0.5) : c.outlineCard,
-        ),
+        side: dashed
+            ? BorderSide.none
+            : BorderSide(
+                color: accent ? color.withValues(alpha: 0.5) : c.outlineCard,
+              ),
       ),
       clipBehavior: Clip.antiAlias,
       child: InkWell(
@@ -631,6 +634,17 @@ class _Badge extends StatelessWidget {
         ),
       ),
     );
+    //dashed 1 px border, as in the canvas
+    return dashed
+        ? CustomPaint(
+            foregroundPainter: DashedBorder(
+              color: c.outline,
+              radius: 8,
+              width: 1,
+            ),
+            child: badge,
+          )
+        : badge;
   }
 }
 
@@ -787,7 +801,6 @@ class _DeleteRouteDialog extends StatelessWidget {
                     kind: AppButtonKind.outlined,
                     height: 46,
                     radius: 23,
-                    autofocus: true, //so Enter doesn't delete by accident
                     onPressed: () => Navigator.of(context).pop(false),
                   ),
                 ),

@@ -15,7 +15,6 @@ class DialogTemplate extends StatelessWidget {
 
   ///the long dialogs hang from the top, the short ones are centered
   final Alignment alignment;
-  final FocusNode? closeFocusNode;
   final VoidCallback? onClose;
 
   const DialogTemplate({
@@ -26,7 +25,6 @@ class DialogTemplate extends StatelessWidget {
     this.width = 580,
     this.footer,
     this.alignment = Alignment.topCenter,
-    this.closeFocusNode,
     this.onClose,
     super.key,
   });
@@ -82,8 +80,6 @@ class DialogTemplate extends StatelessWidget {
                   tooltip: context.intl.actions.close,
                   size: 44,
                   iconSize: 20,
-                  focusNode: closeFocusNode,
-                  autofocus: closeFocusNode != null,
                   onPressed: onClose ?? () => Navigator.of(context).pop(),
                 ),
               ],

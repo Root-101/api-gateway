@@ -81,7 +81,7 @@ offline:
 notFound:
   title: 'Esta página no existe'
   description: 'La ruta o el log pueden haberse borrado, o el enlace es incorrecto.'
-  goToRoutes: 'Ir a Rutas'
+  goToMap: 'Ir al mapa'
   openLogs: 'Abrir Http logs'
 routes:
   routes: 'Rutas'
@@ -139,11 +139,11 @@ form:
   next: 'Siguiente'
   stepOf: 'Paso {step: int} de 3 · {name: String}'
   stepGeneral: 'General'
-  stepGeneralHint: 'Cómo se ve la ruta en la consola.'
+  stepGeneralHint: 'Cómo se ve la ruta en la consola'
   stepForwarding: 'Reenvío'
-  stepForwardingHint: 'Las peticiones que coinciden con el path se envían a la URI.'
+  stepForwardingHint: 'Las peticiones que coinciden con el path se envían a la URI'
   stepRewrite: 'Reescritura del path'
-  stepRewriteHint: 'Opcional. Cambia un prefijo del path antes de reenviar.'
+  stepRewriteHint: 'Opcional. Cambia un prefijo del path antes de reenviar'
   nameTaken: 'Ya existe una ruta con este nombre'
 delete:
   title: '¿Eliminar esta ruta?'
@@ -275,7 +275,6 @@ maintenance:
   gatewayOff: 'Mantenimiento del gateway apagado'
 map:
   title: 'Mapa del gateway'
-  experimental: 'EXPERIMENTAL'
   legendRedirect: 'Solo redirección'
   legendMaintenance: 'Mantenimiento'
   zoomIn: 'Acercar'

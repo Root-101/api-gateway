@@ -431,8 +431,11 @@ class _MaintenanceBanner extends StatelessWidget {
 
   const _MaintenanceBanner(this.maintenance);
 
+  //the countdown moves on by itself
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) => Ticking(builder: _build);
+
+  Widget _build(BuildContext context) {
     final c = app.colors;
     final intl = context.intl;
     final retry = maintenance.retryAfter?.toLocal();

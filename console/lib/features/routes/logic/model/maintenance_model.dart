@@ -67,15 +67,17 @@ class MaintenanceModel {
   }
 }
 
-///"3 d 4 h", "2 h 5 min", "40 min": how long until a maintenance's return time, or how long it lasted
+///"3d 4h", "2h 30 min", "40 min": how long until a maintenance's return time, or how long it lasted
 String durationText(int seconds) {
   final d = seconds ~/ 86400;
   if (d > 0) {
     final dh = (seconds % 86400) ~/ 3600;
-    return dh == 0 ? '$d d' : '$d d $dh h';
+    return dh == 0 ? '${d}d' : '${d}d ${dh}h';
   }
-  final h = seconds ~/ 3600;
-  final m = ((seconds % 3600) / 60).round();
+  //rounded once, so 59.6 min is "1h", never "60 min"
+  final minutes = (seconds / 60).round();
+  final h = minutes ~/ 60;
+  final m = minutes % 60;
   if (h == 0) return '${m < 1 ? 1 : m} min';
-  return m == 0 ? '$h h' : '$h h $m min';
+  return m == 0 ? '${h}h' : '${h}h $m min';
 }

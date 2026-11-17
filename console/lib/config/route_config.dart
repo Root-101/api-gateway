@@ -9,7 +9,9 @@ class RouteConfig {
 
   static RouterConfig<Object> router = GoRouter(
     initialLocation: app.di.find<AuthCubit>().isLoggedIn
-        ? (launchLocation != '/' ? launchLocation : RoutesScreen.navigator.path)
+        ? (launchLocation != '/'
+              ? launchLocation
+              : GatewayMapScreen.navigator.path)
         : LoginScreen.navigator.path,
     navigatorKey: navigatorKey,
     //guard: logged-out users only see login, logged-in users never see it
@@ -18,7 +20,7 @@ class RouteConfig {
       final loggedIn = app.di.find<AuthCubit>().isLoggedIn;
       final atLogin = state.matchedLocation == LoginScreen.navigator.path;
       if (!loggedIn && !atLogin) return LoginScreen.navigator.path;
-      if (loggedIn && atLogin) return RoutesScreen.navigator.path;
+      if (loggedIn && atLogin) return GatewayMapScreen.navigator.path;
       return null;
     },
     //unknown url: 404 inside the shell (the guard sends it to login when logged out)
@@ -32,7 +34,7 @@ class RouteConfig {
         branches: [
           StatefulShellBranch(
             routes: <RouteBase>[
-              ///   /map (experimental)
+              ///   /map (start screen)
               GoRoute(
                 name: GatewayMapScreen.navigator.name,
                 path: GatewayMapScreen.navigator.path,

@@ -287,11 +287,7 @@ class _RoutesFormWidgetState extends State<RoutesFormWidget> {
     final currentId = _isEdit ? widget.route?.id : null;
     final nameTaken =
         model.name.isNotEmpty &&
-        _routes.any(
-          (r) =>
-              r.id != currentId &&
-              r.name == model.name,
-        );
+        _routes.any((r) => r.id != currentId && r.name == model.name);
     return {
       ...errors,
       if (nameTaken && !errors.containsKey(_name.key))
@@ -419,6 +415,7 @@ class _RoutesFormWidgetState extends State<RoutesFormWidget> {
             Container(
               padding: const EdgeInsets.fromLTRB(24, 16, 24, 16),
               decoration: BoxDecoration(
+                color: c.card,
                 border: Border(bottom: BorderSide(color: c.raised)),
               ),
               child: ListenableBuilder(
@@ -615,23 +612,34 @@ class _RoutesFormWidgetState extends State<RoutesFormWidget> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Text(
-          title,
-          style: TextStyle(
-            fontSize: 16,
-            height: 22 / 16,
-            fontWeight: FontWeight.w600,
-            color: c.text,
-          ),
-        ),
-        const SizedBox(height: 2),
-        Text(
-          help,
-          style: TextStyle(
-            fontSize: 12,
-            height: 16 / 12,
-            color: c.textTertiary,
-          ),
+        //one line, as in the canvas: "General · How the route shows up in the console"
+        Wrap(
+          crossAxisAlignment: WrapCrossAlignment.end,
+          spacing: 8,
+          runSpacing: 2,
+          children: [
+            Text(
+              title,
+              style: TextStyle(
+                fontSize: 16,
+                height: 22 / 16,
+                fontWeight: FontWeight.w600,
+                color: c.text,
+              ),
+            ),
+            for (final part in ['·', help])
+              Padding(
+                padding: const EdgeInsets.only(bottom: 2),
+                child: Text(
+                  part,
+                  style: TextStyle(
+                    fontSize: 12,
+                    height: 16 / 12,
+                    color: c.textTertiary,
+                  ),
+                ),
+              ),
+          ],
         ),
         for (final field in fields) ...[const SizedBox(height: 14), field],
       ],
@@ -688,163 +696,155 @@ class _RoutePreview extends StatelessWidget {
     final form = intl.form;
     final url = monoStyle(size: 13, height: 20 / 13, color: c.text);
     final hasRewrite = rewriteFrom.isNotEmpty || rewriteTo.isNotEmpty;
-    return Container(
-      padding: const EdgeInsets.fromLTRB(16, 14, 14, 12),
-      decoration: BoxDecoration(
-        color: c.card,
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: c.outlineCard),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Flexible(
+                        child: DefaultTextStyle.merge(
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          child: _value(
+                            model.name,
+                            form.previewName,
+                            TextStyle(
+                              fontSize: 19,
+                              height: 26 / 19,
+                              fontWeight: FontWeight.w500,
+                              color: c.text,
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 2),
+                      _pencil(form.editName, onEditName),
+                    ],
+                  ),
+                  Transform.translate(
+                    offset: const Offset(0, -4),
+                    child: Row(
                       children: [
                         Flexible(
                           child: DefaultTextStyle.merge(
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                             child: _value(
-                              model.name,
-                              form.previewName,
+                              model.description,
+                              intl.routes.noDescription,
                               TextStyle(
-                                fontSize: 19,
-                                height: 26 / 19,
-                                fontWeight: FontWeight.w500,
-                                color: c.text,
+                                fontSize: 13,
+                                height: 18 / 13,
+                                color: c.textSecondary,
                               ),
                             ),
                           ),
                         ),
                         const SizedBox(width: 2),
-                        _pencil(form.editName, onEditName),
+                        _pencil(form.editDescription, onEditDescription),
                       ],
                     ),
-                    Transform.translate(
-                      offset: const Offset(0, -4),
-                      child: Row(
-                        children: [
-                          Flexible(
-                            child: DefaultTextStyle.merge(
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              child: _value(
-                                model.description,
-                                intl.routes.noDescription,
-                                TextStyle(
-                                  fontSize: 13,
-                                  height: 18 / 13,
-                                  color: c.textSecondary,
-                                ),
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: 2),
-                          _pencil(form.editDescription, onEditDescription),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(width: 12),
-              Container(
-                height: 24,
-                padding: const EdgeInsets.symmetric(horizontal: 8),
-                alignment: Alignment.center,
-                decoration: BoxDecoration(
-                  color: c.raised,
-                  borderRadius: BorderRadius.circular(6),
-                ),
-                child: Text(
-                  form.preview,
-                  style: TextStyle(
-                    fontSize: 11,
-                    height: 16 / 11,
-                    fontWeight: FontWeight.w600,
-                    letterSpacing: 0.6,
-                    color: c.label,
                   ),
-                ),
+                ],
               ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.fromLTRB(12, 6, 6, 10),
-            decoration: BoxDecoration(
-              color: c.night,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: c.outlineSoft),
             ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _urlHeader(intl.routes.from, false, form.editPath, onEditPath),
+            const SizedBox(width: 12),
+            Container(
+              height: 24,
+              padding: const EdgeInsets.symmetric(horizontal: 8),
+              alignment: Alignment.center,
+              decoration: BoxDecoration(
+                color: c.raised,
+                borderRadius: BorderRadius.circular(6),
+              ),
+              child: Text(
+                form.preview,
+                style: TextStyle(
+                  fontSize: 11,
+                  height: 16 / 11,
+                  fontWeight: FontWeight.w600,
+                  letterSpacing: 0.6,
+                  color: c.label,
+                ),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.fromLTRB(12, 6, 6, 10),
+          decoration: BoxDecoration(
+            color: c.night,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: c.outlineSoft),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _urlHeader(intl.routes.from, false, form.editPath, onEditPath),
+              Padding(
+                padding: const EdgeInsets.only(right: 6),
+                child: _value(
+                  model.path.isEmpty ? '' : model.enterPoint,
+                  '$gatewayUrl/…',
+                  url,
+                ),
+              ),
+              Container(
+                height: 1,
+                margin: const EdgeInsets.fromLTRB(0, 8, 6, 2),
+                color: c.outlineSoft,
+              ),
+              _urlHeader(intl.routes.to, true, form.editUri, onEditUri),
+              Padding(
+                padding: const EdgeInsets.only(right: 6),
+                child: _value(
+                  model.uri.isEmpty ? '' : model.redirectTo,
+                  'https://…',
+                  url,
+                ),
+              ),
+              if (hasRewrite)
                 Padding(
-                  padding: const EdgeInsets.only(right: 6),
-                  child: _value(
-                    model.path.isEmpty ? '' : model.enterPoint,
-                    '$gatewayUrl/…',
-                    url,
-                  ),
-                ),
-                Container(
-                  height: 1,
-                  margin: const EdgeInsets.fromLTRB(0, 8, 6, 2),
-                  color: c.outlineSoft,
-                ),
-                _urlHeader(intl.routes.to, true, form.editUri, onEditUri),
-                Padding(
-                  padding: const EdgeInsets.only(right: 6),
-                  child: _value(
-                    model.uri.isEmpty ? '' : model.redirectTo,
-                    'https://…',
-                    url,
-                  ),
-                ),
-                if (hasRewrite)
-                  Padding(
-                    padding: const EdgeInsets.only(top: 6),
-                    child: Row(
-                      children: [
-                        Flexible(
-                          child: Text.rich(
-                            TextSpan(
-                              text: '${form.rewrite} ',
-                              children: [
-                                TextSpan(
-                                  text:
-                                      '${rewriteFrom.isEmpty ? '…' : rewriteFrom} → ${rewriteTo.isEmpty ? '…' : rewriteTo}',
-                                  style: monoStyle(size: 12, color: c.label),
-                                ),
-                              ],
-                            ),
-                            style: TextStyle(
-                              fontSize: 12,
-                              height: 16 / 12,
-                              color: c.textTertiary,
-                            ),
+                  padding: const EdgeInsets.only(top: 6),
+                  child: Row(
+                    children: [
+                      Flexible(
+                        child: Text.rich(
+                          TextSpan(
+                            text: '${form.rewrite} ',
+                            children: [
+                              TextSpan(
+                                text:
+                                    '${rewriteFrom.isEmpty ? '…' : rewriteFrom} → ${rewriteTo.isEmpty ? '…' : rewriteTo}',
+                                style: monoStyle(size: 12, color: c.label),
+                              ),
+                            ],
+                          ),
+                          style: TextStyle(
+                            fontSize: 12,
+                            height: 16 / 12,
+                            color: c.textTertiary,
                           ),
                         ),
-                        const SizedBox(width: 6),
-                        _pencil(form.editRewrite, onEditRewrite),
-                      ],
-                    ),
+                      ),
+                      const SizedBox(width: 6),
+                      _pencil(form.editRewrite, onEditRewrite),
+                    ],
                   ),
-              ],
-            ),
+                ),
+            ],
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 

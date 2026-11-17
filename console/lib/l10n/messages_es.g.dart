@@ -339,7 +339,7 @@ class AppMessages$notFound$es implements AppMessages$notFound$en {
   String get description =>
       'La ruta o el log pueden haberse borrado, o el enlace es incorrecto.';
   @override
-  String get goToRoutes => 'Ir a Rutas';
+  String get goToMap => 'Ir al mapa';
   @override
   String get openLogs => 'Abrir Http logs';
 }
@@ -475,17 +475,17 @@ class AppMessages$form$es implements AppMessages$form$en {
   @override
   String get stepGeneral => 'General';
   @override
-  String get stepGeneralHint => 'Cómo se ve la ruta en la consola.';
+  String get stepGeneralHint => 'Cómo se ve la ruta en la consola';
   @override
   String get stepForwarding => 'Reenvío';
   @override
   String get stepForwardingHint =>
-      'Las peticiones que coinciden con el path se envían a la URI.';
+      'Las peticiones que coinciden con el path se envían a la URI';
   @override
   String get stepRewrite => 'Reescritura del path';
   @override
   String get stepRewriteHint =>
-      'Opcional. Cambia un prefijo del path antes de reenviar.';
+      'Opcional. Cambia un prefijo del path antes de reenviar';
   @override
   String get nameTaken => 'Ya existe una ruta con este nombre';
 }
@@ -824,8 +824,6 @@ class AppMessages$map$es implements AppMessages$map$en {
   @override
   String get title => 'Mapa del gateway';
   @override
-  String get experimental => 'EXPERIMENTAL';
-  @override
   String get legendRedirect => 'Solo redirección';
   @override
   String get legendMaintenance => 'Mantenimiento';
@@ -1035,7 +1033,7 @@ extension on AppMessagesEs {
       'notFound.title' => 'Esta página no existe',
       'notFound.description' =>
         'La ruta o el log pueden haberse borrado, o el enlace es incorrecto.',
-      'notFound.goToRoutes' => 'Ir a Rutas',
+      'notFound.goToMap' => 'Ir al mapa',
       'notFound.openLogs' => 'Abrir Http logs',
       'routes.routes' => 'Rutas',
       'routes.oneRoute' => '1 ruta',
@@ -1106,13 +1104,13 @@ extension on AppMessagesEs {
         required String name,
       }) => 'Paso ${step} de 3 · ${name}',
       'form.stepGeneral' => 'General',
-      'form.stepGeneralHint' => 'Cómo se ve la ruta en la consola.',
+      'form.stepGeneralHint' => 'Cómo se ve la ruta en la consola',
       'form.stepForwarding' => 'Reenvío',
       'form.stepForwardingHint' =>
-        'Las peticiones que coinciden con el path se envían a la URI.',
+        'Las peticiones que coinciden con el path se envían a la URI',
       'form.stepRewrite' => 'Reescritura del path',
       'form.stepRewriteHint' =>
-        'Opcional. Cambia un prefijo del path antes de reenviar.',
+        'Opcional. Cambia un prefijo del path antes de reenviar',
       'form.nameTaken' => 'Ya existe una ruta con este nombre',
       'delete.title' => '¿Eliminar esta ruta?',
       'delete.descriptionStart' => 'Las peticiones a',
@@ -1285,7 +1283,6 @@ extension on AppMessagesEs {
       'maintenance.gatewayOn' => 'Gateway en mantenimiento',
       'maintenance.gatewayOff' => 'Mantenimiento del gateway apagado',
       'map.title' => 'Mapa del gateway',
-      'map.experimental' => 'EXPERIMENTAL',
       'map.legendRedirect' => 'Solo redirección',
       'map.legendMaintenance' => 'Mantenimiento',
       'map.zoomIn' => 'Acercar',

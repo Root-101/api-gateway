@@ -83,7 +83,7 @@ offline:
 notFound:
   title: 'This page doesn’t exist'
   description: 'The route or log may have been deleted, or the link is wrong.'
-  goToRoutes: 'Go to Routes'
+  goToMap: 'Go to map'
   openLogs: 'Open Http logs'
 routes:
   routes: 'Routes'
@@ -141,11 +141,11 @@ form:
   next: 'Next'
   stepOf: 'Step {step: int} of 3 · {name: String}'
   stepGeneral: 'General'
-  stepGeneralHint: 'How the route shows up in the console.'
+  stepGeneralHint: 'How the route shows up in the console'
   stepForwarding: 'Forwarding'
-  stepForwardingHint: 'Requests that match the path are sent to the URI.'
+  stepForwardingHint: 'Requests that match the path are sent to the URI'
   stepRewrite: 'Path rewrite'
-  stepRewriteHint: 'Optional. Swap a prefix of the path before forwarding.'
+  stepRewriteHint: 'Optional. Swap a prefix of the path before forwarding'
   nameTaken: 'A route with this name already exists'
 delete:
   title: 'Delete this route?'
@@ -277,7 +277,6 @@ maintenance:
   gatewayOff: 'Gateway maintenance off'
 map:
   title: 'Gateway map'
-  experimental: 'EXPERIMENTAL'
   legendRedirect: 'Redirect only'
   legendMaintenance: 'Maintenance'
   zoomIn: 'Zoom in'

@@ -9,21 +9,48 @@
           route shows `PAUSED` and its slide is locked. API: `addons` in each route, `GET /addons`, and `PUT`,
           `DELETE`, `POST .../enable` and `.../disable` under `/routes/{id}/addons/maintenance` and
           `/addons/maintenance`.
-        * **Gateway map** :world_map: : New first entry of the rail (experimental): the gateway's URL, the gateway
+        * **Gateway map** :world_map: : New first entry of the rail: the gateway's URL, the gateway
           and a branch per route with its path, dashed and moving while it forwards, dotted orange while it answers
           `503`. Drag, wheel zoom, `Fit`, an "Add route" card when there are none, and the panel of a route or of the
-          gateway on a click. `Open in Routes` filters Routes by that route.
+          gateway on a click. `Open in Routes` filters Routes by that route. It is the start screen: opening the
+          console and logging in land on the map instead of Routes. The 404 page offers "Go to map" instead of "Go to
+          Routes". The grid behind it pans and zooms with the map.
+          Over the canvas the cursor is the drag hand (closed while dragging); nodes and buttons keep the click hand.
+        * **Route form** :pencil2: : The preview is no longer a card inside the form: the strip under the title takes
+          the card color, as in the canvas.
         * **Routes** :twisted_rightwards_arrows: : Each card has the `MAINT` / `PAUSED` tag, a badge per add-on and
           `+ Add-ons`. Backups keep the `addons` of each route as the gateway sends them (unknown ones too, without
           `default_message` and `state`), and restore sends them back.
         * **Maintenance** :construction: : The banner stays on every screen while the gateway is in maintenance:
           `Edit` opens the map with the gateway's panel, `Turn off` calls `disable`. The first 6.1.0 version (rail
           entry, dialog and wrench on the card, never released) was replaced by the add-ons.
+        * **Canvas match** :art: : After comparing every screen with the canvas: "+ Add-ons" on the route cards has a
+          dashed border; Routes keeps 3 columns with the rail expanded (380 px cards, 12 px gaps); the route form shows
+          each step's title and hint on one line; the maintenance slide is drawn as in the canvas (44 px track, 38 px
+          knob with a shadow and a double-chevron, an orange fill behind it, the label fading while dragged; the label
+          keeps clear of the knob only on its side, so it isn't cut in the panel); text buttons (Clear all, Go to the
+          login page) are bold; dialogs no longer focus a button or the close button when they open (the route form
+          still focuses Name).
+        * **Maintenance time** :stopwatch: : "On for", "Last window", the gateway node and the banner's countdown use
+          larger units ("2h 30 min", "1d 3h") and update every 10 s on their own.
+        * **Route panel** :jigsaw: : `Open in Routes` / `Edit route` has the external-link icon of the canvas. Each
+          "Add to this route" card has a dashed 1.5 px border, as in the canvas. The
+          maintenance slide keeps the handle where it was dropped while it saves (it jumped back to the old side and
+          then to the new one), slides to its side when not dragged, and shows the click hand. Removing an add-on asks
+          with the canvas buttons: outlined Cancel (no longer focused, so no lilac ring) and filled red Remove. The edit
+          buttons (Cancel, Save) are 34 px too, as in the canvas.
+        * **Toasts** :speech_balloon: : They show at the bottom center instead of the bottom right, where they
+          covered the side panel of the map.
+        * **Fix** :bug: : The version under the rail, the login and the splash was empty with `flutter run`: its
+          `version.json` comes as javascript there, so it was not read as a map. It is now read as text and decoded.
         * **Fix** :bug: : No toast showed after an action with the loading layer (delete, backup, restore, save a
           route): the `loader_overlay` package painted above the app. The loading layer is now drawn under the
           toast, and the dependency was removed.
-        * **Docs** :books: : `docs/console.md` has the Gateway map and Add-ons sections; `docs/design` screens 21–24
-          are the map, and every screen shows the rail and cards as built.
+        * **Docs** :books: : `docs/console.md` has the Gateway map and Add-ons sections, and the map as the start
+          screen; `docs/design` screens 21–24 are the map, and every screen shows the rail and cards as built. The
+          canvas has no Experimental page any more (the map and the route panel are with the other screens, the
+          superseded maintenance boards are gone), its sample URLs are generic (`example.com`), and the export was
+          regenerated from it (`export.py` takes screen 24 from Routes and draws the map with 3 routes).
     * 6.0.0:
         * **DATE** :date: : 2026-11-12.
         * **Redesign** :art: : New visual identity and rebuilt screens: login, side menu with notch, route cards,

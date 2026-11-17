@@ -137,7 +137,6 @@ class _LogsFilterDialogState extends State<LogsFilterDialog> {
       height: 36,
       child: TextField(
         controller: _exact,
-        autofocus: true,
         maxLines: 1,
         textAlign: TextAlign.center,
         textAlignVertical: TextAlignVertical.center,

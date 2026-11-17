@@ -1,4 +1,8 @@
+import 'dart:ui';
+import 'dart:math';
+
 import 'package:console/app_exporter.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -41,6 +45,9 @@ class AppButton extends StatelessWidget {
   final VoidCallback? onPressed;
   final SvgAsset? icon;
   final Widget? leading;
+
+  ///after the label (Open in Routes' external-link icon)
+  final SvgAsset? trailing;
   final AppButtonKind kind;
   final double height;
   final double radius;
@@ -53,6 +60,7 @@ class AppButton extends StatelessWidget {
     required this.onPressed,
     this.icon,
     this.leading,
+    this.trailing,
     this.kind = AppButtonKind.primary,
     this.height = 40,
     this.radius = 12,
@@ -118,10 +126,17 @@ class AppButton extends StatelessWidget {
             label,
             style: TextStyle(
               fontSize: fontSize,
-              fontWeight: filled ? FontWeight.w600 : FontWeight.w500,
+              //text buttons are bold, as in the canvas (Clear all, Go to the login page)
+              fontWeight: filled || kind == AppButtonKind.text
+                  ? FontWeight.w600
+                  : FontWeight.w500,
               letterSpacing: 0.2,
             ),
           ),
+          if (trailing != null) ...[
+            const SizedBox(width: 6),
+            trailing!.build(size: 13, color: fg),
+          ],
         ],
       ),
     );
@@ -589,15 +604,17 @@ class StatusPill extends StatelessWidget {
   }
 }
 
-///page background: flat night color with a 48 px line grid
+///page background: flat night color with a 48 px line grid.
+///With [view] the grid pans and zooms with it (the gateway map's canvas)
 class GridBackground extends StatelessWidget {
-  final Widget child;
+  final Widget? child;
+  final ValueListenable<Matrix4>? view;
 
-  const GridBackground({required this.child, super.key});
+  const GridBackground({this.child, this.view, super.key});
 
   @override
   Widget build(BuildContext context) => CustomPaint(
-    painter: _GridPainter(app.colors.gridBg, app.colors.gridLine),
+    painter: _GridPainter(app.colors.gridBg, app.colors.gridLine, view),
     child: child,
   );
 }
@@ -605,23 +622,29 @@ class GridBackground extends StatelessWidget {
 class _GridPainter extends CustomPainter {
   final Color background;
   final Color line;
+  final ValueListenable<Matrix4>? view;
 
-  _GridPainter(this.background, this.line);
+  _GridPainter(this.background, this.line, this.view) : super(repaint: view);
 
   @override
   void paint(Canvas canvas, Size size) {
     canvas.drawRect(Offset.zero & size, Paint()..color = background);
     final paint = Paint()..color = line;
-    for (double x = 47; x < size.width; x += 48) {
+    final m = view?.value.storage;
+    //x scale and translation of the view; identity without one
+    final scale = m?[0] ?? 1;
+    final step = 48 * scale;
+    double first(double t) => (t + 47 * scale) % step;
+    for (double x = first(m?[12] ?? 0); x < size.width; x += step) {
       canvas.drawRect(Rect.fromLTWH(x, 0, 1, size.height), paint);
     }
-    for (double y = 47; y < size.height; y += 48) {
+    for (double y = first(m?[13] ?? 0); y < size.height; y += step) {
       canvas.drawRect(Rect.fromLTWH(0, y, size.width, 1), paint);
     }
   }
 
   @override
-  bool shouldRepaint(_GridPainter oldDelegate) => false;
+  bool shouldRepaint(_GridPainter oldDelegate) => oldDelegate.view != view;
 }
 
 class AppLogo extends StatelessWidget {
@@ -851,5 +874,61 @@ class SmallSpinner extends StatelessWidget {
   Widget build(BuildContext context) => SizedBox.square(
     dimension: size,
     child: CircularProgressIndicator(strokeWidth: 2, color: color),
+  );
+}
+
+///a rounded border drawn in dashes (`foregroundPainter` of a CustomPaint):
+///the map's nodes in maintenance and "Add route", the panel's "Add to this route"
+class DashedBorder extends CustomPainter {
+  final Color color;
+  final double radius;
+  final double width;
+
+  DashedBorder({required this.color, required this.radius, this.width = 1.2});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final path = Path()
+      ..addRRect(
+        RRect.fromRectAndRadius(
+          Offset.zero & size,
+          Radius.circular(radius),
+        ).deflate(width / 2),
+      );
+    final paint = Paint()
+      ..color = color
+      ..strokeWidth = width
+      ..style = PaintingStyle.stroke;
+    for (final PathMetric metric in path.computeMetrics()) {
+      var d = 0.0;
+      while (d < metric.length) {
+        canvas.drawPath(
+          metric.extractPath(d, min(d + 4, metric.length)),
+          paint,
+        );
+        d += 7;
+      }
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant DashedBorder old) =>
+      old.color != color || old.radius != radius || old.width != width;
+}
+
+///rebuilds [builder] every 10 s, so "on for 3 min" and countdowns move on by themselves
+class Ticking extends StatelessWidget {
+  static final Stream<void> _clock = Stream<void>.periodic(
+    const Duration(seconds: 10),
+  ).asBroadcastStream();
+
+  final WidgetBuilder builder;
+
+  const Ticking({required this.builder, super.key});
+
+  @override
+  Widget build(BuildContext context) => StreamBuilder<void>(
+    stream: _clock,
+    builder: (context, _) => builder(context),
   );
 }

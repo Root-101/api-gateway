@@ -85,7 +85,9 @@ class _MaintenanceBlockState extends State<MaintenanceBlock> {
     if (mounted) setState(() => _busy = false);
   }
 
-  void _toggle(bool on) => cubit.setEnabled(route: widget.route, enabled: on);
+  Future<bool> _toggle(bool on) => cubit
+      .setEnabled(route: widget.route, enabled: on)
+      .then((error) => error == null);
 
   @override
   Widget build(BuildContext context) {
@@ -178,12 +180,6 @@ class _MaintenanceBlockState extends State<MaintenanceBlock> {
         : m.enabled
         ? (_gateway ? intl.panel.onGateway : intl.panel.onRoute)
         : (_gateway ? intl.panel.offGateway : intl.panel.offRoute);
-    final duration = m.onFor ?? m.lastWindow;
-    final durationLabel = duration == null
-        ? null
-        : m.onFor != null
-        ? intl.panel.onFor(time: durationText(duration.inSeconds))
-        : intl.panel.lastWindow(time: durationText(duration.inSeconds));
     final retry = m.retryAfter?.toLocal();
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -196,11 +192,19 @@ class _MaintenanceBlockState extends State<MaintenanceBlock> {
             color: on ? c.maintenance : c.textTertiary,
           ),
         ),
-        if (durationLabel != null) ...[
+        if ((m.onFor ?? m.lastWindow) != null) ...[
           const SizedBox(height: 2),
-          Text(
-            durationLabel,
-            style: TextStyle(fontSize: 12, color: c.textTertiary),
+          Ticking(
+            builder: (context) {
+              final onFor = m.onFor;
+              final time = durationText((onFor ?? m.lastWindow)!.inSeconds);
+              return Text(
+                onFor != null
+                    ? intl.panel.onFor(time: time)
+                    : intl.panel.lastWindow(time: time),
+                style: TextStyle(fontSize: 12, color: c.textTertiary),
+              );
+            },
           ),
         ],
         Container(
@@ -356,16 +360,21 @@ class _MaintenanceBlockState extends State<MaintenanceBlock> {
           Row(
             mainAxisAlignment: MainAxisAlignment.end,
             children: [
+              //as in the canvas: 34 px, like the remove confirmation
               AppButton(
                 label: intl.actions.cancel,
                 kind: AppButtonKind.outlined,
-                height: 40,
+                height: 34,
+                radius: 10,
+                fontSize: 13,
                 onPressed: () => setState(() => _mode = _Mode.view),
               ),
               const SizedBox(width: 8),
               AppButton(
                 label: intl.panel.save,
-                height: 40,
+                height: 34,
+                radius: 10,
+                fontSize: 13,
                 leading: _busy ? SmallSpinner(color: c.onLilac) : null,
                 onPressed: tooLong || _busy ? null : _save,
               ),
@@ -400,19 +409,22 @@ class _MaintenanceBlockState extends State<MaintenanceBlock> {
         Row(
           mainAxisAlignment: MainAxisAlignment.end,
           children: [
+            //as in the canvas: outlined Cancel, filled red Remove, 34 px
             AppButton(
               label: intl.actions.cancel,
               kind: AppButtonKind.outlined,
-              height: 40,
-              autofocus: true, //so Enter doesn't remove by accident
+              height: 34,
+              radius: 10,
+              fontSize: 13,
               onPressed: () => setState(() => _mode = _Mode.view),
             ),
             const SizedBox(width: 8),
             AppButton(
               label: intl.panel.remove,
-              icon: app.assets.icons.actions.delete,
-              kind: AppButtonKind.softDanger,
-              height: 40,
+              kind: AppButtonKind.danger,
+              height: 34,
+              radius: 10,
+              fontSize: 13,
               onPressed: _busy ? null : _remove,
             ),
           ],

@@ -385,8 +385,8 @@ class AppMessages$notFound$en {
   String get description =>
       'The route or log may have been deleted, or the link is wrong.';
 
-  /// en: 'Go to Routes'
-  String get goToRoutes => 'Go to Routes';
+  /// en: 'Go to map'
+  String get goToMap => 'Go to map';
 
   /// en: 'Open Http logs'
   String get openLogs => 'Open Http logs';
@@ -574,22 +574,22 @@ class AppMessages$form$en {
   /// en: 'General'
   String get stepGeneral => 'General';
 
-  /// en: 'How the route shows up in the console.'
-  String get stepGeneralHint => 'How the route shows up in the console.';
+  /// en: 'How the route shows up in the console'
+  String get stepGeneralHint => 'How the route shows up in the console';
 
   /// en: 'Forwarding'
   String get stepForwarding => 'Forwarding';
 
-  /// en: 'Requests that match the path are sent to the URI.'
+  /// en: 'Requests that match the path are sent to the URI'
   String get stepForwardingHint =>
-      'Requests that match the path are sent to the URI.';
+      'Requests that match the path are sent to the URI';
 
   /// en: 'Path rewrite'
   String get stepRewrite => 'Path rewrite';
 
-  /// en: 'Optional. Swap a prefix of the path before forwarding.'
+  /// en: 'Optional. Swap a prefix of the path before forwarding'
   String get stepRewriteHint =>
-      'Optional. Swap a prefix of the path before forwarding.';
+      'Optional. Swap a prefix of the path before forwarding';
 
   /// en: 'A route with this name already exists'
   String get nameTaken => 'A route with this name already exists';
@@ -1048,9 +1048,6 @@ class AppMessages$map$en {
   /// en: 'Gateway map'
   String get title => 'Gateway map';
 
-  /// en: 'EXPERIMENTAL'
-  String get experimental => 'EXPERIMENTAL';
-
   /// en: 'Redirect only'
   String get legendRedirect => 'Redirect only';
 
@@ -1308,7 +1305,7 @@ extension on AppMessages {
       'notFound.title' => 'This page doesn’t exist',
       'notFound.description' =>
         'The route or log may have been deleted, or the link is wrong.',
-      'notFound.goToRoutes' => 'Go to Routes',
+      'notFound.goToMap' => 'Go to map',
       'notFound.openLogs' => 'Open Http logs',
       'routes.routes' => 'Routes',
       'routes.oneRoute' => '1 route',
@@ -1373,13 +1370,13 @@ extension on AppMessages {
         required String name,
       }) => 'Step ${step} of 3 · ${name}',
       'form.stepGeneral' => 'General',
-      'form.stepGeneralHint' => 'How the route shows up in the console.',
+      'form.stepGeneralHint' => 'How the route shows up in the console',
       'form.stepForwarding' => 'Forwarding',
       'form.stepForwardingHint' =>
-        'Requests that match the path are sent to the URI.',
+        'Requests that match the path are sent to the URI',
       'form.stepRewrite' => 'Path rewrite',
       'form.stepRewriteHint' =>
-        'Optional. Swap a prefix of the path before forwarding.',
+        'Optional. Swap a prefix of the path before forwarding',
       'form.nameTaken' => 'A route with this name already exists',
       'delete.title' => 'Delete this route?',
       'delete.descriptionStart' => 'Requests to',
@@ -1552,7 +1549,6 @@ extension on AppMessages {
       'maintenance.gatewayOn' => 'Gateway in maintenance',
       'maintenance.gatewayOff' => 'Gateway maintenance off',
       'map.title' => 'Gateway map',
-      'map.experimental' => 'EXPERIMENTAL',
       'map.legendRedirect' => 'Redirect only',
       'map.legendMaintenance' => 'Maintenance',
       'map.zoomIn' => 'Zoom in',

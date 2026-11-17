@@ -123,12 +123,20 @@ class GeneralIcons {
 
   SvgAsset get chevronRight => const SvgAsset('<path d="m9 18 6-6-6-6"/>');
 
+  ///the maintenance slide's knob
+  SvgAsset get chevronsRight =>
+      const SvgAsset('<path d="m6 17 5-5-5-5"/><path d="m13 17 5-5-5-5"/>');
+
   SvgAsset get lock => const SvgAsset(
     '<rect x="5" y="10.5" width="14" height="9.5" rx="2"/><path d="M8 10.5V8a4 4 0 0 1 8 0v2.5"/>',
   );
 
   SvgAsset get wrench => const SvgAsset(
     '<path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>',
+  );
+
+  SvgAsset get externalLink => const SvgAsset(
+    '<path d="M15 3h6v6"/><path d="M10 14 21 3"/><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>',
   );
 
   SvgAsset get wifiOff => const SvgAsset(
