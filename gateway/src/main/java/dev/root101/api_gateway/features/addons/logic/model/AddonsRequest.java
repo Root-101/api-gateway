@@ -1,5 +1,6 @@
 package dev.root101.api_gateway.features.addons.logic.model;
 
+import dev.root101.api_gateway.features.health_check.logic.model.HealthCheck;
 import dev.root101.api_gateway.features.maintenance.logic.model.Maintenance;
 import jakarta.validation.Valid;
 
@@ -16,6 +17,9 @@ public class AddonsRequest {
     @Valid
     private Maintenance maintenance;
 
+    @Valid
+    private HealthCheck healthCheck;
+
     private final Set<String> sent = new HashSet<>();
 
     public Maintenance getMaintenance() {
@@ -25,6 +29,15 @@ public class AddonsRequest {
     public void setMaintenance(Maintenance maintenance) {
         this.maintenance = maintenance;
         sent.add(Maintenance.TYPE);
+    }
+
+    public HealthCheck getHealthCheck() {
+        return healthCheck;
+    }
+
+    public void setHealthCheck(HealthCheck healthCheck) {
+        this.healthCheck = healthCheck;
+        sent.add(HealthCheck.TYPE);
     }
 
     /**

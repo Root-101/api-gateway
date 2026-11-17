@@ -9,7 +9,7 @@ The gateway serves two things on the same port (8080 by default):
 - **Proxied traffic** at any path: each request goes to the service of the [route](#how-a-request-is-routed)
   whose path matches.
 - **Admin API** at `/{ADMIN_PATH}` (`/_admin` by default): log in, manage the routes and their
-  [add-ons](#add-ons) (maintenance), search the logs. Always JSON in and out; errors are [Problem Details](#errors). Don't give a route a path
+  [add-ons](#add-ons) (maintenance, health check), search the logs. Always JSON in and out; errors are [Problem Details](#errors). Don't give a route a path
   under it.
 
 The examples use the default `ADMIN_PATH`; change it and every path below changes with it. Keys
@@ -571,11 +571,11 @@ endpoints and its own object; every route comes with all of them in `addons`, an
 at `GET /_admin/addons`:
 
 ```json
-"addons": {"maintenance": null}
+"addons": {"maintenance": null, "health_check": null}
 ```
 
-Every type this version knows is there, `null` when it isn't configured (today only `maintenance`;
-a newer gateway adds keys, so ignore the ones you don't know). Create, edit and create several
+Every type this version knows is there, `null` when it isn't configured (today `maintenance` and
+`health_check`; a newer gateway adds keys, so ignore the ones you don't know). Create, edit and create several
 ignore `addons` in the body (an edit keeps them); [replace every route](#replace-every-route)
 restores them.
 
@@ -583,7 +583,8 @@ restores them.
 GET /_admin/addons
 ```
 
-`200` with the add-ons of the gateway: `{"maintenance": null}` until its maintenance is set.
+`200` with the add-ons of the gateway: `{"maintenance": null}` until its maintenance is set. Only the
+types the gateway can have: the health check is of a route only.
 
 ### Maintenance
 
@@ -663,6 +664,67 @@ Content-Type: application/problem+json
 - The requests are [logged](#what-gets-logged), with their `503`.
 - In memory, as the routes: a change made through another instance is seen after a restart (see
   `DECISIONS.md`, one instance).
+
+### Health check
+
+The gateway calls a path of the route's service on its own, every so often, and keeps the last
+result: to see at a glance which services are up. Routes only (the gateway itself has its own
+[health check](#health)). It never changes the routing: a route whose service is down still gets
+its requests. What you send:
+
+| Field              | Type    | Rules                                       | Description                                              |
+|--------------------|---------|---------------------------------------------|----------------------------------------------------------|
+| `enabled`          | boolean | Required                                    | `true`: called every `interval_seconds`; `false`: only when run by hand |
+| `path`             | string  | Required, starts with `/`, no spaces, up to 2000 | Added to the `uri` of the route, query included: `/health`, `/status?full=1` |
+| `interval_seconds` | integer | Required, from 10 to 3600                   | How often it is called while `enabled`                   |
+
+What comes back also has a read-only `state` (ignored when sent), the last result, its fields
+`null` until the first call:
+
+| Field        | Type    | Description                                                         |
+|--------------|---------|---------------------------------------------------------------------|
+| `checked_at` | string  | When it was called                                                  |
+| `up`         | boolean | The service answered a `2xx`                                        |
+| `status`     | integer | The status it answered, `null` when it didn't answer (can't be reached, or no answer in 5 s) |
+| `millis`     | integer | How long the call took                                              |
+
+```json
+{
+  "enabled": true,
+  "path": "/health",
+  "interval_seconds": 30,
+  "state": {"checked_at": "2026-11-17T20:10:04.512331Z", "up": true, "status": 200, "millis": 12}
+}
+```
+
+```http
+PUT    /_admin/routes/{id}/addons/health-check
+DELETE /_admin/routes/{id}/addons/health-check
+POST   /_admin/routes/{id}/addons/health-check/enable
+POST   /_admin/routes/{id}/addons/health-check/disable
+POST   /_admin/routes/{id}/addons/health-check/run
+```
+
+- `PUT` creates or replaces it, with the object above: `200` with it as saved, in use right away.
+  The last result is kept until the next call. `422` with the broken fields (`enabled`, `path`,
+  `interval_seconds`).
+- `DELETE` removes it, back to `null`: `204`, also when there was none.
+- `enable` and `disable` turn it on or off without a body, keeping the rest: `200` with it.
+- `run` calls it now, on or off, and answers `200` with the new result (the console's "Run now"). It
+  waits for the call: up to 5 s.
+- `enable`, `disable` and `run`: `404 The route has no health check configured: …` when it isn't set.
+  All of them: `404` when the route doesn't exist, `400` when the id isn't a UUID.
+
+How it calls the service:
+
+- `GET {uri}{path}`, without a body or the client's headers, its answer thrown away. The host is
+  always the route's: a path like `//other-host` stays a path. Redirects aren't followed.
+- A `2xx` is up; any other status, or no answer in 5 s, is down.
+- A scheduler looks every 5 s for the ones due, so a call can come up to 5 s late. One call per
+  route at a time; after a restart the overdue ones are called right away.
+- Only the result is written (the add-on's `state`), never what the admin set nor its
+  `updated_at`. Not in the [logs](#what-gets-logged): it isn't proxied traffic.
+- Each instance calls them on its own (see `DECISIONS.md`, one instance).
 
 ## Search the logs
 

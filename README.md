@@ -184,6 +184,8 @@ dates in UTC, and every error a Problem Details (RFC 9457), with its `violations
 | `PUT`    | `/_admin/routes/{id}/addons/maintenance` | Sets the maintenance of a route (`503` to its clients while on) |
 | `DELETE` | `/_admin/routes/{id}/addons/maintenance` | Removes it: `204`                                        |
 | `POST`   | `/_admin/routes/{id}/addons/maintenance/enable` | Turns it on (`/disable`: off), keeping the rest   |
+| `PUT`    | `/_admin/routes/{id}/addons/health-check` | Sets the health check of a route (`DELETE`: removes it) |
+| `POST`   | `/_admin/routes/{id}/addons/health-check/run` | Calls it now (`/enable`, `/disable`: on, off) |
 | `GET`    | `/_admin/addons`        | The add-ons of the whole gateway: `{"maintenance": …}`              |
 | `PUT`    | `/_admin/addons/maintenance` | Sets the maintenance of the whole gateway                      |
 | `POST`   | `/_admin/addons/maintenance/enable` | Turns it on (`/disable`: off)                           |

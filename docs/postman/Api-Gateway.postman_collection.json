@@ -1277,6 +1277,213 @@
           ]
         },
         {
+          "name": "health check - set",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{gateway-url}}/{{gateway-admin-path}}/routes/{{route-id}}/addons/health-check",
+              "host": [
+                "{{gateway-url}}"
+              ],
+              "path": [
+                "{{gateway-admin-path}}",
+                "routes",
+                "{{route-id}}",
+                "addons",
+                "health-check"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"enabled\": false,\n    \"path\": \"/\",\n    \"interval_seconds\": 60\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 200', () => pm.response.to.have.status(200));",
+                  "pm.test('returns the saved health check', () => {",
+                  "    const r = pm.response.json();",
+                  "    pm.expect(r.enabled).to.eql(false);",
+                  "    pm.expect(r.path).to.eql('/');",
+                  "    pm.expect(r.interval_seconds).to.eql(60);",
+                  "    pm.expect(r.state).to.be.an('object');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "health check - run",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{gateway-url}}/{{gateway-admin-path}}/routes/{{route-id}}/addons/health-check/run",
+              "host": [
+                "{{gateway-url}}"
+              ],
+              "path": [
+                "{{gateway-admin-path}}",
+                "routes",
+                "{{route-id}}",
+                "addons",
+                "health-check",
+                "run"
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 200', () => pm.response.to.have.status(200));",
+                  "pm.test('has a result', () => {",
+                  "    const s = pm.response.json().state;",
+                  "    pm.expect(s.checked_at).to.be.a('string');",
+                  "    pm.expect(s.up).to.be.a('boolean');",
+                  "    pm.expect(s.millis).to.be.a('number');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "health check - invalid",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{gateway-url}}/{{gateway-admin-path}}/routes/{{route-id}}/addons/health-check",
+              "host": [
+                "{{gateway-url}}"
+              ],
+              "path": [
+                "{{gateway-admin-path}}",
+                "routes",
+                "{{route-id}}",
+                "addons",
+                "health-check"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"enabled\": true,\n    \"path\": \"health\",\n    \"interval_seconds\": 5\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 422', () => pm.response.to.have.status(422));",
+                  "pm.test('names the broken fields', () => {",
+                  "    const fields = pm.response.json().violations.map(v => v.fieldName);",
+                  "    pm.expect(fields).to.include.members(['path', 'interval_seconds']);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "health check - delete",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{gateway-url}}/{{gateway-admin-path}}/routes/{{route-id}}/addons/health-check",
+              "host": [
+                "{{gateway-url}}"
+              ],
+              "path": [
+                "{{gateway-admin-path}}",
+                "routes",
+                "{{route-id}}",
+                "addons",
+                "health-check"
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 204', () => pm.response.to.have.status(204));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "health check - run deleted",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{gateway-url}}/{{gateway-admin-path}}/routes/{{route-id}}/addons/health-check/run",
+              "host": [
+                "{{gateway-url}}"
+              ],
+              "path": [
+                "{{gateway-admin-path}}",
+                "routes",
+                "{{route-id}}",
+                "addons",
+                "health-check",
+                "run"
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 404', () => pm.response.to.have.status(404));"
+                ]
+              }
+            }
+          ]
+        },
+        {
           "name": "delete",
           "request": {
             "method": "DELETE",

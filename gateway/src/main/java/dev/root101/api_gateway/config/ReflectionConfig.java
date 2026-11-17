@@ -7,6 +7,10 @@ import dev.root101.api_gateway.features.http_logs.logic.model.HttpLogResponse;
 import dev.root101.api_gateway.features.http_logs.logic.model.HttpLogSearchResponse;
 import dev.root101.api_gateway.features.addons.logic.model.Addons;
 import dev.root101.api_gateway.features.addons.logic.model.AddonsRequest;
+import dev.root101.api_gateway.features.addons.logic.model.GatewayAddons;
+import dev.root101.api_gateway.features.health_check.logic.model.HealthCheck;
+import dev.root101.api_gateway.features.health_check.logic.model.HealthCheckResponse;
+import dev.root101.api_gateway.features.health_check.logic.model.HealthCheckState;
 import dev.root101.api_gateway.features.maintenance.logic.model.Maintenance;
 import dev.root101.api_gateway.features.maintenance.logic.model.MaintenanceResponse;
 import dev.root101.api_gateway.features.maintenance.logic.model.MaintenanceState;
@@ -29,9 +33,10 @@ import java.time.OffsetDateTime;
         RouteRules.class,
         OffsetDateTime.class,
         //--------- ADD-ONS ---------\\
-        Addons.class, AddonsRequest.class,
+        Addons.class, GatewayAddons.class, AddonsRequest.class,
         //also written to and read from the db as json
         Maintenance.class, MaintenanceState.class, MaintenanceResponse.class,
+        HealthCheck.class, HealthCheckState.class, HealthCheckResponse.class,
         //--------- AUTH ---------\\
         LoginRequest.class, LoginResponse.class,
         //--------- HTTP LOGS ---------\\

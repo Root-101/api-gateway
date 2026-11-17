@@ -1,7 +1,7 @@
 package dev.root101.api_gateway.features.addons.rest;
 
 import dev.root101.api_gateway.config.I18n;
-import dev.root101.api_gateway.features.addons.logic.model.Addons;
+import dev.root101.api_gateway.features.addons.logic.model.GatewayAddons;
 import dev.root101.api_gateway.features.addons.logic.usecase.AddonsUseCase;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -27,7 +27,7 @@ public class AddonsController {
      * @return Every add-on type of the gateway, `null` when not configured
      */
     @GetMapping
-    public Mono<Addons> getAddons(ServerWebExchange exchange) {
+    public Mono<GatewayAddons> getAddons(ServerWebExchange exchange) {
         return Mono.fromSupplier(() -> addonsUseCase.ofGateway(I18n.locale(exchange)));
     }
 }

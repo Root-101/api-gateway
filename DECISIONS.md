@@ -191,3 +191,19 @@ record with `@Valid`).
 - Deleting a route deletes its add-ons (`ON DELETE CASCADE`). They are read into memory at startup
   and after each change: a proxied request never waits for the database. Counters (rate limit) stay
   in memory too, never a write per request.
+
+## 18. The health check calls only the route's own host
+
+The health check add-on is the first time the gateway calls a service on its own, not on behalf of
+a client. What it can reach is limited to what the admin could already reach through a route:
+
+- The url is `{uri of the route}{path}`, built as text: the host is always the route's, a path like
+  `//other-host` or `/@other-host` stays a path. The path must start with `/` and have no spaces.
+- Redirects aren't followed, the body is thrown away, and only the status and the time are kept:
+  it can't be used to read another service's answers.
+- A plain `GET` with no headers of a client and no credentials; a call ends after 5 s, under the
+  shortest interval (10 s), and one route never has two calls at a time.
+- The result goes to the add-on's `state` with an `UPDATE` of that column only (see 17): a check
+  never overwrites what the admin set, and a check of an add-on deleted meanwhile writes nothing.
+- It never changes the routing. Taking a route out when it is down would be a new decision: a
+  flapping service would come and go for every client.

@@ -25,6 +25,7 @@ The gateway has two faces on the same port:
 | Audit                 | Every request is logged, also the admin requests the security layer rejects (401, 429)                                   |
 | CORS                  | Every path (admin API and proxied routes), without credentials; replaces the services' own CORS headers                  |
 | Errors                | A `500` says only `Internal server error`; the detail stays in the server log                                            |
+| Health check add-on   | The gateway calls `GET {uri of the route}{path}` on its own: the route's host only, no redirects, no client headers, body thrown away, 5 s max (decision 18 in `DECISIONS.md`) |
 | Defaults              | The gateway warns in its log when it runs with the default admin or database password                                    |
 | Container             | The image runs as a non-root user                                                                                        |
 | Console               | A strict Content Security Policy, `X-Frame-Options: DENY`; it keeps only the token (with *Remember me*), never the password |
