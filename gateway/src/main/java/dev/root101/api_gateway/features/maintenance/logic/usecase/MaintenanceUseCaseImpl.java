@@ -2,8 +2,8 @@ package dev.root101.api_gateway.features.maintenance.logic.usecase;
 
 import dev.root101.api_gateway.features.maintenance.logic.model.Maintenance;
 import dev.root101.api_gateway.features.settings.data.entity.SettingEntity;
+import dev.root101.api_gateway.features.settings.data.entity.SettingValue;
 import dev.root101.api_gateway.features.settings.data.repo.SettingRepo;
-import io.r2dbc.postgresql.codec.Json;
 import org.springframework.beans.factory.SmartInitializingSingleton;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
@@ -81,7 +81,7 @@ class MaintenanceUseCaseImpl implements MaintenanceUseCase, SmartInitializingSin
     }
 
     private Mono<SettingEntity> write(SettingEntity setting, Maintenance maintenance) {
-        setting.setValue(Json.of(objectMapper.writeValueAsString(maintenance)));
+        setting.setValue(new SettingValue(objectMapper.writeValueAsString(maintenance)));
         setting.setUpdatedAt(OffsetDateTime.now().truncatedTo(ChronoUnit.MICROS));
         return settingRepo.save(setting);
     }
@@ -94,7 +94,7 @@ class MaintenanceUseCaseImpl implements MaintenanceUseCase, SmartInitializingSin
                     Maintenance global = null;
                     Map<String, Maintenance> routes = new HashMap<>();
                     for (SettingEntity setting : settings) {
-                        Maintenance maintenance = objectMapper.readValue(setting.getValue().asString(), Maintenance.class);
+                        Maintenance maintenance = objectMapper.readValue(setting.getValue().json(), Maintenance.class);
                         if (setting.getRouteId() == null) {
                             global = maintenance;
                         } else {

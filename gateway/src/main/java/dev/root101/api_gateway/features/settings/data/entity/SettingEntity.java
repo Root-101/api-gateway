@@ -1,6 +1,6 @@
 package dev.root101.api_gateway.features.settings.data.entity;
 
-import io.r2dbc.postgresql.codec.Json;
+
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -35,7 +35,7 @@ public class SettingEntity {
     private String key;
 
     @Column("value")
-    private Json value;
+    private SettingValue value;
 
     @Column("updated_at")
     private OffsetDateTime updatedAt;
