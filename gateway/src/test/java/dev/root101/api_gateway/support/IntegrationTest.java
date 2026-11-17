@@ -132,7 +132,7 @@ public abstract class IntegrationTest {
      * Route `/{prefix}-{id}/**` → fake upstream, no rewrite
      */
     protected static RouteConfigRequest route(String name, String pathPrefix) {
-        return new RouteConfigRequest(name, "/" + pathPrefix + "/**", upstreamUrl(), null, null);
+        return new RouteConfigRequest(name, "/" + pathPrefix + "/**", upstreamUrl(), null, null, null);
     }
 
     /**
@@ -141,7 +141,7 @@ public abstract class IntegrationTest {
     protected static RouteConfigRequest rewriteRoute(String name, String pathPrefix) {
         return new RouteConfigRequest(
                 name, "/" + pathPrefix + "/**", upstreamUrl(),
-                new RewritePathModel("/" + pathPrefix + "/(?<segment>.*)", "/${segment}"), null
+                new RewritePathModel("/" + pathPrefix + "/(?<segment>.*)", "/${segment}"), null, null
         );
     }
 

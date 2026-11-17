@@ -1,5 +1,6 @@
 package dev.root101.api_gateway.features.routes.logic.usecase;
 
+import dev.root101.api_gateway.features.maintenance.logic.model.Maintenance;
 import dev.root101.api_gateway.features.routes.data.entity.RouteEntity;
 import dev.root101.api_gateway.features.routes.logic.model.RouteConfigRequest;
 import dev.root101.api_gateway.features.routes.logic.model.RouteConfigResponse;
@@ -56,6 +57,13 @@ public interface RouteUseCase {
      * @param routeId The id of the route to delete
      */
     Mono<Void> deleteRoute(String routeId);
+
+    /**
+     * Saves the maintenance of a route, in use right away: `400` if the id isn't a UUID, `404` if there is no route
+     *
+     * @return The saved maintenance
+     */
+    Mono<Maintenance> setMaintenance(String routeId, Maintenance maintenance);
 
     /**
      * This can also be achieved with:

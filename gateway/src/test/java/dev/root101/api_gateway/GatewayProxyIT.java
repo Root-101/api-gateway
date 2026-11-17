@@ -94,7 +94,7 @@ class GatewayProxyIT extends IntegrationTest {
         int closedPort = closed.port();
         closed.disposeNow();
         createRoute(new dev.root101.api_gateway.features.routes.logic.model.RouteConfigRequest(
-                "down-" + id, "/down-" + id + "/**", "http://localhost:" + closedPort, null, null));
+                "down-" + id, "/down-" + id + "/**", "http://localhost:" + closedPort, null, null, null));
         createRoute(route("slow-" + id, "slow-" + id));
 
         webTestClient.get().uri("/down-%s/x".formatted(id)).exchange()

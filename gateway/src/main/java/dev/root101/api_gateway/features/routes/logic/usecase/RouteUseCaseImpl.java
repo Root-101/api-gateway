@@ -1,5 +1,7 @@
 package dev.root101.api_gateway.features.routes.logic.usecase;
 
+import dev.root101.api_gateway.features.maintenance.logic.model.Maintenance;
+import dev.root101.api_gateway.features.maintenance.logic.usecase.MaintenanceUseCase;
 import dev.root101.api_gateway.features.routes.data.entity.RouteEntity;
 import dev.root101.api_gateway.features.routes.data.repo.RouteRepo;
 import dev.root101.api_gateway.features.routes.logic.model.RewritePathModel;
@@ -24,6 +26,7 @@ import java.time.Duration;
 import java.time.OffsetDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -47,6 +50,8 @@ class RouteUseCaseImpl implements RouteUseCase, SmartInitializingSingleton {
 
     private final TransactionalOperator tx;
 
+    private final MaintenanceUseCase maintenanceUseCase;
+
     private final Map<String, RouteEntity> cache = new ConcurrentHashMap<>();
 
     @Autowired
@@ -54,12 +59,14 @@ class RouteUseCaseImpl implements RouteUseCase, SmartInitializingSingleton {
             RouteDefinitionWriter routeDefinitionWriter,
             RouteUpdater routeUpdater,
             RouteRepo routeRepo,
-            TransactionalOperator tx
+            TransactionalOperator tx,
+            MaintenanceUseCase maintenanceUseCase
     ) {
         this.routeDefinitionWriter = routeDefinitionWriter;
         this.routeUpdater = routeUpdater;
         this.routeRepo = routeRepo;
         this.tx = tx;
+        this.maintenanceUseCase = maintenanceUseCase;
     }
 
     /**
@@ -117,7 +124,8 @@ class RouteUseCaseImpl implements RouteUseCase, SmartInitializingSingleton {
 
     /**
      * Replace every route with the given ones, all or nothing. A route whose name already exists keeps its id
-     * (and its creation date), so its logs still find it; the others get new ids.
+     * (and its creation date), so its logs still find it; the others get new ids. The maintenance of a route is
+     * saved when it comes (a backup), and kept when it doesn't.
      *
      * @param requests The routes that will exist after the call
      * @return The routes, as saved
@@ -141,10 +149,34 @@ class RouteUseCaseImpl implements RouteUseCase, SmartInitializingSingleton {
                                     return routeRepo.deleteAll(removed)
                                             .thenMany(routeRepo.saveAll(entities))
                                             .collectList()
+                                            .flatMap(saved -> saveMaintenance(saved, requests).thenReturn(saved))
                                             .as(tx::transactional)
-                                            .flatMap(saved -> apply(saved, removed));
+                                            .flatMap(saved -> maintenanceUseCase.reload()
+                                                    .then(Mono.defer(() -> apply(saved, removed))));
                                 })
                 );
+    }
+
+    /**
+     * The maintenance that comes with each route (by name), in the transaction of the caller
+     */
+    private Mono<Void> saveMaintenance(List<RouteEntity> saved, List<RouteConfigRequest> requests) {
+        Map<String, Maintenance> byName = new HashMap<>();
+        for (RouteConfigRequest request : requests) {
+            if (request.getMaintenance() != null) byName.put(request.getName(), request.getMaintenance());
+        }
+        return Flux.fromIterable(saved)
+                .filter(entity -> byName.containsKey(entity.getName()))
+                .concatMap(entity -> maintenanceUseCase.save(entity.getRouteId(), byName.get(entity.getName())))
+                .then();
+    }
+
+    @Override
+    public Mono<Maintenance> setMaintenance(String routeId, Maintenance maintenance) {
+        return findEntity(routeId)
+                .flatMap(route -> maintenanceUseCase.save(route.getRouteId(), maintenance))
+                .then(maintenanceUseCase.reload())
+                .thenReturn(maintenance);
     }
 
     /**
@@ -261,7 +293,9 @@ class RouteUseCaseImpl implements RouteUseCase, SmartInitializingSingleton {
                                     ).onErrorResume(org.springframework.cloud.gateway.support.NotFoundException.class, e -> Mono.empty())
                             );
                 })
-                .then(Mono.defer(routeUpdater::updateRoutes)); // Update route after all changes
+                .then(Mono.defer(routeUpdater::updateRoutes)) // Update route after all changes
+                //its maintenance was deleted with it in db (cascade)
+                .then(maintenanceUseCase.reload());
     }
 
     /**
@@ -318,7 +352,8 @@ class RouteUseCaseImpl implements RouteUseCase, SmartInitializingSingleton {
                 entity.getUri(),
                 entity.getRewritePathFrom() != null && entity.getRewritePathTo() != null ? new RewritePathModel(entity.getRewritePathFrom(), entity.getRewritePathTo()) : null,
                 entity.getDescription(),
-                entity.getCreatedAt()
+                entity.getCreatedAt(),
+                maintenanceUseCase.ofRoute(entity.getRouteId().toString())
         );
     }
 }

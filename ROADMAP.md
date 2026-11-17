@@ -5,7 +5,7 @@ done is in `CHANGELOG.md`.
 
 Rules:
 
-- Every change is recorded in `CHANGELOG.md`, under the in-progress version (currently `6.0.1`).
+- Every change is recorded in `CHANGELOG.md`, under the in-progress version (currently `6.1.0`).
 - Everything in the project is written in English (code, comments, docs, changelog, roadmap).
 - Console: keep its base (Cubit + DI with Get + go_router + Dio). Changes in the contract of
   `/{ADMIN_PATH}/auth|routes|http-log` must be applied in both folders.
@@ -15,13 +15,10 @@ Rules:
 ## Gateway features
 
 After 6.0.0, in priority order. Impact and effort are estimates from how the project is built
-today. Every new per-route option means a migration, a field in the admin API, the console form,
-and GraalVM reflection hints for the predicates and filters it uses.
+today. Every new option of the gateway or of a route is a key of the `setting` table (no
+migration, see decision 17 in `DECISIONS.md`), a field in the admin API, the console form, and
+GraalVM reflection hints for its value and the predicates and filters it uses.
 
-0. [ ] **Maintenance mode.** The whole gateway, or a single route, can be put in maintenance:
-   every request to it gets an instant answer instead of reaching the service. For maintenance
-   windows, or when a service has to be taken out for any reason. *How to do it is still to be
-   discussed.*
 1. [ ] **Rate limiting per route.** Requests per IP (or API key) per route, `429` with
    `Retry-After`; protects the services from abuse and spikes. Impact: high, the first thing
    expected from a gateway. Effort: medium. Migration (limit and window per route), API, console
@@ -62,6 +59,12 @@ and GraalVM reflection hints for the predicates and filters it uses.
     `DECISIONS.md`.
 
 ## Possible improvements
+
+- [ ] Gateway: **HTML maintenance page.** Today a route in maintenance answers a Problem Details
+  (JSON) to everyone. A browser (`Accept: text/html`) could get a page instead: first one built-in
+  template (title, message, return time, in the request's language, no template engine), later the
+  admin's own HTML as another key of `setting` (served as is to the end users: review it as a
+  security change).
 
 - [ ] Gateway: **HTTP/2 and gRPC** support, for a later version (not 6.0.0). gRPC needs HTTP/2 end
   to end (trailers, multiplexed streams): enable it on the gateway server (`server.http2.enabled`)

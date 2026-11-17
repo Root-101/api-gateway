@@ -43,8 +43,8 @@ class ValidCoverageTest {
                 }
             }
         }
-        //the scan found the controllers (login + the 5 route writes)
-        assertThat(bodies).hasSize(6);
+        //the scan found the controllers (login, the 5 route writes and the 2 maintenance ones)
+        assertThat(bodies).hasSize(8);
         assertThat(missing).isEmpty();
     }
 }

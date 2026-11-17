@@ -137,7 +137,7 @@ class GlobalExceptionHandlerTest {
         //the validator as ServiceConfig builds it, and the error of a `@Valid` body
         LocalValidatorFactoryBean validator = new ServiceConfig().defaultValidator(MESSAGES);
         validator.afterPropertiesSet();
-        RouteConfigRequest route = new RouteConfigRequest("", "/a/**", "http://a" + "a".repeat(255), null, null);
+        RouteConfigRequest route = new RouteConfigRequest("", "/a/**", "http://a" + "a".repeat(255), null, null, null);
         BeanPropertyBindingResult result = new BeanPropertyBindingResult(route, "route");
         validator.validate(route, result);
         WebExchangeBindException error = new WebExchangeBindException(new MethodParameter(Object.class.getMethod("equals", Object.class), 0), result);

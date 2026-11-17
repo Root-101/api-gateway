@@ -160,9 +160,22 @@ cookie-authenticated service through the gateway. A CORS policy per route is a
 
 ## 16. Rejected admin requests are logged
 
-The HTTP logs filter runs before the security chain (order `-101`, security is `-100`), and answers
-errors itself so their status is known when the log is saved.
+The HTTP logs filter runs before the security chain (order `-101`, security is `-100`). It saves the
+log once the request ends, and the errors already have their status by then: the
+`ErrorWebExceptionHandler` sets it first.
 
 After it, the 401 of a missing or wrong credential and the 429 of the lockout ended the request
 before the filter ran: guessing the password over Basic left no trace.
 
+## 17. Settings in one table, a row per feature
+
+The maintenance of the gateway and of each route live in `setting`: `route_id` (null = the whole
+gateway), `key` (`maintenance`) and `value` (`jsonb`), unique per route and key. The next options
+(rate limiting...) are new keys of the same table.
+
+A column per feature in `route` would need a migration for each one, and the gateway's own values
+would need another table. One `jsonb` column with every feature inside would make two changes to
+different features of the same route overwrite each other. Here each feature is its own row; the
+code validates the shape of each value (a record with `@Valid`), and deleting a route deletes its
+settings (`ON DELETE CASCADE`). They are read into memory at startup and after each change: a
+proxied request never waits for the database.

@@ -1,5 +1,6 @@
 package dev.root101.api_gateway.features.routes.rest;
 
+import dev.root101.api_gateway.features.maintenance.logic.model.Maintenance;
 import dev.root101.api_gateway.features.routes.logic.model.RouteConfigRequest;
 import dev.root101.api_gateway.features.routes.logic.model.RouteConfigResponse;
 import dev.root101.api_gateway.features.routes.logic.usecase.RouteUseCase;
@@ -107,6 +108,18 @@ public class RoutesController {
     @PutMapping("/{route-id}")
     public Mono<RouteConfigResponse> editRoute(@PathVariable("route-id") String routeId, @Valid @RequestBody RouteConfigRequest routeDefinition) {
         return routeUseCase.editRoute(routeId, routeDefinition);
+    }
+
+    /**
+     * Puts a route in maintenance (`enabled: true`) or takes it out (`enabled: false`), right away
+     *
+     * @param routeId     The id of the route
+     * @param maintenance Its maintenance
+     * @return The saved maintenance
+     */
+    @PutMapping("/{route-id}/maintenance")
+    public Mono<Maintenance> setMaintenance(@PathVariable("route-id") String routeId, @Valid @RequestBody Maintenance maintenance) {
+        return routeUseCase.setMaintenance(routeId, maintenance);
     }
 
     /**
