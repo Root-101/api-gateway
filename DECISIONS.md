@@ -207,3 +207,24 @@ a client. What it can reach is limited to what the admin could already reach thr
   never overwrites what the admin set, and a check of an add-on deleted meanwhile writes nothing.
 - It never changes the routing. Taking a route out when it is down would be a new decision: a
   flapping service would come and go for every client.
+
+## 19. Rate limit per client IP, the gateway's and the route's together
+
+The rate limit add-on counts per client IP (the one of the logs and the lockout, `TRUSTED_PROXIES`),
+with a token bucket in memory: `limit` per `period`, up to `burst` at once.
+
+- The gateway's counts each IP on every route together, not one total for everyone: with one total,
+  a single abusive client would use it up and every other client would get `429`s. A cap on the
+  total load would be another add-on (concurrency), not this one.
+- With both, both apply (the gateway's first): not "the gateway wins" as in maintenance. The
+  gateway's stops a client that spreads its requests over many routes, a route's protects a weaker
+  service; neither replaces the other.
+- Only the IP for now: an API key belongs to the authentication towards the services (roadmap).
+  A header chosen by the admin would be faked by the client unless the service checks it.
+- Only `Retry-After` on the `429`, no `RateLimit-*` headers on every answer: they are still an IETF
+  draft and, with two limits, which one to show is a choice of its own. They can be added later
+  without breaking anyone.
+- In memory, never a write per request, and every count starts again on any change (the buckets of
+  the old limits are dropped whole): simpler than moving each count to a new limit. With several
+  instances each counts on its own; Redis then (see 6). A bucket full again is forgotten every
+  minute, so the memory follows the clients of the last minute.

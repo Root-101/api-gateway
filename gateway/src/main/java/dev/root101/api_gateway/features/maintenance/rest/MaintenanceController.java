@@ -35,6 +35,15 @@ public class MaintenanceController {
     }
 
     /**
+     * Removes the maintenance of the gateway: back to `null`
+     */
+    @DeleteMapping("/addons/maintenance")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public Mono<Void> deleteGateway() {
+        return maintenanceUseCase.deleteGateway();
+    }
+
+    /**
      * Turns the maintenance of the gateway on: `404` if it isn't configured
      */
     @PostMapping("/addons/maintenance/enable")

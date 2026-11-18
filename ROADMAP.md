@@ -20,11 +20,14 @@ today. An option of a route or of the gateway is an add-on: a new `type` of the 
 `addons`, its block in the console's route panel, and GraalVM reflection hints for its records and
 the predicates and filters it uses.
 
-1. [ ] **Rate limiting per route.** Requests per IP (or API key) per route, `429` with
+1. [x] **Rate limiting per route.** Requests per IP (or API key) per route, `429` with
    `Retry-After`; protects the services from abuse and spikes. Impact: high, the first thing
    expected from a gateway. Effort: medium. An add-on (`rate_limit`: limit, per second/minute/hour,
    burst), its endpoints, its block in the route panel, native hints. Counters in memory are enough
-   for one instance; Redis if there are ever several.
+   for one instance; Redis if there are ever several. Gateway done in 6.1.0, per route and for the
+   whole gateway (per IP on every route), decision 19 in `DECISIONS.md`.
+   - [x] Console: its block in the route panel and in the gateway's add-ons (`docs/api.md`,
+     "Rate limit"). Done in 6.1.0.
 2. [ ] **Authentication towards the services (JWT / API key).** The gateway validates the token
    before passing the request and forwards the identity in headers (`X-User-Id`), so the services
    stop validating it each on their own. Impact: high. Effort: high. Design (issuer, JWKS, keys),

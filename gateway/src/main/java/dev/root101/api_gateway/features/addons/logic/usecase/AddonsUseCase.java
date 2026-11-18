@@ -7,6 +7,8 @@ import dev.root101.api_gateway.features.health_check.logic.model.HealthCheck;
 import dev.root101.api_gateway.features.health_check.logic.usecase.HealthCheckUseCase;
 import dev.root101.api_gateway.features.maintenance.logic.model.Maintenance;
 import dev.root101.api_gateway.features.maintenance.logic.usecase.MaintenanceUseCase;
+import dev.root101.api_gateway.features.rate_limit.logic.model.RateLimit;
+import dev.root101.api_gateway.features.rate_limit.logic.usecase.RateLimitUseCase;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 
@@ -22,24 +24,26 @@ public class AddonsUseCase {
 
     private final MaintenanceUseCase maintenanceUseCase;
     private final HealthCheckUseCase healthCheckUseCase;
+    private final RateLimitUseCase rateLimitUseCase;
 
-    public AddonsUseCase(MaintenanceUseCase maintenanceUseCase, HealthCheckUseCase healthCheckUseCase) {
+    public AddonsUseCase(MaintenanceUseCase maintenanceUseCase, HealthCheckUseCase healthCheckUseCase, RateLimitUseCase rateLimitUseCase) {
         this.maintenanceUseCase = maintenanceUseCase;
         this.healthCheckUseCase = healthCheckUseCase;
+        this.rateLimitUseCase = rateLimitUseCase;
     }
 
     /**
      * The add-ons of the gateway. No db request.
      */
     public GatewayAddons ofGateway(Locale locale) {
-        return new GatewayAddons(maintenanceUseCase.ofGateway(locale));
+        return new GatewayAddons(maintenanceUseCase.ofGateway(locale), rateLimitUseCase.ofGateway());
     }
 
     /**
      * The add-ons of a route. No db request.
      */
     public Addons ofRoute(String routeId, Locale locale) {
-        return new Addons(maintenanceUseCase.ofRoute(routeId, locale), healthCheckUseCase.ofRoute(routeId));
+        return new Addons(maintenanceUseCase.ofRoute(routeId, locale), healthCheckUseCase.ofRoute(routeId), rateLimitUseCase.ofRoute(routeId));
     }
 
     /**
@@ -50,13 +54,14 @@ public class AddonsUseCase {
         if (addons == null) return Mono.empty();
         Mono<Void> maintenance = addons.sent(Maintenance.TYPE) ? maintenanceUseCase.save(routeId, addons.getMaintenance()) : Mono.empty();
         Mono<Void> healthCheck = addons.sent(HealthCheck.TYPE) ? healthCheckUseCase.save(routeId, addons.getHealthCheck()) : Mono.empty();
-        return maintenance.then(healthCheck);
+        Mono<Void> rateLimit = addons.sent(RateLimit.TYPE) ? rateLimitUseCase.save(routeId, addons.getRateLimit()) : Mono.empty();
+        return maintenance.then(healthCheck).then(rateLimit);
     }
 
     /**
      * Reads every add-on from db into use
      */
     public Mono<Void> reload() {
-        return maintenanceUseCase.reload().then(healthCheckUseCase.reload());
+        return maintenanceUseCase.reload().then(healthCheckUseCase.reload()).then(rateLimitUseCase.reload());
     }
 }

@@ -186,9 +186,12 @@ dates in UTC, and every error a Problem Details (RFC 9457), with its `violations
 | `POST`   | `/_admin/routes/{id}/addons/maintenance/enable` | Turns it on (`/disable`: off), keeping the rest   |
 | `PUT`    | `/_admin/routes/{id}/addons/health-check` | Sets the health check of a route (`DELETE`: removes it) |
 | `POST`   | `/_admin/routes/{id}/addons/health-check/run` | Calls it now (`/enable`, `/disable`: on, off) |
-| `GET`    | `/_admin/addons`        | The add-ons of the whole gateway: `{"maintenance": …}`              |
-| `PUT`    | `/_admin/addons/maintenance` | Sets the maintenance of the whole gateway                      |
+| `PUT`    | `/_admin/routes/{id}/addons/rate-limit` | Sets the rate limit of a route (`429` past it; `DELETE`: removes it) |
+| `POST`   | `/_admin/routes/{id}/addons/rate-limit/enable` | Turns it on (`/disable`: off), keeping the rest |
+| `GET`    | `/_admin/addons`        | The add-ons of the whole gateway: `{"maintenance": …, "rate_limit": …}` |
+| `PUT`    | `/_admin/addons/maintenance` | Sets the maintenance of the whole gateway (`DELETE`: removes it) |
 | `POST`   | `/_admin/addons/maintenance/enable` | Turns it on (`/disable`: off)                           |
+| `PUT`    | `/_admin/addons/rate-limit` | Sets the rate limit of the whole gateway, per IP on every route (`/enable`, `/disable`; `DELETE`: removes it) |
 | `GET`    | `/_admin/http-logs`     | Searches the HTTP logs: page and filters in the query               |
 
 Every call, with real requests and responses and its errors: [`docs/api.md`](docs/api.md). The

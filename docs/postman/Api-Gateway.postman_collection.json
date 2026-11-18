@@ -1484,6 +1484,212 @@
           ]
         },
         {
+          "name": "rate limit - set",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{gateway-url}}/{{gateway-admin-path}}/routes/{{route-id}}/addons/rate-limit",
+              "host": [
+                "{{gateway-url}}"
+              ],
+              "path": [
+                "{{gateway-admin-path}}",
+                "routes",
+                "{{route-id}}",
+                "addons",
+                "rate-limit"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"enabled\": true,\n    \"limit\": 100,\n    \"period\": \"minute\",\n    \"burst\": 20\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 200', () => pm.response.to.have.status(200));",
+                  "pm.test('returns the saved rate limit', () => {",
+                  "    const r = pm.response.json();",
+                  "    pm.expect(r.enabled).to.eql(true);",
+                  "    pm.expect(r.limit).to.eql(100);",
+                  "    pm.expect(r.period).to.eql('minute');",
+                  "    pm.expect(r.burst).to.eql(20);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "rate limit - disable",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{gateway-url}}/{{gateway-admin-path}}/routes/{{route-id}}/addons/rate-limit/disable",
+              "host": [
+                "{{gateway-url}}"
+              ],
+              "path": [
+                "{{gateway-admin-path}}",
+                "routes",
+                "{{route-id}}",
+                "addons",
+                "rate-limit",
+                "disable"
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 200', () => pm.response.to.have.status(200));",
+                  "pm.test('off, the rest kept', () => {",
+                  "    const r = pm.response.json();",
+                  "    pm.expect(r.enabled).to.eql(false);",
+                  "    pm.expect(r.limit).to.eql(100);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "rate limit - invalid",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{gateway-url}}/{{gateway-admin-path}}/routes/{{route-id}}/addons/rate-limit",
+              "host": [
+                "{{gateway-url}}"
+              ],
+              "path": [
+                "{{gateway-admin-path}}",
+                "routes",
+                "{{route-id}}",
+                "addons",
+                "rate-limit"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"enabled\": true,\n    \"limit\": 0,\n    \"period\": \"day\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 422', () => pm.response.to.have.status(422));",
+                  "pm.test('names the broken fields', () => {",
+                  "    const fields = pm.response.json().violations.map(v => v.fieldName);",
+                  "    pm.expect(fields).to.include.members(['limit', 'period']);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "rate limit - delete",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{gateway-url}}/{{gateway-admin-path}}/routes/{{route-id}}/addons/rate-limit",
+              "host": [
+                "{{gateway-url}}"
+              ],
+              "path": [
+                "{{gateway-admin-path}}",
+                "routes",
+                "{{route-id}}",
+                "addons",
+                "rate-limit"
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 204', () => pm.response.to.have.status(204));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "rate limit - enable deleted",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{gateway-url}}/{{gateway-admin-path}}/routes/{{route-id}}/addons/rate-limit/enable",
+              "host": [
+                "{{gateway-url}}"
+              ],
+              "path": [
+                "{{gateway-admin-path}}",
+                "routes",
+                "{{route-id}}",
+                "addons",
+                "rate-limit",
+                "enable"
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 404', () => pm.response.to.have.status(404));"
+                ]
+              }
+            }
+          ]
+        },
+        {
           "name": "delete",
           "request": {
             "method": "DELETE",

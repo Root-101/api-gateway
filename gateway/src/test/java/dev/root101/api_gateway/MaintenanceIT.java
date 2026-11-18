@@ -214,16 +214,23 @@ class MaintenanceIT extends IntegrationTest {
     }
 
     /**
-     * Never set: `{"maintenance": null}`, and it can't be enabled
+     * Delete: back to `"maintenance": null` right away, the requests pass again, and it can't be enabled. Nothing
+     * to delete is fine.
      */
     @Test
     void gatewayNotConfigured() {
-        addonRepo.findByRouteIdIsNullAndType(Maintenance.TYPE).flatMap(addonRepo::delete).block();
-        addonsUseCase.reload().block();
+        String id = unique();
+        createRoute(route("mtg-" + id, "mtg-" + id));
+        setGateway(maintenance(true, "Gateway down", null));
+        webTestClient.get().uri("/mtg-%s/x".formatted(id)).exchange().expectStatus().isEqualTo(HttpStatus.SERVICE_UNAVAILABLE);
+
+        admin(HttpMethod.DELETE, "/addons/maintenance").exchange().expectStatus().isNoContent();
+        webTestClient.get().uri("/mtg-%s/y".formatted(id)).exchange().expectStatus().isOk();
+        admin(HttpMethod.DELETE, "/addons/maintenance").exchange().expectStatus().isNoContent();
 
         admin(HttpMethod.GET, "/addons").exchange()
                 .expectStatus().isOk()
-                .expectBody(String.class).isEqualTo("{\"maintenance\":null}");
+                .expectBody(String.class).value(body -> assertThat(body).contains("\"maintenance\":null"));
         admin(HttpMethod.POST, "/addons/maintenance/enable").exchange().expectStatus().isNotFound();
         admin(HttpMethod.POST, "/addons/maintenance/disable").exchange()
                 .expectStatus().isNotFound()
@@ -355,7 +362,7 @@ class MaintenanceIT extends IntegrationTest {
         admin(HttpMethod.PUT, "/routes")
                 .bodyValue(List.of(
                         restored("mtk-" + id, null),
-                        restored("mte-" + id, Map.of("rate_limit", Map.of("limit", 5))),
+                        restored("mte-" + id, Map.of("future_addon", Map.of("limit", 5))),
                         restored("mtx-" + id, deleted),
                         restored("mtn-" + id, Map.of("maintenance", fromBackup))
                 ))
@@ -366,7 +373,7 @@ class MaintenanceIT extends IntegrationTest {
                 .jsonPath("$[0].addons.maintenance.message").isEqualTo("Before")
                 .jsonPath("$[1].id").isEqualTo(emptyId)
                 .jsonPath("$[1].addons.maintenance.message").isEqualTo("Before")
-                .jsonPath("$[1].addons.rate_limit").doesNotExist()
+                .jsonPath("$[1].addons.future_addon").doesNotExist()
                 .jsonPath("$[2].id").isEqualTo(deletedId)
                 .jsonPath("$[2].addons.maintenance").isEmpty()
                 .jsonPath("$[3].addons.maintenance.enabled").isEqualTo(true)

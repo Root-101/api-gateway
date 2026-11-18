@@ -2,6 +2,7 @@ package dev.root101.api_gateway.features.addons.logic.model;
 
 import dev.root101.api_gateway.features.health_check.logic.model.HealthCheck;
 import dev.root101.api_gateway.features.maintenance.logic.model.Maintenance;
+import dev.root101.api_gateway.features.rate_limit.logic.model.RateLimit;
 import jakarta.validation.Valid;
 
 import java.util.HashSet;
@@ -19,6 +20,9 @@ public class AddonsRequest {
 
     @Valid
     private HealthCheck healthCheck;
+
+    @Valid
+    private RateLimit rateLimit;
 
     private final Set<String> sent = new HashSet<>();
 
@@ -38,6 +42,15 @@ public class AddonsRequest {
     public void setHealthCheck(HealthCheck healthCheck) {
         this.healthCheck = healthCheck;
         sent.add(HealthCheck.TYPE);
+    }
+
+    public RateLimit getRateLimit() {
+        return rateLimit;
+    }
+
+    public void setRateLimit(RateLimit rateLimit) {
+        this.rateLimit = rateLimit;
+        sent.add(RateLimit.TYPE);
     }
 
     /**

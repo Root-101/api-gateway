@@ -112,6 +112,13 @@ class MaintenanceUseCaseImpl implements MaintenanceUseCase, SmartInitializingSin
     }
 
     @Override
+    public Mono<Void> deleteGateway() {
+        return addonRepo.findByRouteIdIsNullAndType(Maintenance.TYPE)
+                .flatMap(addonRepo::delete)
+                .then(reload());
+    }
+
+    @Override
     public Mono<MaintenanceResponse> setRoute(String routeId, Maintenance maintenance, Locale locale) {
         return routeRepo.findExisting(routeId)
                 .flatMap(route -> save(route.getRouteId(), maintenance))

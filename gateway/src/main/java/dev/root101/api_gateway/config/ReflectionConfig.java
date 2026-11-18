@@ -14,6 +14,7 @@ import dev.root101.api_gateway.features.health_check.logic.model.HealthCheckStat
 import dev.root101.api_gateway.features.maintenance.logic.model.Maintenance;
 import dev.root101.api_gateway.features.maintenance.logic.model.MaintenanceResponse;
 import dev.root101.api_gateway.features.maintenance.logic.model.MaintenanceState;
+import dev.root101.api_gateway.features.rate_limit.logic.model.RateLimit;
 import dev.root101.api_gateway.features.routes.logic.model.RewritePathModel;
 import dev.root101.api_gateway.features.routes.logic.model.RouteConfigRequest;
 import dev.root101.api_gateway.features.routes.logic.model.RouteConfigResponse;
@@ -37,6 +38,7 @@ import java.time.OffsetDateTime;
         //also written to and read from the db as json
         Maintenance.class, MaintenanceState.class, MaintenanceResponse.class,
         HealthCheck.class, HealthCheckState.class, HealthCheckResponse.class,
+        RateLimit.class,
         //--------- AUTH ---------\\
         LoginRequest.class, LoginResponse.class,
         //--------- HTTP LOGS ---------\\

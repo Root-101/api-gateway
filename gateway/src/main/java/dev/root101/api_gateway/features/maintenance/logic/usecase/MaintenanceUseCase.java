@@ -40,6 +40,11 @@ public interface MaintenanceUseCase {
     Mono<MaintenanceResponse> enableGateway(boolean enabled, Locale locale);
 
     /**
+     * Removes the maintenance of the gateway (back to `null`), in use right away. Nothing to remove is fine.
+     */
+    Mono<Void> deleteGateway();
+
+    /**
      * Creates or replaces the maintenance of a route, in use right away
      */
     Mono<MaintenanceResponse> setRoute(String routeId, Maintenance maintenance, Locale locale);

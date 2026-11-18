@@ -9,7 +9,7 @@ The gateway serves two things on the same port (8080 by default):
 - **Proxied traffic** at any path: each request goes to the service of the [route](#how-a-request-is-routed)
   whose path matches.
 - **Admin API** at `/{ADMIN_PATH}` (`/_admin` by default): log in, manage the routes and their
-  [add-ons](#add-ons) (maintenance, health check), search the logs. Always JSON in and out; errors are [Problem Details](#errors). Don't give a route a path
+  [add-ons](#add-ons) (maintenance, health check, rate limit), search the logs. Always JSON in and out; errors are [Problem Details](#errors). Don't give a route a path
   under it.
 
 The examples use the default `ADMIN_PATH`; change it and every path below changes with it. Keys
@@ -571,11 +571,11 @@ endpoints and its own object; every route comes with all of them in `addons`, an
 at `GET /_admin/addons`:
 
 ```json
-"addons": {"maintenance": null, "health_check": null}
+"addons": {"maintenance": null, "health_check": null, "rate_limit": null}
 ```
 
-Every type this version knows is there, `null` when it isn't configured (today `maintenance` and
-`health_check`; a newer gateway adds keys, so ignore the ones you don't know). Create, edit and create several
+Every type this version knows is there, `null` when it isn't configured (today `maintenance`,
+`health_check` and `rate_limit`; a newer gateway adds keys, so ignore the ones you don't know). Create, edit and create several
 ignore `addons` in the body (an edit keeps them); [replace every route](#replace-every-route)
 restores them.
 
@@ -583,8 +583,9 @@ restores them.
 GET /_admin/addons
 ```
 
-`200` with the add-ons of the gateway: `{"maintenance": null}` until its maintenance is set. Only the
-types the gateway can have: the health check is of a route only.
+`200` with the add-ons of the gateway: `{"maintenance": null, "rate_limit": null}` until they are set.
+Only the types the gateway can have: the health check is of a route only. The keys of each
+`addons` are the types that can be added there.
 
 ### Maintenance
 
@@ -636,15 +637,17 @@ POST   /_admin/routes/{id}/addons/maintenance/disable
   one twice changes nothing. `404 The route has no maintenance configured: …` when it isn't set.
 - All of them: `404` when the route doesn't exist, `400` when the id isn't a UUID.
 
-The maintenance of the gateway, the same way, without `DELETE`:
+The maintenance of the gateway, the same way:
 
 ```http
-PUT  /_admin/addons/maintenance
-POST /_admin/addons/maintenance/enable
-POST /_admin/addons/maintenance/disable
+PUT    /_admin/addons/maintenance
+DELETE /_admin/addons/maintenance
+POST   /_admin/addons/maintenance/enable
+POST   /_admin/addons/maintenance/disable
 ```
 
-`enable` and `disable` answer `404 The gateway has no maintenance configured` until it is set.
+`DELETE` takes it back to `null` (`204`, also when there was none); `enable` and `disable` answer
+`404 The gateway has no maintenance configured` until it is set.
 
 What a client of a route in maintenance gets (the `Retry-After` only while `retry_after` is ahead,
 in seconds, rounded up):
@@ -725,6 +728,78 @@ How it calls the service:
 - Only the result is written (the add-on's `state`), never what the admin set nor its
   `updated_at`. Not in the [logs](#what-gets-logged): it isn't proxied traffic.
 - Each instance calls them on its own (see `DECISIONS.md`, one instance).
+
+### Rate limit
+
+How many requests each client can make in a period: past it, a `429` right away, without reaching
+the service. Against abuse and spikes. The client is its IP, the same one the [logs](#what-gets-logged)
+show (see `TRUSTED_PROXIES`). A route can have one, the whole gateway too, or both. What you send,
+for both:
+
+| Field     | Type    | Rules                                     | Description                                                   |
+|-----------|---------|-------------------------------------------|---------------------------------------------------------------|
+| `enabled` | boolean | Required                                  | `true` limits, `false` lets everything through                |
+| `limit`   | integer | Required, from 1 to 1000000               | Requests per `period`, per client IP                          |
+| `period`  | string  | Required, `second`, `minute` or `hour`    |                                                               |
+| `burst`   | integer | Optional, from 1 to 1000000               | The most requests at once; `limit` when missing               |
+
+It answers the same object, with no read-only fields: the counts are only in memory.
+
+```json
+{"enabled": true, "limit": 100, "period": "minute", "burst": 20}
+```
+
+That is: 20 requests at once at most, then one more every 0.6 s (100 per minute). Each client
+starts with `burst` requests, each request takes one, and they come back at `limit` per `period`
+(a token bucket). Without `burst`, a client can use the whole `limit` at once.
+
+The rate limit of a route:
+
+```http
+PUT    /_admin/routes/{id}/addons/rate-limit
+DELETE /_admin/routes/{id}/addons/rate-limit
+POST   /_admin/routes/{id}/addons/rate-limit/enable
+POST   /_admin/routes/{id}/addons/rate-limit/disable
+```
+
+The rate limit of the gateway, the same way:
+
+```http
+PUT    /_admin/addons/rate-limit
+DELETE /_admin/addons/rate-limit
+POST   /_admin/addons/rate-limit/enable
+POST   /_admin/addons/rate-limit/disable
+```
+
+- `PUT` creates or replaces it, with the object above: `200` with it as saved, in use right away.
+  `422` with the broken fields (`enabled`, `limit`, `period`, `burst`).
+- `DELETE` removes it, back to `null`: `204`, also when there was none.
+- `enable` and `disable` turn it on or off without a body, keeping the rest: `200` with it.
+  `404 The route has no rate limit configured: …` (or `The gateway has no rate limit configured`)
+  when it isn't set.
+- The ones of a route: `404` when the route doesn't exist, `400` when the id isn't a UUID.
+
+What a client over the limit gets (`Retry-After`: the seconds until it can make one more, rounded
+up):
+
+```http
+HTTP/1.1 429 Too Many Requests
+Retry-After: 12
+Content-Type: application/problem+json
+
+{"type":"about:blank","title":"Too Many Requests","status":429,"detail":"Too many requests, try again in 12 s","instance":"/users/42"}
+```
+
+- The gateway's counts each IP on **every route together**; a route's, on that route only. With
+  both, a request has to pass both: the gateway's first, then the route's.
+- Only the proxied traffic: the admin API has its own lockout. A route in
+  [maintenance](#maintenance) answers its `503` first, and those requests don't count.
+- Any change to a rate limit (set, enable, disable, delete), a [restore](#replace-every-route) or
+  deleting a route starts every count again, from zero.
+- The requests stopped are [logged](#what-gets-logged), with their `429`. Successful responses
+  get no rate limit headers.
+- In memory and per instance: with several instances each one counts on its own (see
+  `DECISIONS.md`, one instance).
 
 ## Search the logs
 
