@@ -224,10 +224,13 @@ class RouteUseCaseImpl implements RouteUseCase, SmartInitializingSingleton {
                     entityToEdit.setRouteId(oldRoute.getRouteId());//maintain same id
                     entityToEdit.setCreatedAt(oldRoute.getCreatedAt());//maintain same create_at
 
+                    boolean uriChanged = !entityToEdit.getUri().equals(oldRoute.getUri());
                     return routeRepo.save(entityToEdit)
                             //same id: the writer replaces the old definition
                             .flatMap(saved -> apply(List.of(saved), List.of()))
-                            .map(List::getFirst);
+                            //before answering: the add-ons in the response already have the new service's result
+                            .flatMap(edited -> (uriChanged ? addonsUseCase.uriChanged(routeId) : Mono.<Void>empty())
+                                    .thenReturn(edited.getFirst()));
                 });
     }
 

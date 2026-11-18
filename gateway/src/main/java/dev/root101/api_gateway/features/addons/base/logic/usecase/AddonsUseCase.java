@@ -59,6 +59,14 @@ public class AddonsUseCase {
     }
 
     /**
+     * A route now points to another service: its health check, if it has one (on or off), is called again right
+     * away, so it never shows the last result of the old service
+     */
+    public Mono<Void> uriChanged(String routeId) {
+        return Mono.defer(() -> healthCheckUseCase.ofRoute(routeId) == null ? Mono.empty() : healthCheckUseCase.run(routeId).then());
+    }
+
+    /**
      * Reads every add-on from db into use
      */
     public Mono<Void> reload() {

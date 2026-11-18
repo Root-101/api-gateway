@@ -18,6 +18,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicReference;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
@@ -112,6 +113,38 @@ class HealthCheckIT extends IntegrationTest {
                     .expectStatus().isNotFound()
                     .expectBody().jsonPath("$.detail").isEqualTo("The route has no health check configured: " + routeId);
         }
+    }
+
+    /**
+     * An edit that points the route to another service calls its health check again (on or off) before answering:
+     * never the last result of the old one. An edit that keeps the uri keeps the result.
+     */
+    @Test
+    void editedUri() {
+        String id = unique();
+        String routeId = createRoute(route("hce-" + id, "hce-" + id));
+        set(routeId, healthCheck(false, "/health", 3600));
+        admin(HttpMethod.POST, routePath(routeId) + "/run").exchange()
+                .expectBody().jsonPath("$.state.up").isEqualTo(true);
+
+        admin(HttpMethod.PUT, "/routes/" + routeId)
+                .bodyValue(new RouteConfigRequest("hce-" + id, "/hce-" + id + "/**", "http://localhost:1", null, null, null))
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody()
+                .jsonPath("$.addons.health_check.state.up").isEqualTo(false)
+                .jsonPath("$.addons.health_check.state.status").isEmpty();
+
+        //same uri, other path: nothing called, the result stays
+        AtomicReference<Object> checkedAt = new AtomicReference<>();
+        admin(HttpMethod.GET, "/routes/" + routeId).exchange()
+                .expectBody().jsonPath("$.addons.health_check.state.checked_at").value(checkedAt::set);
+        admin(HttpMethod.PUT, "/routes/" + routeId)
+                .bodyValue(new RouteConfigRequest("hce-" + id, "/hce2-" + id + "/**", "http://localhost:1", null, null, null))
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody()
+                .jsonPath("$.addons.health_check.state.checked_at").isEqualTo(checkedAt.get());
     }
 
     /**

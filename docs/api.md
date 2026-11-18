@@ -723,6 +723,9 @@ How it calls the service:
 - `GET {uri}{path}`, without a body or the client's headers, its answer thrown away. The host is
   always the route's: a path like `//other-host` stays a path. Redirects aren't followed.
 - A `2xx` is up; any other status, or no answer in 5 s, is down.
+- An edit of the route that changes its `uri` (`PUT /_admin/routes/{id}`) calls it again before
+  answering, on or off, so it never shows the result of the old service: the edit can take up to
+  5 s more. Other changes of the route (name, path, rewrite) keep the result.
 - A scheduler looks every 5 s for the ones due, so a call can come up to 5 s late. One call per
   route at a time; after a restart the overdue ones are called right away.
 - Only the result is written (the add-on's `state`), never what the admin set nor its
