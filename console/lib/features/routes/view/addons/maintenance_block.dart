@@ -118,49 +118,14 @@ class _MaintenanceBlockState extends State<MaintenanceBlock> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Row(
-              children: [
-                app.assets.icons.general.wrench.build(
-                  size: 17,
-                  color: on ? c.maintenance : c.label,
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Row(
-                    children: [
-                      Flexible(
-                        child: Text(
-                          intl.panel.maintenance,
-                          style: TextStyle(
-                            fontSize: 15,
-                            fontWeight: FontWeight.w600,
-                            color: c.text,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 2),
-                      maintenanceInfo(context, gateway: _gateway),
-                    ],
-                  ),
-                ),
-                if (_mode == _Mode.view) ...[
-                  AppIconButton(
-                    icon: app.assets.icons.actions.edit,
-                    tooltip: intl.panel.edit,
-                    size: 34,
-                    iconSize: 16,
-                    onPressed: _startEdit,
-                  ),
-                  AppIconButton(
-                    icon: app.assets.icons.actions.delete,
-                    tooltip: intl.panel.remove,
-                    size: 34,
-                    iconSize: 16,
-                    hoverColor: c.softRed,
-                    onPressed: () => setState(() => _mode = _Mode.confirm),
-                  ),
-                ],
-              ],
+            AddonHeader(
+              icon: app.assets.icons.general.wrench,
+              iconColor: on ? c.maintenance : c.label,
+              title: intl.panel.maintenance,
+              info: maintenanceInfo(context, gateway: _gateway),
+              showActions: _mode == _Mode.view,
+              onEdit: _startEdit,
+              onRemove: () => setState(() => _mode = _Mode.confirm),
             ),
             const SizedBox(height: 6),
             Padding(
@@ -393,50 +358,16 @@ class _MaintenanceBlockState extends State<MaintenanceBlock> {
   }
 
   Widget _buildConfirm(BuildContext context) {
-    final c = app.colors;
     final intl = context.intl;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        const SizedBox(height: 4),
-        Text(
-          intl.panel.removeTitle,
-          style: TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.w600,
-            color: c.text,
-          ),
-        ),
-        const SizedBox(height: 4),
-        Text(
-          intl.panel.removeBody,
-          style: TextStyle(fontSize: 13, height: 18 / 13, color: c.label),
-        ),
-        const SizedBox(height: 14),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.end,
-          children: [
-            //as in the canvas: outlined Cancel, filled red Remove, 34 px
-            AppButton(
-              label: intl.actions.cancel,
-              kind: AppButtonKind.outlined,
-              height: 34,
-              radius: 10,
-              fontSize: 13,
-              onPressed: () => setState(() => _mode = _Mode.view),
-            ),
-            const SizedBox(width: 8),
-            AppButton(
-              label: intl.panel.remove,
-              kind: AppButtonKind.danger,
-              height: 34,
-              radius: 10,
-              fontSize: 13,
-              onPressed: _busy ? null : _remove,
-            ),
-          ],
-        ),
-      ],
+    return Padding(
+      padding: const EdgeInsets.only(top: 4),
+      child: AddonRemoveConfirm(
+        title: intl.panel.removeTitle,
+        body: intl.panel.removeBody,
+        busy: _busy,
+        onCancel: () => setState(() => _mode = _Mode.view),
+        onRemove: _remove,
+      ),
     );
   }
 }

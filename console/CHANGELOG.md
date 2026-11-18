@@ -45,7 +45,9 @@
           stepper, footer and duplicate chip live in `form/widgets`. And Logs: its screen keeps the debounced search
           and the snacks, and the header, the toolbar (search, filter chips, Filters button), the table (rows, empty
           state) and the footer (rows per page, pages) live in `features/logs/view/widgets`. The date range calendar
-          of the logs filter is now a design system component, `AppDateRangeDialog`.
+          of the logs filter is now a design system component, `AppDateRangeDialog`. The three add-on blocks share
+          their header (icon, name, info, Edit, Remove) and their remove confirmation: `AddonHeader` and
+          `AddonRemoveConfirm` in `addons/addon_block_parts.dart`.
         * **Route form** :pencil2: : The preview is no longer a card inside the form: the strip under the title takes
           the card color, as in the canvas.
         * **Routes** :twisted_rightwards_arrows: : Each card has the `MAINT` / `PAUSED` tag, a badge per add-on and

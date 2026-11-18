@@ -115,58 +115,28 @@ class _HealthCheckBlockState extends State<HealthCheckBlock> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Row(
-              children: [
-                app.assets.icons.general.activity.build(size: 17, color: color),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Row(
-                    children: [
-                      Flexible(
-                        child: Text(
-                          intl.health.title,
-                          style: TextStyle(
-                            fontSize: 15,
-                            fontWeight: FontWeight.w600,
-                            color: c.text,
-                          ),
-                        ),
+            AddonHeader(
+              icon: app.assets.icons.general.activity,
+              iconColor: color,
+              title: intl.health.title,
+              info: healthInfo(context),
+              showActions: _mode == _Mode.view,
+              onEdit: _startEdit,
+              onRemove: () => setState(() => _mode = _Mode.confirm),
+              extraActions: [
+                _checking
+                    ? SizedBox(
+                        width: 34,
+                        height: 34,
+                        child: Center(child: SmallSpinner(color: c.label)),
+                      )
+                    : AppIconButton(
+                        icon: app.assets.icons.general.play,
+                        tooltip: intl.health.runNow,
+                        size: 34,
+                        iconSize: 14,
+                        onPressed: _run,
                       ),
-                      const SizedBox(width: 2),
-                      healthInfo(context),
-                    ],
-                  ),
-                ),
-                if (_mode == _Mode.view) ...[
-                  _checking
-                      ? SizedBox(
-                          width: 34,
-                          height: 34,
-                          child: Center(child: SmallSpinner(color: c.label)),
-                        )
-                      : AppIconButton(
-                          icon: app.assets.icons.general.play,
-                          tooltip: intl.health.runNow,
-                          size: 34,
-                          iconSize: 14,
-                          onPressed: _run,
-                        ),
-                  AppIconButton(
-                    icon: app.assets.icons.actions.edit,
-                    tooltip: intl.panel.edit,
-                    size: 34,
-                    iconSize: 16,
-                    onPressed: _startEdit,
-                  ),
-                  AppIconButton(
-                    icon: app.assets.icons.actions.delete,
-                    tooltip: intl.panel.remove,
-                    size: 34,
-                    iconSize: 16,
-                    hoverColor: c.softRed,
-                    onPressed: () => setState(() => _mode = _Mode.confirm),
-                  ),
-                ],
               ],
             ),
             const SizedBox(height: 8),
@@ -450,48 +420,13 @@ class _HealthCheckBlockState extends State<HealthCheckBlock> {
   }
 
   Widget _buildConfirm(BuildContext context) {
-    final c = app.colors;
     final intl = context.intl;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Text(
-          intl.health.removeTitle,
-          style: TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.w600,
-            color: c.text,
-          ),
-        ),
-        const SizedBox(height: 4),
-        Text(
-          intl.health.removeBody,
-          style: TextStyle(fontSize: 13, height: 18 / 13, color: c.label),
-        ),
-        const SizedBox(height: 14),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.end,
-          children: [
-            AppButton(
-              label: intl.actions.cancel,
-              kind: AppButtonKind.outlined,
-              height: 34,
-              radius: 10,
-              fontSize: 13,
-              onPressed: () => setState(() => _mode = _Mode.view),
-            ),
-            const SizedBox(width: 8),
-            AppButton(
-              label: intl.panel.remove,
-              kind: AppButtonKind.danger,
-              height: 34,
-              radius: 10,
-              fontSize: 13,
-              onPressed: _busy ? null : _remove,
-            ),
-          ],
-        ),
-      ],
+    return AddonRemoveConfirm(
+      title: intl.health.removeTitle,
+      body: intl.health.removeBody,
+      busy: _busy,
+      onCancel: () => setState(() => _mode = _Mode.view),
+      onRemove: _remove,
     );
   }
 }
