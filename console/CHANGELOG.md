@@ -36,6 +36,8 @@
           console and logging in land on the map instead of Routes. The 404 page offers "Go to map" instead of "Go to
           Routes". The grid behind it pans and zooms with the map.
           Over the canvas the cursor is the drag hand (closed while dragging); nodes and buttons keep the click hand.
+          In code it is its own feature, `features/map`: the screen keeps the view and the selection, and the header,
+          the diagram, the branches, the legend and each node are widgets of their own in `view/widgets`.
         * **Route form** :pencil2: : The preview is no longer a card inside the form: the strip under the title takes
           the card color, as in the canvas.
         * **Routes** :twisted_rightwards_arrows: : Each card has the `MAINT` / `PAUSED` tag, a badge per add-on and

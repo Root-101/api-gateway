@@ -5,4 +5,5 @@ export 'features_init.dart';
 export 'global/global.dart';
 export 'language/language.dart';
 export 'logs/logs.dart';
+export 'map/map.dart';
 export 'routes/routes.dart';
