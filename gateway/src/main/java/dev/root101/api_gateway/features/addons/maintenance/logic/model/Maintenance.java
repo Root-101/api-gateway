@@ -31,8 +31,4 @@ public record Maintenance(
     public boolean on() {
         return Boolean.TRUE.equals(enabled);
     }
-
-    public boolean hasMessage() {
-        return message != null && !message.isBlank();
-    }
 }

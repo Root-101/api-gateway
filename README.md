@@ -151,7 +151,13 @@ Environment variables of the gateway, read on start:
 | `GATEWAY_RESPONSE_TIMEOUT`    | `60s`                    | Wait for a service to start answering (`504` after it); empty for no limit, for slow exports or long polling |
 | `TRUSTED_PROXIES`             | `.*`                     | Regex of the IPs of the proxies in front of the gateway: only their `X-Forwarded-*` are believed (client IP of the logs and the lockout) and passed on to the services. Empty = none. Narrow it if the gateway can be reached without the proxy (see `SECURITY.md`) |
 | `PORT`                        | `8080`                   | Port of the gateway                                                                                        |
-| `PROFILE`, `APPLICATION_NAME` | `default`, `Api-Gateway` | Spring profile and name; they can stay as they are                                                         |
+| `APPLICATION_NAME`            | `Api-Gateway`            | Name in the logs; it can stay as it is                                                                    |
+
+Variables no longer read: setting them does nothing, they can be taken out of any deployment.
+
+| Variable  | Removed in | Why                                                                     |
+|-----------|------------|-------------------------------------------------------------------------|
+| `PROFILE` | `6.1.0`    | There is no profile-specific config: the Spring profile changed nothing |
 
 The database is set in parts (host, port, name, user, password) instead of as a connection URL
 because the gateway needs two URLs: an `r2dbc:` one for its reactive queries and a `jdbc:` one for

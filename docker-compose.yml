@@ -35,7 +35,6 @@ services:
       postgres:
         condition: service_healthy    #the gateway runs the migrations on start: the db must accept connections
     environment:
-      PROFILE: LOCAL
       ADMIN_USERNAME: admin
       ADMIN_PASSWORD: admin123**
       ADMIN_PATH: _admin

@@ -4,8 +4,6 @@ server:
 spring:
   main:
     web-application-type: reactive
-  profiles:
-    default: ${PROFILE:default}
   application:
     name: ${APPLICATION_NAME:Api-Gateway}
   messages:

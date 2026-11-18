@@ -15,7 +15,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 class AdminAuthenticationManagerTest {
 
     private final AdminAuthenticationManager manager = new AdminAuthenticationManager(
-            "admin", "pa:ss-ñ", "ROLE_GATEWAY_ADMIN", "admin", "admin123**"
+            "admin", "pa:ss-ñ", "ROLE_GATEWAY_ADMIN", "admin123**"
     );
 
     private static UsernamePasswordAuthenticationToken basic(String raw) {

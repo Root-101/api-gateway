@@ -1,6 +1,5 @@
 package dev.root101.api_gateway.features.http_logs.logic.model;
 
-import dev.root101.api_gateway.features.routes.data.entity.RouteEntity;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;

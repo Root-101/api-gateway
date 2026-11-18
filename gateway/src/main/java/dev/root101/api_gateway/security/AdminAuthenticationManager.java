@@ -35,7 +35,6 @@ public class AdminAuthenticationManager implements ReactiveAuthenticationManager
             @Value("${app.admin.username}") String adminUsername,
             @Value("${app.admin.password}") String adminPassword,
             @Value("${app.admin.role}") String adminRole,
-            @Value("${app.defaults.username}") String defaultUsername,
             @Value("${app.defaults.password}") String defaultPassword
     ) {
         this.adminUsername = adminUsername;
