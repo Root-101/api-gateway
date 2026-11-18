@@ -687,6 +687,9 @@ class _Node extends StatefulWidget {
   final bool dashed;
   final Color background;
   final Color border;
+
+  ///the 2 px border while it's selected: lilac, or the state's (maintenance, down) as in the canvas
+  final Color? selectedBorder;
   final String semanticLabel;
 
   const _Node({
@@ -696,6 +699,7 @@ class _Node extends StatefulWidget {
     required this.background,
     required this.border,
     required this.semanticLabel,
+    this.selectedBorder,
     this.dashed = false,
   });
 
@@ -709,7 +713,9 @@ class _NodeState extends State<_Node> {
   @override
   Widget build(BuildContext context) {
     final c = app.colors;
-    final border = widget.selected ? c.lilac : widget.border;
+    final border = widget.selected
+        ? widget.selectedBorder ?? c.lilac
+        : widget.border;
     return Semantics(
       button: true,
       selected: widget.selected,
@@ -779,6 +785,7 @@ class _GatewayNode extends StatelessWidget {
       dashed: on,
       background: on ? const Color(0xff221b1f) : c.surface,
       border: on ? c.maintenance : c.outline,
+      selectedBorder: on ? c.maintenance : null,
       semanticLabel: 'api-gateway',
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 18),
@@ -890,14 +897,23 @@ class _PathLabel extends StatelessWidget {
     final c = app.colors;
     final maint =
         status == RouteStatus.maintenance || status == RouteStatus.paused;
-    final color = maint ? c.maintenance : c.text;
+    final down = status == RouteStatus.down;
+    final color = maint
+        ? c.maintenance
+        : down
+        ? c.dangerText
+        : c.text;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
       decoration: BoxDecoration(
         color: c.gridBg,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: maint ? c.maintenance.withValues(alpha: 0.7) : c.outline,
+          color: maint
+              ? c.maintenance.withValues(alpha: 0.7)
+              : down
+              ? c.danger
+              : c.outline,
         ),
       ),
       child: Text(path, style: monoStyle(size: 12, color: color)),
@@ -932,12 +948,22 @@ class _RouteNode extends StatelessWidget {
       onTap: onTap,
       selected: selected,
       dashed: ownOn,
-      background: ownOn ? const Color(0xff221b1f) : c.card,
+      background: ownOn
+          ? const Color(0xff221b1f)
+          : status == RouteStatus.down
+          ? const Color(0xff1f1519)
+          : c.card,
       border: ownOn
           ? c.maintenance
           : status == RouteStatus.down
           ? c.danger.withValues(alpha: 0.6)
           : c.outlineCard,
+      //paused by the gateway's maintenance too: its branch is orange, so is the selection
+      selectedBorder: status.inMaintenance
+          ? c.maintenance
+          : status == RouteStatus.down
+          ? c.danger
+          : null,
       semanticLabel: '${route.name} ${route.path}',
       child: Padding(
         padding: const EdgeInsets.fromLTRB(14, 12, 14, 10),

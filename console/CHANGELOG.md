@@ -11,8 +11,8 @@
           `/addons/maintenance`.
         * **Health check** :heartpulse: : A second add-on, routes only: the gateway calls a path of the route's
           service every 10 s to 1 h and the console shows the last result. `LIVE` (a 2xx) or `DOWN` at the end of
-          the last check (maintenance wins), a `Health · every 30 s` badge on the card, a chip on the map node, and a red,
-          still branch in the map while it is down (it still gets its requests). Its block in the panel shows the
+          the last check (maintenance wins), a `Health · every 30 s` badge on the card, a chip on the map node, and, while it is
+          down, a red, still branch in the map with a red path label and a reddish node (it still gets its requests). Its block in the panel shows the
           endpoint, the interval and the last check ("12 s ago · 200 in 18 ms · LIVE"), with "Run now", edit in place
           (endpoint, one of 10 s / 30 s / 1 min / 5 min / 15 min / 1 h, on or off) and remove. Added as
           `/health` every 30 s, on. The routes are reread every 10 s while one has it on (the gateway doesn't
