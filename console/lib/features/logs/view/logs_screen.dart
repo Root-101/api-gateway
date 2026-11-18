@@ -118,14 +118,20 @@ class _LogsScreenState extends State<LogsScreen> {
             onPressed: cubit.init,
           );
         }
-        return SingleChildScrollView(
+        //the screen fits the window: only the table's rows scroll
+        return Padding(
           padding: const EdgeInsets.fromLTRB(24, 24, 24, 32),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               LogsHeader(cubit: cubit, onRefresh: _refresh),
               const SizedBox(height: 16),
-              _buildPanel(context, filtering: state is LogsFilteringState),
+              Expanded(
+                child: _buildPanel(
+                  context,
+                  filtering: state is LogsFilteringState,
+                ),
+              ),
             ],
           ),
         );
@@ -166,12 +172,17 @@ class _LogsScreenState extends State<LogsScreen> {
                   )
                 : null,
           ),
-          AnimatedOpacity(
-            opacity: filtering && !booting ? 0.35 : 1,
-            duration: motion(context, const Duration(milliseconds: 180)),
-            child: LogsTable(booting: booting, items: cubit.items),
+          Expanded(
+            child: AnimatedOpacity(
+              opacity: filtering && !booting ? 0.35 : 1,
+              duration: motion(context, const Duration(milliseconds: 180)),
+              child: LogsTable(
+                booting: booting,
+                items: cubit.items,
+                empty: noLogs ? LogsEmpty(onClearAll: _clearAll) : null,
+              ),
+            ),
           ),
-          if (noLogs) LogsEmpty(onClearAll: _clearAll),
           LogsFooter(cubit: cubit, booting: booting, filtering: filtering),
         ],
       ),

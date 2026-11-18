@@ -50,6 +50,10 @@
           gateway on a click. `Open in Routes` filters Routes by that route. It is the start screen: opening the
           console and logging in land on the map instead of Routes. The 404 page offers "Go to map" instead of "Go to
           Routes". The grid behind it pans and zooms with the map.
+          An expand button next to the panel's close opens it as the big panel: centered over the dimmed map (up to
+          1180 px wide), the blocks in 3 columns and "Add to..." below them. The panel's box animates from the side
+          to the middle and back, and the blocks fade in once it has resized. A click outside or the close button
+          closes it. Only in the map: the panel in Routes stays on the side.
           Over the canvas the cursor is the drag hand (closed while dragging); nodes and buttons keep the click hand.
           In code it is its own feature, `features/map`: the screen keeps the view and the selection, and the header,
           the diagram, the branches, the legend and each node are widgets of their own in `view/widgets`. Routes got
@@ -103,6 +107,8 @@
         * **Fix** :bug: : No toast showed after an action with the loading layer (delete, backup, restore, save a
           route): the `loader_overlay` package painted above the app. The loading layer is now drawn under the
           toast, and the dependency was removed.
+        * **Fix** :bug: : Logs with many rows per page scrolled the whole screen. The screen now fits the window:
+          the header, search and footer stay, the column titles too, and only the rows scroll.
         * **Docs** :books: : `docs/console.md` has the Gateway map and Add-ons sections, and the map as the start
           screen; `docs/design` screens 21–24 are the map, and every screen shows the rail and cards as built. The
           canvas has no Experimental page any more (the map and the route panel are with the other screens, the

@@ -91,11 +91,19 @@ class RoutePanel extends StatelessWidget {
   final String redirectLabel;
   final void Function(RouteModel route) onRedirect;
 
+  ///the map's big panel: blocks in 3 columns instead of 1
+  final bool expanded;
+
+  ///toggles [expanded]; null hides the button (Routes' sheet)
+  final VoidCallback? onExpand;
+
   const RoutePanel({
     required this.routeId,
     required this.onClose,
     required this.redirectLabel,
     required this.onRedirect,
+    this.expanded = false,
+    this.onExpand,
     super.key,
   });
 
@@ -214,6 +222,16 @@ class RoutePanel extends StatelessWidget {
                     ],
                   ),
                 ),
+                if (onExpand != null)
+                  AppIconButton(
+                    icon: expanded
+                        ? app.assets.icons.actions.collapse
+                        : app.assets.icons.actions.expand,
+                    tooltip: expanded ? intl.panel.collapse : intl.panel.expand,
+                    size: 40,
+                    iconSize: 17,
+                    onPressed: onExpand,
+                  ),
                 AppIconButton(
                   icon: app.assets.icons.actions.close,
                   tooltip: intl.actions.close,
@@ -225,60 +243,100 @@ class RoutePanel extends StatelessWidget {
             ),
           ),
           Expanded(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  if (route != null) ...[
-                    _RedirectBlock(
-                      route: route,
-                      label: redirectLabel,
-                      onPressed: () => onRedirect(route),
-                    ),
-                    const SizedBox(height: 12),
-                  ] else ...[
-                    _OverviewBlock(
-                      routes: app.di.find<RoutesCubit>().routes,
-                      gatewayOn: gatewayOn,
-                    ),
-                    const SizedBox(height: 12),
-                  ],
-                  if (route?.healthCheck case final health?) ...[
-                    HealthCheckBlock(
-                      key: ValueKey('health-${route!.id}'),
-                      route: route,
-                      model: health,
-                    ),
-                    const SizedBox(height: 12),
-                  ],
-                  if (own != null) ...[
-                    MaintenanceBlock(
-                      key: ValueKey('maint-${route?.id ?? 'gateway'}'),
-                      route: route,
-                      model: own,
-                      locked: route != null && gatewayOn,
-                    ),
-                    const SizedBox(height: 12),
-                  ],
-                  if (rate != null) ...[
-                    RateLimitBlock(
-                      key: ValueKey('rate-${route?.id ?? 'gateway'}'),
-                      route: route,
-                      model: rate,
-                    ),
-                    const SizedBox(height: 12),
-                  ],
-                  if (cors != null) ...[
-                    CorsBlock(
-                      key: ValueKey('cors-${route?.id ?? 'gateway'}'),
-                      route: route,
-                      model: cors,
-                    ),
-                    const SizedBox(height: 12),
-                  ],
-                  ..._addable(context, route, own, rate, cors),
-                ],
+            child: _RelayoutFade(
+              trigger: expanded,
+              child: SingleChildScrollView(
+                padding: EdgeInsets.all(expanded ? 24 : 16),
+                child: LayoutBuilder(
+                  builder: (context, box) {
+                    //one column on the side, three in the big panel; the same tree in both,
+                    //so a block being edited keeps its state when the panel changes size
+                    final cols = expanded ? 3 : 1;
+                    final gap = expanded ? 16.0 : 12.0;
+                    final w = (box.maxWidth - gap * (cols - 1)) / cols;
+                    Widget cell(Widget child) =>
+                        SizedBox(width: w, child: child);
+                    final tiles = _addable(context, route, own, rate, cors);
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Wrap(
+                          spacing: gap,
+                          runSpacing: gap,
+                          children: [
+                            cell(
+                              route != null
+                                  ? _RedirectBlock(
+                                      route: route,
+                                      label: redirectLabel,
+                                      onPressed: () => onRedirect(route),
+                                    )
+                                  : _OverviewBlock(
+                                      routes: app.di.find<RoutesCubit>().routes,
+                                      gatewayOn: gatewayOn,
+                                    ),
+                            ),
+                            if (route?.healthCheck case final health?)
+                              cell(
+                                HealthCheckBlock(
+                                  key: ValueKey('health-${route!.id}'),
+                                  route: route,
+                                  model: health,
+                                ),
+                              ),
+                            if (own != null)
+                              cell(
+                                MaintenanceBlock(
+                                  key: ValueKey(
+                                    'maint-${route?.id ?? 'gateway'}',
+                                  ),
+                                  route: route,
+                                  model: own,
+                                  locked: route != null && gatewayOn,
+                                ),
+                              ),
+                            if (rate != null)
+                              cell(
+                                RateLimitBlock(
+                                  key: ValueKey(
+                                    'rate-${route?.id ?? 'gateway'}',
+                                  ),
+                                  route: route,
+                                  model: rate,
+                                ),
+                              ),
+                            if (cors != null)
+                              cell(
+                                CorsBlock(
+                                  key: ValueKey(
+                                    'cors-${route?.id ?? 'gateway'}',
+                                  ),
+                                  route: route,
+                                  model: cors,
+                                ),
+                              ),
+                          ],
+                        ),
+                        //"Add to..." always below the add-ons, the full width
+                        if (tiles.isNotEmpty) ...[
+                          SizedBox(height: gap + 6),
+                          CaptionText(
+                            route == null
+                                ? intl.panel.addToGateway
+                                : intl.panel.addToRoute,
+                            size: 11,
+                          ),
+                          const SizedBox(height: 8),
+                          Wrap(
+                            spacing: gap,
+                            runSpacing: 8,
+                            children: [for (final t in tiles) cell(t)],
+                          ),
+                        ],
+                      ],
+                    );
+                  },
+                ),
               ),
             ),
           ),
@@ -287,7 +345,7 @@ class RoutePanel extends StatelessWidget {
     );
   }
 
-  ///"Add to this route": the types the route can have (keys the api sent) that aren't set yet
+  ///the tiles of "Add to this route": the types the route can have (keys the api sent) that aren't set yet
   List<Widget> _addable(
     BuildContext context,
     RouteModel? route,
@@ -374,16 +432,52 @@ class RoutePanel extends StatelessWidget {
           ),
         ),
     ];
-    if (tiles.isEmpty) return const [];
-    return [
-      const SizedBox(height: 6),
-      CaptionText(
-        route == null ? intl.panel.addToGateway : intl.panel.addToRoute,
-        size: 11,
-      ),
-      for (final tile in tiles) ...[const SizedBox(height: 8), tile],
-    ];
+    return tiles;
   }
+}
+
+///fades the blocks back in once the panel has mostly changed size: they reflow at once
+///(1 <-> 3 columns) while the map animates the panel's box
+class _RelayoutFade extends StatefulWidget {
+  final bool trigger;
+  final Widget child;
+
+  const _RelayoutFade({required this.trigger, required this.child});
+
+  @override
+  State<_RelayoutFade> createState() => _RelayoutFadeState();
+}
+
+class _RelayoutFadeState extends State<_RelayoutFade>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _c = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 420),
+    value: 1,
+  );
+  late final Animation<double> _opacity = CurvedAnimation(
+    parent: _c,
+    curve: const Interval(0.4, 1, curve: Curves.ease),
+  );
+
+  @override
+  void didUpdateWidget(_RelayoutFade old) {
+    super.didUpdateWidget(old);
+    if (old.trigger != widget.trigger &&
+        !MediaQuery.disableAnimationsOf(context)) {
+      _c.forward(from: 0);
+    }
+  }
+
+  @override
+  void dispose() {
+    _c.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) =>
+      FadeTransition(opacity: _opacity, child: widget.child);
 }
 
 class _RedirectBlock extends StatelessWidget {

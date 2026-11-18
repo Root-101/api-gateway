@@ -174,7 +174,9 @@ form.
 
 A click on a route opens its panel on the right and dims the others; a click on the gateway opens
 the gateway's; a click on the background closes it (see [Add-ons](#add-ons)). **Open in Routes**
-goes to Routes with the search set to that route.
+goes to Routes with the search set to that route. The button next to the panel's close opens it
+as the big panel, in the middle of the screen with its blocks in three columns; the same button
+takes it back to the side, and a click outside closes it.
 
 ![Gateway map, no routes yet](design/screens/23-gateway-map-empty.png)
 

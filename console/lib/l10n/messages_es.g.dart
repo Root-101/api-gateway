@@ -1088,13 +1088,13 @@ class AppMessages$cors$es implements AppMessages$cors$en {
   String get gatewaySaved => 'CORS del gateway guardado';
   @override
   String envMigratedTitle({required Object name}) =>
-      '${name} ya está en el CORS del gateway.';
+      'La variable de entorno ${name} ya está en el CORS del gateway.';
   @override
   String get envMigratedDetail =>
       'Sus orígenes pasaron al add-on: edita el CORS aquí. Quita la variable del despliegue y reinicia el gateway para ocultar esto.';
   @override
   String envIgnoredTitle({required Object name}) =>
-      '${name} está puesta pero se ignora.';
+      'La variable de entorno ${name} está puesta pero se ignora.';
   @override
   String get envIgnoredDetail =>
       'No coincide con el CORS del gateway, que es el que se aplica. Edita el CORS aquí, luego quita la variable del despliegue y reinicia el gateway.';
@@ -1161,6 +1161,10 @@ class AppMessages$panel$es implements AppMessages$panel$en {
   String get openInRoutes => 'Abrir en Rutas';
   @override
   String get editRoute => 'Editar ruta';
+  @override
+  String get expand => 'Abrir en el panel grande';
+  @override
+  String get collapse => 'Volver al panel lateral';
   @override
   String get maintenance => 'Mantenimiento';
   @override
@@ -1807,11 +1811,11 @@ extension on AppMessagesEs {
       'cors.gatewaySaved' => 'CORS del gateway guardado',
       'cors.envMigratedTitle' => ({
         required Object name,
-      }) => '${name} ya está en el CORS del gateway.',
+      }) => 'La variable de entorno ${name} ya está en el CORS del gateway.',
       'cors.envMigratedDetail' => 'Sus orígenes pasaron al add-on: edita el CORS aquí. Quita la variable del despliegue y reinicia el gateway para ocultar esto.',
       'cors.envIgnoredTitle' => ({
         required Object name,
-      }) => '${name} está puesta pero se ignora.',
+      }) => 'La variable de entorno ${name} está puesta pero se ignora.',
       'cors.envIgnoredDetail' => 'No coincide con el CORS del gateway, que es el que se aplica. Edita el CORS aquí, luego quita la variable del despliegue y reinicia el gateway.',
       'cors.envVariable' => 'Variable',
       'cors.envApplies' => 'Se aplica',
@@ -1837,6 +1841,8 @@ extension on AppMessagesEs {
       'panel.redirect' => 'Redirección',
       'panel.openInRoutes' => 'Abrir en Rutas',
       'panel.editRoute' => 'Editar ruta',
+      'panel.expand' => 'Abrir en el panel grande',
+      'panel.collapse' => 'Volver al panel lateral',
       'panel.maintenance' => 'Mantenimiento',
       'panel.offRoute' => 'Apagado · las peticiones se reenvían con normalidad',
       'panel.offGateway' => 'Apagado · todas las rutas reenvían con normalidad',

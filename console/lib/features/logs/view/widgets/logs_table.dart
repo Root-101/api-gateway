@@ -20,7 +20,15 @@ class LogsTable extends StatelessWidget {
   final bool booting;
   final List<HttpLogModel> items;
 
-  const LogsTable({required this.booting, required this.items, super.key});
+  ///shown under the titles instead of the rows (no request matches)
+  final Widget? empty;
+
+  const LogsTable({
+    required this.booting,
+    required this.items,
+    this.empty,
+    super.key,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -33,6 +41,7 @@ class LogsTable extends StatelessWidget {
         scrollDirection: Axis.horizontal,
         child: SizedBox(
           width: max(860, constraints.maxWidth),
+          //the titles stay, the rows scroll under them
           child: Column(
             children: [
               Container(
@@ -47,20 +56,39 @@ class LogsTable extends StatelessWidget {
                   title(intl.logs.columnRequestDuration),
                 ),
               ),
-              if (booting)
-                for (final width in _skeletonWidths)
-                  _LogRowFrame(
-                    child: _LogCells(
-                      const AppSkeleton(width: 130),
-                      const AppSkeleton(width: 40),
-                      AppSkeleton(width: width),
-                      const AppSkeleton(width: 90),
-                      const AppSkeleton(width: 52, height: 22, radius: 11),
-                      const AppSkeleton(width: 44),
-                    ),
-                  )
-              else
-                for (final log in items) LogRow(log: log),
+              Expanded(
+                child: ListView(
+                  children: [
+                    if (booting)
+                      for (final width in _skeletonWidths)
+                        _LogRowFrame(
+                          child: _LogCells(
+                            const AppSkeleton(width: 130),
+                            const AppSkeleton(width: 40),
+                            AppSkeleton(width: width),
+                            const AppSkeleton(width: 90),
+                            const AppSkeleton(
+                              width: 52,
+                              height: 22,
+                              radius: 11,
+                            ),
+                            const AppSkeleton(width: 44),
+                          ),
+                        )
+                    else if (empty case final empty?)
+                      //the visible width, not the 860 of the columns
+                      Align(
+                        alignment: Alignment.topLeft,
+                        child: SizedBox(
+                          width: constraints.maxWidth,
+                          child: empty,
+                        ),
+                      )
+                    else
+                      for (final log in items) LogRow(log: log),
+                  ],
+                ),
+              ),
             ],
           ),
         ),

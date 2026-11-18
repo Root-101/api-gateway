@@ -1417,17 +1417,17 @@ class AppMessages$cors$en {
   /// en: 'Gateway CORS saved'
   String get gatewaySaved => 'Gateway CORS saved';
 
-  /// en: '{name: String} is in the gateway's CORS now.'
+  /// en: 'The env {name: String} is in the gateway's CORS now.'
   String envMigratedTitle({required String name}) =>
-      '${name} is in the gateway\'s CORS now.';
+      'The env ${name} is in the gateway\'s CORS now.';
 
   /// en: 'Its origins were moved into the add-on: edit CORS here. Remove the variable from the deploy and restart the gateway to hide this.'
   String get envMigratedDetail =>
       'Its origins were moved into the add-on: edit CORS here. Remove the variable from the deploy and restart the gateway to hide this.';
 
-  /// en: '{name: String} is set but ignored.'
+  /// en: 'The env {name: String} is set but ignored.'
   String envIgnoredTitle({required String name}) =>
-      '${name} is set but ignored.';
+      'The env ${name} is set but ignored.';
 
   /// en: 'It differs from the gateway's CORS, which is what applies. Edit CORS here, then remove the variable from the deploy and restart the gateway.'
   String get envIgnoredDetail =>
@@ -1544,6 +1544,12 @@ class AppMessages$panel$en {
 
   /// en: 'Edit route'
   String get editRoute => 'Edit route';
+
+  /// en: 'Open in the big panel'
+  String get expand => 'Open in the big panel';
+
+  /// en: 'Back to the side panel'
+  String get collapse => 'Back to the side panel';
 
   /// en: 'Maintenance'
   String get maintenance => 'Maintenance';
@@ -2209,11 +2215,11 @@ extension on AppMessages {
       'cors.gatewaySaved' => 'Gateway CORS saved',
       'cors.envMigratedTitle' => ({
         required String name,
-      }) => '${name} is in the gateway\'s CORS now.',
+      }) => 'The env ${name} is in the gateway\'s CORS now.',
       'cors.envMigratedDetail' => 'Its origins were moved into the add-on: edit CORS here. Remove the variable from the deploy and restart the gateway to hide this.',
       'cors.envIgnoredTitle' => ({
         required String name,
-      }) => '${name} is set but ignored.',
+      }) => 'The env ${name} is set but ignored.',
       'cors.envIgnoredDetail' => 'It differs from the gateway\'s CORS, which is what applies. Edit CORS here, then remove the variable from the deploy and restart the gateway.',
       'cors.envVariable' => 'Variable',
       'cors.envApplies' => 'Applies',
@@ -2249,6 +2255,8 @@ extension on AppMessages {
       'panel.redirect' => 'Redirect',
       'panel.openInRoutes' => 'Open in Routes',
       'panel.editRoute' => 'Edit route',
+      'panel.expand' => 'Open in the big panel',
+      'panel.collapse' => 'Back to the side panel',
       'panel.maintenance' => 'Maintenance',
       'panel.offRoute' => 'Off · requests are forwarded normally',
       'panel.offGateway' => 'Off · every route forwards normally',

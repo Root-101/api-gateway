@@ -48,6 +48,10 @@ class GatewayMapScreen extends StatefulWidget {
 class _GatewayMapScreenState extends State<GatewayMapScreen>
     with SingleTickerProviderStateMixin {
   static const double _panelW = 380;
+
+  ///the big panel's widest, centered over the map
+  static const double _bigW = 1180;
+  static const Duration _morph = Duration(milliseconds: 360);
   final TransformationController _view = TransformationController();
   final ValueNotifier<bool> _grabbing = ValueNotifier(false);
   late final AnimationController _flow = AnimationController(
@@ -57,6 +61,9 @@ class _GatewayMapScreenState extends State<GatewayMapScreen>
   Size _viewport = Size.zero;
   bool _fitted = false;
   double _scale = 1;
+
+  ///the panel open as the big one in the middle
+  bool _big = false;
 
   RoutesCubit get _routes => app.di.find();
 
@@ -92,7 +99,9 @@ class _GatewayMapScreenState extends State<GatewayMapScreen>
   }
 
   void _onSelected() {
-    setState(() {});
+    setState(() {
+      if (GatewayMapScreen.selected.value == null) _big = false;
+    });
     WidgetsBinding.instance.addPostFrameCallback((_) => _keepVisible());
   }
 
@@ -188,6 +197,10 @@ class _GatewayMapScreenState extends State<GatewayMapScreen>
     return LayoutBuilder(
       builder: (context, constraints) {
         _viewport = constraints.biggest;
+        final morph = MediaQuery.disableAnimationsOf(context)
+            ? Duration.zero
+            : _morph;
+        final bigInset = max(32.0, (constraints.maxWidth - _bigW) / 2);
         if (!_fitted && _routes.loaded) {
           _fitted = true;
           WidgetsBinding.instance.addPostFrameCallback((_) => _fit(layout));
@@ -249,18 +262,37 @@ class _GatewayMapScreenState extends State<GatewayMapScreen>
                 top: 0,
                 child: LinearProgressIndicator(minHeight: 2),
               ),
-            if (panelId != null)
-              Positioned(
-                top: 12,
-                right: 12,
-                bottom: 12,
-                width: _panelW,
+            if (panelId != null) ...[
+              //the big panel's scrim: a click outside closes it
+              Positioned.fill(
+                child: IgnorePointer(
+                  ignoring: !_big,
+                  child: GestureDetector(
+                    onTap: () => GatewayMapScreen.selected.value = null,
+                    child: AnimatedOpacity(
+                      opacity: _big ? 1 : 0,
+                      duration: morph,
+                      child: ColoredBox(color: c.barrier),
+                    ),
+                  ),
+                ),
+              ),
+              //the same four edges on the side and in the middle, so the box can animate
+              AnimatedPositioned(
+                duration: morph,
+                curve: appEase,
+                top: _big ? 40 : 12,
+                bottom: _big ? 40 : 12,
+                right: _big ? bigInset : 12,
+                left: _big ? bigInset : constraints.maxWidth - 12 - _panelW,
                 child: RoutePanel(
                   key: ValueKey(panelId),
                   routeId: panelId == GatewayMapScreen.gatewayId
                       ? null
                       : panelId,
                   redirectLabel: intl.panel.openInRoutes,
+                  expanded: _big,
+                  onExpand: () => setState(() => _big = !_big),
                   onClose: () => GatewayMapScreen.selected.value = null,
                   onRedirect: (route) {
                     _routes.query.value = route.name;
@@ -268,6 +300,7 @@ class _GatewayMapScreenState extends State<GatewayMapScreen>
                   },
                 ),
               ),
+            ],
           ],
         );
       },

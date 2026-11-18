@@ -61,6 +61,14 @@ class ActionsIcons {
     '<rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/>',
   );
 
+  SvgAsset get expand => const SvgAsset(
+    '<path d="M15 3h6v6"/><path d="M9 21H3v-6"/><path d="M21 3l-7 7"/><path d="M3 21l7-7"/>',
+  );
+
+  SvgAsset get collapse => const SvgAsset(
+    '<path d="M4 14h6v6"/><path d="M20 10h-6V4"/><path d="M14 10l7-7"/><path d="M3 21l7-7"/>',
+  );
+
   SvgAsset get arrowRight =>
       const SvgAsset('<path d="M5 12h14"/><path d="m12 5 7 7-7 7"/>');
 }
