@@ -20,69 +20,71 @@ today. An option of a route or of the gateway is an add-on: a new `type` of the 
 `addons`, its block in the console's route panel, and GraalVM reflection hints for its records and
 the predicates and filters it uses.
 
-1. [x] **Rate limiting per route.** Requests per IP (or API key) per route, `429` with
-   `Retry-After`; protects the services from abuse and spikes. Impact: high, the first thing
-   expected from a gateway. Effort: medium. An add-on (`rate_limit`: limit, per second/minute/hour,
-   burst), its endpoints, its block in the route panel, native hints. Counters in memory are enough
-   for one instance; Redis if there are ever several. Gateway done in 6.1.0, per route and for the
-   whole gateway (per IP on every route), decision 19 in `DECISIONS.md`.
-   - [x] Console: its block in the route panel and in the gateway's add-ons (`docs/api.md`,
-     "Rate limit"). Done in 6.1.0.
+1. [ ] **Add-ons.** Options a route, or the whole gateway, can have on top of the routing, done and
+   pending, in priority order.
+   - [x] 1.1. **Maintenance** (`maintenance`), of a route and of the whole gateway: `503` to its clients
+     while on, with a message and a return time. Gateway and console done in 6.1.0, decision 17 in
+     `DECISIONS.md`.
+   - [x] 1.2. **Health check** (`health_check`), routes only: a scheduler calls a path of the route
+     (every 10 s to 1 h) and keeps the last result (time, status, ms) in the add-on's `state`;
+     LIVE / DOWN and "Run now" in the console. Gateway and console done in 6.1.0, decision 18 in
+     `DECISIONS.md`. A history (uptime) would be a new table in the gateway.
+   - [x] 1.3. **Rate limit** (`rate_limit`), of a route and of the whole gateway: requests per client IP
+     per second/minute/hour, with burst, `429` with `Retry-After`. Counters in memory, enough for one
+     instance; Redis if there are ever several. Gateway and console done in 6.1.0, decision 19 in
+     `DECISIONS.md`.
+   - [ ] 1.4. **CORS per route.** Today one policy (`CORS_ALLOWED_ORIGINS`) for every path, and the
+     services' own CORS headers are replaced. Let each route keep its service's CORS (forward the
+     preflight to the upstream instead of answering it in the gateway) or set its own origins, as
+     an add-on of the route, edited from the admin API and the console. See decision 15 in
+     `DECISIONS.md`.
+   - [ ] 1.5. **Circuit breaker and retries.** A service that keeps failing is cut and answered with a
+     fast `503` instead of waiting for timeouts; `GET`s are retried on transient failures. Impact:
+     high, stops cascading failures. Effort: medium. An add-on per route (thresholds, retries), new
+     dependency (Resilience4j, delicate on GraalVM), native hints.
+   - [ ] 1.6. **Header transformation.** Add, remove or rewrite request and response headers per route
+     (hide `Server`, set `X-Forwarded-Prefix`, inject a fixed one). Impact: medium. Effort:
+     low-medium. An add-on (list of rules) of a route and maybe of the whole gateway, a key-value
+     list editor in the console, native hints.
+   - [ ] 1.7. **Timeouts and max body size per route.** Today the timeouts are global
+     (`GATEWAY_CONNECT_TIMEOUT_MS`, `GATEWAY_RESPONSE_TIMEOUT`), which stay as the default. Impact:
+     medium. Effort: low. An add-on per route, route metadata in the mapper; no new dependencies.
 2. [ ] **Authentication towards the services (JWT / API key).** The gateway validates the token
    before passing the request and forwards the identity in headers (`X-User-Id`), so the services
-   stop validating it each on their own. Impact: high. Effort: high. Design (issuer, JWKS, keys),
-   migration (auth mode per route, API keys table), a new API and console screen to manage keys,
-   `SECURITY.md`.
-3. [ ] **Circuit breaker and retries.** A service that keeps failing is cut and answered with a
-   fast `503` instead of waiting for timeouts; `GET`s are retried on transient failures. Impact:
-   high, stops cascading failures. Effort: medium. New dependency (Resilience4j, delicate on
-   GraalVM), migration, API, console fields, native hints.
-4. [ ] **Request id / tracing.** Generate or forward an `X-Request-Id` (or `traceparent`) to the
+   stop validating it each on their own. Impact: high. Effort: high. It could be an add-on (the auth
+   mode of a route), but for now it is its own item: design (issuer, JWKS, keys), an API keys table
+   (a migration), a new API and console screen to manage keys, `SECURITY.md`.
+3. [ ] **Request id / tracing.** Generate or forward an `X-Request-Id` (or `traceparent`) to the
    service, return it to the client and keep it in the log, to follow a request across services.
    Impact: high. Effort: low. A global filter, a migration (column in `http_log`), the field and a
-   search filter in the API, a column and filter in the console.
-5. [ ] **Latency in the logs and metrics per route.** Keep each request's duration and show p50/p95,
+   search filter in the API, a column and filter in the console. Not an add-on: always on.
+4. [ ] **Latency in the logs and metrics per route.** Keep each request's duration and show p50/p95,
    error rate and volume per route in the console; optionally `/metrics` for Prometheus. Impact:
    high. Effort: medium. Migration (`duration_ms` and indexes), a new API for aggregates per route
-   and time range, a dashboard screen designed in the canvas. Builds on 4.
-6. [ ] **More predicates and filters.** `order`, `methods`, `hosts`, `headers`, all optional, in
+   and time range, a dashboard screen designed in the canvas. Builds on 3. Not an add-on: always on.
+5. [ ] **More predicates and filters.** `order`, `methods`, `hosts`, `headers`, all optional, in
    the admin API and the console form. Impact: medium-high. Effort: medium. Migration, API, route
-   form redesign, native hints of each predicate, validation in `RouteRules`.
-7. [ ] **Header transformation.** Add, remove or rewrite request and response headers per route
-   (hide `Server`, set `X-Forwarded-Prefix`, inject a fixed one). Impact: medium. Effort: low-medium.
-   Migration (list of rules per route), API, a key-value list editor in the console, native hints.
-8. [ ] **Timeouts and max body size per route.** Today the timeouts are global. Impact: medium.
-   Effort: low. Migration (2–3 columns), API, console fields, route metadata in the mapper; no new
-   dependencies.
-9. [ ] **Canary / traffic split.** Send a percentage of a route's traffic to another version of the
+   form redesign, native hints of each predicate, validation in `RouteRules`. Not an add-on: they
+   decide which route a request matches, part of the route itself.
+6. [ ] **Canary / traffic split.** Send a percentage of a route's traffic to another version of the
    service (`Weight` predicate), for gradual deploys. Impact: medium. Effort: medium. Design (route
-   groups with weights), migration, API, console (grouping and weights), native hints.
-10. [ ] **Several admin users and an audit log.** Users with roles (read-only / admin) and a record
-    of who created, edited or deleted each route. Impact: medium, grows with the team. Effort:
-    high. Design (roles, user management), migration (users with hashed passwords, audit table),
-    a new security model (today one user from variables), new API and screens, `SECURITY.md` and
-    `DECISIONS.md`.
+   groups with weights), migration, API, console (grouping and weights), native hints. Not an
+   add-on: it joins several routes in a group.
+7. [ ] **Several admin users and an audit log.** Users with roles (read-only / admin) and a record
+   of who created, edited or deleted each route. Impact: medium, grows with the team. Effort:
+   high. Design (roles, user management), migration (users with hashed passwords, audit table),
+   a new security model (today one user from variables), new API and screens, `SECURITY.md` and
+   `DECISIONS.md`. Not an add-on: it is about the admins, not the traffic.
 
 ## Possible improvements
-
-- [ ] Gateway: **HTML maintenance page.** Today a route in maintenance answers a Problem Details
-  (JSON) to everyone. A browser (`Accept: text/html`) could get a page instead: first one built-in
-  template (title, message, return time, in the request's language, no template engine), later the
-  admin's own HTML in the maintenance add-on (served as is to the end users: review it as a
-  security change).
-
-- [x] Gateway: **Health check add-on.** Each route can have a health check (`health_check`: path,
-  every 10 s to 1 h): a scheduler calls it and keeps the last result (time, status, ms) in the
-  add-on's `state`. Reviewed as a security change: decision 18 in `DECISIONS.md`. Done in 6.1.0.
-- [x] Console: **Health check add-on.** LIVE / DOWN per route from `addons.health_check.state`, set
-  it (path, interval, on/off) and a "Run now" (`POST .../health-check/run`). Done in 6.1.0. A history
-  (uptime) would be a new table in the gateway.
 
 - [ ] Gateway: **HTTP/2 and gRPC** support, for a later version (not 6.0.0). gRPC needs HTTP/2 end
   to end (trailers, multiplexed streams): enable it on the gateway server (`server.http2.enabled`)
   and on the client to the upstreams, check the Railway edge forwards HTTP/2 to the container, and
   check the http logs filter with long-lived streams. Then update *Supported protocols* in the README.
-- [ ] Gateway: **CORS per route**: today one policy (`CORS_ALLOWED_ORIGINS`) for every path, and
-  the services' own CORS headers are replaced. Let each route keep its service's CORS (forward the
-  preflight to the upstream instead of answering it in the gateway) or set its own origins, and
-  maybe edit them from the admin API and the console. See decision 15 in `DECISIONS.md`.
+
+- [ ] Gateway: **HTML maintenance page**, an extra of the maintenance add-on, not planned for now.
+  Today a route in maintenance answers a Problem Details (JSON) to everyone. A browser
+  (`Accept: text/html`) could get a page instead: first one built-in template (title, message,
+  return time, in the request's language, no template engine), later the admin's own HTML in the
+  maintenance add-on (served as is to the end users: review it as a security change).
