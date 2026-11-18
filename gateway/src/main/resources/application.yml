@@ -42,6 +42,12 @@ spring:
     password: ${DB_PASSWORD:${app.defaults.db-password}}
     locations: classpath:db/migration
 
+logging:
+  level:
+    #shortcut: hides HV000271 (`@Valid` on a List, deprecated), raised by Spring Cloud Gateway's own classes
+    #(RouteDefinition.predicates/filters, GatewayProperties.routes), not ours; drop it once a gateway release fixes them
+    org.hibernate.validator.internal.metadata.aggregated.CascadingMetaDataBuilder: ERROR
+
 app:
   defaults:
     username: admin
