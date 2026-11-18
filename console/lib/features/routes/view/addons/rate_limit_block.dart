@@ -1,4 +1,5 @@
 import 'package:console/app_exporter.dart';
+import 'package:console/features/routes/view/addons/slide_switch.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -76,10 +77,12 @@ class _RateLimitBlockState extends State<RateLimitBlock> {
     if (mounted) setState(() => _busy = false);
   }
 
-  Future<void> _toggle(bool on) async {
+  ///true when it was saved (the slide keeps its handle where it was dropped till then)
+  Future<bool> _toggle(bool on) async {
     setState(() => _busy = true);
-    await cubit.setEnabled(route: widget.route, enabled: on);
+    final error = await cubit.setEnabled(route: widget.route, enabled: on);
     if (mounted) setState(() => _busy = false);
+    return error == null;
   }
 
   String _periodText(BuildContext context, String period) {
@@ -186,32 +189,49 @@ class _RateLimitBlockState extends State<RateLimitBlock> {
           m.burst == null ? intl.burstSame : intl.burstValue(burst: m.burst!),
         ),
         row(intl.overLimit, intl.tooMany),
-        _switchRow(value: m.enabled, onChanged: _busy ? null : _toggle),
+        _switchRow(value: m.enabled),
       ],
     );
   }
 
-  Widget _switchRow({
-    required bool value,
-    required ValueChanged<bool>? onChanged,
-  }) {
+  Widget _switchRow({required bool value}) {
     final c = app.colors;
-    final intl = context.intl.rate;
+    final intl = context.intl;
     return Row(
       children: [
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(intl.enabled, style: TextStyle(fontSize: 13, color: c.text)),
               Text(
-                intl.enabledHint,
+                intl.rate.enabled,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(fontSize: 13, color: c.text),
+              ),
+              Text(
+                intl.rate.enabledHint,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
                 style: TextStyle(fontSize: 12, color: c.textTertiary),
               ),
             ],
           ),
         ),
-        Switch(value: value, onChanged: onChanged),
+        const SizedBox(width: 12),
+        SizedBox(
+          width: 120,
+          child: SlideSwitch(
+            compact: true,
+            value: value,
+            onLabel: intl.panel.turnOn,
+            offLabel: intl.panel.turnOff,
+            hint: intl.panel.slideHint,
+            color: c.info,
+            onColor: const Color(0xff0b2b45),
+            onChanged: _toggle,
+          ),
+        ),
       ],
     );
   }

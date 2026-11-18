@@ -1113,8 +1113,8 @@ class AppMessages$health$en {
   /// en: 'Check on a schedule'
   String get enabled => 'Check on a schedule';
 
-  /// en: 'Off: no calls, Run now still works.'
-  String get enabledHint => 'Off: no calls, Run now still works.';
+  /// en: 'Off: only Run now calls it'
+  String get enabledHint => 'Off: only Run now calls it';
 
   /// en: 'Remove health check?'
   String get removeTitle => 'Remove health check?';
@@ -1218,8 +1218,8 @@ class AppMessages$rate$en {
   /// en: 'Limit requests'
   String get enabled => 'Limit requests';
 
-  /// en: 'Off: every request goes through.'
-  String get enabledHint => 'Off: every request goes through.';
+  /// en: 'Off: nothing is limited'
+  String get enabledHint => 'Off: nothing is limited';
 
   /// en: 'Saving starts every count from zero.'
   String get resetHint => 'Saving starts every count from zero.';
@@ -1394,6 +1394,12 @@ class AppMessages$panel$en {
 
   /// en: 'Drag the handle, or use the arrow keys'
   String get slideHint => 'Drag the handle, or use the arrow keys';
+
+  /// en: 'Turn on'
+  String get turnOn => 'Turn on';
+
+  /// en: 'Turn off'
+  String get turnOff => 'Turn off';
 
   /// en: 'Controlled by the gateway'
   String get locked => 'Controlled by the gateway';
@@ -1868,7 +1874,7 @@ extension on AppMessages {
       }) => 'Called on ${host}; any 2xx counts as live.',
       'health.checkEvery' => 'Check every',
       'health.enabled' => 'Check on a schedule',
-      'health.enabledHint' => 'Off: no calls, Run now still works.',
+      'health.enabledHint' => 'Off: only Run now calls it',
       'health.removeTitle' => 'Remove health check?',
       'health.removeBody' => 'Its endpoint, interval and last result are lost. You can add it again later.',
       'health.add' => 'Health check',
@@ -1915,7 +1921,7 @@ extension on AppMessages {
       'rate.burstPlaceholder' => 'Same as the limit',
       'rate.per' => 'Per client IP, every',
       'rate.enabled' => 'Limit requests',
-      'rate.enabledHint' => 'Off: every request goes through.',
+      'rate.enabledHint' => 'Off: nothing is limited',
       'rate.resetHint' => 'Saving starts every count from zero.',
       'rate.removeTitle' => 'Remove rate limit?',
       'rate.removeBody' =>
@@ -1976,6 +1982,8 @@ extension on AppMessages {
       'panel.slideOn' => 'Slide right to turn on maintenance',
       'panel.slideOff' => 'Slide left to turn off',
       'panel.slideHint' => 'Drag the handle, or use the arrow keys',
+      'panel.turnOn' => 'Turn on',
+      'panel.turnOff' => 'Turn off',
       'panel.locked' => 'Controlled by the gateway',
       'panel.lockedHint' => 'The whole gateway is in maintenance: every route answers its message until it is turned off.',
       'panel.edit' => 'Edit',

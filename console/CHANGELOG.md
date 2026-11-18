@@ -14,14 +14,14 @@
           the last check (maintenance wins), a `Health · every 30 s` badge on the card, a chip on the map node, and, while it is
           down, a red, still branch in the map with a red path label and a reddish node (it still gets its requests). Its block in the panel shows the
           endpoint, the interval and the last check ("12 s ago · 200 in 18 ms · LIVE"), with "Run now", a "Check on a schedule"
-          switch (as rate limit's, `POST .../enable` and `.../disable`), edit in place (endpoint, one of 10 s / 30 s /
+          slide (as rate limit's, `POST .../enable` and `.../disable`), edit in place (endpoint, one of 10 s / 30 s /
           1 min / 5 min / 15 min / 1 h) and remove. Added as
           `/health` every 30 s, on. The routes are reread every 10 s while one has it on (the gateway doesn't
           push). "Add to this route" lists the types the route's `addons` has as keys. API: `PUT`, `DELETE` and
           `POST .../run` under `/routes/{id}/addons/health-check`.
         * **Rate limit** :stopwatch: : A third add-on, per route and for the whole gateway: past a number of requests
           per second, minute or hour per client IP, a 429 (the gateway's counts every route together). Its block
-          shows the limit, the burst ("Same as the limit" when empty) and the 429, with a switch to turn it on or
+          shows the limit, the burst ("Same as the limit" when empty) and the 429, with a slide to turn it on or
           off, edit in place (requests, burst, period; saving starts every count from zero) and remove. Added as 60 / minute, burst 10, off, since it changes traffic. A `Rate limit · 60/min` badge on
           the card and a `60/min` chip on the map node. API: `rate_limit` in each route and in `GET /addons`, and
           `PUT`, `DELETE`, `POST .../enable` and `.../disable` under `/routes/{id}/addons/rate-limit` and
@@ -48,7 +48,9 @@
           state) and the footer (rows per page, pages) live in `features/logs/view/widgets`. The date range calendar
           of the logs filter is now a design system component, `AppDateRangeDialog`. The three add-on blocks share
           their header (icon, name, info, Edit, Remove) and their remove confirmation: `AddonHeader` and
-          `AddonRemoveConfirm` in `addons/addon_block_parts.dart`. The shell (`base_screen.dart`) keeps the add-on loads,
+          `AddonRemoveConfirm` in `addons/addon_block_parts.dart`. The health check's and the rate limit's on / off are
+          compact slides on the right of their row (120 px, green and blue), like maintenance's full-width one
+          (`SlideSwitch` takes a `color` and `compact`). The shell (`base_screen.dart`) keeps the add-on loads,
           the health check poll and the layout; the rail with its items, the maintenance and offline banners and the
           snack listeners (`ShellListeners`) live in `features/base`. The restore dialog's drop area uses the design
           system's `DashedBorder` (now with `dash` and `gap`) instead of its own copy.

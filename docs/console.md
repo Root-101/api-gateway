@@ -199,7 +199,7 @@ that is down still gets its requests.
 |---------------------------------------|----------------------------------------------------------------------------------|
 | **Add to this route → Health check**  | Adds it, on, calling `/health` every 30 s                                        |
 | **Run now** (play)                    | Calls it now and shows the result (up to 5 s), also while it's off               |
-| **Check on a schedule** (switch)      | On: called every interval; off: no calls, **Every** says `Off · every 30 s` and **Run now** still works. Keeps the endpoint, interval and last result |
+| **Check on a schedule** (slide)       | On: called every interval; off: no calls, **Every** says `Off · every 30 s` and **Run now** still works. Keeps the endpoint, interval and last result |
 | **Edit** (pencil)                     | **Endpoint** (added to the route's URI) and **Check every** (10 s to 1 h)        |
 | **Remove** (trash)                    | Asks in the block itself, then removes it with its last result                   |
 
@@ -221,7 +221,7 @@ checked first, and the admin API is never limited.
 | In the block                        | What it does                                                                       |
 |-------------------------------------|------------------------------------------------------------------------------------|
 | **Add to this route → Rate limit**  | Adds it, off, at 60 per minute with a burst of 10                                  |
-| **Limit requests** (switch)         | Turns it on or off, keeping the rest                                               |
+| **Limit requests** (slide)          | Turns it on or off, keeping the rest                                               |
 | **Edit** (pencil)                   | **Requests**, **Burst** (the most at once; empty: the same as the limit) and the period (second, minute, hour) |
 | **Remove** (trash)                  | Asks in the block itself, then removes it: it shows under **Add to …** again      |
 

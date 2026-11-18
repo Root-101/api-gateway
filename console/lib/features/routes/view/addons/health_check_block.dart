@@ -1,4 +1,5 @@
 import 'package:console/app_exporter.dart';
+import 'package:console/features/routes/view/addons/slide_switch.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -74,10 +75,12 @@ class _HealthCheckBlockState extends State<HealthCheckBlock> {
     if (mounted) setState(() => _busy = false);
   }
 
-  Future<void> _toggle(bool on) async {
+  ///true when it was saved (the slide keeps its handle where it was dropped till then)
+  Future<bool> _toggle(bool on) async {
     setState(() => _busy = true);
-    await cubit.setEnabled(route: widget.route, enabled: on);
+    final error = await cubit.setEnabled(route: widget.route, enabled: on);
     if (mounted) setState(() => _busy = false);
+    return error == null;
   }
 
   Future<void> _run() async {
@@ -250,16 +253,33 @@ class _HealthCheckBlockState extends State<HealthCheckBlock> {
                 children: [
                   Text(
                     intl.health.enabled,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                     style: TextStyle(fontSize: 13, color: c.text),
                   ),
                   Text(
                     intl.health.enabledHint,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                     style: TextStyle(fontSize: 12, color: c.textTertiary),
                   ),
                 ],
               ),
             ),
-            Switch(value: m.enabled, onChanged: _busy ? null : _toggle),
+            const SizedBox(width: 12),
+            SizedBox(
+              width: 120,
+              child: SlideSwitch(
+                compact: true,
+                value: m.enabled,
+                onLabel: intl.panel.turnOn,
+                offLabel: intl.panel.turnOff,
+                hint: intl.panel.slideHint,
+                color: c.success,
+                onColor: const Color(0xff0f3a14),
+                onChanged: _toggle,
+              ),
+            ),
           ],
         ),
       ],

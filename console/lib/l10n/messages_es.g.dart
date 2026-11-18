@@ -873,8 +873,7 @@ class AppMessages$health$es implements AppMessages$health$en {
   @override
   String get enabled => 'Comprobar periódicamente';
   @override
-  String get enabledHint =>
-      'Apagado: no se llama, Comprobar ahora sigue funcionando.';
+  String get enabledHint => 'Apagado: solo lo llama Comprobar ahora';
   @override
   String get removeTitle => '¿Quitar el health check?';
   @override
@@ -948,7 +947,7 @@ class AppMessages$rate$es implements AppMessages$rate$en {
   @override
   String get enabled => 'Limitar peticiones';
   @override
-  String get enabledHint => 'Apagado: pasan todas las peticiones.';
+  String get enabledHint => 'Apagado: no se limita nada';
   @override
   String get resetHint => 'Al guardar, todas las cuentas vuelven a cero.';
   @override
@@ -1074,6 +1073,10 @@ class AppMessages$panel$es implements AppMessages$panel$en {
   String get slideOff => 'Desliza a la izquierda para apagar';
   @override
   String get slideHint => 'Arrastra el control o usa las flechas';
+  @override
+  String get turnOn => 'Encender';
+  @override
+  String get turnOff => 'Apagar';
   @override
   String get locked => 'Lo controla el gateway';
   @override
@@ -1524,8 +1527,7 @@ extension on AppMessagesEs {
       }) => 'Se llama en ${host}; cualquier 2xx cuenta como activo.',
       'health.checkEvery' => 'Comprobar cada',
       'health.enabled' => 'Comprobar periódicamente',
-      'health.enabledHint' =>
-        'Apagado: no se llama, Comprobar ahora sigue funcionando.',
+      'health.enabledHint' => 'Apagado: solo lo llama Comprobar ahora',
       'health.removeTitle' => '¿Quitar el health check?',
       'health.removeBody' => 'Se pierden su endpoint, su intervalo y el último resultado. Puedes volver a añadirlo después.',
       'health.add' => 'Health check',
@@ -1572,7 +1574,7 @@ extension on AppMessagesEs {
       'rate.burstPlaceholder' => 'Igual que el límite',
       'rate.per' => 'Por IP de cliente, cada',
       'rate.enabled' => 'Limitar peticiones',
-      'rate.enabledHint' => 'Apagado: pasan todas las peticiones.',
+      'rate.enabledHint' => 'Apagado: no se limita nada',
       'rate.resetHint' => 'Al guardar, todas las cuentas vuelven a cero.',
       'rate.removeTitle' => '¿Quitar el rate limit?',
       'rate.removeBody' =>
@@ -1643,6 +1645,8 @@ extension on AppMessagesEs {
       'panel.slideOn' => 'Desliza para encender el mantenimiento',
       'panel.slideOff' => 'Desliza a la izquierda para apagar',
       'panel.slideHint' => 'Arrastra el control o usa las flechas',
+      'panel.turnOn' => 'Encender',
+      'panel.turnOff' => 'Apagar',
       'panel.locked' => 'Lo controla el gateway',
       'panel.lockedHint' => 'Todo el gateway está en mantenimiento: cada ruta responde su mensaje hasta que se apague.',
       'panel.edit' => 'Editar',

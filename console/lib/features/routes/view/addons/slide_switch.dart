@@ -4,8 +4,9 @@ import 'package:console/app_exporter.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-///full-width slide control: drag the handle right to turn on, left to turn off, no confirmation.
-///Arrow keys do the same, so it works without a mouse
+///slide control: drag the handle right to turn on, left to turn off, no confirmation.
+///Arrow keys do the same, so it works without a mouse. Maintenance's is full width and orange;
+///the health check's and the rate limit's are [compact] (36 px, on the right of their row) in their own color
 class SlideSwitch extends StatefulWidget {
   final bool value;
   final String onLabel;
@@ -17,6 +18,15 @@ class SlideSwitch extends StatefulWidget {
   final Future<bool> Function(bool on)? onChanged;
   final String? lockedLabel;
 
+  ///the "on" color (track, fill, knob, label); null = maintenance's orange
+  final Color? color;
+
+  ///the handle's icon on [color]; null = maintenance's dark brown
+  final Color? onColor;
+
+  ///36 px high with a 30 px knob and a 12 px label, for a narrow slot
+  final bool compact;
+
   const SlideSwitch({
     required this.value,
     required this.onLabel,
@@ -24,6 +34,9 @@ class SlideSwitch extends StatefulWidget {
     required this.hint,
     required this.onChanged,
     this.lockedLabel,
+    this.color,
+    this.onColor,
+    this.compact = false,
     super.key,
   });
 
@@ -32,8 +45,9 @@ class SlideSwitch extends StatefulWidget {
 }
 
 class _SlideSwitchState extends State<SlideSwitch> {
-  static const double _height = 44;
-  static const double _knob = 38;
+  double get _height => widget.compact ? 36 : 44;
+
+  double get _knob => widget.compact ? 30 : 38;
 
   ///handle position while dragging, 0 (left) to 1 (right); null when not dragging
   double? _drag;
@@ -77,6 +91,8 @@ class _SlideSwitchState extends State<SlideSwitch> {
     final c = app.colors;
     final locked = widget.onChanged == null;
     final on = _pending ?? widget.value;
+    final accent = widget.color ?? c.maintenance;
+    final side = _knob + 8;
     return LayoutBuilder(
       builder: (context, constraints) {
         //inside the 1 px border: the knob runs 2 px from each end
@@ -128,15 +144,13 @@ class _SlideSwitchState extends State<SlideSwitch> {
                     child: Container(
                       height: _height,
                       decoration: BoxDecoration(
-                        color: on
-                            ? c.maintenance.withValues(alpha: 0.10)
-                            : c.night,
+                        color: on ? accent.withValues(alpha: 0.10) : c.night,
                         borderRadius: BorderRadius.circular(_height / 2),
                         border: Border.all(
                           color: _focused
                               ? c.lilac
                               : on
-                              ? c.maintenance.withValues(alpha: 0.55)
+                              ? accent.withValues(alpha: 0.55)
                               : c.outlineCard,
                         ),
                       ),
@@ -153,7 +167,7 @@ class _SlideSwitchState extends State<SlideSwitch> {
                             width: x + _knob + 4,
                             child: DecoratedBox(
                               decoration: BoxDecoration(
-                                color: c.maintenance.withValues(alpha: 0.22),
+                                color: accent.withValues(alpha: 0.22),
                                 borderRadius: BorderRadius.circular(
                                   _height / 2,
                                 ),
@@ -163,8 +177,8 @@ class _SlideSwitchState extends State<SlideSwitch> {
                           Padding(
                             //room for the knob on its side only: the canvas's 48 px on both cut the label
                             padding: on
-                                ? const EdgeInsets.only(left: 12, right: 46)
-                                : const EdgeInsets.only(left: 46, right: 12),
+                                ? EdgeInsets.only(left: 12, right: side)
+                                : EdgeInsets.only(left: side, right: 12),
                             child: Opacity(
                               //fades out while the knob is dragged away from its side
                               opacity: _drag == null
@@ -176,9 +190,9 @@ class _SlideSwitchState extends State<SlideSwitch> {
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
                                 style: TextStyle(
-                                  fontSize: 13,
+                                  fontSize: widget.compact ? 12 : 13,
                                   fontWeight: FontWeight.w500,
-                                  color: on ? c.maintenance : c.textTertiary,
+                                  color: on ? accent : c.textTertiary,
                                 ),
                               ),
                             ),
@@ -193,7 +207,7 @@ class _SlideSwitchState extends State<SlideSwitch> {
                               height: _knob,
                               alignment: Alignment.center,
                               decoration: BoxDecoration(
-                                color: live > 0.5 ? c.maintenance : c.label,
+                                color: live > 0.5 ? accent : c.label,
                                 shape: BoxShape.circle,
                                 boxShadow: const [
                                   BoxShadow(
@@ -207,9 +221,9 @@ class _SlideSwitchState extends State<SlideSwitch> {
                                 quarterTurns: on ? 2 : 0,
                                 child: app.assets.icons.general.chevronsRight
                                     .build(
-                                      size: 16,
+                                      size: widget.compact ? 14 : 16,
                                       color: live > 0.5
-                                          ? c.onMaintenance
+                                          ? (widget.onColor ?? c.onMaintenance)
                                           : c.surface,
                                     ),
                               ),
