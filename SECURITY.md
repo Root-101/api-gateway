@@ -44,9 +44,13 @@ The gateway has two faces on the same port:
   of the credentials: the login and Basic auth. A token it already has and the health check keep
   working. Behind a proxy that doesn't set `X-Forwarded-For`, every client shares the proxy's IP,
   so a few wrong passwords keep every admin from logging in until the window ends.
-- **Restrict CORS** with `CORS_ALLOWED_ORIGINS` to the origins of the console and your web apps:
-  the default `*` lets any page call the admin API with a token it has, and read any proxied
-  service. Cookies are never allowed cross-origin (no credentials).
+- **Restrict CORS** in the gateway's CORS add-on (console, or `PUT /_admin/addons/cors`) to the
+  origins of the console and your web apps: the default `*` lets any page call the admin API with a
+  token it has, and read any proxied service. The gateway's never allows cookies cross-origin (no
+  credentials); a route's can, only with explicit origins, never with `*`. A change from a browser
+  that would leave that browser out is refused (`400`); if a wrong list locks the console out
+  anyway, fix it without a browser, where CORS doesn't apply:
+  `curl -X PUT -H "Authorization: Basic …" -H "Content-Type: application/json" -d '{"enabled":true,"allowed_origins":["https://console.example.com"]}' https://gateway.example.com/_admin/addons/cors`.
 - **Rename the admin path** (`ADMIN_PATH`) if you want it off the default `_admin`; it is not a
   secret, only a way to keep it out of the way of the services.
 - **Run one instance.** Tokens, the lockout count and the routes in use live in memory per

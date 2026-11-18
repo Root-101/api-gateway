@@ -1690,6 +1690,225 @@
           ]
         },
         {
+          "name": "cors - set",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{gateway-url}}/{{gateway-admin-path}}/routes/{{route-id}}/addons/cors",
+              "host": [
+                "{{gateway-url}}"
+              ],
+              "path": [
+                "{{gateway-admin-path}}",
+                "routes",
+                "{{route-id}}",
+                "addons",
+                "cors"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"enabled\": true,\n    \"allowed_origins\": [\n        \"https://app.example.com\",\n        \"https://*.example.org\"\n    ],\n    \"allow_credentials\": true\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 200', () => pm.response.to.have.status(200));",
+                  "pm.test('returns the saved cors', () => {",
+                  "    const r = pm.response.json();",
+                  "    pm.expect(r.enabled).to.eql(true);",
+                  "    pm.expect(r.allowed_origins).to.eql(['https://app.example.com', 'https://*.example.org']);",
+                  "    pm.expect(r.allow_credentials).to.eql(true);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "cors - disable",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{gateway-url}}/{{gateway-admin-path}}/routes/{{route-id}}/addons/cors/disable",
+              "host": [
+                "{{gateway-url}}"
+              ],
+              "path": [
+                "{{gateway-admin-path}}",
+                "routes",
+                "{{route-id}}",
+                "addons",
+                "cors",
+                "disable"
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 200', () => pm.response.to.have.status(200));",
+                  "pm.test('off, origins kept', () => {",
+                  "    const r = pm.response.json();",
+                  "    pm.expect(r.enabled).to.eql(false);",
+                  "    pm.expect(r.allowed_origins).to.have.lengthOf(2);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "cors - credentials with any origin",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{gateway-url}}/{{gateway-admin-path}}/routes/{{route-id}}/addons/cors",
+              "host": [
+                "{{gateway-url}}"
+              ],
+              "path": [
+                "{{gateway-admin-path}}",
+                "routes",
+                "{{route-id}}",
+                "addons",
+                "cors"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"enabled\": true,\n    \"allowed_origins\": [\n        \"*\"\n    ],\n    \"allow_credentials\": true\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 400', () => pm.response.to.have.status(400));",
+                  "pm.test('says why', () => pm.expect(pm.response.json().detail).to.include('Credentials'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "cors - invalid",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{gateway-url}}/{{gateway-admin-path}}/routes/{{route-id}}/addons/cors",
+              "host": [
+                "{{gateway-url}}"
+              ],
+              "path": [
+                "{{gateway-admin-path}}",
+                "routes",
+                "{{route-id}}",
+                "addons",
+                "cors"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"enabled\": true,\n    \"allowed_origins\": [\n        \"https://app.example.com/path\"\n    ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 422', () => pm.response.to.have.status(422));",
+                  "pm.test('names the broken origin', () => {",
+                  "    const fields = pm.response.json().violations.map(v => v.fieldName);",
+                  "    pm.expect(fields).to.include('allowed_origins[0]');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "cors - delete",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{gateway-url}}/{{gateway-admin-path}}/routes/{{route-id}}/addons/cors",
+              "host": [
+                "{{gateway-url}}"
+              ],
+              "path": [
+                "{{gateway-admin-path}}",
+                "routes",
+                "{{route-id}}",
+                "addons",
+                "cors"
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 204', () => pm.response.to.have.status(204));"
+                ]
+              }
+            }
+          ]
+        },
+        {
           "name": "delete",
           "request": {
             "method": "DELETE",
@@ -1938,6 +2157,51 @@
                 "exec": [
                   "pm.test('status is 400', () => pm.response.to.have.status(400));",
                   "pm.test('names the field', () => pm.expect(pm.response.json().detail).to.include('retry_after'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "cors - set with credentials",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{gateway-url}}/{{gateway-admin-path}}/addons/cors",
+              "host": [
+                "{{gateway-url}}"
+              ],
+              "path": [
+                "{{gateway-admin-path}}",
+                "addons",
+                "cors"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"enabled\": true,\n    \"allowed_origins\": [\n        \"https://console.example.com\"\n    ],\n    \"allow_credentials\": true\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 400', () => pm.response.to.have.status(400));",
+                  "pm.test('says why', () => pm.expect(pm.response.json().detail).to.include('credentials'));"
                 ]
               }
             }

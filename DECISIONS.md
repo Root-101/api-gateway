@@ -147,6 +147,8 @@ reading the list again.
 
 ## 15. One CORS policy for every path, without credentials
 
+Superseded by [20](#20-cors-as-an-add-on-of-the-gateway-and-of-each-route).
+
 The CORS policy (`CORS_ALLOWED_ORIGINS`, `*` by default) applies to every path, the admin API and
 the proxied routes, without credentials. The `Access-Control-*` headers a service sends are dropped:
 the gateway's are the only ones.
@@ -228,3 +230,30 @@ with a token bucket in memory: `limit` per `period`, up to `burst` at once.
   the old limits are dropped whole): simpler than moving each count to a new limit. With several
   instances each counts on its own; Redis then (see 6). A bucket full again is forgotten every
   minute, so the memory follows the clients of the last minute.
+
+## 20. CORS as an add-on of the gateway and of each route
+
+CORS is the `cors` add-on (see 17): the gateway's covers the admin API and every route without its
+own, a route's covers only that route. Only the origins and the credentials can be set; methods,
+headers and exposed headers stay `*`. It replaces `CORS_ALLOWED_ORIGINS` (15).
+
+- **Applied where the gateway already knows the route.** Spring Cloud Gateway's handler mapping
+  resolves the route (`GATEWAY_ROUTE_ATTR`) and then runs its CORS step: its
+  `CorsConfigurationSource` reads that route's add-on, never a path matched by hand, so it is
+  always the route that gets the request. Its own `globalcors` listener is off: it replaces that
+  source on every route refresh. Spring Security's CORS filter only covers the admin API (it ends
+  every preflight, a proxied one would never reach the handler mapping), so its `401`/`403` keep
+  their CORS headers.
+- **The gateway's always exists, always on, never with credentials.** Without it the console
+  can't reach the admin API; the admin API uses a header token, credentials are per service.
+- **No credentials with any origin**, at any level: it was the hole closed in 6.0.0.
+- **Lockout guard.** A `PUT` of the gateway's from a browser whose `Origin` the new list doesn't
+  allow is a `400`. Without a browser there is no CORS, so a wrong list is fixed with curl.
+- **The env var only seeds it, once.** No row: created from `CORS_ALLOWED_ORIGINS`, or `*`. A row:
+  the env var is ignored, with a warning. Rejected: the env var winning while set, with the console
+  read-only: two sources of truth and more to delete in 7.0, where the env var goes.
+- **Rejected: passing the preflight to the service.** Spring answers every preflight in the
+  handler mapping, even without a config; forwarding it means hiding it from Spring and restoring
+  it later, fragile. A route's own origins and credentials cover the need.
+- A path with no route gets no CORS headers: an error either way.
+- In memory, per instance, as the other add-ons.

@@ -128,7 +128,7 @@ class GatewayProxyIT extends IntegrationTest {
     }
 
     /**
-     * Proxied routes get the gateway's CORS (`CORS_ALLOWED_ORIGINS`, no credentials), also on the preflight
+     * Proxied routes without their own get the gateway's CORS add-on (`*` in the tests, no credentials), also on the preflight
      * (WebFlux never forwards it to the route). The upstream's own CORS headers are dropped, not duplicated.
      */
     @Test

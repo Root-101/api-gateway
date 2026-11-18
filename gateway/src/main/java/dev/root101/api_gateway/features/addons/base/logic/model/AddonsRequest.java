@@ -1,5 +1,6 @@
 package dev.root101.api_gateway.features.addons.base.logic.model;
 
+import dev.root101.api_gateway.features.addons.cors.logic.model.Cors;
 import dev.root101.api_gateway.features.addons.health_check.logic.model.HealthCheck;
 import dev.root101.api_gateway.features.addons.maintenance.logic.model.Maintenance;
 import dev.root101.api_gateway.features.addons.rate_limit.logic.model.RateLimit;
@@ -23,6 +24,9 @@ public class AddonsRequest {
 
     @Valid
     private RateLimit rateLimit;
+
+    @Valid
+    private Cors cors;
 
     private final Set<String> sent = new HashSet<>();
 
@@ -51,6 +55,15 @@ public class AddonsRequest {
     public void setRateLimit(RateLimit rateLimit) {
         this.rateLimit = rateLimit;
         sent.add(RateLimit.TYPE);
+    }
+
+    public Cors getCors() {
+        return cors;
+    }
+
+    public void setCors(Cors cors) {
+        this.cors = cors;
+        sent.add(Cors.TYPE);
     }
 
     /**

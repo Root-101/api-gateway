@@ -69,12 +69,12 @@ Content-Type: application/problem+json
 
 `Retry-After` is the seconds left in the window; `detail` says it in minutes, rounded up (in seconds under one minute).
 
-CORS applies to every path, the admin API and the proxied routes: the origins of
-`CORS_ALLOWED_ORIGINS` (`*` by default), any method and any header, without credentials (tokens go
-in a header, never a cookie). The gateway answers the preflights itself, and the `Access-Control-*`
-headers a service sends are replaced by the gateway's.
+CORS comes from the [CORS add-on](#cors): the gateway's on the admin API and on every route
+without its own, a route's own on that route. Any method and any header; on the admin API never
+with credentials (tokens go in a header, never a cookie). The gateway answers the preflights
+itself, and the `Access-Control-*` headers a service sends are replaced by the gateway's.
 
-A request with an `Origin` that `CORS_ALLOWED_ORIGINS` doesn't allow is answered `403` with an
+A request with an `Origin` that the CORS in use doesn't allow is answered `403` with an
 empty body (not a Problem Details), preflight or not, on the admin API and on proxied routes: it
 never reaches the service. Requests without `Origin` (curl, server to server) and same-origin ones
 are not affected.
@@ -571,11 +571,11 @@ endpoints and its own object; every route comes with all of them in `addons`, an
 at `GET /_admin/addons`:
 
 ```json
-"addons": {"maintenance": null, "health_check": null, "rate_limit": null}
+"addons": {"maintenance": null, "health_check": null, "rate_limit": null, "cors": null}
 ```
 
 Every type this version knows is there, `null` when it isn't configured (today `maintenance`,
-`health_check` and `rate_limit`; a newer gateway adds keys, so ignore the ones you don't know). Create, edit and create several
+`health_check`, `rate_limit` and `cors`; a newer gateway adds keys, so ignore the ones you don't know). Create, edit and create several
 ignore `addons` in the body (an edit keeps them); [replace every route](#replace-every-route)
 restores them.
 
@@ -583,7 +583,8 @@ restores them.
 GET /_admin/addons
 ```
 
-`200` with the add-ons of the gateway: `{"maintenance": null, "rate_limit": null}` until they are set.
+`200` with the add-ons of the gateway: `{"maintenance": null, "rate_limit": null, "cors": {...}}`, the
+first two `null` until they are set; the gateway's `cors` always exists.
 Only the types the gateway can have: the health check is of a route only. The keys of each
 `addons` are the types that can be added there.
 
@@ -803,6 +804,77 @@ Content-Type: application/problem+json
   get no rate limit headers.
 - In memory and per instance: with several instances each one counts on its own (see
   `DECISIONS.md`, one instance).
+
+### CORS
+
+Which web pages (origins) a browser lets call the gateway. The gateway's covers the admin API and
+every route without its own; a route's covers only that route, instead of the gateway's. Methods
+and headers are always any (`*`). What you send, for both:
+
+| Field               | Type     | Rules                                                               | Description                                                             |
+|---------------------|----------|---------------------------------------------------------------------|-------------------------------------------------------------------------|
+| `enabled`           | boolean  | Required; always `true` on the gateway                              | A route's `false` uses the gateway's                                    |
+| `allowed_origins`   | string[] | Required, at least one; each `*` or `scheme://host[:port]`, no path | `https://app.com`, `https://*.example.com`, `http://localhost:[*]`, `*` |
+| `allow_credentials` | boolean  | Optional, `false` when missing; never on the gateway                | Lets the browser send cookies (`Access-Control-Allow-Credentials`)      |
+
+It answers the same object.
+
+```json
+{"enabled": true, "allowed_origins": ["https://app.example.com"], "allow_credentials": true}
+```
+
+The CORS of a route:
+
+```http
+PUT    /_admin/routes/{id}/addons/cors
+DELETE /_admin/routes/{id}/addons/cors
+POST   /_admin/routes/{id}/addons/cors/enable
+POST   /_admin/routes/{id}/addons/cors/disable
+```
+
+The CORS of the gateway, only replaced (it always exists and is always on):
+
+```http
+PUT /_admin/addons/cors
+```
+
+- `PUT` creates or replaces it: `200` with it as saved, in use right away. `422` with the broken
+  fields (`enabled`, `allowed_origins`, `allowed_origins[1]` for a bad origin).
+- `400` (only a `detail`, no field) when it breaks a rule:
+  - `allow_credentials` with an origin that lets every origin in (`*`, `https://*`): `Credentials
+    can't be allowed with an origin that matches every origin (*)`.
+  - On the gateway, `enabled: false`: `The gateway's CORS can't be turned off: ...`.
+  - On the gateway, `allow_credentials: true`: `The gateway's CORS can't allow credentials: ...`.
+  - On the gateway, sent from a browser whose `Origin` the new origins don't allow: `These origins
+    would lock out this console (...): add it to the list`. Without a browser (curl, Postman) there
+    is no `Origin` and no CORS, so a wrong list can always be fixed from there.
+- `DELETE` removes a route's, back to `null` (the gateway's): `204`, also when there was none.
+- `enable` and `disable` turn a route's on or off without a body, keeping the rest: `200` with it.
+  `404 The route has no CORS configured: ...` when it isn't set.
+- The ones of a route: `404` when the route doesn't exist, `400` when the id isn't a UUID.
+
+On the first start of 6.1.0, the gateway's is created from `CORS_ALLOWED_ORIGINS` (deprecated), or
+`*` without it. From then on only the add-on counts: changing the variable does nothing.
+
+The gateway's (in `GET /_admin/addons` and the answer of its `PUT`) has one more read-only field,
+never saved and ignored on writes, so the console can tell about that variable. :warning:
+Deprecated: it goes in 7.0, with the variable.
+
+| Field     | Type           | Description                                                                                                                                                         |
+|-----------|----------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `env_var` | object \| null | `null` when `CORS_ALLOWED_ORIGINS` isn't set. Else `name` (`CORS_ALLOWED_ORIGINS`), `origins` (its value) and `matches`: `true` when they are the same origins as `allowed_origins`, in any order (it can be removed), `false` when they differ (it is ignored) |
+
+```json
+{"enabled": true, "allowed_origins": ["https://console.example.com"], "allow_credentials": false,
+ "env_var": {"name": "CORS_ALLOWED_ORIGINS", "origins": ["https://console.example.com"], "matches": true}}
+```
+
+The variable is read at startup: `env_var` goes back to `null` once it is removed and the gateway
+restarts. `matches` follows every change of the gateway's CORS right away.
+
+- A route's CORS also covers its [maintenance](#maintenance) `503` and its [rate limit](#rate-limit)
+  `429`. A path with no route gets no CORS headers.
+- In memory and per instance: a change made through another instance is seen there after a restart.
 
 ## Search the logs
 

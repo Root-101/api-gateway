@@ -3,6 +3,8 @@ package dev.root101.api_gateway.features.addons.base.logic.usecase;
 import dev.root101.api_gateway.features.addons.base.logic.model.Addons;
 import dev.root101.api_gateway.features.addons.base.logic.model.AddonsRequest;
 import dev.root101.api_gateway.features.addons.base.logic.model.GatewayAddons;
+import dev.root101.api_gateway.features.addons.cors.logic.model.Cors;
+import dev.root101.api_gateway.features.addons.cors.logic.usecase.CorsUseCase;
 import dev.root101.api_gateway.features.addons.health_check.logic.model.HealthCheck;
 import dev.root101.api_gateway.features.addons.health_check.logic.usecase.HealthCheckUseCase;
 import dev.root101.api_gateway.features.addons.maintenance.logic.model.Maintenance;
@@ -25,25 +27,27 @@ public class AddonsUseCase {
     private final MaintenanceUseCase maintenanceUseCase;
     private final HealthCheckUseCase healthCheckUseCase;
     private final RateLimitUseCase rateLimitUseCase;
+    private final CorsUseCase corsUseCase;
 
-    public AddonsUseCase(MaintenanceUseCase maintenanceUseCase, HealthCheckUseCase healthCheckUseCase, RateLimitUseCase rateLimitUseCase) {
+    public AddonsUseCase(MaintenanceUseCase maintenanceUseCase, HealthCheckUseCase healthCheckUseCase, RateLimitUseCase rateLimitUseCase, CorsUseCase corsUseCase) {
         this.maintenanceUseCase = maintenanceUseCase;
         this.healthCheckUseCase = healthCheckUseCase;
         this.rateLimitUseCase = rateLimitUseCase;
+        this.corsUseCase = corsUseCase;
     }
 
     /**
      * The add-ons of the gateway. No db request.
      */
     public GatewayAddons ofGateway(Locale locale) {
-        return new GatewayAddons(maintenanceUseCase.ofGateway(locale), rateLimitUseCase.ofGateway());
+        return new GatewayAddons(maintenanceUseCase.ofGateway(locale), rateLimitUseCase.ofGateway(), corsUseCase.gatewayResponse());
     }
 
     /**
      * The add-ons of a route. No db request.
      */
     public Addons ofRoute(String routeId, Locale locale) {
-        return new Addons(maintenanceUseCase.ofRoute(routeId, locale), healthCheckUseCase.ofRoute(routeId), rateLimitUseCase.ofRoute(routeId));
+        return new Addons(maintenanceUseCase.ofRoute(routeId, locale), healthCheckUseCase.ofRoute(routeId), rateLimitUseCase.ofRoute(routeId), corsUseCase.ofRoute(routeId));
     }
 
     /**
@@ -55,7 +59,8 @@ public class AddonsUseCase {
         Mono<Void> maintenance = addons.sent(Maintenance.TYPE) ? maintenanceUseCase.save(routeId, addons.getMaintenance()) : Mono.empty();
         Mono<Void> healthCheck = addons.sent(HealthCheck.TYPE) ? healthCheckUseCase.save(routeId, addons.getHealthCheck()) : Mono.empty();
         Mono<Void> rateLimit = addons.sent(RateLimit.TYPE) ? rateLimitUseCase.save(routeId, addons.getRateLimit()) : Mono.empty();
-        return maintenance.then(healthCheck).then(rateLimit);
+        Mono<Void> cors = addons.sent(Cors.TYPE) ? corsUseCase.save(routeId, addons.getCors()) : Mono.empty();
+        return maintenance.then(healthCheck).then(rateLimit).then(cors);
     }
 
     /**
@@ -70,6 +75,6 @@ public class AddonsUseCase {
      * Reads every add-on from db into use
      */
     public Mono<Void> reload() {
-        return maintenanceUseCase.reload().then(healthCheckUseCase.reload()).then(rateLimitUseCase.reload());
+        return maintenanceUseCase.reload().then(healthCheckUseCase.reload()).then(rateLimitUseCase.reload()).then(corsUseCase.reload());
     }
 }

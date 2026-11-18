@@ -23,6 +23,9 @@ spring:
         webflux:
           #a stored route that can't be built (only possible from a db edited by hand: the api validates them) skips itself, not every route
           fail-on-route-definition-error: false
+          #off: its listener replaces the routes' CORS source on every refresh; CORS comes from the add-ons (see CorsConfig)
+          globalcors:
+            enabled: false
           #regex of the proxies in front of the gateway whose `X-Forwarded-*` are believed (client ip of the logs and the lockout,
           #headers sent to the services). Empty = none. `.*` is only safe if the gateway can't be reached without that proxy
           trusted-proxies: ${TRUSTED_PROXIES:.*}
@@ -62,7 +65,8 @@ app:
     lockout-minutes: ${ADMIN_LOCKOUT_MINUTES:15}
     token-minutes: ${ADMIN_TOKEN_MINUTES:480}                                                    #validity of the token given by the login
   cors:
-    allowed-origins: ${CORS_ALLOWED_ORIGINS:*}                                                   #comma separated origin patterns
+    #deprecated (removed in 7.0): only seeds the gateway's CORS add-on on the first start, `*` when empty
+    allowed-origins: ${CORS_ALLOWED_ORIGINS:}                                                    #comma separated origin patterns
   logs:
     maintainForDays: ${MAINTAIN_LOGS_FOR_DAYS:14}
     max-search-size: ${MAX_LOGS_SEARCH_SIZE:10000}

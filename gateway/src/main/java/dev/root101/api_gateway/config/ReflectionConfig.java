@@ -8,6 +8,8 @@ import dev.root101.api_gateway.features.http_logs.logic.model.HttpLogSearchRespo
 import dev.root101.api_gateway.features.addons.base.logic.model.Addons;
 import dev.root101.api_gateway.features.addons.base.logic.model.AddonsRequest;
 import dev.root101.api_gateway.features.addons.base.logic.model.GatewayAddons;
+import dev.root101.api_gateway.features.addons.cors.logic.model.Cors;
+import dev.root101.api_gateway.features.addons.cors.logic.model.CorsResponse;
 import dev.root101.api_gateway.features.addons.health_check.logic.model.HealthCheck;
 import dev.root101.api_gateway.features.addons.health_check.logic.model.HealthCheckResponse;
 import dev.root101.api_gateway.features.addons.health_check.logic.model.HealthCheckState;
@@ -25,6 +27,8 @@ import org.springframework.context.annotation.Configuration;
 import java.time.OffsetDateTime;
 
 @Configuration
+//the deprecated CorsResponse.EnvVar still needs its hints until 7.0
+@SuppressWarnings("removal")
 @RegisterReflectionForBinding({
         //--------- CONFIG ---------\\
         GlobalExceptionHandler.class,
@@ -38,7 +42,7 @@ import java.time.OffsetDateTime;
         //also written to and read from the db as json
         Maintenance.class, MaintenanceState.class, MaintenanceResponse.class,
         HealthCheck.class, HealthCheckState.class, HealthCheckResponse.class,
-        RateLimit.class,
+        RateLimit.class, Cors.class, CorsResponse.class, CorsResponse.EnvVar.class,
         //--------- AUTH ---------\\
         LoginRequest.class, LoginResponse.class,
         //--------- HTTP LOGS ---------\\
