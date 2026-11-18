@@ -589,6 +589,15 @@ class _AddonsFooter extends StatelessWidget {
             color: maintenance.enabled ? c.maintenance : c.label,
             onPressed: open,
           ),
+        if (route.rateLimit case final rate?)
+          _Badge(
+            icon: app.assets.icons.general.gauge,
+            label: rate.enabled
+                ? intl.rate.badge(value: rateShort(rate))
+                : intl.rate.badgeOff,
+            color: rate.enabled ? c.info : c.label,
+            onPressed: open,
+          ),
         _Badge(
           icon: app.assets.icons.actions.add,
           label: intl.maintenance.addons,

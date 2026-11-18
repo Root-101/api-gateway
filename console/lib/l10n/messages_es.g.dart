@@ -101,6 +101,8 @@ class AppMessagesEs
   @override
   late final AppMessages$health$es health = AppMessages$health$es._(_root);
   @override
+  late final AppMessages$rate$es rate = AppMessages$rate$es._(_root);
+  @override
   late final AppMessages$map$es map = AppMessages$map$es._(_root);
   @override
   late final AppMessages$panel$es panel = AppMessages$panel$es._(_root);
@@ -814,6 +816,8 @@ class AppMessages$maintenance$es implements AppMessages$maintenance$en {
   String get gatewayOn => 'Gateway en mantenimiento';
   @override
   String get gatewayOff => 'Mantenimiento del gateway apagado';
+  @override
+  String get gatewayRemoved => 'Mantenimiento del gateway quitado';
 }
 
 // Path: health
@@ -892,6 +896,91 @@ class AppMessages$health$es implements AppMessages$health$en {
   String saved({required Object name}) => '"${name}": health check guardado';
   @override
   String removed({required Object name}) => '"${name}": health check quitado';
+}
+
+// Path: rate
+class AppMessages$rate$es implements AppMessages$rate$en {
+  AppMessages$rate$es._(this._root);
+
+  final AppMessagesEs _root; // ignore: unused_field
+
+  // Translations
+  @override
+  String get title => 'Rate limit';
+  @override
+  String get off => 'OFF';
+  @override
+  String get limit => 'Límite';
+  @override
+  String get burst => 'Ráfaga';
+  @override
+  String get overLimit => 'Al pasarlo';
+  @override
+  String get tooMany => '429 Too Many Requests';
+  @override
+  String limitValue({required Object limit, required Object period}) =>
+      '${limit} peticiones por ${period}, por IP de cliente';
+  @override
+  String limitValueGateway({required Object limit, required Object period}) =>
+      '${limit} peticiones por ${period}, por IP de cliente, en todas las rutas juntas';
+  @override
+  String burstValue({required Object burst}) => '${burst} a la vez';
+  @override
+  String get burstSame => 'Igual que el límite';
+  @override
+  String get second => 'segundo';
+  @override
+  String get minute => 'minuto';
+  @override
+  String get hour => 'hora';
+  @override
+  String get requests => 'Peticiones';
+  @override
+  String get burstPlaceholder => 'Igual que el límite';
+  @override
+  String get per => 'Por IP de cliente, cada';
+  @override
+  String get enabled => 'Limitar peticiones';
+  @override
+  String get enabledHint => 'Apagado: pasan todas las peticiones.';
+  @override
+  String get resetHint => 'Al guardar, todas las cuentas vuelven a cero.';
+  @override
+  String get removeTitle => '¿Quitar el rate limit?';
+  @override
+  String get removeBody =>
+      'Se pierden su límite y su ráfaga. Puedes volver a añadirlo después.';
+  @override
+  String get add => 'Rate limit';
+  @override
+  String get addHint => 'Responde 429 al pasar un límite por IP de cliente';
+  @override
+  String get addHintGateway =>
+      'Responde 429 al pasar un límite por IP de cliente, en todas las rutas juntas';
+  @override
+  String badge({required Object value}) => 'Rate limit · ${value}';
+  @override
+  String get badgeOff => 'Rate limit · off';
+  @override
+  String added({required Object name}) => '"${name}": rate limit añadido';
+  @override
+  String saved({required Object name}) => '"${name}": rate limit guardado';
+  @override
+  String removed({required Object name}) => '"${name}": rate limit quitado';
+  @override
+  String routeOn({required Object name}) => '"${name}": rate limit encendido';
+  @override
+  String routeOff({required Object name}) => '"${name}": rate limit apagado';
+  @override
+  String get gatewayAdded => 'Rate limit del gateway añadido';
+  @override
+  String get gatewaySaved => 'Rate limit del gateway guardado';
+  @override
+  String get gatewayOn => 'Rate limit del gateway encendido';
+  @override
+  String get gatewayOff => 'Rate limit del gateway apagado';
+  @override
+  String get gatewayRemoved => 'Rate limit del gateway quitado';
 }
 
 // Path: map
@@ -1362,6 +1451,7 @@ extension on AppMessagesEs {
       'maintenance.gatewaySaved' => 'Mantenimiento del gateway guardado',
       'maintenance.gatewayOn' => 'Gateway en mantenimiento',
       'maintenance.gatewayOff' => 'Mantenimiento del gateway apagado',
+      'maintenance.gatewayRemoved' => 'Mantenimiento del gateway quitado',
       'health.title' => 'Health check',
       'health.live' => 'LIVE',
       'health.down' => 'CAÍDA',
@@ -1406,6 +1496,59 @@ extension on AppMessagesEs {
       'health.removed' => ({
         required Object name,
       }) => '"${name}": health check quitado',
+      'rate.title' => 'Rate limit',
+      'rate.off' => 'OFF',
+      'rate.limit' => 'Límite',
+      'rate.burst' => 'Ráfaga',
+      'rate.overLimit' => 'Al pasarlo',
+      'rate.tooMany' => '429 Too Many Requests',
+      'rate.limitValue' => ({
+        required Object limit,
+        required Object period,
+      }) => '${limit} peticiones por ${period}, por IP de cliente',
+      'rate.limitValueGateway' => ({
+        required Object limit,
+        required Object period,
+      }) => '${limit} peticiones por ${period}, por IP de cliente, en todas las rutas juntas',
+      'rate.burstValue' => ({required Object burst}) => '${burst} a la vez',
+      'rate.burstSame' => 'Igual que el límite',
+      'rate.second' => 'segundo',
+      'rate.minute' => 'minuto',
+      'rate.hour' => 'hora',
+      'rate.requests' => 'Peticiones',
+      'rate.burstPlaceholder' => 'Igual que el límite',
+      'rate.per' => 'Por IP de cliente, cada',
+      'rate.enabled' => 'Limitar peticiones',
+      'rate.enabledHint' => 'Apagado: pasan todas las peticiones.',
+      'rate.resetHint' => 'Al guardar, todas las cuentas vuelven a cero.',
+      'rate.removeTitle' => '¿Quitar el rate limit?',
+      'rate.removeBody' =>
+        'Se pierden su límite y su ráfaga. Puedes volver a añadirlo después.',
+      'rate.add' => 'Rate limit',
+      'rate.addHint' => 'Responde 429 al pasar un límite por IP de cliente',
+      'rate.addHintGateway' => 'Responde 429 al pasar un límite por IP de cliente, en todas las rutas juntas',
+      'rate.badge' => ({required Object value}) => 'Rate limit · ${value}',
+      'rate.badgeOff' => 'Rate limit · off',
+      'rate.added' => ({
+        required Object name,
+      }) => '"${name}": rate limit añadido',
+      'rate.saved' => ({
+        required Object name,
+      }) => '"${name}": rate limit guardado',
+      'rate.removed' => ({
+        required Object name,
+      }) => '"${name}": rate limit quitado',
+      'rate.routeOn' => ({
+        required Object name,
+      }) => '"${name}": rate limit encendido',
+      'rate.routeOff' => ({
+        required Object name,
+      }) => '"${name}": rate limit apagado',
+      'rate.gatewayAdded' => 'Rate limit del gateway añadido',
+      'rate.gatewaySaved' => 'Rate limit del gateway guardado',
+      'rate.gatewayOn' => 'Rate limit del gateway encendido',
+      'rate.gatewayOff' => 'Rate limit del gateway apagado',
+      'rate.gatewayRemoved' => 'Rate limit del gateway quitado',
       'map.title' => 'Mapa del gateway',
       'map.legendRedirect' => 'Solo redirección',
       'map.legendMaintenance' => 'Mantenimiento',

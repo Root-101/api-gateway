@@ -76,6 +76,7 @@ class AppMessages with BaseTranslations<AppMessagesLocale, AppMessages> {
   late final AppMessages$maintenance$en maintenance =
       AppMessages$maintenance$en._(_root);
   late final AppMessages$health$en health = AppMessages$health$en._(_root);
+  late final AppMessages$rate$en rate = AppMessages$rate$en._(_root);
   late final AppMessages$map$en map = AppMessages$map$en._(_root);
   late final AppMessages$panel$en panel = AppMessages$panel$en._(_root);
 }
@@ -1036,6 +1037,9 @@ class AppMessages$maintenance$en {
 
   /// en: 'Gateway maintenance off'
   String get gatewayOff => 'Gateway maintenance off';
+
+  /// en: 'Gateway maintenance removed'
+  String get gatewayRemoved => 'Gateway maintenance removed';
 }
 
 // Path: health
@@ -1144,6 +1148,127 @@ class AppMessages$health$en {
 
   /// en: '"{name: String}": health check removed'
   String removed({required String name}) => '"${name}": health check removed';
+}
+
+// Path: rate
+class AppMessages$rate$en {
+  AppMessages$rate$en._(this._root);
+
+  final AppMessages _root; // ignore: unused_field
+
+  // Translations
+
+  /// en: 'Rate limit'
+  String get title => 'Rate limit';
+
+  /// en: 'OFF'
+  String get off => 'OFF';
+
+  /// en: 'Limit'
+  String get limit => 'Limit';
+
+  /// en: 'Burst'
+  String get burst => 'Burst';
+
+  /// en: 'Over limit'
+  String get overLimit => 'Over limit';
+
+  /// en: '429 Too Many Requests'
+  String get tooMany => '429 Too Many Requests';
+
+  /// en: '{limit: int} requests per {period: String}, per client IP'
+  String limitValue({required int limit, required String period}) =>
+      '${limit} requests per ${period}, per client IP';
+
+  /// en: '{limit: int} requests per {period: String}, per client IP, on all routes together'
+  String limitValueGateway({required int limit, required String period}) =>
+      '${limit} requests per ${period}, per client IP, on all routes together';
+
+  /// en: '{burst: int} at once'
+  String burstValue({required int burst}) => '${burst} at once';
+
+  /// en: 'Same as the limit'
+  String get burstSame => 'Same as the limit';
+
+  /// en: 'second'
+  String get second => 'second';
+
+  /// en: 'minute'
+  String get minute => 'minute';
+
+  /// en: 'hour'
+  String get hour => 'hour';
+
+  /// en: 'Requests'
+  String get requests => 'Requests';
+
+  /// en: 'Same as the limit'
+  String get burstPlaceholder => 'Same as the limit';
+
+  /// en: 'Per client IP, every'
+  String get per => 'Per client IP, every';
+
+  /// en: 'Limit requests'
+  String get enabled => 'Limit requests';
+
+  /// en: 'Off: every request goes through.'
+  String get enabledHint => 'Off: every request goes through.';
+
+  /// en: 'Saving starts every count from zero.'
+  String get resetHint => 'Saving starts every count from zero.';
+
+  /// en: 'Remove rate limit?'
+  String get removeTitle => 'Remove rate limit?';
+
+  /// en: 'Its limit and burst are lost. You can add it again later.'
+  String get removeBody =>
+      'Its limit and burst are lost. You can add it again later.';
+
+  /// en: 'Rate limit'
+  String get add => 'Rate limit';
+
+  /// en: 'Answer 429 past a limit per client IP'
+  String get addHint => 'Answer 429 past a limit per client IP';
+
+  /// en: 'Answer 429 past a limit per client IP, on all routes together'
+  String get addHintGateway =>
+      'Answer 429 past a limit per client IP, on all routes together';
+
+  /// en: 'Rate limit · {value: String}'
+  String badge({required String value}) => 'Rate limit · ${value}';
+
+  /// en: 'Rate limit · off'
+  String get badgeOff => 'Rate limit · off';
+
+  /// en: '"{name: String}": rate limit added'
+  String added({required String name}) => '"${name}": rate limit added';
+
+  /// en: '"{name: String}": rate limit saved'
+  String saved({required String name}) => '"${name}": rate limit saved';
+
+  /// en: '"{name: String}": rate limit removed'
+  String removed({required String name}) => '"${name}": rate limit removed';
+
+  /// en: '"{name: String}": rate limit on'
+  String routeOn({required String name}) => '"${name}": rate limit on';
+
+  /// en: '"{name: String}": rate limit off'
+  String routeOff({required String name}) => '"${name}": rate limit off';
+
+  /// en: 'Gateway rate limit added'
+  String get gatewayAdded => 'Gateway rate limit added';
+
+  /// en: 'Gateway rate limit saved'
+  String get gatewaySaved => 'Gateway rate limit saved';
+
+  /// en: 'Gateway rate limit on'
+  String get gatewayOn => 'Gateway rate limit on';
+
+  /// en: 'Gateway rate limit off'
+  String get gatewayOff => 'Gateway rate limit off';
+
+  /// en: 'Gateway rate limit removed'
+  String get gatewayRemoved => 'Gateway rate limit removed';
 }
 
 // Path: map
@@ -1657,6 +1782,7 @@ extension on AppMessages {
       'maintenance.gatewaySaved' => 'Gateway maintenance saved',
       'maintenance.gatewayOn' => 'Gateway in maintenance',
       'maintenance.gatewayOff' => 'Gateway maintenance off',
+      'maintenance.gatewayRemoved' => 'Gateway maintenance removed',
       'health.title' => 'Health check',
       'health.live' => 'LIVE',
       'health.down' => 'DOWN',
@@ -1700,6 +1826,54 @@ extension on AppMessages {
       'health.removed' => ({
         required String name,
       }) => '"${name}": health check removed',
+      'rate.title' => 'Rate limit',
+      'rate.off' => 'OFF',
+      'rate.limit' => 'Limit',
+      'rate.burst' => 'Burst',
+      'rate.overLimit' => 'Over limit',
+      'rate.tooMany' => '429 Too Many Requests',
+      'rate.limitValue' => ({
+        required int limit,
+        required String period,
+      }) => '${limit} requests per ${period}, per client IP',
+      'rate.limitValueGateway' => ({
+        required int limit,
+        required String period,
+      }) => '${limit} requests per ${period}, per client IP, on all routes together',
+      'rate.burstValue' => ({required int burst}) => '${burst} at once',
+      'rate.burstSame' => 'Same as the limit',
+      'rate.second' => 'second',
+      'rate.minute' => 'minute',
+      'rate.hour' => 'hour',
+      'rate.requests' => 'Requests',
+      'rate.burstPlaceholder' => 'Same as the limit',
+      'rate.per' => 'Per client IP, every',
+      'rate.enabled' => 'Limit requests',
+      'rate.enabledHint' => 'Off: every request goes through.',
+      'rate.resetHint' => 'Saving starts every count from zero.',
+      'rate.removeTitle' => 'Remove rate limit?',
+      'rate.removeBody' =>
+        'Its limit and burst are lost. You can add it again later.',
+      'rate.add' => 'Rate limit',
+      'rate.addHint' => 'Answer 429 past a limit per client IP',
+      'rate.addHintGateway' =>
+        'Answer 429 past a limit per client IP, on all routes together',
+      'rate.badge' => ({required String value}) => 'Rate limit · ${value}',
+      'rate.badgeOff' => 'Rate limit · off',
+      'rate.added' => ({required String name}) => '"${name}": rate limit added',
+      'rate.saved' => ({required String name}) => '"${name}": rate limit saved',
+      'rate.removed' => ({
+        required String name,
+      }) => '"${name}": rate limit removed',
+      'rate.routeOn' => ({required String name}) => '"${name}": rate limit on',
+      'rate.routeOff' => ({
+        required String name,
+      }) => '"${name}": rate limit off',
+      'rate.gatewayAdded' => 'Gateway rate limit added',
+      'rate.gatewaySaved' => 'Gateway rate limit saved',
+      'rate.gatewayOn' => 'Gateway rate limit on',
+      'rate.gatewayOff' => 'Gateway rate limit off',
+      'rate.gatewayRemoved' => 'Gateway rate limit removed',
       'map.title' => 'Gateway map',
       'map.legendRedirect' => 'Redirect only',
       'map.legendMaintenance' => 'Maintenance',

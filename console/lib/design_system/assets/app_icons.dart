@@ -135,6 +135,11 @@ class GeneralIcons {
   SvgAsset get activity =>
       const SvgAsset('<path d="M22 12h-4l-3 9L9 3l-3 9H2"/>');
 
+  ///the rate limit add-on
+  SvgAsset get gauge => const SvgAsset(
+    '<path d="m12 14 4-4"/><path d="M3.34 19a10 10 0 1 1 17.32 0"/>',
+  );
+
   ///"Run now" of the health check (filled, as in the canvas)
   SvgAsset get play => const SvgAsset(
     '<path fill="#000" stroke="none" d="M7 4.5v15a1 1 0 0 0 1.5.87l12-7.5a1 1 0 0 0 0-1.74l-12-7.5A1 1 0 0 0 7 4.5z"/>',

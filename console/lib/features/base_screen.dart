@@ -31,6 +31,7 @@ class _BaseScreenState extends State<BaseScreen> {
   void initState() {
     super.initState();
     _maintenance.load();
+    app.di.find<RateLimitCubit>().load();
     _healthPoll = Timer.periodic(const Duration(seconds: 10), (_) {
       final routes = app.di.find<RoutesCubit>();
       if (app.di.find<GatewayStatusCubit>().state.offline ||
@@ -45,6 +46,30 @@ class _BaseScreenState extends State<BaseScreen> {
   void dispose() {
     _healthPoll?.cancel();
     super.dispose();
+  }
+
+  void _onRateLimit(BuildContext context, RateLimitState state) {
+    final intl = context.intl.rate;
+    if (state is RateLimitSaveOkState) {
+      final name = state.route?.name;
+      app.snack.showSuccess(
+        message: switch (state.action) {
+          RateLimitAction.added =>
+            name == null ? intl.gatewayAdded : intl.added(name: name),
+          RateLimitAction.saved =>
+            name == null ? intl.gatewaySaved : intl.saved(name: name),
+          RateLimitAction.enabled =>
+            name == null ? intl.gatewayOn : intl.routeOn(name: name),
+          RateLimitAction.disabled =>
+            name == null ? intl.gatewayOff : intl.routeOff(name: name),
+          RateLimitAction.deleted =>
+            name == null ? intl.gatewayRemoved : intl.removed(name: name),
+        },
+      );
+    } else if (state is RateLimitSaveErrorState &&
+        state.exception.type != GlobalExceptionType.validation) {
+      app.snack.showError(message: state.message);
+    }
   }
 
   void _onHealthCheck(BuildContext context, HealthCheckState state) {
@@ -70,6 +95,7 @@ class _BaseScreenState extends State<BaseScreen> {
     app.snack.showSuccess(message: context.intl.offline.restored);
     app.di.find<RoutesCubit>().search(emitLoading: false);
     _maintenance.load();
+    app.di.find<RateLimitCubit>().load();
     final logs = app.di.find<LogsCubit>();
     if (logs.state is! LogsInitialState) logs.search();
   }
@@ -90,7 +116,8 @@ class _BaseScreenState extends State<BaseScreen> {
             name == null ? intl.gatewayOn : intl.routeOn(name: name),
           MaintenanceAction.disabled =>
             name == null ? intl.gatewayOff : intl.routeOff(name: name),
-          MaintenanceAction.deleted => intl.removed(name: name ?? ''),
+          MaintenanceAction.deleted =>
+            name == null ? intl.gatewayRemoved : intl.removed(name: name),
         },
       );
     } else if (state is MaintenanceSaveErrorState &&
@@ -115,6 +142,7 @@ class _BaseScreenState extends State<BaseScreen> {
         BlocListener<HealthCheckCubit, HealthCheckState>(
           listener: _onHealthCheck,
         ),
+        BlocListener<RateLimitCubit, RateLimitState>(listener: _onRateLimit),
       ],
       child: Scaffold(
         body: Row(

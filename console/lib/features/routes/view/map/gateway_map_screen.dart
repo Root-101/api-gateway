@@ -926,6 +926,7 @@ class _RouteNode extends StatelessWidget {
     final ownOn = status == RouteStatus.maintenance;
     final maintenance = route.maintenance;
     final health = route.healthCheck;
+    final rate = route.rateLimit;
     final host = Uri.tryParse(route.uri)?.host;
     return _Node(
       onTap: onTap,
@@ -985,7 +986,7 @@ class _RouteNode extends StatelessWidget {
             const Spacer(),
             Container(height: 1, color: c.outlineSoft),
             const SizedBox(height: 8),
-            if (maintenance == null && health == null)
+            if (maintenance == null && health == null && rate == null)
               Text(
                 intl.maintenance.redirectOnly,
                 style: TextStyle(fontSize: 12, color: c.textTertiary),
@@ -1004,12 +1005,22 @@ class _RouteNode extends StatelessWidget {
                     ),
                     const SizedBox(width: 6),
                   ],
-                  if (maintenance != null)
+                  if (maintenance != null) ...[
                     _Chip(
                       icon: app.assets.icons.general.wrench,
                       color: maintenance.enabled ? c.maintenance : null,
                       label: maintenance.enabled
                           ? intl.maintenance.chipOn
+                          : intl.maintenance.chipOff,
+                    ),
+                    const SizedBox(width: 6),
+                  ],
+                  if (rate != null)
+                    _Chip(
+                      icon: app.assets.icons.general.gauge,
+                      color: null,
+                      label: rate.enabled
+                          ? rateShort(rate)
                           : intl.maintenance.chipOff,
                     ),
                 ],

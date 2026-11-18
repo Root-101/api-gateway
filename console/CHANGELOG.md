@@ -18,6 +18,14 @@
           `/health` every 30 s, on. The routes are reread every 10 s while one has it on (the gateway doesn't
           push). "Add to this route" lists the types the route's `addons` has as keys. API: `PUT`, `DELETE` and
           `POST .../run` under `/routes/{id}/addons/health-check`.
+        * **Rate limit** :stopwatch: : A third add-on, per route and for the whole gateway: past a number of requests
+          per second, minute or hour per client IP, a 429 (the gateway's counts every route together). Its block
+          shows the limit, the burst ("Same as the limit" when empty) and the 429, with a switch to turn it on or
+          off, edit in place (requests, burst, period; saving starts every count from zero) and remove. Added as 60 / minute, burst 10, off, since it changes traffic. A `Rate limit · 60/min` badge on
+          the card and a `60/min` chip on the map node. API: `rate_limit` in each route and in `GET /addons`, and
+          `PUT`, `DELETE`, `POST .../enable` and `.../disable` under `/routes/{id}/addons/rate-limit` and
+          `/addons/rate-limit`. The gateway's maintenance and rate limit can be removed too, like a route's
+          (`DELETE /addons/maintenance`, `DELETE /addons/rate-limit`).
         * **Gateway map** :world_map: : New first entry of the rail: the gateway's URL, the gateway
           and a branch per route with its path, dashed and moving while it forwards, dotted orange while it answers
           `503`. Drag, wheel zoom, `Fit`, an "Add route" card when there are none, and the panel of a route or of the

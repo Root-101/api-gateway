@@ -6,7 +6,7 @@ import 'package:flutter/services.dart';
 enum _Mode { view, edit, confirm }
 
 ///the maintenance add-on of a [route], or of the gateway when null: its message and return time,
-///the slide to turn it on or off, edit in place and (routes only) remove with a confirmation in place
+///the slide to turn it on or off, edit in place and remove with a confirmation in place
 class MaintenanceBlock extends StatefulWidget {
   final RouteModel? route;
   final MaintenanceModel model;
@@ -81,7 +81,7 @@ class _MaintenanceBlockState extends State<MaintenanceBlock> {
 
   Future<void> _remove() async {
     setState(() => _busy = true);
-    await cubit.delete(route: widget.route!);
+    await cubit.delete(route: widget.route);
     if (mounted) setState(() => _busy = false);
   }
 
@@ -143,15 +143,14 @@ class _MaintenanceBlockState extends State<MaintenanceBlock> {
                     iconSize: 16,
                     onPressed: _startEdit,
                   ),
-                  if (!_gateway)
-                    AppIconButton(
-                      icon: app.assets.icons.actions.delete,
-                      tooltip: intl.panel.remove,
-                      size: 34,
-                      iconSize: 16,
-                      hoverColor: c.softRed,
-                      onPressed: () => setState(() => _mode = _Mode.confirm),
-                    ),
+                  AppIconButton(
+                    icon: app.assets.icons.actions.delete,
+                    tooltip: intl.panel.remove,
+                    size: 34,
+                    iconSize: 16,
+                    hoverColor: c.softRed,
+                    onPressed: () => setState(() => _mode = _Mode.confirm),
+                  ),
                 ],
               ],
             ),

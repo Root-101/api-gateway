@@ -11,6 +11,7 @@ class RouteModel {
   final String description;
   final MaintenanceModel? maintenance;
   final HealthCheckModel? healthCheck;
+  final RateLimitModel? rateLimit;
 
   ///every add-on as the api sent it (`null` the ones not configured, unknown ones too), for the backup
   final Map<String, dynamic> addons;
@@ -39,6 +40,7 @@ class RouteModel {
     this.rewritePath,
     this.maintenance,
     this.healthCheck,
+    this.rateLimit,
     this.addons = const {},
     this.gatewayUrl,
   });

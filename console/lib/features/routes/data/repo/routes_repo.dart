@@ -111,7 +111,7 @@ class RoutesRepo {
     }
   }
 
-  Future deleteMaintenance({required String routeId}) async {
+  Future deleteMaintenance({String? routeId}) async {
     try {
       await client.deleteMaintenance(routeId: routeId);
     } on Exception catch (exc) {
@@ -129,6 +129,48 @@ class RoutesRepo {
         enabled: enabled,
       );
       return response.toModel();
+    } on Exception catch (exc) {
+      throw ExceptionConverter.parse(exc);
+    }
+  }
+
+  Future<Map<String, dynamic>> findGatewayAddons() async {
+    try {
+      return await client.findGatewayAddons();
+    } on Exception catch (exc) {
+      throw ExceptionConverter.parse(exc);
+    }
+  }
+
+  ///[routeId] null = the gateway's
+  Future<RateLimitModel?> putRateLimit({
+    required RateLimitModel model,
+    String? routeId,
+  }) async {
+    try {
+      return await client.putRateLimit(model: model, routeId: routeId);
+    } on Exception catch (exc) {
+      throw ExceptionConverter.parse(exc);
+    }
+  }
+
+  Future deleteRateLimit({String? routeId}) async {
+    try {
+      await client.deleteRateLimit(routeId: routeId);
+    } on Exception catch (exc) {
+      throw ExceptionConverter.parse(exc);
+    }
+  }
+
+  Future<RateLimitModel?> setRateLimitEnabled({
+    required bool enabled,
+    String? routeId,
+  }) async {
+    try {
+      return await client.setRateLimitEnabled(
+        enabled: enabled,
+        routeId: routeId,
+      );
     } on Exception catch (exc) {
       throw ExceptionConverter.parse(exc);
     }
@@ -221,6 +263,7 @@ extension RouteModelParser on RouteResponse {
         millis: h.millis,
       ),
     },
+    rateLimit: RateLimitModel.tryFromJson(addons['rate_limit']),
     addons: addons,
     gatewayUrl: gatewayUrl,
   );

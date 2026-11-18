@@ -69,8 +69,8 @@ class RoutesClient extends BaseClient {
     return MaintenanceEntity.fromJson(rawResponse.data as Map<String, dynamic>);
   }
 
-  ///only routes: the gateway's can't be deleted
-  Future deleteMaintenance({required String routeId}) async {
+  ///204, also when there is none; [routeId] null = the gateway's
+  Future deleteMaintenance({String? routeId}) async {
     await dio.delete('${_addons(routeId)}/maintenance');
   }
 
@@ -83,6 +83,41 @@ class RoutesClient extends BaseClient {
       '${_addons(routeId)}/maintenance/${enabled ? 'enable' : 'disable'}',
     );
     return MaintenanceEntity.fromJson(rawResponse.data as Map<String, dynamic>);
+  }
+
+  ///the gateway's add-ons as sent (`maintenance`, `rate_limit`...: null = not configured)
+  Future<Map<String, dynamic>> findGatewayAddons() async {
+    Response rawResponse = await dio.get(_addons(null));
+    final data = rawResponse.data;
+    return data is Map<String, dynamic> ? data : {};
+  }
+
+  ///creates or replaces it; 422 fields `enabled`, `limit`, `period`, `burst`
+  Future<RateLimitModel?> putRateLimit({
+    required RateLimitModel model,
+    String? routeId,
+  }) async {
+    Response rawResponse = await dio.put(
+      '${_addons(routeId)}/rate-limit',
+      data: model.toJson(),
+    );
+    return RateLimitModel.tryFromJson(rawResponse.data);
+  }
+
+  ///204, also when there is none; [routeId] null = the gateway's
+  Future deleteRateLimit({String? routeId}) async {
+    await dio.delete('${_addons(routeId)}/rate-limit');
+  }
+
+  ///keeps the rest; 404 when it isn't configured
+  Future<RateLimitModel?> setRateLimitEnabled({
+    required bool enabled,
+    String? routeId,
+  }) async {
+    Response rawResponse = await dio.post(
+      '${_addons(routeId)}/rate-limit/${enabled ? 'enable' : 'disable'}',
+    );
+    return RateLimitModel.tryFromJson(rawResponse.data);
   }
 
   ///creates or replaces it (keeps the last state); 422 fields `enabled`, `path`, `interval_seconds`

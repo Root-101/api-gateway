@@ -51,9 +51,10 @@ class MaintenanceCubit extends Cubit<MaintenanceState>
     () => repo.setMaintenanceEnabled(routeId: route?.id, enabled: enabled),
   );
 
-  Future<GlobalException?> delete({required RouteModel route}) =>
+  ///[route] null = the gateway's
+  Future<GlobalException?> delete({RouteModel? route}) =>
       _run(route, MaintenanceAction.deleted, () async {
-        await repo.deleteMaintenance(routeId: route.id);
+        await repo.deleteMaintenance(routeId: route?.id);
         return null;
       });
 

@@ -1,6 +1,7 @@
 import 'package:console/app_exporter.dart';
 import 'package:console/features/routes/view/addons/health_check_block.dart';
 import 'package:console/features/routes/view/addons/maintenance_block.dart';
+import 'package:console/features/routes/view/addons/rate_limit_block.dart';
 import 'package:console/features/routes/view/form/routes_form_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -102,19 +103,21 @@ class RoutePanel extends StatelessWidget {
     return BlocBuilder<RoutesCubit, RoutesState>(
       buildWhen: (previous, current) => current is RoutesSearchState,
       builder: (context, _) => BlocBuilder<MaintenanceCubit, MaintenanceState>(
-        builder: (context, _) {
-          final maintenance = app.di.find<MaintenanceCubit>();
-          final routes = app.di.find<RoutesCubit>().routes;
-          RouteModel? route;
-          if (routeId != null) {
-            for (final r in routes) {
-              if (r.id == routeId) route = r;
+        builder: (context, _) => BlocBuilder<RateLimitCubit, RateLimitState>(
+          builder: (context, _) {
+            final maintenance = app.di.find<MaintenanceCubit>();
+            final routes = app.di.find<RoutesCubit>().routes;
+            RouteModel? route;
+            if (routeId != null) {
+              for (final r in routes) {
+                if (r.id == routeId) route = r;
+              }
+              //deleted meanwhile
+              if (route == null) return const SizedBox.shrink();
             }
-            //deleted meanwhile
-            if (route == null) return const SizedBox.shrink();
-          }
-          return _build(context, route, maintenance);
-        },
+            return _build(context, route, maintenance);
+          },
+        ),
       ),
     );
   }
@@ -128,6 +131,8 @@ class RoutePanel extends StatelessWidget {
     final intl = context.intl;
     final gatewayOn = maintenance.gatewayOn;
     final own = route == null ? maintenance.gateway : route.maintenance;
+    final rateCubit = app.di.find<RateLimitCubit>();
+    final rate = route == null ? rateCubit.gateway : route.rateLimit;
     final status = route == null
         ? (gatewayOn ? RouteStatus.maintenance : RouteStatus.none)
         : RouteStatus.of(route, gatewayOn: gatewayOn);
@@ -240,14 +245,24 @@ class RoutePanel extends StatelessWidget {
                     ),
                     const SizedBox(height: 12),
                   ],
-                  if (own != null)
+                  if (own != null) ...[
                     MaintenanceBlock(
                       key: ValueKey('maint-${route?.id ?? 'gateway'}'),
                       route: route,
                       model: own,
                       locked: route != null && gatewayOn,
                     ),
-                  ..._addable(context, route, own),
+                    const SizedBox(height: 12),
+                  ],
+                  if (rate != null) ...[
+                    RateLimitBlock(
+                      key: ValueKey('rate-${route?.id ?? 'gateway'}'),
+                      route: route,
+                      model: rate,
+                    ),
+                    const SizedBox(height: 12),
+                  ],
+                  ..._addable(context, route, own, rate),
                 ],
               ),
             ),
@@ -262,6 +277,7 @@ class RoutePanel extends StatelessWidget {
     BuildContext context,
     RouteModel? route,
     MaintenanceModel? own,
+    RateLimitModel? rate,
   ) {
     final c = app.colors;
     final intl = context.intl;
@@ -298,10 +314,31 @@ class RoutePanel extends StatelessWidget {
             model: MaintenanceModel(enabled: false),
           ),
         ),
+      if (rate == null &&
+          (route == null
+              ? app.di.find<RateLimitCubit>().gatewayCanHave
+              : route.canHave('rate_limit')))
+        _AddTile(
+          icon: app.assets.icons.general.gauge,
+          color: c.info,
+          label: intl.rate.add,
+          hint: route == null ? intl.rate.addHintGateway : intl.rate.addHint,
+          onPressed: () => app.di.find<RateLimitCubit>().put(
+            route: route,
+            action: RateLimitAction.added,
+            //the canvas's 60 / minute, burst 10, but off like maintenance: it changes traffic
+            model: RateLimitModel(
+              enabled: false,
+              limit: 60,
+              period: 'minute',
+              burst: 10,
+            ),
+          ),
+        ),
     ];
     if (tiles.isEmpty) return const [];
     return [
-      SizedBox(height: own == null ? 6 : 18),
+      const SizedBox(height: 6),
       CaptionText(
         route == null ? intl.panel.addToGateway : intl.panel.addToRoute,
         size: 11,

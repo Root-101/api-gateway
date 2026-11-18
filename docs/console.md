@@ -76,7 +76,8 @@ mouse or keyboard activity.
 Every route of the gateway as a card: its name and description, **FROM** (the public URL it
 answers, the gateway's URL plus its path) and **TO** (where it forwards, with the rewrite of the
 path applied), each with a button to copy it. Each card has **Edit**, **Duplicate** and
-**Delete**, and at its foot a badge per add-on (**Health · every 30 s**, **Maintenance · on/off**)
+**Delete**, and at its foot a badge per add-on (**Health · every 30 s**, **Maintenance · on/off**,
+**Rate limit · 60/min**)
 and **+ Add-ons**; both open the panel of the route on the right (see [Add-ons](#add-ons)). Next to
 the name, **MAINT** when its maintenance is on, or **PAUSED** for every route while the whole
 gateway is in maintenance; otherwise **LIVE** or **DOWN** from its [health check](#health-check).
@@ -182,7 +183,8 @@ Without routes the map shows an **Add route** card that opens the form.
 ## Add-ons
 
 Every route forwards its requests; everything else is an add-on, added, edited, turned on or off
-and removed on its own. This version has two: **health check** (routes only) and **maintenance**.
+and removed on its own. This version has three: **health check** (routes only), **maintenance**
+and **rate limit** (both also for the whole gateway, from its panel in the map).
 The panel of a route (from the map, or from the badges and **+ Add-ons** of its card in Routes)
 shows its redirect, its add-ons and, under **Add to this route**, the ones it doesn't have yet (the
 types the gateway lists for it).
@@ -207,6 +209,26 @@ results: the console rereads the routes every 10 seconds while one of them has i
 **Behind it:** the [health check endpoints](api.md#health-check) of a route
 (`/_admin/routes/{id}/addons/health-check`: `PUT`, `DELETE`, `POST …/run`).
 
+### Rate limit
+
+Past a number of requests per second, minute or hour from the same client IP, a `429 Too Many
+Requests` with `Retry-After`, without reaching the service. A route's counts that route only; the
+gateway's counts each IP on every route together; with both, both apply. Maintenance (`503`) is
+checked first, and the admin API is never limited.
+
+| In the block                        | What it does                                                                       |
+|-------------------------------------|------------------------------------------------------------------------------------|
+| **Add to this route → Rate limit**  | Adds it, off, at 60 per minute with a burst of 10                                  |
+| **Limit requests** (switch)         | Turns it on or off, keeping the rest                                               |
+| **Edit** (pencil)                   | **Requests**, **Burst** (the most at once; empty: the same as the limit) and the period (second, minute, hour) |
+| **Remove** (trash)                  | Asks in the block itself, then removes it: it shows under **Add to …** again      |
+
+Any change (save, on, off, remove) starts every count from zero.
+
+**Behind it:** the [rate limit endpoints](api.md#rate-limit) of a route
+(`/_admin/routes/{id}/addons/rate-limit`: `PUT`, `DELETE`, `POST …/enable`, `POST …/disable`) and
+of the gateway (`/_admin/addons/rate-limit`: `PUT`, `DELETE`, `POST …/enable`, `POST …/disable`).
+
 ### Maintenance
 
 A route in maintenance answers every request with a `503` without reaching its service; the whole
@@ -218,7 +240,7 @@ The console, `/health` and the admin API keep working. It never turns off by its
 | **Add to this route → Maintenance mode** | Adds it, off, with the gateway's default message                              |
 | The slide           | Right turns it on, left turns it off (or the arrow keys), no confirmation                           |
 | **Edit** (pencil)   | **503 message**, optional, up to 500 characters (empty: the default one, marked *default*), and **Back around**, optional: callers get it as `Retry-After` while it's ahead |
-| **Remove** (trash)  | Asks in the block itself, then removes it with its message and time (routes only)                   |
+| **Remove** (trash)  | Asks in the block itself, then removes it with its message and time: it shows under **Add to …** again |
 
 Under its state, how long it has been on, or how long the last window lasted, in large units (`2h 30 min`,
 `1d 3h`); it moves on by itself every 10 seconds, like the gateway node of the map and the banner's countdown.
@@ -235,7 +257,7 @@ the gateway's panel open) and **Turn off** (which keeps the message and the time
 **Behind it:** [`GET /_admin/routes`](api.md#list-routes) and [`GET /_admin/addons`](api.md#add-ons)
 to draw it, and the [maintenance endpoints](api.md#maintenance) of a route
 (`/_admin/routes/{id}/addons/maintenance`: `PUT`, `DELETE`, `POST …/enable`, `POST …/disable`) and
-of the gateway (`/_admin/addons/maintenance`: `PUT`, `POST …/enable`, `POST …/disable`).
+of the gateway (`/_admin/addons/maintenance`: `PUT`, `DELETE`, `POST …/enable`, `POST …/disable`).
 
 ## Http logs
 
