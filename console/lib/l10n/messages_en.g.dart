@@ -79,6 +79,7 @@ class AppMessages with BaseTranslations<AppMessagesLocale, AppMessages> {
   late final AppMessages$rate$en rate = AppMessages$rate$en._(_root);
   late final AppMessages$map$en map = AppMessages$map$en._(_root);
   late final AppMessages$panel$en panel = AppMessages$panel$en._(_root);
+  late final AppMessages$info$en info = AppMessages$info$en._(_root);
 }
 
 // Path: app
@@ -1449,6 +1450,59 @@ class AppMessages$panel$en {
   String get clear => 'Clear';
 }
 
+// Path: info
+class AppMessages$info$en {
+  AppMessages$info$en._(this._root);
+
+  final AppMessages _root; // ignore: unused_field
+
+  // Translations
+
+  /// en: 'What is {name: String}?'
+  String what({required String name}) => 'What is ${name}?';
+
+  /// en: 'Is the service up?'
+  String get healthTitle => 'Is the service up?';
+
+  /// en: 'The gateway calls a path of the service, like /health, on a schedule. A 2xx answer marks the route LIVE; any other answer, or none, marks it DOWN.'
+  String get healthBody =>
+      'The gateway calls a path of the service, like /health, on a schedule. A 2xx answer marks the route LIVE; any other answer, or none, marks it DOWN.';
+
+  /// en: 'It only watches: requests keep going to the service either way. To stop them, turn on maintenance. Run now checks it right away.'
+  String get healthNote =>
+      'It only watches: requests keep going to the service either way. To stop them, turn on maintenance. Run now checks it right away.';
+
+  /// en: 'Close it for a while'
+  String get maintenanceTitle => 'Close it for a while';
+
+  /// en: 'While it is on, the gateway answers every request to this route with a 503 and your message, and doesn't call the service.'
+  String get maintenanceBody =>
+      'While it is on, the gateway answers every request to this route with a 503 and your message, and doesn\'t call the service.';
+
+  /// en: 'While it is on, the gateway answers every request, on every route, with a 503 and your message, and doesn't call any service.'
+  String get maintenanceBodyGateway =>
+      'While it is on, the gateway answers every request, on every route, with a 503 and your message, and doesn\'t call any service.';
+
+  /// en: 'You can add a return time for the clients. Turn it off and requests go through again.'
+  String get maintenanceNote =>
+      'You can add a return time for the clients. Turn it off and requests go through again.';
+
+  /// en: 'How many requests per client'
+  String get rateTitle => 'How many requests per client';
+
+  /// en: 'Each client IP gets a number of requests per second, minute or hour. Burst is how many can arrive at once.'
+  String get rateBody =>
+      'Each client IP gets a number of requests per second, minute or hour. Burst is how many can arrive at once.';
+
+  /// en: 'Each client IP gets a number of requests per second, minute or hour, on all routes together. Burst is how many can arrive at once.'
+  String get rateBodyGateway =>
+      'Each client IP gets a number of requests per second, minute or hour, on all routes together. Burst is how many can arrive at once.';
+
+  /// en: 'Past the limit the gateway answers 429 and doesn't call the service. Any change resets the counts.'
+  String get rateNote =>
+      'Past the limit the gateway answers 429 and doesn\'t call the service. Any change resets the counts.';
+}
+
 /// The flat map containing all translations for locale <en>.
 /// Only for edge cases! For simple maps, use the map function of this library.
 ///
@@ -1933,6 +1987,18 @@ extension on AppMessages {
       'panel.backHint' => 'Optional. Sent as Retry-After while it is ahead; it never turns off by itself.',
       'panel.pickTime' => 'Pick a date and time',
       'panel.clear' => 'Clear',
+      'info.what' => ({required String name}) => 'What is ${name}?',
+      'info.healthTitle' => 'Is the service up?',
+      'info.healthBody' => 'The gateway calls a path of the service, like /health, on a schedule. A 2xx answer marks the route LIVE; any other answer, or none, marks it DOWN.',
+      'info.healthNote' => 'It only watches: requests keep going to the service either way. To stop them, turn on maintenance. Run now checks it right away.',
+      'info.maintenanceTitle' => 'Close it for a while',
+      'info.maintenanceBody' => 'While it is on, the gateway answers every request to this route with a 503 and your message, and doesn\'t call the service.',
+      'info.maintenanceBodyGateway' => 'While it is on, the gateway answers every request, on every route, with a 503 and your message, and doesn\'t call any service.',
+      'info.maintenanceNote' => 'You can add a return time for the clients. Turn it off and requests go through again.',
+      'info.rateTitle' => 'How many requests per client',
+      'info.rateBody' => 'Each client IP gets a number of requests per second, minute or hour. Burst is how many can arrive at once.',
+      'info.rateBodyGateway' => 'Each client IP gets a number of requests per second, minute or hour, on all routes together. Burst is how many can arrive at once.',
+      'info.rateNote' => 'Past the limit the gateway answers 429 and doesn\'t call the service. Any change resets the counts.',
       _ => null,
     };
   }

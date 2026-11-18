@@ -290,6 +290,7 @@ class RoutePanel extends StatelessWidget {
           color: c.success,
           label: intl.health.add,
           hint: intl.health.addHint,
+          info: healthInfo(context),
           onPressed: () => app.di.find<HealthCheckCubit>().put(
             route: route,
             action: HealthCheckAction.added,
@@ -307,6 +308,7 @@ class RoutePanel extends StatelessWidget {
           color: c.maintenance,
           label: intl.panel.addMaintenance,
           hint: intl.panel.addMaintenanceHint,
+          info: maintenanceInfo(context, gateway: route == null),
           onPressed: () => app.di.find<MaintenanceCubit>().put(
             route: route,
             action: MaintenanceAction.added,
@@ -323,6 +325,7 @@ class RoutePanel extends StatelessWidget {
           color: c.info,
           label: intl.rate.add,
           hint: route == null ? intl.rate.addHintGateway : intl.rate.addHint,
+          info: rateInfo(context, gateway: route == null),
           onPressed: () => app.di.find<RateLimitCubit>().put(
             route: route,
             action: RateLimitAction.added,
@@ -470,6 +473,7 @@ class _AddTile extends StatelessWidget {
   final Color color;
   final String label;
   final String hint;
+  final Widget info;
   final VoidCallback onPressed;
 
   const _AddTile({
@@ -477,6 +481,7 @@ class _AddTile extends StatelessWidget {
     required this.color,
     required this.label,
     required this.hint,
+    required this.info,
     required this.onPressed,
   });
 
@@ -515,13 +520,21 @@ class _AddTile extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        label,
-                        style: TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w500,
-                          color: c.text,
-                        ),
+                      Row(
+                        children: [
+                          Flexible(
+                            child: Text(
+                              label,
+                              style: TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w500,
+                                color: c.text,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 2),
+                          info,
+                        ],
                       ),
                       Text(
                         hint,

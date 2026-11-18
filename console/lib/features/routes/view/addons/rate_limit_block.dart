@@ -121,13 +121,21 @@ class _RateLimitBlockState extends State<RateLimitBlock> {
                 app.assets.icons.general.gauge.build(size: 17, color: color),
                 const SizedBox(width: 10),
                 Expanded(
-                  child: Text(
-                    intl.rate.title,
-                    style: TextStyle(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w600,
-                      color: c.text,
-                    ),
+                  child: Row(
+                    children: [
+                      Flexible(
+                        child: Text(
+                          intl.rate.title,
+                          style: TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w600,
+                            color: c.text,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 2),
+                      rateInfo(context, gateway: _gateway),
+                    ],
                   ),
                 ),
                 Padding(

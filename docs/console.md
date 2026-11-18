@@ -199,11 +199,12 @@ that is down still gets its requests.
 |---------------------------------------|----------------------------------------------------------------------------------|
 | **Add to this route → Health check**  | Adds it, on, calling `/health` every 30 s                                        |
 | **Run now** (play)                    | Calls it now and shows the result (up to 5 s), also while it's off               |
-| **Edit** (pencil)                     | **Endpoint** (added to the route's URI), **Check every** (10 s to 1 h) and **Check on a schedule** (off: no calls, it shows **OFF**) |
+| **Edit** (pencil)                     | **Endpoint** (added to the route's URI), **Check every** (10 s to 1 h) and **Check on a schedule** (off: no calls, **Every** says `Off · every 30 s`) |
 | **Remove** (trash)                    | Asks in the block itself, then removes it with its last result                   |
 
-The block shows the endpoint, the interval and the **Last check** (`12 s ago · 200 in 18 ms`, `no
-answer` when the service couldn't be reached or didn't answer in 5 s). The gateway doesn't push the
+The block shows the endpoint, the interval and the **Last check**, ending in the state while it's on
+(`12 s ago · 200 in 18 ms · LIVE`, `no answer · DOWN` when the service couldn't be reached or didn't
+answer in 5 s). The (i) beside its name, as beside every add-on's, explains it in a popup. The gateway doesn't push the
 results: the console rereads the routes every 10 seconds while one of them has it on.
 
 **Behind it:** the [health check endpoints](api.md#health-check) of a route

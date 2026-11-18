@@ -13,6 +13,7 @@ export 'logic/model/rewrite_path_model.dart';
 export 'logic/model/route_form_model.dart';
 export 'logic/model/route_model.dart';
 export 'routes_init.dart';
+export 'view/addons/info_tip.dart';
 export 'view/addons/route_panel.dart';
 export 'view/map/gateway_map_screen.dart';
 export 'view/routes_restore_dialog.dart';

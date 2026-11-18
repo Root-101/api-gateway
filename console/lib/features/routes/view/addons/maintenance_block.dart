@@ -126,13 +126,21 @@ class _MaintenanceBlockState extends State<MaintenanceBlock> {
                 ),
                 const SizedBox(width: 10),
                 Expanded(
-                  child: Text(
-                    intl.panel.maintenance,
-                    style: TextStyle(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w600,
-                      color: c.text,
-                    ),
+                  child: Row(
+                    children: [
+                      Flexible(
+                        child: Text(
+                          intl.panel.maintenance,
+                          style: TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w600,
+                            color: c.text,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 2),
+                      maintenanceInfo(context, gateway: _gateway),
+                    ],
                   ),
                 ),
                 if (_mode == _Mode.view) ...[

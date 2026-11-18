@@ -86,13 +86,12 @@ class _HealthCheckBlockState extends State<HealthCheckBlock> {
     final c = app.colors;
     final intl = context.intl;
     final m = widget.model;
-    final (Color color, String? state) = !m.enabled
-        ? (c.label, intl.health.off)
-        : m.up == true
-        ? (c.success, intl.health.live)
-        : m.up == false
-        ? (c.dangerText, intl.health.down)
-        : (c.label, null);
+    //the icon keeps the state's color; LIVE / DOWN themselves go at the end of the last check
+    final color = !m.enabled || m.up == null
+        ? c.label
+        : m.up!
+        ? c.success
+        : c.dangerText;
     return CallbackShortcuts(
       bindings: {
         if (_mode != _Mode.view)
@@ -121,27 +120,23 @@ class _HealthCheckBlockState extends State<HealthCheckBlock> {
                 app.assets.icons.general.activity.build(size: 17, color: color),
                 const SizedBox(width: 10),
                 Expanded(
-                  child: Text(
-                    intl.health.title,
-                    style: TextStyle(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w600,
-                      color: c.text,
-                    ),
+                  child: Row(
+                    children: [
+                      Flexible(
+                        child: Text(
+                          intl.health.title,
+                          style: TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w600,
+                            color: c.text,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 2),
+                      healthInfo(context),
+                    ],
                   ),
                 ),
-                if (state != null)
-                  Padding(
-                    padding: const EdgeInsets.only(right: 4),
-                    child: Text(
-                      state,
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                        color: color,
-                      ),
-                    ),
-                  ),
                 if (_mode == _Mode.view) ...[
                   _checking
                       ? SizedBox(
@@ -242,8 +237,30 @@ class _HealthCheckBlockState extends State<HealthCheckBlock> {
                   style: style.copyWith(color: c.textTertiary),
                 )
               : Ticking(
-                  builder: (context) => Text(
-                    _lastText(context, m),
+                  builder: (context) => Text.rich(
+                    TextSpan(
+                      text: _lastText(context, m),
+                      children: [
+                        //"12 s ago · 200 in 18 ms · LIVE", as in the canvas; off, the result is old
+                        if (m.enabled && m.checkedAt != null && m.up != null)
+                          TextSpan(
+                            text: ' · ',
+                            children: [
+                              TextSpan(
+                                text: m.up!
+                                    ? intl.health.live
+                                    : intl.health.down,
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w600,
+                                  letterSpacing: 0.4,
+                                  color: m.up! ? c.success : c.dangerText,
+                                ),
+                              ),
+                            ],
+                          ),
+                      ],
+                    ),
                     style: m.up == false
                         ? style.copyWith(color: c.dangerText)
                         : style,

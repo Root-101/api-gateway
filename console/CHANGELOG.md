@@ -10,10 +10,10 @@
           `DELETE`, `POST .../enable` and `.../disable` under `/routes/{id}/addons/maintenance` and
           `/addons/maintenance`.
         * **Health check** :heartpulse: : A second add-on, routes only: the gateway calls a path of the route's
-          service every 10 s to 1 h and the console shows the last result. `LIVE` (a 2xx) or `DOWN` next to the
-          name (maintenance wins), a `Health · every 30 s` badge on the card, a chip on the map node, and a red,
+          service every 10 s to 1 h and the console shows the last result. `LIVE` (a 2xx) or `DOWN` at the end of
+          the last check (maintenance wins), a `Health · every 30 s` badge on the card, a chip on the map node, and a red,
           still branch in the map while it is down (it still gets its requests). Its block in the panel shows the
-          endpoint, the interval and the last check ("12 s ago · 200 in 18 ms"), with "Run now", edit in place
+          endpoint, the interval and the last check ("12 s ago · 200 in 18 ms · LIVE"), with "Run now", edit in place
           (endpoint, one of 10 s / 30 s / 1 min / 5 min / 15 min / 1 h, on or off) and remove. Added as
           `/health` every 30 s, on. The routes are reread every 10 s while one has it on (the gateway doesn't
           push). "Add to this route" lists the types the route's `addons` has as keys. API: `PUT`, `DELETE` and
@@ -26,6 +26,9 @@
           `PUT`, `DELETE`, `POST .../enable` and `.../disable` under `/routes/{id}/addons/rate-limit` and
           `/addons/rate-limit`. The gateway's maintenance and rate limit can be removed too, like a route's
           (`DELETE /addons/maintenance`, `DELETE /addons/rate-limit`).
+        * **Add-on info** :information_source: : An (i) beside each add-on's name, in its block and in "Add to this
+          route", even before it is added. Hover, focus or a tap opens a popup with what it is for and how it works
+          (for the gateway's maintenance and rate limit, the gateway-wide wording), as in the canvas.
         * **Gateway map** :world_map: : New first entry of the rail: the gateway's URL, the gateway
           and a branch per route with its path, dashed and moving while it forwards, dotted orange while it answers
           `503`. Drag, wheel zoom, `Fit`, an "Add route" card when there are none, and the panel of a route or of the

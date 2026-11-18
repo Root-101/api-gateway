@@ -106,6 +106,8 @@ class AppMessagesEs
   late final AppMessages$map$es map = AppMessages$map$es._(_root);
   @override
   late final AppMessages$panel$es panel = AppMessages$panel$es._(_root);
+  @override
+  late final AppMessages$info$es info = AppMessages$info$es._(_root);
 }
 
 // Path: app
@@ -1113,6 +1115,47 @@ class AppMessages$panel$es implements AppMessages$panel$en {
   String get clear => 'Quitar';
 }
 
+// Path: info
+class AppMessages$info$es implements AppMessages$info$en {
+  AppMessages$info$es._(this._root);
+
+  final AppMessagesEs _root; // ignore: unused_field
+
+  // Translations
+  @override
+  String what({required Object name}) => '¿Qué es ${name}?';
+  @override
+  String get healthTitle => '¿Está arriba el servicio?';
+  @override
+  String get healthBody =>
+      'El gateway llama cada cierto tiempo a una ruta del servicio, como /health. Una respuesta 2xx marca la ruta LIVE; cualquier otra, o ninguna, la marca DOWN.';
+  @override
+  String get healthNote =>
+      'Solo vigila: las peticiones siguen llegando al servicio igual. Para cortarlas, activa el mantenimiento. Comprobar ahora lo hace al momento.';
+  @override
+  String get maintenanceTitle => 'Ciérrala un rato';
+  @override
+  String get maintenanceBody =>
+      'Mientras está activo, el gateway responde a cada petición de esta ruta con un 503 y tu mensaje, sin llamar al servicio.';
+  @override
+  String get maintenanceBodyGateway =>
+      'Mientras está activo, el gateway responde a cada petición, en todas las rutas, con un 503 y tu mensaje, sin llamar a ningún servicio.';
+  @override
+  String get maintenanceNote =>
+      'Puedes indicar una hora de vuelta para los clientes. Al apagarlo, las peticiones vuelven a pasar.';
+  @override
+  String get rateTitle => 'Cuántas peticiones por cliente';
+  @override
+  String get rateBody =>
+      'Cada IP de cliente tiene un número de peticiones por segundo, minuto u hora. El burst es cuántas pueden llegar a la vez.';
+  @override
+  String get rateBodyGateway =>
+      'Cada IP de cliente tiene un número de peticiones por segundo, minuto u hora, sumando todas las rutas. El burst es cuántas pueden llegar a la vez.';
+  @override
+  String get rateNote =>
+      'Al pasarse, el gateway responde 429 sin llamar al servicio. Cualquier cambio reinicia los contadores.';
+}
+
 /// The flat map containing all translations for locale <es>.
 /// Only for edge cases! For simple maps, use the map function of this library.
 ///
@@ -1615,6 +1658,18 @@ extension on AppMessagesEs {
       'panel.backHint' => 'Opcional. Se envía como Retry-After mientras no haya pasado; nunca lo apaga solo.',
       'panel.pickTime' => 'Elige fecha y hora',
       'panel.clear' => 'Quitar',
+      'info.what' => ({required Object name}) => '¿Qué es ${name}?',
+      'info.healthTitle' => '¿Está arriba el servicio?',
+      'info.healthBody' => 'El gateway llama cada cierto tiempo a una ruta del servicio, como /health. Una respuesta 2xx marca la ruta LIVE; cualquier otra, o ninguna, la marca DOWN.',
+      'info.healthNote' => 'Solo vigila: las peticiones siguen llegando al servicio igual. Para cortarlas, activa el mantenimiento. Comprobar ahora lo hace al momento.',
+      'info.maintenanceTitle' => 'Ciérrala un rato',
+      'info.maintenanceBody' => 'Mientras está activo, el gateway responde a cada petición de esta ruta con un 503 y tu mensaje, sin llamar al servicio.',
+      'info.maintenanceBodyGateway' => 'Mientras está activo, el gateway responde a cada petición, en todas las rutas, con un 503 y tu mensaje, sin llamar a ningún servicio.',
+      'info.maintenanceNote' => 'Puedes indicar una hora de vuelta para los clientes. Al apagarlo, las peticiones vuelven a pasar.',
+      'info.rateTitle' => 'Cuántas peticiones por cliente',
+      'info.rateBody' => 'Cada IP de cliente tiene un número de peticiones por segundo, minuto u hora. El burst es cuántas pueden llegar a la vez.',
+      'info.rateBodyGateway' => 'Cada IP de cliente tiene un número de peticiones por segundo, minuto u hora, sumando todas las rutas. El burst es cuántas pueden llegar a la vez.',
+      'info.rateNote' => 'Al pasarse, el gateway responde 429 sin llamar al servicio. Cualquier cambio reinicia los contadores.',
       _ => null,
     };
   }
