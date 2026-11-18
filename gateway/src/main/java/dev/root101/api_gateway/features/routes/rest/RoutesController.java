@@ -1,7 +1,7 @@
 package dev.root101.api_gateway.features.routes.rest;
 
 import dev.root101.api_gateway.config.I18n;
-import dev.root101.api_gateway.features.addons.logic.usecase.AddonsUseCase;
+import dev.root101.api_gateway.features.addons.base.logic.usecase.AddonsUseCase;
 import dev.root101.api_gateway.features.routes.logic.model.RouteConfigRequest;
 import dev.root101.api_gateway.features.routes.logic.model.RouteConfigResponse;
 import dev.root101.api_gateway.features.routes.logic.usecase.RouteUseCase;

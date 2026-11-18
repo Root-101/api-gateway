@@ -1,7 +1,7 @@
 package dev.root101.api_gateway.features.routes.logic.usecase;
 
-import dev.root101.api_gateway.features.addons.logic.model.AddonsRequest;
-import dev.root101.api_gateway.features.addons.logic.usecase.AddonsUseCase;
+import dev.root101.api_gateway.features.addons.base.logic.model.AddonsRequest;
+import dev.root101.api_gateway.features.addons.base.logic.usecase.AddonsUseCase;
 import dev.root101.api_gateway.features.routes.data.entity.RouteEntity;
 import dev.root101.api_gateway.features.routes.data.repo.RouteRepo;
 import dev.root101.api_gateway.features.routes.logic.model.RewritePathModel;

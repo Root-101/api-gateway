@@ -1,10 +1,10 @@
 package dev.root101.api_gateway;
 
-import dev.root101.api_gateway.features.addons.data.entity.AddonEntity;
-import dev.root101.api_gateway.features.addons.data.entity.AddonJson;
-import dev.root101.api_gateway.features.addons.data.repo.AddonRepo;
-import dev.root101.api_gateway.features.addons.logic.usecase.AddonsUseCase;
-import dev.root101.api_gateway.features.maintenance.logic.model.Maintenance;
+import dev.root101.api_gateway.features.addons.base.data.entity.AddonEntity;
+import dev.root101.api_gateway.features.addons.base.data.entity.AddonJson;
+import dev.root101.api_gateway.features.addons.base.data.repo.AddonRepo;
+import dev.root101.api_gateway.features.addons.base.logic.usecase.AddonsUseCase;
+import dev.root101.api_gateway.features.addons.maintenance.logic.model.Maintenance;
 import dev.root101.api_gateway.support.IntegrationTest;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;

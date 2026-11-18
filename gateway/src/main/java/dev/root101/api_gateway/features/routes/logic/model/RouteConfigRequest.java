@@ -1,6 +1,6 @@
 package dev.root101.api_gateway.features.routes.logic.model;
 
-import dev.root101.api_gateway.features.addons.logic.model.AddonsRequest;
+import dev.root101.api_gateway.features.addons.base.logic.model.AddonsRequest;
 import dev.root101.api_gateway.features.routes.utils.ValidRoute;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;

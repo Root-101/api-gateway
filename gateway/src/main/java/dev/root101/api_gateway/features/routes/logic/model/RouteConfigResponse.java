@@ -1,6 +1,6 @@
 package dev.root101.api_gateway.features.routes.logic.model;
 
-import dev.root101.api_gateway.features.addons.logic.model.Addons;
+import dev.root101.api_gateway.features.addons.base.logic.model.Addons;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;

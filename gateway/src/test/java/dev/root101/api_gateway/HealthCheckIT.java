@@ -1,10 +1,10 @@
 package dev.root101.api_gateway;
 
-import dev.root101.api_gateway.features.addons.data.entity.AddonEntity;
-import dev.root101.api_gateway.features.addons.data.entity.AddonJson;
-import dev.root101.api_gateway.features.addons.data.repo.AddonRepo;
-import dev.root101.api_gateway.features.addons.logic.usecase.AddonsUseCase;
-import dev.root101.api_gateway.features.health_check.logic.model.HealthCheck;
+import dev.root101.api_gateway.features.addons.base.data.entity.AddonEntity;
+import dev.root101.api_gateway.features.addons.base.data.entity.AddonJson;
+import dev.root101.api_gateway.features.addons.base.data.repo.AddonRepo;
+import dev.root101.api_gateway.features.addons.base.logic.usecase.AddonsUseCase;
+import dev.root101.api_gateway.features.addons.health_check.logic.model.HealthCheck;
 import dev.root101.api_gateway.features.routes.logic.model.RouteConfigRequest;
 import dev.root101.api_gateway.support.IntegrationTest;
 import org.junit.jupiter.api.Test;
