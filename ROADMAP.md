@@ -89,6 +89,13 @@ the predicates and filters it uses.
   the cost of the http logs (one db row per request). A load tool against a local stub service,
   run by hand, not in CI; the results and how to repeat them in the docs.
 
+- [ ] Gateway: **Routes with the same path.** Today only the name is unique (`409`): two routes can
+  have the same `path` (`/dumpling/**`), and only one gets the traffic, with no warning. Every
+  route has order `0`, so which one wins isn't defined, and the other one's add-ons (a rate limit,
+  a maintenance) never apply. Seen on 2026-11-18 with a copied route. Reject the same path with a
+  `409` on create, edit, multi-add and restore (or at least warn in the console). Overlapping
+  patterns (`/a/**` and `/a/b/**`) are a separate question: they need an explicit order (item 5).
+
 - [ ] Gateway: **HTML maintenance page**, an extra of the maintenance add-on, not planned for now.
   Today a route in maintenance answers a Problem Details (JSON) to everyone. A browser
   (`Accept: text/html`) could get a page instead: first one built-in template (title, message,
