@@ -40,7 +40,9 @@
           the diagram, the branches, the legend and each node are widgets of their own in `view/widgets`. Routes got
           the same split: its screen keeps the search and the delete confirmation, and the header, the grid, the card
           (with its maintenance strip, add-on badges and skeleton) and the delete dialog live in
-          `features/routes/view/widgets`.
+          `features/routes/view/widgets`. So did the route form: `routes_form_screen.dart` keeps the dialog and its
+          cubit, `routes_form_widget.dart` the fields, steps, validation and saving, and the header, preview, step,
+          stepper, footer and duplicate chip live in `form/widgets`.
         * **Route form** :pencil2: : The preview is no longer a card inside the form: the strip under the title takes
           the card color, as in the canvas.
         * **Routes** :twisted_rightwards_arrows: : Each card has the `MAINT` / `PAUSED` tag, a badge per add-on and
