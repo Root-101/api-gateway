@@ -47,7 +47,10 @@
           state) and the footer (rows per page, pages) live in `features/logs/view/widgets`. The date range calendar
           of the logs filter is now a design system component, `AppDateRangeDialog`. The three add-on blocks share
           their header (icon, name, info, Edit, Remove) and their remove confirmation: `AddonHeader` and
-          `AddonRemoveConfirm` in `addons/addon_block_parts.dart`.
+          `AddonRemoveConfirm` in `addons/addon_block_parts.dart`. The shell (`base_screen.dart`) keeps the add-on loads,
+          the health check poll and the layout; the rail with its items, the maintenance and offline banners and the
+          snack listeners (`ShellListeners`) live in `features/base`. The restore dialog's drop area uses the design
+          system's `DashedBorder` (now with `dash` and `gap`) instead of its own copy.
         * **Route form** :pencil2: : The preview is no longer a card inside the form: the strip under the title takes
           the card color, as in the canvas.
         * **Routes** :twisted_rightwards_arrows: : Each card has the `MAINT` / `PAUSED` tag, a badge per add-on and
