@@ -33,11 +33,10 @@ the predicates and filters it uses.
      per second/minute/hour, with burst, `429` with `Retry-After`. Counters in memory, enough for one
      instance; Redis if there are ever several. Gateway and console done in 6.1.0, decision 19 in
      `DECISIONS.md`.
-   - [ ] 1.4. **CORS per route.** Today one policy (`CORS_ALLOWED_ORIGINS`) for every path, and the
-     services' own CORS headers are replaced. Let each route keep its service's CORS (forward the
-     preflight to the upstream instead of answering it in the gateway) or set its own origins, as
-     an add-on of the route, edited from the admin API and the console. See decision 15 in
-     `DECISIONS.md`.
+   - [x] 1.4. **CORS** (`cors`), of the gateway and of each route: origins and credentials, edited
+     from the admin API and the console; replaces `CORS_ALLOWED_ORIGINS`, migrated into the
+     gateway's on the first start. Forwarding the preflight to the service was rejected. Gateway
+     and console done in 6.1.0, decision 20 in `DECISIONS.md`.
    - [ ] 1.5. **Circuit breaker and retries.** A service that keeps failing is cut and answered with a
      fast `503` instead of waiting for timeouts; `GET`s are retried on transient failures. Impact:
      high, stops cascading failures. Effort: medium. An add-on per route (thresholds, retries), new
@@ -78,6 +77,8 @@ the predicates and filters it uses.
 
 ## Possible improvements
 
+- [ ] Gateway, 7.0: **remove `CORS_ALLOWED_ORIGINS`**, deprecated in 6.1.0. Only its read goes: the
+  gateway's CORS add-on is still created with `*` on the first start (decision 20 in `DECISIONS.md`).
 - [ ] Gateway: **HTTP/2 and gRPC** support, for a later version (not 6.0.0). gRPC needs HTTP/2 end
   to end (trailers, multiplexed streams): enable it on the gateway server (`server.http2.enabled`)
   and on the client to the upstreams, check the Railway edge forwards HTTP/2 to the container, and
