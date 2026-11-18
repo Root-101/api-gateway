@@ -88,3 +88,18 @@ the predicates and filters it uses.
   (`Accept: text/html`) could get a page instead: first one built-in template (title, message,
   return time, in the request's language, no template engine), later the admin's own HTML in the
   maintenance add-on (served as is to the end users: review it as a security change).
+
+- [ ] Console: **WebAssembly build** (`flutter build web --release --wasm`), not urgent. Checked on
+  2026-11-17 with Flutter 3.47: it builds without changes (the code only uses `dart:js_interop` and
+  `package:web`, no `dart:html`, and every dependency compiles). The Dart code becomes
+  `main.dart.wasm` (3.6 MB, vs 4.0 MB of `main.dart.js`), drawn by skwasm (Skia in WASM, with a
+  render thread) instead of CanvasKit. The build keeps both: `flutter_bootstrap.js` loads the
+  WASM where WasmGC exists (Chrome/Edge 119+, Firefox 120+) and the JS elsewhere (some Safari
+  versions). Gain: smoother frames and less jank in big tables and the map, a slightly faster
+  start; moderate for an admin console. To do: `--wasm` in `console/Dockerfile`, and in
+  `console/nginx.conf` `Cross-Origin-Opener-Policy: same-origin` and
+  `Cross-Origin-Embedder-Policy: credentialless` (without them the browser gives no threads;
+  `credentialless` rather than `require-corp` so CanvasKit and the fonts from gstatic still load).
+  The CSP already has `'wasm-unsafe-eval'`, `no-cache` covers the `.wasm`, and nginx 1.28 serves it
+  as `application/wasm`. Risk: COOP/COEP can block cross-origin resources; test in Chrome, Firefox
+  and Safari against the real gateway before releasing (Flutter still labels WASM as new).
