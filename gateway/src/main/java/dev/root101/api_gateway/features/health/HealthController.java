@@ -1,4 +1,4 @@
-package dev.root101.api_gateway.features.health.rest;
+package dev.root101.api_gateway.features.health;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
