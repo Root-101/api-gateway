@@ -73,6 +73,8 @@ class ShellListeners extends StatelessWidget {
       final message = switch (state.action) {
         HealthCheckAction.added => intl.added(name: name),
         HealthCheckAction.saved => intl.saved(name: name),
+        HealthCheckAction.enabled => intl.routeOn(name: name),
+        HealthCheckAction.disabled => intl.routeOff(name: name),
         HealthCheckAction.deleted => intl.removed(name: name),
         //the block shows the result
         HealthCheckAction.checked => null,

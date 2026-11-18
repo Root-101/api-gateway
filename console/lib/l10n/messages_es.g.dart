@@ -897,6 +897,10 @@ class AppMessages$health$es implements AppMessages$health$en {
   @override
   String saved({required Object name}) => '"${name}": health check guardado';
   @override
+  String routeOn({required Object name}) => '"${name}": health check encendido';
+  @override
+  String routeOff({required Object name}) => '"${name}": health check apagado';
+  @override
   String removed({required Object name}) => '"${name}": health check quitado';
 }
 
@@ -1536,6 +1540,12 @@ extension on AppMessagesEs {
       'health.saved' => ({
         required Object name,
       }) => '"${name}": health check guardado',
+      'health.routeOn' => ({
+        required Object name,
+      }) => '"${name}": health check encendido',
+      'health.routeOff' => ({
+        required Object name,
+      }) => '"${name}": health check apagado',
       'health.removed' => ({
         required Object name,
       }) => '"${name}": health check quitado',

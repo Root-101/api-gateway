@@ -133,6 +133,16 @@ class RoutesClient extends BaseClient {
     await dio.delete('${_addons(routeId)}/health-check');
   }
 
+  ///keeps the endpoint, interval and last result; 404 when it isn't configured
+  Future setHealthCheckEnabled({
+    required String routeId,
+    required bool enabled,
+  }) async {
+    await dio.post(
+      '${_addons(routeId)}/health-check/${enabled ? 'enable' : 'disable'}',
+    );
+  }
+
   ///waits for the call (up to ~5 s); 404 when it isn't configured
   Future runHealthCheck({required String routeId}) async {
     await dio.post('${_addons(routeId)}/health-check/run');

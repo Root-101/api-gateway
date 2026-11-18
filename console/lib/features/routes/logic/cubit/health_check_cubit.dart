@@ -1,7 +1,7 @@
 import 'package:console/app_exporter.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-enum HealthCheckAction { added, saved, deleted, checked }
+enum HealthCheckAction { added, saved, enabled, disabled, deleted, checked }
 
 ///the health check add-on of a route: saving, removing and "Run now". The route list
 ///(reloaded on every change) is where the panel reads it from
@@ -27,6 +27,16 @@ class HealthCheckCubit extends Cubit<HealthCheckState>
       _run(route, HealthCheckAction.deleted, () async {
         await repo.deleteHealthCheck(routeId: route.id);
       });
+
+  ///on: called every interval; off: only by Run now. Keeps the rest
+  Future<GlobalException?> setEnabled({
+    required RouteModel route,
+    required bool enabled,
+  }) => _run(
+    route,
+    enabled ? HealthCheckAction.enabled : HealthCheckAction.disabled,
+    () => repo.setHealthCheckEnabled(routeId: route.id, enabled: enabled),
+  );
 
   ///calls it now (up to ~5 s), on or off
   Future<GlobalException?> runNow({required RouteModel route}) => _run(

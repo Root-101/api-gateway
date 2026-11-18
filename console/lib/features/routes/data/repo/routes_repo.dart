@@ -203,6 +203,17 @@ class RoutesRepo {
     }
   }
 
+  Future setHealthCheckEnabled({
+    required String routeId,
+    required bool enabled,
+  }) async {
+    try {
+      await client.setHealthCheckEnabled(routeId: routeId, enabled: enabled);
+    } on Exception catch (exc) {
+      throw ExceptionConverter.parse(exc);
+    }
+  }
+
   Future runHealthCheck({required String routeId}) async {
     try {
       await client.runHealthCheck(routeId: routeId);

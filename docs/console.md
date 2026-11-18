@@ -199,7 +199,8 @@ that is down still gets its requests.
 |---------------------------------------|----------------------------------------------------------------------------------|
 | **Add to this route → Health check**  | Adds it, on, calling `/health` every 30 s                                        |
 | **Run now** (play)                    | Calls it now and shows the result (up to 5 s), also while it's off               |
-| **Edit** (pencil)                     | **Endpoint** (added to the route's URI), **Check every** (10 s to 1 h) and **Check on a schedule** (off: no calls, **Every** says `Off · every 30 s`) |
+| **Check on a schedule** (switch)      | On: called every interval; off: no calls, **Every** says `Off · every 30 s` and **Run now** still works. Keeps the endpoint, interval and last result |
+| **Edit** (pencil)                     | **Endpoint** (added to the route's URI) and **Check every** (10 s to 1 h)        |
 | **Remove** (trash)                    | Asks in the block itself, then removes it with its last result                   |
 
 The block shows the endpoint, the interval and the **Last check**, ending in the state while it's on
@@ -208,7 +209,7 @@ answer in 5 s). The (i) beside its name, as beside every add-on's, explains it i
 results: the console rereads the routes every 10 seconds while one of them has it on.
 
 **Behind it:** the [health check endpoints](api.md#health-check) of a route
-(`/_admin/routes/{id}/addons/health-check`: `PUT`, `DELETE`, `POST …/run`).
+(`/_admin/routes/{id}/addons/health-check`: `PUT`, `DELETE`, `POST …/enable`, `…/disable`, `…/run`).
 
 ### Rate limit
 

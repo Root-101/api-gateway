@@ -307,6 +307,8 @@ health:
   legendDown: 'Down'
   added: '"{name: String}": health check added'
   saved: '"{name: String}": health check saved'
+  routeOn: '"{name: String}": health check on'
+  routeOff: '"{name: String}": health check off'
   removed: '"{name: String}": health check removed'
 rate:
   title: 'Rate limit'

@@ -20,7 +20,6 @@ class _HealthCheckBlockState extends State<HealthCheckBlock> {
   final HealthCheckCubit cubit = app.di.find();
   final TextEditingController _path = TextEditingController();
   _Mode _mode = _Mode.view;
-  bool _enabled = true;
   int _interval = 30;
   bool _busy = false;
   bool _checking = false;
@@ -37,7 +36,6 @@ class _HealthCheckBlockState extends State<HealthCheckBlock> {
     _path.text = widget.model.path;
     setState(() {
       _mode = _Mode.edit;
-      _enabled = widget.model.enabled;
       _interval = widget.model.intervalSeconds;
       _pathError = null;
       _intervalError = null;
@@ -50,7 +48,8 @@ class _HealthCheckBlockState extends State<HealthCheckBlock> {
     final error = await cubit.put(
       route: widget.route,
       model: HealthCheckModel(
-        enabled: _enabled,
+        //on / off is the slide in the view
+        enabled: widget.model.enabled,
         path: _path.text,
         intervalSeconds: _interval,
       ),
@@ -72,6 +71,12 @@ class _HealthCheckBlockState extends State<HealthCheckBlock> {
   Future<void> _remove() async {
     setState(() => _busy = true);
     await cubit.delete(route: widget.route);
+    if (mounted) setState(() => _busy = false);
+  }
+
+  Future<void> _toggle(bool on) async {
+    setState(() => _busy = true);
+    await cubit.setEnabled(route: widget.route, enabled: on);
     if (mounted) setState(() => _busy = false);
   }
 
@@ -237,6 +242,26 @@ class _HealthCheckBlockState extends State<HealthCheckBlock> {
                   ),
                 ),
         ),
+        Row(
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    intl.health.enabled,
+                    style: TextStyle(fontSize: 13, color: c.text),
+                  ),
+                  Text(
+                    intl.health.enabledHint,
+                    style: TextStyle(fontSize: 12, color: c.textTertiary),
+                  ),
+                ],
+              ),
+            ),
+            Switch(value: m.enabled, onChanged: _busy ? null : _toggle),
+          ],
+        ),
       ],
     );
   }
@@ -334,30 +359,6 @@ class _HealthCheckBlockState extends State<HealthCheckBlock> {
             style: TextStyle(fontSize: 12, color: c.dangerText),
           ),
         ],
-        const SizedBox(height: 8),
-        Row(
-          children: [
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    intl.health.enabled,
-                    style: TextStyle(fontSize: 13, color: c.text),
-                  ),
-                  Text(
-                    intl.health.enabledHint,
-                    style: TextStyle(fontSize: 12, color: c.textTertiary),
-                  ),
-                ],
-              ),
-            ),
-            Switch(
-              value: _enabled,
-              onChanged: (value) => setState(() => _enabled = value),
-            ),
-          ],
-        ),
         const SizedBox(height: 10),
         Row(
           mainAxisAlignment: MainAxisAlignment.end,

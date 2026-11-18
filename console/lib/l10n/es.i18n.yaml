@@ -305,6 +305,8 @@ health:
   legendDown: 'Caída'
   added: '"{name}": health check añadido'
   saved: '"{name}": health check guardado'
+  routeOn: '"{name}": health check encendido'
+  routeOff: '"{name}": health check apagado'
   removed: '"{name}": health check quitado'
 rate:
   title: 'Rate limit'

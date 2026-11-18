@@ -1147,6 +1147,12 @@ class AppMessages$health$en {
   /// en: '"{name: String}": health check saved'
   String saved({required String name}) => '"${name}": health check saved';
 
+  /// en: '"{name: String}": health check on'
+  String routeOn({required String name}) => '"${name}": health check on';
+
+  /// en: '"{name: String}": health check off'
+  String routeOff({required String name}) => '"${name}": health check off';
+
   /// en: '"{name: String}": health check removed'
   String removed({required String name}) => '"${name}": health check removed';
 }
@@ -1877,6 +1883,12 @@ extension on AppMessages {
       'health.saved' => ({
         required String name,
       }) => '"${name}": health check saved',
+      'health.routeOn' => ({
+        required String name,
+      }) => '"${name}": health check on',
+      'health.routeOff' => ({
+        required String name,
+      }) => '"${name}": health check off',
       'health.removed' => ({
         required String name,
       }) => '"${name}": health check removed',
