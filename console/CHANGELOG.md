@@ -42,7 +42,10 @@
           (with its maintenance strip, add-on badges and skeleton) and the delete dialog live in
           `features/routes/view/widgets`. So did the route form: `routes_form_screen.dart` keeps the dialog and its
           cubit, `routes_form_widget.dart` the fields, steps, validation and saving, and the header, preview, step,
-          stepper, footer and duplicate chip live in `form/widgets`.
+          stepper, footer and duplicate chip live in `form/widgets`. And Logs: its screen keeps the debounced search
+          and the snacks, and the header, the toolbar (search, filter chips, Filters button), the table (rows, empty
+          state) and the footer (rows per page, pages) live in `features/logs/view/widgets`. The date range calendar
+          of the logs filter is now a design system component, `AppDateRangeDialog`.
         * **Route form** :pencil2: : The preview is no longer a card inside the form: the strip under the title takes
           the card color, as in the canvas.
         * **Routes** :twisted_rightwards_arrows: : Each card has the `MAINT` / `PAUSED` tag, a badge per add-on and

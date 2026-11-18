@@ -6,3 +6,7 @@ export 'logs_init.dart';
 export 'view/log_details_screen.dart';
 export 'view/logs_filter_dialog.dart';
 export 'view/logs_screen.dart';
+export 'view/widgets/logs_footer.dart';
+export 'view/widgets/logs_header.dart';
+export 'view/widgets/logs_table.dart';
+export 'view/widgets/logs_toolbar.dart';
