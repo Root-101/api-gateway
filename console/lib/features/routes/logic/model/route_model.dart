@@ -13,6 +13,9 @@ class RouteModel {
   final HealthCheckModel? healthCheck;
   final RateLimitModel? rateLimit;
 
+  ///its own CORS; null (or off) = the gateway's
+  final CorsModel? cors;
+
   ///every add-on as the api sent it (`null` the ones not configured, unknown ones too), for the backup
   final Map<String, dynamic> addons;
 
@@ -41,6 +44,7 @@ class RouteModel {
     this.maintenance,
     this.healthCheck,
     this.rateLimit,
+    this.cors,
     this.addons = const {},
     this.gatewayUrl,
   });

@@ -33,8 +33,10 @@ class MapChip extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           icon.build(size: 12, color: color),
-          const SizedBox(width: 5),
-          Text(label, style: TextStyle(fontSize: 12, color: color)),
+          if (label.isNotEmpty) ...[
+            const SizedBox(width: 5),
+            Text(label, style: TextStyle(fontSize: 12, color: color)),
+          ],
         ],
       ),
     );

@@ -24,6 +24,7 @@ class MapRouteNode extends StatelessWidget {
     final maintenance = route.maintenance;
     final health = route.healthCheck;
     final rate = route.rateLimit;
+    final cors = route.cors;
     final host = Uri.tryParse(route.uri)?.host;
     return MapNode(
       onTap: onTap,
@@ -93,7 +94,10 @@ class MapRouteNode extends StatelessWidget {
             const Spacer(),
             Container(height: 1, color: c.outlineSoft),
             const SizedBox(height: 8),
-            if (maintenance == null && health == null && rate == null)
+            if (maintenance == null &&
+                health == null &&
+                rate == null &&
+                cors == null)
               Text(
                 intl.maintenance.redirectOnly,
                 style: TextStyle(fontSize: 12, color: c.textTertiary),
@@ -122,13 +126,27 @@ class MapRouteNode extends StatelessWidget {
                     ),
                     const SizedBox(width: 6),
                   ],
-                  if (rate != null)
+                  if (rate != null) ...[
                     MapChip(
                       icon: app.assets.icons.general.gauge,
                       color: null,
                       label: rate.enabled
                           ? rateShort(rate)
                           : intl.maintenance.chipOff,
+                    ),
+                    const SizedBox(width: 6),
+                  ],
+                  //icon only: the card has no room for a fourth label
+                  if (cors != null)
+                    Tooltip(
+                      message: cors.enabled
+                          ? intl.cors.badge(value: corsShort(context, cors))
+                          : intl.cors.badgeOff,
+                      child: MapChip(
+                        icon: app.assets.icons.general.globe,
+                        color: cors.enabled ? c.lilac : null,
+                        label: '',
+                      ),
                     ),
                 ],
               ),

@@ -27,6 +27,20 @@
           `PUT`, `DELETE`, `POST .../enable` and `.../disable` under `/routes/{id}/addons/rate-limit` and
           `/addons/rate-limit`. The gateway's maintenance and rate limit can be removed too, like a route's
           (`DELETE /addons/maintenance`, `DELETE /addons/rate-limit`).
+        * **CORS** :globe_with_meridians: : A fourth add-on, per route and for the whole gateway: the browser origins
+          allowed to call it (`https://app.com`, `https://*.example.com`, `*`) and, routes only, credentials
+          (cookies). Origins are chips: type one and press Enter (checked right away: a bad one stays in the field with its error), the trash to take it out. The gateway's is always
+          there, with no slide and no remove: it covers the admin API and every route without its own; editing it
+          warns, without blocking, when the list leaves out the origin this console runs on (the gateway rejects
+          that save). A route's is added off with the gateway's origins, has a slide (off: the gateway's applies)
+          and can be removed. Credentials are off and locked while an origin matches all. A bad origin marks its
+          chip; the gateway's rule errors show in the block. A `CORS · app.com` badge on the card and a globe chip
+          on the map node. API: `cors` in each route and in `GET /addons`, `PUT /addons/cors`, and `PUT`, `DELETE`,
+          `POST .../enable` and `.../disable` under `/routes/{id}/addons/cors`. While the deprecated
+          `CORS_ALLOWED_ORIGINS` is still set, a banner on top of every screen says so: blue when it was moved into
+          the gateway's CORS (can be closed), yellow with both lists when it differs and is ignored; both with
+          "Edit CORS", and both gone once the variable is removed and the gateway restarted (`env_var` in the
+          gateway's `cors`).
         * **Add-on info** :information_source: : An (i) beside each add-on's name, in its block and in "Add to this
           route", even before it is added. Hover, focus or a tap opens a popup with what it is for and how it works
           (for the gateway's maintenance and rate limit, the gateway-wide wording), as in the canvas.
@@ -76,7 +90,12 @@
           maintenance slide keeps the handle where it was dropped while it saves (it jumped back to the old side and
           then to the new one), slides to its side when not dragged, and shows the click hand. Removing an add-on asks
           with the canvas buttons: outlined Cancel (no longer focused, so no lilac ring) and filled red Remove. The edit
-          buttons (Cancel, Save) are 34 px too, as in the canvas.
+          buttons (Cancel, Save) are 34 px too, as in the canvas. Every add-on ends like maintenance: its data, a
+          divider, what the slide does with a line on what happens now ("On · called every 30 s", "Off · nothing is
+          limited"), and the slide across the whole block, instead of a small switch on the right. The gateway's
+          panel starts with an **Overview** block, like a route's Redirect: its public URL and how many routes there
+          are, health-checked, down, in maintenance (all of them while the gateway is), rate-limited and with their
+          own CORS.
         * **Toasts** :speech_balloon: : They show at the bottom center instead of the bottom right, where they
           covered the side panel of the map.
         * **Fix** :bug: : The version under the rail, the login and the splash was empty with `flutter run`: its

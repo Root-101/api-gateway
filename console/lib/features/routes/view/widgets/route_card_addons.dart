@@ -45,6 +45,15 @@ class RouteCardAddons extends StatelessWidget {
             color: rate.enabled ? c.info : c.label,
             onPressed: open,
           ),
+        if (route.cors case final cors?)
+          RouteBadge(
+            icon: app.assets.icons.general.globe,
+            label: cors.enabled
+                ? intl.cors.badge(value: corsShort(context, cors))
+                : intl.cors.badgeOff,
+            color: cors.enabled ? c.lilac : c.label,
+            onPressed: open,
+          ),
         RouteBadge(
           icon: app.assets.icons.actions.add,
           label: intl.maintenance.addons,

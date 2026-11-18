@@ -106,3 +106,13 @@ Widget rateInfo(BuildContext context, {required bool gateway}) {
     note: intl.info.rateNote,
   );
 }
+
+Widget corsInfo(BuildContext context, {required bool gateway}) {
+  final intl = context.intl;
+  return InfoTip(
+    name: intl.cors.title,
+    title: intl.info.corsTitle,
+    body: gateway ? intl.info.corsBodyGateway : intl.info.corsBody,
+    note: intl.info.corsNote,
+  );
+}

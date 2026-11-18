@@ -62,6 +62,7 @@ class FeaturesInit {
     app.di.find<RoutesCubit>().reset();
     app.di.find<MaintenanceCubit>().reset();
     app.di.find<RateLimitCubit>().reset();
+    app.di.find<CorsCubit>().reset();
     app.di.find<LogsCubit>().reset();
     app.di.find<GatewayStatusCubit>().reset();
   }
@@ -80,6 +81,7 @@ class FeaturesInit {
     BlocProvider<RateLimitCubit>(
       create: (context) => app.di.find<RateLimitCubit>(),
     ),
+    BlocProvider<CorsCubit>(create: (context) => app.di.find<CorsCubit>()),
     //LOGS
     BlocProvider<LogsCubit>(create: (context) => app.di.find<LogsCubit>()),
     //GATEWAY STATUS

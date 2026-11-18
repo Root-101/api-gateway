@@ -1,16 +1,14 @@
 import 'package:console/app_exporter.dart';
+import 'package:console/features/routes/view/addons/slide_switch.dart';
 import 'package:flutter/material.dart';
 
-///an add-on block's top row: icon, name with its (i), then [status] and, while viewing,
-///[extraActions], Edit and Remove
+///an add-on block's top row: icon, name with its (i) and, while viewing, [extraActions], Edit and
+///Remove (the slide below says whether it's on)
 class AddonHeader extends StatelessWidget {
   final SvgAsset icon;
   final Color iconColor;
   final String title;
   final Widget info;
-
-  ///always shown after the name (e.g. the rate, `60/min`)
-  final List<Widget> status;
 
   ///false while editing or confirming: no buttons
   final bool showActions;
@@ -18,7 +16,9 @@ class AddonHeader extends StatelessWidget {
   ///before Edit while viewing (e.g. Run now)
   final List<Widget> extraActions;
   final VoidCallback onEdit;
-  final VoidCallback onRemove;
+
+  ///null: it can't be removed (the gateway's CORS)
+  final VoidCallback? onRemove;
 
   const AddonHeader({
     required this.icon,
@@ -28,7 +28,6 @@ class AddonHeader extends StatelessWidget {
     required this.showActions,
     required this.onEdit,
     required this.onRemove,
-    this.status = const [],
     this.extraActions = const [],
     super.key,
   });
@@ -59,7 +58,6 @@ class AddonHeader extends StatelessWidget {
             ],
           ),
         ),
-        ...status,
         if (showActions) ...[
           ...extraActions,
           AppIconButton(
@@ -69,14 +67,15 @@ class AddonHeader extends StatelessWidget {
             iconSize: 16,
             onPressed: onEdit,
           ),
-          AppIconButton(
-            icon: app.assets.icons.actions.delete,
-            tooltip: intl.panel.remove,
-            size: 34,
-            iconSize: 16,
-            hoverColor: c.softRed,
-            onPressed: onRemove,
-          ),
+          if (onRemove != null)
+            AppIconButton(
+              icon: app.assets.icons.actions.delete,
+              tooltip: intl.panel.remove,
+              size: 34,
+              iconSize: 16,
+              hoverColor: c.softRed,
+              onPressed: onRemove,
+            ),
         ],
       ],
     );
@@ -146,6 +145,69 @@ class AddonRemoveConfirm extends StatelessWidget {
           ],
         ),
       ],
+    );
+  }
+}
+
+///the foot of an add-on block, as maintenance's: a divider, what the slide does ([title]) and what
+///happens now ([hint]), then the slide across the whole block
+class AddonSlideSection extends StatelessWidget {
+  final String title;
+  final String hint;
+  final bool value;
+
+  ///shown while off / on, as in the slide itself ("Slide right to …")
+  final String onLabel;
+  final String offLabel;
+  final Color color;
+  final Color onColor;
+  final Future<bool> Function(bool on) onChanged;
+
+  const AddonSlideSection({
+    required this.title,
+    required this.hint,
+    required this.value,
+    required this.onLabel,
+    required this.offLabel,
+    required this.color,
+    required this.onColor,
+    required this.onChanged,
+    super.key,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final c = app.colors;
+    return Container(
+      margin: const EdgeInsets.only(top: 4),
+      padding: const EdgeInsets.only(top: 10),
+      decoration: BoxDecoration(
+        border: Border(top: BorderSide(color: c.outlineCard)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text(title, style: TextStyle(fontSize: 13, color: c.text)),
+          Text(
+            hint,
+            style: TextStyle(
+              fontSize: 12,
+              height: 16 / 12,
+              color: c.textTertiary,
+            ),
+          ),
+          const SizedBox(height: 8),
+          SlideSwitch(
+            value: value,
+            onLabel: onLabel,
+            offLabel: offLabel,
+            hint: context.intl.panel.slideHint,
+            color: color,
+            onColor: onColor,
+            onChanged: onChanged,
+          ),
+        ],
+      ),
     );
   }
 }

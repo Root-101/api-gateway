@@ -9,7 +9,7 @@ reads where the gateway is at container start, from `GATEWAY_SERVICE_URL` (requi
 `ADMIN_PATH` (optional, `_admin` by default, like the gateway's) (see
 [`console/README.md`](../console/README.md)), and talks to it only through the
 [admin API](api.md), with the token of the login as `Authorization: Bearer …`. So the gateway must
-allow the console's origin in `CORS_ALLOWED_ORIGINS`.
+allow the console's origin in its CORS add-on (`*` by default; see [CORS](api.md#cors)).
 
 The console uses hash URLs: the screen goes after `#` (`https://console.example.com/#/logs`). Every
 screen has its own URL, so it can be bookmarked, reloaded and reached with back and forward.
@@ -77,7 +77,7 @@ Every route of the gateway as a card: its name and description, **FROM** (the pu
 answers, the gateway's URL plus its path) and **TO** (where it forwards, with the rewrite of the
 path applied), each with a button to copy it. Each card has **Edit**, **Duplicate** and
 **Delete**, and at its foot a badge per add-on (**Health · every 30 s**, **Maintenance · on/off**,
-**Rate limit · 60/min**)
+**Rate limit · 60/min**, **CORS · app.com**)
 and **+ Add-ons**; both open the panel of the route on the right (see [Add-ons](#add-ons)). Next to
 the name, **MAINT** when its maintenance is on, or **PAUSED** for every route while the whole
 gateway is in maintenance; otherwise **LIVE** or **DOWN** from its [health check](#health-check).
@@ -183,8 +183,11 @@ Without routes the map shows an **Add route** card that opens the form.
 ## Add-ons
 
 Every route forwards its requests; everything else is an add-on, added, edited, turned on or off
-and removed on its own. This version has three: **health check** (routes only), **maintenance**
-and **rate limit** (both also for the whole gateway, from its panel in the map).
+and removed on its own. This version has four: **health check** (routes only), **maintenance**,
+**rate limit** and **CORS** (all three also for the whole gateway, from its panel in the map).
+Each block ends with a slide across it to turn it on or off, with a line on what happens now. The
+gateway's panel starts with an **Overview**: its public URL and how many routes there are, are
+health-checked, down, in maintenance, rate-limited and have their own CORS.
 The panel of a route (from the map, or from the badges and **+ Add-ons** of its card in Routes)
 shows its redirect, its add-ons and, under **Add to this route**, the ones it doesn't have yet (the
 types the gateway lists for it).
@@ -230,6 +233,33 @@ Any change (save, on, off, remove) starts every count from zero.
 **Behind it:** the [rate limit endpoints](api.md#rate-limit) of a route
 (`/_admin/routes/{id}/addons/rate-limit`: `PUT`, `DELETE`, `POST …/enable`, `POST …/disable`) and
 of the gateway (`/_admin/addons/rate-limit`: `PUT`, `DELETE`, `POST …/enable`, `POST …/disable`).
+
+### CORS
+
+Which browser origins may call it, and whether they may send cookies. Only browsers apply it
+(curl, Postman and servers aren't affected), and the gateway answers the preflights itself. The
+gateway's is always there: it covers the admin API (this console) and every route without its own
+CORS, or with it off.
+
+| In the block                   | What it does                                                                        |
+|--------------------------------|-------------------------------------------------------------------------------------|
+| **Add to this route → CORS**   | Adds it, off, with the gateway's origins                                            |
+| **Own CORS** (slide)           | Routes only. On: its origins apply; off: the gateway's                              |
+| **Edit** (pencil)              | **Allowed origins** as chips (type one, Enter, checked right away; the trash takes it out): `https://app.com`, `https://*.example.com` or `*`. Routes also have **Allow credentials**, locked off while an origin matches all |
+| **Remove** (trash)             | Routes only. Asks in the block itself; the route uses the gateway's CORS again       |
+
+The gateway's has no slide, no remove and no credentials (the admin API uses a token). Editing it
+warns when the list leaves out the origin this console runs on: the gateway rejects that save, so a
+browser can't lock itself out (curl can still fix any list).
+
+While the deprecated `CORS_ALLOWED_ORIGINS` is still set, a banner on top of every screen says so:
+blue when its origins were moved into the gateway's CORS (it can be closed), yellow with both lists
+when it differs and is ignored (the add-on applies). It goes away once the variable is removed from
+the deploy and the gateway restarted.
+
+**Behind it:** the [CORS endpoints](api.md#cors) of a route (`/_admin/routes/{id}/addons/cors`:
+`PUT`, `DELETE`, `POST …/enable`, `POST …/disable`) and of the gateway (`/_admin/addons/cors`:
+`PUT` only).
 
 ### Maintenance
 

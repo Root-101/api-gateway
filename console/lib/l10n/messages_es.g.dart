@@ -103,6 +103,8 @@ class AppMessagesEs
   @override
   late final AppMessages$rate$es rate = AppMessages$rate$es._(_root);
   @override
+  late final AppMessages$cors$es cors = AppMessages$cors$es._(_root);
+  @override
   late final AppMessages$map$es map = AppMessages$map$es._(_root);
   @override
   late final AppMessages$panel$es panel = AppMessages$panel$es._(_root);
@@ -873,7 +875,13 @@ class AppMessages$health$es implements AppMessages$health$en {
   @override
   String get enabled => 'Comprobar periódicamente';
   @override
-  String get enabledHint => 'Apagado: solo lo llama Comprobar ahora';
+  String hintOn({required Object time}) => 'Encendido · se llama cada ${time}';
+  @override
+  String get hintOff => 'Apagado · solo lo llama Comprobar ahora';
+  @override
+  String get slideOn => 'Desliza a la derecha para comprobar periódicamente';
+  @override
+  String get slideOff => 'Desliza a la izquierda para dejar de comprobar';
   @override
   String get removeTitle => '¿Quitar el health check?';
   @override
@@ -913,8 +921,6 @@ class AppMessages$rate$es implements AppMessages$rate$en {
   @override
   String get title => 'Rate limit';
   @override
-  String get off => 'OFF';
-  @override
   String get limit => 'Límite';
   @override
   String get burst => 'Ráfaga';
@@ -947,7 +953,13 @@ class AppMessages$rate$es implements AppMessages$rate$en {
   @override
   String get enabled => 'Limitar peticiones';
   @override
-  String get enabledHint => 'Apagado: no se limita nada';
+  String get hintOn => 'Encendido · al pasar el límite, 429';
+  @override
+  String get hintOff => 'Apagado · no se limita nada';
+  @override
+  String get slideOn => 'Desliza a la derecha para limitar peticiones';
+  @override
+  String get slideOff => 'Desliza a la izquierda para dejar de limitar';
   @override
   String get resetHint => 'Al guardar, todas las cuentas vuelven a cero.';
   @override
@@ -986,6 +998,112 @@ class AppMessages$rate$es implements AppMessages$rate$en {
   String get gatewayOff => 'Rate limit del gateway apagado';
   @override
   String get gatewayRemoved => 'Rate limit del gateway quitado';
+}
+
+// Path: cors
+class AppMessages$cors$es implements AppMessages$cors$en {
+  AppMessages$cors$es._(this._root);
+
+  final AppMessagesEs _root; // ignore: unused_field
+
+  // Translations
+  @override
+  String get title => 'CORS';
+  @override
+  String get all => 'TODOS';
+  @override
+  String get origins => 'Orígenes';
+  @override
+  String get credentials => 'Credenciales';
+  @override
+  String get credentialsYes => 'Se envían (cookies, cabeceras de auth)';
+  @override
+  String get credentialsNo => 'No se envían';
+  @override
+  String get credentialsGateway => 'No se envían · la API admin usa un token';
+  @override
+  String get usedByRoutes => 'Las rutas sin CORS propio usan este.';
+  @override
+  String originsCount({required Object count}) => '${count} orígenes';
+  @override
+  String get enabled => 'CORS propio';
+  @override
+  String get hintOn => 'Encendido · se aplican sus propios orígenes';
+  @override
+  String get hintOff => 'Apagado · se aplica el CORS del gateway';
+  @override
+  String get slideOn => 'Desliza a la derecha para usar su propio CORS';
+  @override
+  String get slideOff => 'Desliza a la izquierda para usar el del gateway';
+  @override
+  String get originsLabel => 'Orígenes permitidos';
+  @override
+  String get originsPlaceholder => 'https://app.com y Enter';
+  @override
+  String get clear => 'Limpiar';
+  @override
+  String get originsHint =>
+      'Un origen exacto, un patrón como https://*.example.com, o * para cualquiera.';
+  @override
+  String invalidOrigin({required Object origin}) =>
+      '${origin}: debe ser * o un origen como https://app.com o https://*.example.com, sin ruta';
+  @override
+  String removeOrigin({required Object origin}) => 'Quitar ${origin}';
+  @override
+  String get credentialsSwitch => 'Permitir credenciales';
+  @override
+  String get credentialsSwitchHint => 'Para servicios con sesión por cookies';
+  @override
+  String get credentialsNoAll => 'No con un origen que admite todos, como *';
+  @override
+  String lockout({required Object origin}) =>
+      'Esta consola está en ${origin}, que no está en la lista: al guardar se quedaría sin acceso al gateway.';
+  @override
+  String get removeTitle => '¿Quitar el CORS?';
+  @override
+  String get removeBody =>
+      'Se pierden sus orígenes y la ruta vuelve a usar el CORS del gateway.';
+  @override
+  String get add => 'CORS';
+  @override
+  String get addHint =>
+      'Sus propios orígenes permitidos, y cookies si el servicio las necesita';
+  @override
+  String badge({required Object value}) => 'CORS · ${value}';
+  @override
+  String get badgeOff => 'CORS · off';
+  @override
+  String added({required Object name}) => '"${name}": CORS añadido';
+  @override
+  String saved({required Object name}) => '"${name}": CORS guardado';
+  @override
+  String removed({required Object name}) =>
+      '"${name}": CORS quitado, usa el del gateway';
+  @override
+  String routeOn({required Object name}) => '"${name}": CORS propio encendido';
+  @override
+  String routeOff({required Object name}) =>
+      '"${name}": CORS propio apagado, usa el del gateway';
+  @override
+  String get gatewaySaved => 'CORS del gateway guardado';
+  @override
+  String envMigratedTitle({required Object name}) =>
+      '${name} ya está en el CORS del gateway.';
+  @override
+  String get envMigratedDetail =>
+      'Sus orígenes pasaron al add-on: edita el CORS aquí. Quita la variable del despliegue y reinicia el gateway para ocultar esto.';
+  @override
+  String envIgnoredTitle({required Object name}) =>
+      '${name} está puesta pero se ignora.';
+  @override
+  String get envIgnoredDetail =>
+      'No coincide con el CORS del gateway, que es el que se aplica. Edita el CORS aquí, luego quita la variable del despliegue y reinicia el gateway.';
+  @override
+  String get envVariable => 'Variable';
+  @override
+  String get envApplies => 'Se aplica';
+  @override
+  String get envOpen => 'Editar CORS';
 }
 
 // Path: map
@@ -1120,6 +1238,24 @@ class AppMessages$panel$es implements AppMessages$panel$en {
   String get pickTime => 'Elige fecha y hora';
   @override
   String get clear => 'Quitar';
+  @override
+  String get overview => 'Resumen';
+  @override
+  String get publicUrl => 'URL pública';
+  @override
+  String get routes => 'Rutas';
+  @override
+  String get healthChecked => 'Con health check';
+  @override
+  String get down => 'Caídas';
+  @override
+  String get inMaintenance => 'Mantenimiento';
+  @override
+  String get rateLimited => 'Con rate limit';
+  @override
+  String get ownCors => 'Con CORS propio';
+  @override
+  String allRoutes({required Object count}) => 'Las ${count} (gateway)';
 }
 
 // Path: info
@@ -1161,6 +1297,17 @@ class AppMessages$info$es implements AppMessages$info$en {
   @override
   String get rateNote =>
       'Al pasarse, el gateway responde 429 sin llamar al servicio. Cualquier cambio reinicia los contadores.';
+  @override
+  String get corsTitle => 'Qué webs pueden llamarla';
+  @override
+  String get corsBody =>
+      'Una página de otro origen solo puede leer las respuestas de esta ruta si su origen está en la lista. Permite credenciales si el servicio usa cookies.';
+  @override
+  String get corsBodyGateway =>
+      'Una página de otro origen solo puede llamar al gateway si su origen está en la lista. Cubre la API admin (esta consola) y todas las rutas sin CORS propio.';
+  @override
+  String get corsNote =>
+      'Solo los navegadores aplican CORS: curl, Postman y los servidores no se ven afectados. El gateway responde él mismo a los preflights.';
 }
 
 /// The flat map containing all translations for locale <es>.
@@ -1527,7 +1674,12 @@ extension on AppMessagesEs {
       }) => 'Se llama en ${host}; cualquier 2xx cuenta como activo.',
       'health.checkEvery' => 'Comprobar cada',
       'health.enabled' => 'Comprobar periódicamente',
-      'health.enabledHint' => 'Apagado: solo lo llama Comprobar ahora',
+      'health.hintOn' => ({
+        required Object time,
+      }) => 'Encendido · se llama cada ${time}',
+      'health.hintOff' => 'Apagado · solo lo llama Comprobar ahora',
+      'health.slideOn' => 'Desliza a la derecha para comprobar periódicamente',
+      'health.slideOff' => 'Desliza a la izquierda para dejar de comprobar',
       'health.removeTitle' => '¿Quitar el health check?',
       'health.removeBody' => 'Se pierden su endpoint, su intervalo y el último resultado. Puedes volver a añadirlo después.',
       'health.add' => 'Health check',
@@ -1552,7 +1704,6 @@ extension on AppMessagesEs {
         required Object name,
       }) => '"${name}": health check quitado',
       'rate.title' => 'Rate limit',
-      'rate.off' => 'OFF',
       'rate.limit' => 'Límite',
       'rate.burst' => 'Ráfaga',
       'rate.overLimit' => 'Al pasarlo',
@@ -1574,7 +1725,10 @@ extension on AppMessagesEs {
       'rate.burstPlaceholder' => 'Igual que el límite',
       'rate.per' => 'Por IP de cliente, cada',
       'rate.enabled' => 'Limitar peticiones',
-      'rate.enabledHint' => 'Apagado: no se limita nada',
+      'rate.hintOn' => 'Encendido · al pasar el límite, 429',
+      'rate.hintOff' => 'Apagado · no se limita nada',
+      'rate.slideOn' => 'Desliza a la derecha para limitar peticiones',
+      'rate.slideOff' => 'Desliza a la izquierda para dejar de limitar',
       'rate.resetHint' => 'Al guardar, todas las cuentas vuelven a cero.',
       'rate.removeTitle' => '¿Quitar el rate limit?',
       'rate.removeBody' =>
@@ -1604,6 +1758,64 @@ extension on AppMessagesEs {
       'rate.gatewayOn' => 'Rate limit del gateway encendido',
       'rate.gatewayOff' => 'Rate limit del gateway apagado',
       'rate.gatewayRemoved' => 'Rate limit del gateway quitado',
+      'cors.title' => 'CORS',
+      'cors.all' => 'TODOS',
+      'cors.origins' => 'Orígenes',
+      'cors.credentials' => 'Credenciales',
+      'cors.credentialsYes' => 'Se envían (cookies, cabeceras de auth)',
+      'cors.credentialsNo' => 'No se envían',
+      'cors.credentialsGateway' => 'No se envían · la API admin usa un token',
+      'cors.usedByRoutes' => 'Las rutas sin CORS propio usan este.',
+      'cors.originsCount' => ({required Object count}) => '${count} orígenes',
+      'cors.enabled' => 'CORS propio',
+      'cors.hintOn' => 'Encendido · se aplican sus propios orígenes',
+      'cors.hintOff' => 'Apagado · se aplica el CORS del gateway',
+      'cors.slideOn' => 'Desliza a la derecha para usar su propio CORS',
+      'cors.slideOff' => 'Desliza a la izquierda para usar el del gateway',
+      'cors.originsLabel' => 'Orígenes permitidos',
+      'cors.originsPlaceholder' => 'https://app.com y Enter',
+      'cors.clear' => 'Limpiar',
+      'cors.originsHint' => 'Un origen exacto, un patrón como https://*.example.com, o * para cualquiera.',
+      'cors.invalidOrigin' => ({
+        required Object origin,
+      }) => '${origin}: debe ser * o un origen como https://app.com o https://*.example.com, sin ruta',
+      'cors.removeOrigin' => ({required Object origin}) => 'Quitar ${origin}',
+      'cors.credentialsSwitch' => 'Permitir credenciales',
+      'cors.credentialsSwitchHint' => 'Para servicios con sesión por cookies',
+      'cors.credentialsNoAll' => 'No con un origen que admite todos, como *',
+      'cors.lockout' => ({
+        required Object origin,
+      }) => 'Esta consola está en ${origin}, que no está en la lista: al guardar se quedaría sin acceso al gateway.',
+      'cors.removeTitle' => '¿Quitar el CORS?',
+      'cors.removeBody' =>
+        'Se pierden sus orígenes y la ruta vuelve a usar el CORS del gateway.',
+      'cors.add' => 'CORS',
+      'cors.addHint' => 'Sus propios orígenes permitidos, y cookies si el servicio las necesita',
+      'cors.badge' => ({required Object value}) => 'CORS · ${value}',
+      'cors.badgeOff' => 'CORS · off',
+      'cors.added' => ({required Object name}) => '"${name}": CORS añadido',
+      'cors.saved' => ({required Object name}) => '"${name}": CORS guardado',
+      'cors.removed' => ({
+        required Object name,
+      }) => '"${name}": CORS quitado, usa el del gateway',
+      'cors.routeOn' => ({
+        required Object name,
+      }) => '"${name}": CORS propio encendido',
+      'cors.routeOff' => ({
+        required Object name,
+      }) => '"${name}": CORS propio apagado, usa el del gateway',
+      'cors.gatewaySaved' => 'CORS del gateway guardado',
+      'cors.envMigratedTitle' => ({
+        required Object name,
+      }) => '${name} ya está en el CORS del gateway.',
+      'cors.envMigratedDetail' => 'Sus orígenes pasaron al add-on: edita el CORS aquí. Quita la variable del despliegue y reinicia el gateway para ocultar esto.',
+      'cors.envIgnoredTitle' => ({
+        required Object name,
+      }) => '${name} está puesta pero se ignora.',
+      'cors.envIgnoredDetail' => 'No coincide con el CORS del gateway, que es el que se aplica. Edita el CORS aquí, luego quita la variable del despliegue y reinicia el gateway.',
+      'cors.envVariable' => 'Variable',
+      'cors.envApplies' => 'Se aplica',
+      'cors.envOpen' => 'Editar CORS',
       'map.title' => 'Mapa del gateway',
       'map.legendRedirect' => 'Solo redirección',
       'map.legendMaintenance' => 'Mantenimiento',
@@ -1672,6 +1884,17 @@ extension on AppMessagesEs {
       'panel.backHint' => 'Opcional. Se envía como Retry-After mientras no haya pasado; nunca lo apaga solo.',
       'panel.pickTime' => 'Elige fecha y hora',
       'panel.clear' => 'Quitar',
+      'panel.overview' => 'Resumen',
+      'panel.publicUrl' => 'URL pública',
+      'panel.routes' => 'Rutas',
+      'panel.healthChecked' => 'Con health check',
+      'panel.down' => 'Caídas',
+      'panel.inMaintenance' => 'Mantenimiento',
+      'panel.rateLimited' => 'Con rate limit',
+      'panel.ownCors' => 'Con CORS propio',
+      'panel.allRoutes' => ({
+        required Object count,
+      }) => 'Las ${count} (gateway)',
       'info.what' => ({required Object name}) => '¿Qué es ${name}?',
       'info.healthTitle' => '¿Está arriba el servicio?',
       'info.healthBody' => 'El gateway llama cada cierto tiempo a una ruta del servicio, como /health. Una respuesta 2xx marca la ruta LIVE; cualquier otra, o ninguna, la marca DOWN.',
@@ -1684,6 +1907,10 @@ extension on AppMessagesEs {
       'info.rateBody' => 'Cada IP de cliente tiene un número de peticiones por segundo, minuto u hora. El burst es cuántas pueden llegar a la vez.',
       'info.rateBodyGateway' => 'Cada IP de cliente tiene un número de peticiones por segundo, minuto u hora, sumando todas las rutas. El burst es cuántas pueden llegar a la vez.',
       'info.rateNote' => 'Al pasarse, el gateway responde 429 sin llamar al servicio. Cualquier cambio reinicia los contadores.',
+      'info.corsTitle' => 'Qué webs pueden llamarla',
+      'info.corsBody' => 'Una página de otro origen solo puede leer las respuestas de esta ruta si su origen está en la lista. Permite credenciales si el servicio usa cookies.',
+      'info.corsBodyGateway' => 'Una página de otro origen solo puede llamar al gateway si su origen está en la lista. Cubre la API admin (esta consola) y todas las rutas sin CORS propio.',
+      'info.corsNote' => 'Solo los navegadores aplican CORS: curl, Postman y los servidores no se ven afectados. El gateway responde él mismo a los preflights.',
       _ => null,
     };
   }

@@ -29,6 +29,7 @@ class _BaseScreenState extends State<BaseScreen> {
     super.initState();
     _maintenance.load();
     app.di.find<RateLimitCubit>().load();
+    app.di.find<CorsCubit>().load();
     _healthPoll = Timer.periodic(const Duration(seconds: 10), (_) {
       final routes = app.di.find<RoutesCubit>();
       if (app.di.find<GatewayStatusCubit>().state.offline ||
@@ -66,6 +67,18 @@ class _BaseScreenState extends State<BaseScreen> {
                         builder: (context, _) => _maintenance.gatewayOn
                             ? MaintenanceBanner(_maintenance.gateway!)
                             : const SizedBox.shrink(),
+                      ),
+                      BlocBuilder<CorsCubit, CorsState>(
+                        builder: (context, _) {
+                          final cors = app.di.find<CorsCubit>();
+                          final gateway = cors.gateway;
+                          final env = gateway?.envVar;
+                          return gateway == null ||
+                                  env == null ||
+                                  (env.matches && cors.envInfoClosed)
+                              ? const SizedBox.shrink()
+                              : CorsEnvBanner(gateway: gateway, env: env);
+                        },
                       ),
                       Expanded(
                         child: IgnorePointer(

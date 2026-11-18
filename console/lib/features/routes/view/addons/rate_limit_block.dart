@@ -1,5 +1,4 @@
 import 'package:console/app_exporter.dart';
-import 'package:console/features/routes/view/addons/slide_switch.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -127,19 +126,6 @@ class _RateLimitBlockState extends State<RateLimitBlock> {
               showActions: _mode == _Mode.view,
               onEdit: _startEdit,
               onRemove: () => setState(() => _mode = _Mode.confirm),
-              status: [
-                Padding(
-                  padding: const EdgeInsets.only(right: 4),
-                  child: Text(
-                    m.enabled ? rateShort(m) : intl.rate.off,
-                    style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                      color: color,
-                    ),
-                  ),
-                ),
-              ],
             ),
             const SizedBox(height: 8),
             Padding(
@@ -196,43 +182,16 @@ class _RateLimitBlockState extends State<RateLimitBlock> {
 
   Widget _switchRow({required bool value}) {
     final c = app.colors;
-    final intl = context.intl;
-    return Row(
-      children: [
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                intl.rate.enabled,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(fontSize: 13, color: c.text),
-              ),
-              Text(
-                intl.rate.enabledHint,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(fontSize: 12, color: c.textTertiary),
-              ),
-            ],
-          ),
-        ),
-        const SizedBox(width: 12),
-        SizedBox(
-          width: 120,
-          child: SlideSwitch(
-            compact: true,
-            value: value,
-            onLabel: intl.panel.turnOn,
-            offLabel: intl.panel.turnOff,
-            hint: intl.panel.slideHint,
-            color: c.info,
-            onColor: const Color(0xff0b2b45),
-            onChanged: _toggle,
-          ),
-        ),
-      ],
+    final intl = context.intl.rate;
+    return AddonSlideSection(
+      title: intl.enabled,
+      hint: value ? intl.hintOn : intl.hintOff,
+      value: value,
+      onLabel: intl.slideOn,
+      offLabel: intl.slideOff,
+      color: c.info,
+      onColor: const Color(0xff0b2b45),
+      onChanged: _toggle,
     );
   }
 

@@ -6,7 +6,7 @@ import 'package:flutter/services.dart';
 
 ///slide control: drag the handle right to turn on, left to turn off, no confirmation.
 ///Arrow keys do the same, so it works without a mouse. Maintenance's is full width and orange;
-///the health check's and the rate limit's are [compact] (36 px, on the right of their row) in their own color
+///the other add-ons' are the same size, in their own color
 class SlideSwitch extends StatefulWidget {
   final bool value;
   final String onLabel;
@@ -24,9 +24,6 @@ class SlideSwitch extends StatefulWidget {
   ///the handle's icon on [color]; null = maintenance's dark brown
   final Color? onColor;
 
-  ///36 px high with a 30 px knob and a 12 px label, for a narrow slot
-  final bool compact;
-
   const SlideSwitch({
     required this.value,
     required this.onLabel,
@@ -36,7 +33,6 @@ class SlideSwitch extends StatefulWidget {
     this.lockedLabel,
     this.color,
     this.onColor,
-    this.compact = false,
     super.key,
   });
 
@@ -45,9 +41,9 @@ class SlideSwitch extends StatefulWidget {
 }
 
 class _SlideSwitchState extends State<SlideSwitch> {
-  double get _height => widget.compact ? 36 : 44;
+  static const double _height = 44;
 
-  double get _knob => widget.compact ? 30 : 38;
+  static const double _knob = 38;
 
   ///handle position while dragging, 0 (left) to 1 (right); null when not dragging
   double? _drag;
@@ -190,7 +186,7 @@ class _SlideSwitchState extends State<SlideSwitch> {
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
                                 style: TextStyle(
-                                  fontSize: widget.compact ? 12 : 13,
+                                  fontSize: 13,
                                   fontWeight: FontWeight.w500,
                                   color: on ? accent : c.textTertiary,
                                 ),
@@ -221,7 +217,7 @@ class _SlideSwitchState extends State<SlideSwitch> {
                                 quarterTurns: on ? 2 : 0,
                                 child: app.assets.icons.general.chevronsRight
                                     .build(
-                                      size: widget.compact ? 14 : 16,
+                                      size: 16,
                                       color: live > 0.5
                                           ? (widget.onColor ?? c.onMaintenance)
                                           : c.surface,

@@ -26,6 +26,7 @@ class ShellListeners extends StatelessWidget {
           listener: _onHealthCheck,
         ),
         BlocListener<RateLimitCubit, RateLimitState>(listener: _onRateLimit),
+        BlocListener<CorsCubit, CorsState>(listener: _onCors),
       ],
       child: child,
     );
@@ -37,6 +38,7 @@ class ShellListeners extends StatelessWidget {
     app.di.find<RoutesCubit>().search(emitLoading: false);
     app.di.find<MaintenanceCubit>().load();
     app.di.find<RateLimitCubit>().load();
+    app.di.find<CorsCubit>().load();
     final logs = app.di.find<LogsCubit>();
     if (logs.state is! LogsInitialState) logs.search();
   }
@@ -106,6 +108,25 @@ class ShellListeners extends StatelessWidget {
       );
     } else if (state is RateLimitSaveErrorState &&
         state.exception.type != GlobalExceptionType.validation) {
+      app.snack.showError(message: state.message);
+    }
+  }
+
+  void _onCors(BuildContext context, CorsState state) {
+    final intl = context.intl.cors;
+    if (state is CorsSaveOkState) {
+      final name = state.route?.name;
+      app.snack.showSuccess(
+        message: switch (state.action) {
+          CorsAction.added => intl.added(name: name ?? ''),
+          CorsAction.saved =>
+            name == null ? intl.gatewaySaved : intl.saved(name: name),
+          CorsAction.enabled => intl.routeOn(name: name ?? ''),
+          CorsAction.disabled => intl.routeOff(name: name ?? ''),
+          CorsAction.deleted => intl.removed(name: name ?? ''),
+        },
+      );
+    } else if (state is CorsSaveErrorState && !state.shownInBlock) {
       app.snack.showError(message: state.message);
     }
   }

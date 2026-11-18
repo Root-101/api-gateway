@@ -140,6 +140,11 @@ class GeneralIcons {
     '<path d="m12 14 4-4"/><path d="M3.34 19a10 10 0 1 1 17.32 0"/>',
   );
 
+  ///the CORS add-on
+  SvgAsset get globe => const SvgAsset(
+    '<circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/>',
+  );
+
   ///"Run now" of the health check (filled, as in the canvas)
   SvgAsset get play => const SvgAsset(
     '<path fill="#000" stroke="none" d="M7 4.5v15a1 1 0 0 0 1.5.87l12-7.5a1 1 0 0 0 0-1.74l-12-7.5A1 1 0 0 0 7 4.5z"/>',

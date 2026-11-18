@@ -1,6 +1,7 @@
 export 'auth/auth.dart';
 export 'base_client.dart';
 export 'base/app_rail.dart';
+export 'base/cors_env_banner.dart';
 export 'base/maintenance_banner.dart';
 export 'base/offline_banner.dart';
 export 'base/rail_item.dart';

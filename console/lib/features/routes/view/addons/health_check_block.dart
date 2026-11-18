@@ -1,5 +1,4 @@
 import 'package:console/app_exporter.dart';
-import 'package:console/features/routes/view/addons/slide_switch.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -245,42 +244,17 @@ class _HealthCheckBlockState extends State<HealthCheckBlock> {
                   ),
                 ),
         ),
-        Row(
-          children: [
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    intl.health.enabled,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(fontSize: 13, color: c.text),
-                  ),
-                  Text(
-                    intl.health.enabledHint,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(fontSize: 12, color: c.textTertiary),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(width: 12),
-            SizedBox(
-              width: 120,
-              child: SlideSwitch(
-                compact: true,
-                value: m.enabled,
-                onLabel: intl.panel.turnOn,
-                offLabel: intl.panel.turnOff,
-                hint: intl.panel.slideHint,
-                color: c.success,
-                onColor: const Color(0xff0f3a14),
-                onChanged: _toggle,
-              ),
-            ),
-          ],
+        AddonSlideSection(
+          title: intl.health.enabled,
+          hint: m.enabled
+              ? intl.health.hintOn(time: intervalText(m.intervalSeconds))
+              : intl.health.hintOff,
+          value: m.enabled,
+          onLabel: intl.health.slideOn,
+          offLabel: intl.health.slideOff,
+          color: c.success,
+          onColor: const Color(0xff0f3a14),
+          onChanged: _toggle,
         ),
       ],
     );

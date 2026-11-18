@@ -45,6 +45,16 @@ class RoutesCubit extends Cubit<RoutesState>
         search(emitLoading: false);
       }
     });
+    //same for its CORS
+    onBus<CorsSaveOkState>((event) {
+      if (event.route != null) search(emitLoading: false);
+    });
+    onBus<CorsSaveErrorState>((event) {
+      if (event.route != null &&
+          event.exception.type != GlobalExceptionType.validation) {
+        search(emitLoading: false);
+      }
+    });
     //same for its health check ("Run now" too: the new state is in the route)
     onBus<HealthCheckSaveOkState>((event) => search(emitLoading: false));
     onBus<HealthCheckSaveErrorState>((event) {

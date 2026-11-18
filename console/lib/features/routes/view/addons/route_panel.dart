@@ -1,4 +1,5 @@
 import 'package:console/app_exporter.dart';
+import 'package:console/features/routes/view/addons/cors_block.dart';
 import 'package:console/features/routes/view/addons/health_check_block.dart';
 import 'package:console/features/routes/view/addons/maintenance_block.dart';
 import 'package:console/features/routes/view/addons/rate_limit_block.dart';
@@ -104,19 +105,21 @@ class RoutePanel extends StatelessWidget {
       buildWhen: (previous, current) => current is RoutesSearchState,
       builder: (context, _) => BlocBuilder<MaintenanceCubit, MaintenanceState>(
         builder: (context, _) => BlocBuilder<RateLimitCubit, RateLimitState>(
-          builder: (context, _) {
-            final maintenance = app.di.find<MaintenanceCubit>();
-            final routes = app.di.find<RoutesCubit>().routes;
-            RouteModel? route;
-            if (routeId != null) {
-              for (final r in routes) {
-                if (r.id == routeId) route = r;
+          builder: (context, _) => BlocBuilder<CorsCubit, CorsState>(
+            builder: (context, _) {
+              final maintenance = app.di.find<MaintenanceCubit>();
+              final routes = app.di.find<RoutesCubit>().routes;
+              RouteModel? route;
+              if (routeId != null) {
+                for (final r in routes) {
+                  if (r.id == routeId) route = r;
+                }
+                //deleted meanwhile
+                if (route == null) return const SizedBox.shrink();
               }
-              //deleted meanwhile
-              if (route == null) return const SizedBox.shrink();
-            }
-            return _build(context, route, maintenance);
-          },
+              return _build(context, route, maintenance);
+            },
+          ),
         ),
       ),
     );
@@ -133,6 +136,7 @@ class RoutePanel extends StatelessWidget {
     final own = route == null ? maintenance.gateway : route.maintenance;
     final rateCubit = app.di.find<RateLimitCubit>();
     final rate = route == null ? rateCubit.gateway : route.rateLimit;
+    final cors = route == null ? app.di.find<CorsCubit>().gateway : route.cors;
     final status = route == null
         ? (gatewayOn ? RouteStatus.maintenance : RouteStatus.none)
         : RouteStatus.of(route, gatewayOn: gatewayOn);
@@ -234,7 +238,10 @@ class RoutePanel extends StatelessWidget {
                     ),
                     const SizedBox(height: 12),
                   ] else ...[
-                    _EntryBlock(url: Environment.gatewayUrl),
+                    _OverviewBlock(
+                      routes: app.di.find<RoutesCubit>().routes,
+                      gatewayOn: gatewayOn,
+                    ),
                     const SizedBox(height: 12),
                   ],
                   if (route?.healthCheck case final health?) ...[
@@ -262,7 +269,15 @@ class RoutePanel extends StatelessWidget {
                     ),
                     const SizedBox(height: 12),
                   ],
-                  ..._addable(context, route, own, rate),
+                  if (cors != null) ...[
+                    CorsBlock(
+                      key: ValueKey('cors-${route?.id ?? 'gateway'}'),
+                      route: route,
+                      model: cors,
+                    ),
+                    const SizedBox(height: 12),
+                  ],
+                  ..._addable(context, route, own, rate, cors),
                 ],
               ),
             ),
@@ -278,6 +293,7 @@ class RoutePanel extends StatelessWidget {
     RouteModel? route,
     MaintenanceModel? own,
     RateLimitModel? rate,
+    CorsModel? cors,
   ) {
     final c = app.colors;
     final intl = context.intl;
@@ -335,6 +351,25 @@ class RoutePanel extends StatelessWidget {
               limit: 60,
               period: 'minute',
               burst: 10,
+            ),
+          ),
+        ),
+      //the gateway's is always there: never added
+      if (route != null && cors == null && route.canHave('cors'))
+        _AddTile(
+          icon: app.assets.icons.general.globe,
+          color: c.lilac,
+          label: intl.cors.add,
+          hint: intl.cors.addHint,
+          info: corsInfo(context, gateway: false),
+          onPressed: () => app.di.find<CorsCubit>().put(
+            route: route,
+            action: CorsAction.added,
+            //off like the others, with the gateway's origins: ready to edit
+            model: CorsModel(
+              enabled: false,
+              allowedOrigins:
+                  app.di.find<CorsCubit>().gateway?.allowedOrigins ?? ['*'],
             ),
           ),
         ),
@@ -441,28 +476,110 @@ class _RedirectBlock extends StatelessWidget {
   }
 }
 
-///the gateway's own block: the url every request comes in by
-class _EntryBlock extends StatelessWidget {
-  final String url;
+///the gateway's first block, like a route's redirect: its public url and how its routes are
+class _OverviewBlock extends StatelessWidget {
+  final List<RouteModel> routes;
+  final bool gatewayOn;
 
-  const _EntryBlock({required this.url});
+  const _OverviewBlock({required this.routes, required this.gatewayOn});
 
   @override
   Widget build(BuildContext context) {
     final c = app.colors;
-    return Container(
-      padding: const EdgeInsets.fromLTRB(12, 10, 12, 12),
-      decoration: BoxDecoration(
-        color: c.night,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: c.outlineSoft),
+    final intl = context.intl.panel;
+    int count(bool Function(RouteModel r) test) => routes.where(test).length;
+    final style = TextStyle(fontSize: 13, height: 18 / 13, color: c.text);
+    Widget row(String label, Widget value) => Padding(
+      padding: const EdgeInsets.only(bottom: 6),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(
+            width: 104,
+            child: Text(label, style: style.copyWith(color: c.textTertiary)),
+          ),
+          Expanded(child: value),
+        ],
       ),
-      child: SelectionArea(
-        child: RouteUrlBlock(
-          caption: context.intl.routes.from,
-          url: url,
-          fontSize: 12,
-        ),
+    );
+    Widget number(int n, [Color? color]) =>
+        Text('$n', style: color == null ? style : style.copyWith(color: color));
+    return Container(
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 14),
+      decoration: BoxDecoration(
+        color: c.card,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: c.outlineCard),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            children: [
+              app.assets.icons.gateway.build(size: 17, color: c.lilac),
+              const SizedBox(width: 10),
+              Text(
+                intl.overview,
+                style: TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w600,
+                  color: c.text,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          Container(
+            padding: const EdgeInsets.fromLTRB(12, 10, 12, 4),
+            decoration: BoxDecoration(
+              color: c.night,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: c.outlineSoft),
+            ),
+            child: SelectionArea(
+              child: Column(
+                children: [
+                  row(
+                    intl.publicUrl,
+                    Text(
+                      Environment.gatewayUrl,
+                      style: monoStyle(size: 12, color: c.text),
+                    ),
+                  ),
+                  row(intl.routes, number(routes.length)),
+                  row(
+                    intl.healthChecked,
+                    number(count((r) => r.healthCheck != null)),
+                  ),
+                  row(
+                    intl.down,
+                    number(
+                      count((r) => r.healthCheck?.down == true),
+                      c.dangerText,
+                    ),
+                  ),
+                  row(
+                    intl.inMaintenance,
+                    gatewayOn
+                        ? Text(
+                            intl.allRoutes(count: routes.length),
+                            style: style.copyWith(color: c.maintenance),
+                          )
+                        : number(count((r) => r.inMaintenance), c.maintenance),
+                  ),
+                  row(
+                    intl.rateLimited,
+                    number(count((r) => r.rateLimit?.enabled == true)),
+                  ),
+                  row(
+                    intl.ownCors,
+                    number(count((r) => r.cors?.enabled == true)),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

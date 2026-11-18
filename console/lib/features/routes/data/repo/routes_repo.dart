@@ -176,6 +176,37 @@ class RoutesRepo {
     }
   }
 
+  ///[routeId] null = the gateway's
+  Future<CorsModel?> putCors({
+    required CorsModel model,
+    String? routeId,
+  }) async {
+    try {
+      return await client.putCors(model: model, routeId: routeId);
+    } on Exception catch (exc) {
+      throw ExceptionConverter.parse(exc);
+    }
+  }
+
+  Future deleteCors({required String routeId}) async {
+    try {
+      await client.deleteCors(routeId: routeId);
+    } on Exception catch (exc) {
+      throw ExceptionConverter.parse(exc);
+    }
+  }
+
+  Future<CorsModel?> setCorsEnabled({
+    required bool enabled,
+    required String routeId,
+  }) async {
+    try {
+      return await client.setCorsEnabled(enabled: enabled, routeId: routeId);
+    } on Exception catch (exc) {
+      throw ExceptionConverter.parse(exc);
+    }
+  }
+
   ///a 422 arrives as a validation GlobalException (fields `enabled`, `path`, `interval_seconds`)
   Future putHealthCheck({
     required String routeId,
@@ -275,6 +306,7 @@ extension RouteModelParser on RouteResponse {
       ),
     },
     rateLimit: RateLimitModel.tryFromJson(addons['rate_limit']),
+    cors: CorsModel.tryFromJson(addons['cors']),
     addons: addons,
     gatewayUrl: gatewayUrl,
   );

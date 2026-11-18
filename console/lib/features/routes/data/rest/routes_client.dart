@@ -120,6 +120,35 @@ class RoutesClient extends BaseClient {
     return RateLimitModel.tryFromJson(rawResponse.data);
   }
 
+  ///creates or replaces it; 422 fields `enabled`, `allowed_origins`, `allowed_origins[i]`; the
+  ///rules (credentials with `*`, the gateway's off or with credentials, a console lockout) a 400
+  Future<CorsModel?> putCors({
+    required CorsModel model,
+    String? routeId,
+  }) async {
+    Response rawResponse = await dio.put(
+      '${_addons(routeId)}/cors',
+      data: model.toJson(),
+    );
+    return CorsModel.tryFromJson(rawResponse.data);
+  }
+
+  ///routes only (the gateway's: 405); 204, also when there is none
+  Future deleteCors({required String routeId}) async {
+    await dio.delete('${_addons(routeId)}/cors');
+  }
+
+  ///routes only (the gateway's: 405); keeps the rest; 404 when it isn't configured
+  Future<CorsModel?> setCorsEnabled({
+    required bool enabled,
+    required String routeId,
+  }) async {
+    Response rawResponse = await dio.post(
+      '${_addons(routeId)}/cors/${enabled ? 'enable' : 'disable'}',
+    );
+    return CorsModel.tryFromJson(rawResponse.data);
+  }
+
   ///creates or replaces it (keeps the last state); 422 fields `enabled`, `path`, `interval_seconds`
   Future putHealthCheck({
     required String routeId,
