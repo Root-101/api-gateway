@@ -83,6 +83,12 @@ the predicates and filters it uses.
   and on the client to the upstreams, check the Railway edge forwards HTTP/2 to the container, and
   check the http logs filter with long-lived streams. Then update *Supported protocols* in the README.
 
+- [ ] Gateway: **Performance tests and benchmarks**, not done yet. Measure what the gateway adds
+  on top of calling the service directly: latency (p50/p95/p99) and throughput, CPU and memory, on
+  the JVM and the native image, with no add-ons and with each one on (maintenance, rate limit), and
+  the cost of the http logs (one db row per request). A load tool against a local stub service,
+  run by hand, not in CI; the results and how to repeat them in the docs.
+
 - [ ] Gateway: **HTML maintenance page**, an extra of the maintenance add-on, not planned for now.
   Today a route in maintenance answers a Problem Details (JSON) to everyone. A browser
   (`Accept: text/html`) could get a page instead: first one built-in template (title, message,
