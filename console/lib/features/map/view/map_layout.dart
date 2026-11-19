@@ -6,10 +6,10 @@ class MapLayout {
   static const double gap = 48;
   static const double urlW = 440;
   static const double urlH = 44;
-  static const double gwW = 350;
-  static const double gwH = 112;
+  static const double gwW = 370;
+  static const double gwH = 152;
   static const double gwTop = 92;
-  static const double cardTop = 352;
+  static const double cardTop = 392;
   static const double margin = 120;
 
   final int count;
