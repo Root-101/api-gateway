@@ -175,7 +175,7 @@ class CorsIT extends IntegrationTest {
 
         admin(HttpMethod.PUT, "/routes/%s/addons/rate-limit".formatted(routeId))
                 .bodyValue(Map.of("enabled", true, "limit", 1, "period", "hour")).exchange().expectStatus().isOk();
-        String ip = "10.77.%d.%d".formatted((int) (Math.random() * 250), (int) (Math.random() * 250));
+        String ip = uniqueIp();
         webTestClient.get().uri("/cors-e-%s/1".formatted(id)).header(HttpHeaders.ORIGIN, APP).header("X-Forwarded-For", ip)
                 .exchange().expectStatus().isOk();
         webTestClient.get().uri("/cors-e-%s/2".formatted(id)).header(HttpHeaders.ORIGIN, APP).header("X-Forwarded-For", ip)

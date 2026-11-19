@@ -133,7 +133,7 @@ class HttpLogsIT extends IntegrationTest {
     @Test
     void rejectedAdminRequestsAreLogged() {
         String id = unique();
-        String ip = "192.0.2." + (int) (Math.random() * 200);
+        String ip = uniqueIp();
         String noAuth = "/" + ADMIN_PATH + "/unknown-noauth-" + id;
         String wrongBasic = "/" + ADMIN_PATH + "/unknown-basic-" + id;
         String wrong = "Basic " + HttpHeaders.encodeBasicAuth("admin", "wrong-" + id, null);
