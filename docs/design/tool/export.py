@@ -148,7 +148,7 @@ h1{margin:0;font-size:28px}
 .cover h1 span{color:#d0bcff}
 </style></head><body>
 <div class="p cover"><h1><span>api</span>-gateway</h1>
-<p style="font-size:24px;color:#8f8e9b">Console design · 6.0.0</p></div>
+<p style="font-size:24px;color:#8f8e9b">Console design · 6.x.x</p></div>
 <!--pages-->
 </body></html>"""
 

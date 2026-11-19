@@ -15,7 +15,7 @@ and searches the logs, all without redeploying anything.
 > [`CHANGELOG.md`](CHANGELOG.md) before upgrading from 5.x, and deploy the gateway and the console
 > of the same version together.
 
-![The routes in the console](docs/design/screens/04-routes.png)
+![The gateway map in the console](docs/design/screens/21-gateway-map.png)
 
 ## How it works
 
@@ -48,7 +48,7 @@ With a rewrite of the path, the prefix of the route is dropped on the way:
 | **Backup**      | Every route to a JSON file, and back, all or nothing                                                                       |
 | **Admin API**   | Everything the console does, for scripts and pipelines: token or Basic auth, with a lockout of brute force by IP           |
 | **Console**     | Routes and logs, in English and Spanish; one image for every environment, configured at start                              |
-| **Operations**  | A health check for load balancers, timeouts to the services (`502`/`504`), a native image of ~150 MB of memory             |
+| **Operations**  | A health check for load balancers, timeouts to the services (`502`/`504`), a native image of ~100 MB of memory             |
 
 |                                                                 |                                                                          |
 |-----------------------------------------------------------------|--------------------------------------------------------------------------|
@@ -107,7 +107,7 @@ exposing it: the gateway warns in its log when it runs with the default ones.
 [![Deploy on Railway](https://railway.app/button.svg)](https://railway.app/template/IR4lVv?referralCode=6_5_ta)
 
 The template deploys PostgreSQL, the gateway and the console (see [`docs/railway.md`](docs/railway.md)).
-The whole stack runs in 200–250 MB of memory, about 1.50–2.00 USD a month.
+The whole stack runs in 100–150 MB of memory, about 1.00–1.50 USD a month.
 
 ### Locally
 

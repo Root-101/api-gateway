@@ -79,6 +79,9 @@ the predicates and filters it uses.
 
 - [ ] Gateway, 7.0: **remove `CORS_ALLOWED_ORIGINS`**, deprecated in 6.1.0. Only its read goes: the
   gateway's CORS add-on is still created with `*` on the first start (decision 20 in `DECISIONS.md`).
+- [ ] Docs, 7.0: **the design's version label**, `v6.x.x` in the canvas's `Prototype` (rail and
+  login) and `6.x.x` on the PDF cover (`docs/design/tool/export.py`): change it to `7.x.x` and
+  regenerate the export only then, not on every 6.x release.
 - [ ] Gateway: **HTTP/2 and gRPC** support, for a later version (not 6.0.0). gRPC needs HTTP/2 end
   to end (trailers, multiplexed streams): enable it on the gateway server (`server.http2.enabled`)
   and on the client to the upstreams, check the Railway edge forwards HTTP/2 to the container, and
