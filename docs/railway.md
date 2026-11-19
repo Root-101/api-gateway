@@ -71,7 +71,7 @@ Hosting the Api-Gateway on Railway provisions a complete setup out-of-the-box. T
 
 This setup isolates your internal microservices from the public internet while providing a single unified API endpoint.
 
-> 📌 The whole stack runs in around **200–250 MB RAM** (the gateway alone, ~150 MB), about 1.50–2.00 USD a month.
+> 📌 The whole stack runs in around **100–150 MB RAM**, about 1.00–1.50 USD a month.
 
 ---
 

@@ -107,7 +107,7 @@ exposing it: the gateway warns in its log when it runs with the default ones.
 [![Deploy on Railway](https://railway.app/button.svg)](https://railway.app/template/IR4lVv?referralCode=6_5_ta)
 
 The template deploys PostgreSQL, the gateway and the console (see [`docs/railway.md`](docs/railway.md)).
-The whole stack runs in 200–250 MB of memory, about 1.50–2.00 USD a month.
+The whole stack runs in 100–150 MB of memory, about 1.00–1.50 USD a month.
 
 ### Locally
 
