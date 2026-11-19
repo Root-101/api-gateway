@@ -1,7 +1,8 @@
 * 6.x:
     * 6.1.0:
+        * **DATE** :date: : 2026-11-18.
         * **Add-ons** :jigsaw: : Each route forwards its requests; everything else is an add-on, added, turned
-          on or off, edited and removed on its own (needs the gateway `6.1.0`). This version has one: maintenance,
+          on or off, edited and removed on its own (needs the gateway `6.1.0`). The first is maintenance,
           per route and for the whole gateway. Its panel (the same one in the map and in Routes) shows the redirect,
           the add-ons with an in-place editor and a slide to turn them on or off, and "Add to this route" with the
           ones missing. The 503 message is optional (empty, the gateway's own, marked "default"), and the panel
@@ -109,11 +110,20 @@
           toast, and the dependency was removed.
         * **Fix** :bug: : Logs with many rows per page scrolled the whole screen. The screen now fits the window:
           the header, search and footer stay, the column titles too, and only the rows scroll.
+        * **Fix** :bug: : An older reload of the routes could answer after a newer one and overwrite it (the 10 s
+          health check poll landing after a maintenance toggle showed maintenance off again). Only the latest reload
+          is applied now, its error too, and none after logout.
+        * **Credentials** :lock: : Locked off, as the gateway now asks, while an origin lets in any site: `*`, or a `*` in
+          the host other than `*.domain.com` (`https://*.com`, `https://a*.com`, `https://*:8080`); `https://*.a.com`,
+          `*://a.com` and `http://localhost:[*]` still allow them. Its hint says so.
         * **Docs** :books: : `docs/console.md` has the Gateway map and Add-ons sections, and the map as the start
           screen; `docs/design` screens 21–24 are the map, and every screen shows the rail and cards as built. The
           canvas has no Experimental page any more (the map and the route panel are with the other screens, the
           superseded maintenance boards are gone), its sample URLs are generic (`example.com`), and the export was
-          regenerated from it (`export.py` takes screen 24 from Routes and draws the map with 3 routes).
+          regenerated from it (`export.py` takes screen 24 from Routes and draws the map with 3 routes). The
+          console README lists the map and the add-ons, says console `6.1.0` needs gateway `6.1.0`, counts the 24
+          screens and shows the map.
+        * **Version** :bookmark: : `6.1.0` in `pubspec.yaml` (it said `6.0.1`).
     * 6.0.0:
         * **DATE** :date: : 2026-11-12.
         * **Redesign** :art: : New visual identity and rebuilt screens: login, side menu with notch, route cards,
