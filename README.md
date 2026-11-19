@@ -11,7 +11,7 @@ and searches the logs, all without redeploying anything.
   routes and logs in PostgreSQL.
 - **`console/`**: the web console, in Flutter Web, served by nginx in its own image.
 
-> **Status: `6.1.1`.** 6.1.0 adds the add-ons (maintenance, health check, rate limit, CORS). 6.0.0 was a restructuring release, with breaking changes in the admin API: read
+> **Status: `6.1.2`.** 6.1.0 adds the add-ons (maintenance, health check, rate limit, CORS). 6.0.0 was a restructuring release, with breaking changes in the admin API: read
 > [`CHANGELOG.md`](CHANGELOG.md) before upgrading from 5.x, and deploy the gateway and the console
 > of the same version together.
 

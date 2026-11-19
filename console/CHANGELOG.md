@@ -1,4 +1,7 @@
 * 6.x:
+    * 6.1.2:
+        * **DATE** :date: : 2026-11-19.
+        * **Version** :bookmark: : Version adjustment to match the gateway, no changes in the console.
     * 6.1.1:
         * **DATE** :date: : 2026-11-19.
         * **Gateway map** :world_map: : The gateway node shows its add-ons at the bottom, as the route nodes do:
