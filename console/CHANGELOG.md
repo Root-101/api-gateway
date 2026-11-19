@@ -4,7 +4,6 @@
         * **Gateway map** :world_map: : The gateway node shows its add-ons at the bottom, as the route nodes do:
           `Maintenance · on/off` (orange when on) and `Rate limit · on/off` (blue when on) when configured, and `CORS`
           (always on). The node is wider and taller and the routes sit lower to keep the branches' length.
-        * **Version** :bookmark: : `6.1.1` in `pubspec.yaml`, with the gateway `6.1.1` (same version).
     * 6.1.0:
         * **DATE** :date: : 2026-11-18.
         * **Add-ons** :jigsaw: : Each route forwards its requests; everything else is an add-on, added, turned
