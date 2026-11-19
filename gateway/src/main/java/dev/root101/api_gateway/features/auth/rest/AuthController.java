@@ -3,6 +3,7 @@ package dev.root101.api_gateway.features.auth.rest;
 import dev.root101.api_gateway.features.auth.logic.model.LoginRequest;
 import dev.root101.api_gateway.features.auth.logic.model.LoginResponse;
 import dev.root101.api_gateway.features.auth.logic.usecase.AuthUseCase;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -31,7 +32,7 @@ public class AuthController {
      * @return The token to use in the next requests
      */
     @PostMapping("/login")
-    public Mono<LoginResponse> login(@RequestBody LoginRequest request) {
+    public Mono<LoginResponse> login(@Valid @RequestBody LoginRequest request) {
         return authUseCase.login(request);
     }
 

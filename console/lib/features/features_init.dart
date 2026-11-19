@@ -60,6 +60,9 @@ class FeaturesInit {
   static Future<void> reset() async {
     app.di.find<AuthCubit>().reset();
     app.di.find<RoutesCubit>().reset();
+    app.di.find<MaintenanceCubit>().reset();
+    app.di.find<RateLimitCubit>().reset();
+    app.di.find<CorsCubit>().reset();
     app.di.find<LogsCubit>().reset();
     app.di.find<GatewayStatusCubit>().reset();
   }
@@ -69,6 +72,16 @@ class FeaturesInit {
     BlocProvider<AuthCubit>(create: (context) => app.di.find<AuthCubit>()),
     //ROUTES
     BlocProvider<RoutesCubit>(create: (context) => app.di.find<RoutesCubit>()),
+    BlocProvider<MaintenanceCubit>(
+      create: (context) => app.di.find<MaintenanceCubit>(),
+    ),
+    BlocProvider<HealthCheckCubit>(
+      create: (context) => app.di.find<HealthCheckCubit>(),
+    ),
+    BlocProvider<RateLimitCubit>(
+      create: (context) => app.di.find<RateLimitCubit>(),
+    ),
+    BlocProvider<CorsCubit>(create: (context) => app.di.find<CorsCubit>()),
     //LOGS
     BlocProvider<LogsCubit>(create: (context) => app.di.find<LogsCubit>()),
     //GATEWAY STATUS

@@ -5,28 +5,44 @@ import dev.root101.api_gateway.features.auth.logic.model.LoginResponse;
 import dev.root101.api_gateway.features.http_logs.data.entity.HttpLogEntity;
 import dev.root101.api_gateway.features.http_logs.logic.model.HttpLogResponse;
 import dev.root101.api_gateway.features.http_logs.logic.model.HttpLogSearchResponse;
+import dev.root101.api_gateway.features.addons.base.logic.model.Addons;
+import dev.root101.api_gateway.features.addons.base.logic.model.AddonsRequest;
+import dev.root101.api_gateway.features.addons.base.logic.model.GatewayAddons;
+import dev.root101.api_gateway.features.addons.cors.logic.model.Cors;
+import dev.root101.api_gateway.features.addons.cors.logic.model.CorsResponse;
+import dev.root101.api_gateway.features.addons.health_check.logic.model.HealthCheck;
+import dev.root101.api_gateway.features.addons.health_check.logic.model.HealthCheckResponse;
+import dev.root101.api_gateway.features.addons.health_check.logic.model.HealthCheckState;
+import dev.root101.api_gateway.features.addons.maintenance.logic.model.Maintenance;
+import dev.root101.api_gateway.features.addons.maintenance.logic.model.MaintenanceResponse;
+import dev.root101.api_gateway.features.addons.maintenance.logic.model.MaintenanceState;
+import dev.root101.api_gateway.features.addons.rate_limit.logic.model.RateLimit;
 import dev.root101.api_gateway.features.routes.logic.model.RewritePathModel;
 import dev.root101.api_gateway.features.routes.logic.model.RouteConfigRequest;
 import dev.root101.api_gateway.features.routes.logic.model.RouteConfigResponse;
-import dev.root101.commons.exceptions.ValidationException;
-import dev.root101.commons.validation.annotations.EnumValidatorRegister_ListOfString;
-import dev.root101.commons.validation.annotations.EnumValidatorRegister_String;
-import dev.root101.commons.validation.annotations.SortRegister;
+import dev.root101.api_gateway.features.routes.utils.RouteRules;
 import org.springframework.aot.hint.annotation.RegisterReflectionForBinding;
 import org.springframework.context.annotation.Configuration;
 
 import java.time.OffsetDateTime;
 
 @Configuration
+//the deprecated CorsResponse.EnvVar still needs its hints until 7.0
+@SuppressWarnings("removal")
 @RegisterReflectionForBinding({
         //--------- CONFIG ---------\\
         GlobalExceptionHandler.class,
-        //--------- COMMONS ---------\\
-        ValidationException.class, ValidationException.ValidationErrorMessage.class, SortRegister.class,
-        EnumValidatorRegister_ListOfString.class, EnumValidatorRegister_String.class,
         //--------- ROUTES ---------\\
         RewritePathModel.class, RouteConfigRequest.class, RouteConfigResponse.class,
+        //the validator of @ValidRoute, created by hibernate validator
+        RouteRules.class,
         OffsetDateTime.class,
+        //--------- ADD-ONS ---------\\
+        Addons.class, GatewayAddons.class, AddonsRequest.class,
+        //also written to and read from the db as json
+        Maintenance.class, MaintenanceState.class, MaintenanceResponse.class,
+        HealthCheck.class, HealthCheckState.class, HealthCheckResponse.class,
+        RateLimit.class, Cors.class, CorsResponse.class, CorsResponse.EnvVar.class,
         //--------- AUTH ---------\\
         LoginRequest.class, LoginResponse.class,
         //--------- HTTP LOGS ---------\\

@@ -21,6 +21,7 @@ import reactor.netty.http.server.HttpServer;
 import java.time.Duration;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Predicate;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -49,7 +50,7 @@ public abstract class IntegrationTest {
     public static final String ADMIN_PASSWORD = "admin123**";
 
     //singleton container: started once, stopped by testcontainers (ryuk) when the JVM ends
-    protected static final PostgreSQLContainer POSTGRES = new PostgreSQLContainer("postgres:16");
+    protected static final PostgreSQLContainer POSTGRES = new PostgreSQLContainer("postgres:18");
 
     private static final Pattern STATUS = Pattern.compile("/status/(\\d{3})");
 
@@ -60,6 +61,8 @@ public abstract class IntegrationTest {
      *     <li>`/cors`: also sends its own CORS headers</li>
      *     <li>`/status/{code}`: answers with that status</li>
      *     <li>`/echo`: answers `<method>|<uri>|<X-Test header>|<body>`</li>
+     *     <li>`/bytes`: answers the request body, byte for byte</li>
+     *     <li>`/forwarded`: answers `<X-Forwarded-For>|<X-Forwarded-Host>|<X-Forwarded-Proto>|<X-Forwarded-Prefix>`</li>
      * </ul>
      */
     protected static final DisposableServer UPSTREAM;
@@ -77,6 +80,14 @@ public abstract class IntegrationTest {
                     Matcher status = STATUS.matcher(uri);
                     if (status.find()) {
                         res.status(HttpResponseStatus.valueOf(Integer.parseInt(status.group(1))));
+                    }
+                    if (uri.contains("/bytes")) {
+                        return res.send(req.receive().retain());
+                    }
+                    if (uri.contains("/forwarded")) {
+                        var h = req.requestHeaders();
+                        return res.sendString(Mono.just(h.get("X-Forwarded-For") + "|" + h.get("X-Forwarded-Host")
+                                + "|" + h.get("X-Forwarded-Proto") + "|" + h.get("X-Forwarded-Prefix")));
                     }
                     if (uri.contains("/echo")) {
                         return res.sendString(req.receive().aggregate().asString().defaultIfEmpty("")
@@ -118,11 +129,22 @@ public abstract class IntegrationTest {
         return UUID.randomUUID().toString().substring(0, 8);
     }
 
+    private static final AtomicInteger IPS = new AtomicInteger();
+
+    /**
+     * A client ip (`X-Forwarded-For`) no other test uses: the lockout and the rate limit count per ip in the shared
+     * context, so two tests picking the same random ip made one of them fail now and then
+     */
+    protected static String uniqueIp() {
+        int n = IPS.incrementAndGet();
+        return "10.%d.%d.%d".formatted(n >> 16 & 255, n >> 8 & 255, n & 255);
+    }
+
     /**
      * Route `/{prefix}-{id}/**` → fake upstream, no rewrite
      */
     protected static RouteConfigRequest route(String name, String pathPrefix) {
-        return new RouteConfigRequest(name, "/" + pathPrefix + "/**", upstreamUrl(), null, null);
+        return new RouteConfigRequest(name, "/" + pathPrefix + "/**", upstreamUrl(), null, null, null);
     }
 
     /**
@@ -131,7 +153,7 @@ public abstract class IntegrationTest {
     protected static RouteConfigRequest rewriteRoute(String name, String pathPrefix) {
         return new RouteConfigRequest(
                 name, "/" + pathPrefix + "/**", upstreamUrl(),
-                new RewritePathModel("/" + pathPrefix + "/(?<segment>.*)", "/${segment}"), null
+                new RewritePathModel("/" + pathPrefix + "/(?<segment>.*)", "/${segment}"), null, null
         );
     }
 

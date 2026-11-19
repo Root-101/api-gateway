@@ -15,14 +15,6 @@ class LogDetailsScreen extends StatefulWidget {
 }
 
 class _LogDetailsScreenState extends State<LogDetailsScreen> {
-  final FocusNode _close = FocusNode();
-
-  @override
-  void dispose() {
-    _close.dispose();
-    super.dispose();
-  }
-
   void _openRoute(String name) {
     final routes = app.di.find<RoutesCubit>();
     routes.query.value = name;
@@ -42,7 +34,6 @@ class _LogDetailsScreenState extends State<LogDetailsScreen> {
         app.di.find<RoutesCubit>().routes.any((r) => r.id == route.routeId);
     return DialogTemplate(
       title: intl.logDetails.title,
-      closeFocusNode: _close,
       footer: exists
           ? Align(
               alignment: Alignment.centerRight,

@@ -9,8 +9,23 @@ class RouteModel {
   final String uri;
   final RewritePathModel? rewritePath;
   final String description;
+  final MaintenanceModel? maintenance;
+  final HealthCheckModel? healthCheck;
+  final RateLimitModel? rateLimit;
+
+  ///its own CORS; null (or off) = the gateway's
+  final CorsModel? cors;
+
+  ///every add-on as the api sent it (`null` the ones not configured, unknown ones too), for the backup
+  final Map<String, dynamic> addons;
 
   final String? gatewayUrl;
+
+  ///its own maintenance is on (the gateway's may still win, see [RouteStatus])
+  bool get inMaintenance => maintenance?.enabled ?? false;
+
+  ///the add-on types this route can have: the keys the api sends (null = not configured yet)
+  bool canHave(String addon) => addons.containsKey(addon);
 
   String get enterPoint => '${gatewayUrl ?? ''}$path';
 
@@ -26,6 +41,11 @@ class RouteModel {
     required this.id,
     required this.createdAt,
     this.rewritePath,
+    this.maintenance,
+    this.healthCheck,
+    this.rateLimit,
+    this.cors,
+    this.addons = const {},
     this.gatewayUrl,
   });
 
@@ -38,6 +58,17 @@ class RouteModel {
       'rewrite_path': rewritePath?.toJson(),
       'description': description,
       'created_at': createdAt.toIso8601String(),
+      //every key as received (null included, unknown ones untouched), without what the gateway writes
+      'addons': addons.map(
+        (key, value) => MapEntry(
+          key,
+          value is Map<String, dynamic>
+              ? (Map.of(value)
+                  ..remove('default_message')
+                  ..remove('state'))
+              : value,
+        ),
+      ),
     };
   }
 }

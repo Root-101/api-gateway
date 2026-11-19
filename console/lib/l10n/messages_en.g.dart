@@ -73,6 +73,14 @@ class AppMessages with BaseTranslations<AppMessagesLocale, AppMessages> {
   late final AppMessages$calendar$en calendar = AppMessages$calendar$en._(
     _root,
   );
+  late final AppMessages$maintenance$en maintenance =
+      AppMessages$maintenance$en._(_root);
+  late final AppMessages$health$en health = AppMessages$health$en._(_root);
+  late final AppMessages$rate$en rate = AppMessages$rate$en._(_root);
+  late final AppMessages$cors$en cors = AppMessages$cors$en._(_root);
+  late final AppMessages$map$en map = AppMessages$map$en._(_root);
+  late final AppMessages$panel$en panel = AppMessages$panel$en._(_root);
+  late final AppMessages$info$en info = AppMessages$info$en._(_root);
 }
 
 // Path: app
@@ -381,8 +389,8 @@ class AppMessages$notFound$en {
   String get description =>
       'The route or log may have been deleted, or the link is wrong.';
 
-  /// en: 'Go to Routes'
-  String get goToRoutes => 'Go to Routes';
+  /// en: 'Go to map'
+  String get goToMap => 'Go to map';
 
   /// en: 'Open Http logs'
   String get openLogs => 'Open Http logs';
@@ -570,22 +578,22 @@ class AppMessages$form$en {
   /// en: 'General'
   String get stepGeneral => 'General';
 
-  /// en: 'How the route shows up in the console.'
-  String get stepGeneralHint => 'How the route shows up in the console.';
+  /// en: 'How the route shows up in the console'
+  String get stepGeneralHint => 'How the route shows up in the console';
 
   /// en: 'Forwarding'
   String get stepForwarding => 'Forwarding';
 
-  /// en: 'Requests that match the path are sent to the URI.'
+  /// en: 'Requests that match the path are sent to the URI'
   String get stepForwardingHint =>
-      'Requests that match the path are sent to the URI.';
+      'Requests that match the path are sent to the URI';
 
   /// en: 'Path rewrite'
   String get stepRewrite => 'Path rewrite';
 
-  /// en: 'Optional. Swap a prefix of the path before forwarding.'
+  /// en: 'Optional. Swap a prefix of the path before forwarding'
   String get stepRewriteHint =>
-      'Optional. Swap a prefix of the path before forwarding.';
+      'Optional. Swap a prefix of the path before forwarding';
 
   /// en: 'A route with this name already exists'
   String get nameTaken => 'A route with this name already exists';
@@ -933,6 +941,794 @@ class AppMessages$calendar$en {
   String get hintRestart => 'Click a day to start a new range';
 }
 
+// Path: maintenance
+class AppMessages$maintenance$en {
+  AppMessages$maintenance$en._(this._root);
+
+  final AppMessages _root; // ignore: unused_field
+
+  // Translations
+
+  /// en: 'Maintenance'
+  String get maintenance => 'Maintenance';
+
+  /// en: 'MAINT'
+  String get tagMaint => 'MAINT';
+
+  /// en: 'PAUSED'
+  String get tagPaused => 'PAUSED';
+
+  /// en: 'The gateway is in maintenance.'
+  String get bannerTitle => 'The gateway is in maintenance.';
+
+  /// en: 'Every route answers 503. The console and /health keep working.'
+  String get bannerDetail =>
+      'Every route answers 503. The console and /health keep working.';
+
+  /// en: 'Every route answers 503 until {date: String} (in {left: String}). The console and /health keep working.'
+  String bannerUntil({required String date, required String left}) =>
+      'Every route answers 503 until ${date} (in ${left}). The console and /health keep working.';
+
+  /// en: 'Every route answers 503 (the return time has passed, it stays on until you turn it off). The console and /health keep working.'
+  String get bannerPassed =>
+      'Every route answers 503 (the return time has passed, it stays on until you turn it off). The console and /health keep working.';
+
+  /// en: 'Edit'
+  String get edit => 'Edit';
+
+  /// en: 'Turn off'
+  String get turnOff => 'Turn off';
+
+  /// en: 'The service is under maintenance, try again later'
+  String get defaultMessage =>
+      'The service is under maintenance, try again later';
+
+  /// en: '{count: int} in maintenance'
+  String inCount({required int count}) => '${count} in maintenance';
+
+  /// en: 'IN MAINTENANCE · 503'
+  String get cardTitle => 'IN MAINTENANCE · 503';
+
+  /// en: 'Back {date: String}'
+  String cardBack({required String date}) => 'Back ${date}';
+
+  /// en: 'No return time'
+  String get cardNoTime => 'No return time';
+
+  /// en: 'Add-ons'
+  String get addons => 'Add-ons';
+
+  /// en: 'Maintenance · on'
+  String get badgeOn => 'Maintenance · on';
+
+  /// en: 'Maintenance · off'
+  String get badgeOff => 'Maintenance · off';
+
+  /// en: 'On'
+  String get chipOn => 'On';
+
+  /// en: 'Off'
+  String get chipOff => 'Off';
+
+  /// en: 'Redirect only'
+  String get redirectOnly => 'Redirect only';
+
+  /// en: '"{name: String}": maintenance added'
+  String added({required String name}) => '"${name}": maintenance added';
+
+  /// en: '"{name: String}": maintenance saved'
+  String saved({required String name}) => '"${name}": maintenance saved';
+
+  /// en: '"{name: String}": maintenance removed'
+  String removed({required String name}) => '"${name}": maintenance removed';
+
+  /// en: '"{name: String}" in maintenance'
+  String routeOn({required String name}) => '"${name}" in maintenance';
+
+  /// en: '"{name: String}" back in service'
+  String routeOff({required String name}) => '"${name}" back in service';
+
+  /// en: 'Gateway maintenance added'
+  String get gatewayAdded => 'Gateway maintenance added';
+
+  /// en: 'Gateway maintenance saved'
+  String get gatewaySaved => 'Gateway maintenance saved';
+
+  /// en: 'Gateway in maintenance'
+  String get gatewayOn => 'Gateway in maintenance';
+
+  /// en: 'Gateway maintenance off'
+  String get gatewayOff => 'Gateway maintenance off';
+
+  /// en: 'Gateway maintenance removed'
+  String get gatewayRemoved => 'Gateway maintenance removed';
+}
+
+// Path: health
+class AppMessages$health$en {
+  AppMessages$health$en._(this._root);
+
+  final AppMessages _root; // ignore: unused_field
+
+  // Translations
+
+  /// en: 'Health check'
+  String get title => 'Health check';
+
+  /// en: 'LIVE'
+  String get live => 'LIVE';
+
+  /// en: 'DOWN'
+  String get down => 'DOWN';
+
+  /// en: 'OFF'
+  String get off => 'OFF';
+
+  /// en: 'Endpoint'
+  String get endpoint => 'Endpoint';
+
+  /// en: 'Every'
+  String get every => 'Every';
+
+  /// en: 'Last check'
+  String get lastCheck => 'Last check';
+
+  /// en: 'Every {time: String}'
+  String everyValue({required String time}) => 'Every ${time}';
+
+  /// en: 'Off · every {time: String}'
+  String offValue({required String time}) => 'Off · every ${time}';
+
+  /// en: 'Waiting for the first check'
+  String get waiting => 'Waiting for the first check';
+
+  /// en: 'Checking…'
+  String get checking => 'Checking…';
+
+  /// en: 'Just now'
+  String get justNow => 'Just now';
+
+  /// en: '{time: String} ago'
+  String ago({required String time}) => '${time} ago';
+
+  /// en: '{ago: String} · {status: int} in {millis: int} ms'
+  String answered({
+    required String ago,
+    required int status,
+    required int millis,
+  }) => '${ago} · ${status} in ${millis} ms';
+
+  /// en: '{ago: String} · no answer'
+  String noAnswer({required String ago}) => '${ago} · no answer';
+
+  /// en: 'Run now'
+  String get runNow => 'Run now';
+
+  /// en: 'Called on {host: String}; any 2xx counts as live.'
+  String calledOn({required String host}) =>
+      'Called on ${host}; any 2xx counts as live.';
+
+  /// en: 'Check every'
+  String get checkEvery => 'Check every';
+
+  /// en: 'Check on a schedule'
+  String get enabled => 'Check on a schedule';
+
+  /// en: 'On · called every {time: String}'
+  String hintOn({required String time}) => 'On · called every ${time}';
+
+  /// en: 'Off · only Run now calls it'
+  String get hintOff => 'Off · only Run now calls it';
+
+  /// en: 'Slide right to check on a schedule'
+  String get slideOn => 'Slide right to check on a schedule';
+
+  /// en: 'Slide left to stop the schedule'
+  String get slideOff => 'Slide left to stop the schedule';
+
+  /// en: 'Remove health check?'
+  String get removeTitle => 'Remove health check?';
+
+  /// en: 'Its endpoint, interval and last result are lost. You can add it again later.'
+  String get removeBody =>
+      'Its endpoint, interval and last result are lost. You can add it again later.';
+
+  /// en: 'Health check'
+  String get add => 'Health check';
+
+  /// en: 'Check a path on a schedule, LIVE or DOWN'
+  String get addHint => 'Check a path on a schedule, LIVE or DOWN';
+
+  /// en: 'Health · every {time: String}'
+  String badge({required String time}) => 'Health · every ${time}';
+
+  /// en: 'Health · off'
+  String get badgeOff => 'Health · off';
+
+  /// en: '{count: int} down'
+  String downCount({required int count}) => '${count} down';
+
+  /// en: 'Down'
+  String get legendDown => 'Down';
+
+  /// en: '"{name: String}": health check added'
+  String added({required String name}) => '"${name}": health check added';
+
+  /// en: '"{name: String}": health check saved'
+  String saved({required String name}) => '"${name}": health check saved';
+
+  /// en: '"{name: String}": health check on'
+  String routeOn({required String name}) => '"${name}": health check on';
+
+  /// en: '"{name: String}": health check off'
+  String routeOff({required String name}) => '"${name}": health check off';
+
+  /// en: '"{name: String}": health check removed'
+  String removed({required String name}) => '"${name}": health check removed';
+}
+
+// Path: rate
+class AppMessages$rate$en {
+  AppMessages$rate$en._(this._root);
+
+  final AppMessages _root; // ignore: unused_field
+
+  // Translations
+
+  /// en: 'Rate limit'
+  String get title => 'Rate limit';
+
+  /// en: 'Limit'
+  String get limit => 'Limit';
+
+  /// en: 'Burst'
+  String get burst => 'Burst';
+
+  /// en: 'Over limit'
+  String get overLimit => 'Over limit';
+
+  /// en: '429 Too Many Requests'
+  String get tooMany => '429 Too Many Requests';
+
+  /// en: '{limit: int} requests per {period: String}, per client IP'
+  String limitValue({required int limit, required String period}) =>
+      '${limit} requests per ${period}, per client IP';
+
+  /// en: '{limit: int} requests per {period: String}, per client IP, on all routes together'
+  String limitValueGateway({required int limit, required String period}) =>
+      '${limit} requests per ${period}, per client IP, on all routes together';
+
+  /// en: '{burst: int} at once'
+  String burstValue({required int burst}) => '${burst} at once';
+
+  /// en: 'Same as the limit'
+  String get burstSame => 'Same as the limit';
+
+  /// en: 'second'
+  String get second => 'second';
+
+  /// en: 'minute'
+  String get minute => 'minute';
+
+  /// en: 'hour'
+  String get hour => 'hour';
+
+  /// en: 'Requests'
+  String get requests => 'Requests';
+
+  /// en: 'Same as the limit'
+  String get burstPlaceholder => 'Same as the limit';
+
+  /// en: 'Per client IP, every'
+  String get per => 'Per client IP, every';
+
+  /// en: 'Limit requests'
+  String get enabled => 'Limit requests';
+
+  /// en: 'On · past the limit, 429'
+  String get hintOn => 'On · past the limit, 429';
+
+  /// en: 'Off · nothing is limited'
+  String get hintOff => 'Off · nothing is limited';
+
+  /// en: 'Slide right to limit requests'
+  String get slideOn => 'Slide right to limit requests';
+
+  /// en: 'Slide left to stop limiting'
+  String get slideOff => 'Slide left to stop limiting';
+
+  /// en: 'Saving starts every count from zero.'
+  String get resetHint => 'Saving starts every count from zero.';
+
+  /// en: 'Remove rate limit?'
+  String get removeTitle => 'Remove rate limit?';
+
+  /// en: 'Its limit and burst are lost. You can add it again later.'
+  String get removeBody =>
+      'Its limit and burst are lost. You can add it again later.';
+
+  /// en: 'Rate limit'
+  String get add => 'Rate limit';
+
+  /// en: 'Answer 429 past a limit per client IP'
+  String get addHint => 'Answer 429 past a limit per client IP';
+
+  /// en: 'Answer 429 past a limit per client IP, on all routes together'
+  String get addHintGateway =>
+      'Answer 429 past a limit per client IP, on all routes together';
+
+  /// en: 'Rate limit · {value: String}'
+  String badge({required String value}) => 'Rate limit · ${value}';
+
+  /// en: 'Rate limit · off'
+  String get badgeOff => 'Rate limit · off';
+
+  /// en: '"{name: String}": rate limit added'
+  String added({required String name}) => '"${name}": rate limit added';
+
+  /// en: '"{name: String}": rate limit saved'
+  String saved({required String name}) => '"${name}": rate limit saved';
+
+  /// en: '"{name: String}": rate limit removed'
+  String removed({required String name}) => '"${name}": rate limit removed';
+
+  /// en: '"{name: String}": rate limit on'
+  String routeOn({required String name}) => '"${name}": rate limit on';
+
+  /// en: '"{name: String}": rate limit off'
+  String routeOff({required String name}) => '"${name}": rate limit off';
+
+  /// en: 'Gateway rate limit added'
+  String get gatewayAdded => 'Gateway rate limit added';
+
+  /// en: 'Gateway rate limit saved'
+  String get gatewaySaved => 'Gateway rate limit saved';
+
+  /// en: 'Gateway rate limit on'
+  String get gatewayOn => 'Gateway rate limit on';
+
+  /// en: 'Gateway rate limit off'
+  String get gatewayOff => 'Gateway rate limit off';
+
+  /// en: 'Gateway rate limit removed'
+  String get gatewayRemoved => 'Gateway rate limit removed';
+}
+
+// Path: cors
+class AppMessages$cors$en {
+  AppMessages$cors$en._(this._root);
+
+  final AppMessages _root; // ignore: unused_field
+
+  // Translations
+
+  /// en: 'CORS'
+  String get title => 'CORS';
+
+  /// en: 'ALL'
+  String get all => 'ALL';
+
+  /// en: 'Origins'
+  String get origins => 'Origins';
+
+  /// en: 'Credentials'
+  String get credentials => 'Credentials';
+
+  /// en: 'Sent (cookies, auth headers)'
+  String get credentialsYes => 'Sent (cookies, auth headers)';
+
+  /// en: 'Not sent'
+  String get credentialsNo => 'Not sent';
+
+  /// en: 'Not sent · the admin API uses a token'
+  String get credentialsGateway => 'Not sent · the admin API uses a token';
+
+  /// en: 'Routes without their own CORS use this one.'
+  String get usedByRoutes => 'Routes without their own CORS use this one.';
+
+  /// en: '{count: int} origins'
+  String originsCount({required int count}) => '${count} origins';
+
+  /// en: 'Own CORS'
+  String get enabled => 'Own CORS';
+
+  /// en: 'On · its own origins apply'
+  String get hintOn => 'On · its own origins apply';
+
+  /// en: 'Off · the gateway's CORS applies'
+  String get hintOff => 'Off · the gateway\'s CORS applies';
+
+  /// en: 'Slide right to use its own CORS'
+  String get slideOn => 'Slide right to use its own CORS';
+
+  /// en: 'Slide left to use the gateway's'
+  String get slideOff => 'Slide left to use the gateway\'s';
+
+  /// en: 'Allowed origins'
+  String get originsLabel => 'Allowed origins';
+
+  /// en: 'https://app.com, then Enter'
+  String get originsPlaceholder => 'https://app.com, then Enter';
+
+  /// en: 'Clear'
+  String get clear => 'Clear';
+
+  /// en: 'An exact origin, a pattern like https://*.example.com, or * for any.'
+  String get originsHint =>
+      'An exact origin, a pattern like https://*.example.com, or * for any.';
+
+  /// en: '{origin: String}: must be * or an origin like https://app.com or https://*.example.com, without a path'
+  String invalidOrigin({required String origin}) =>
+      '${origin}: must be * or an origin like https://app.com or https://*.example.com, without a path';
+
+  /// en: 'Remove {origin: String}'
+  String removeOrigin({required String origin}) => 'Remove ${origin}';
+
+  /// en: 'Allow credentials'
+  String get credentialsSwitch => 'Allow credentials';
+
+  /// en: 'For services with cookie sessions'
+  String get credentialsSwitchHint => 'For services with cookie sessions';
+
+  /// en: 'Not with an origin that lets in any site (*, or a * in the host other than *.domain.com)'
+  String get credentialsNoAll =>
+      'Not with an origin that lets in any site (*, or a * in the host other than *.domain.com)';
+
+  /// en: 'This console runs on {origin: String}, which isn't in the list: saving would lock it out of the gateway.'
+  String lockout({required String origin}) =>
+      'This console runs on ${origin}, which isn\'t in the list: saving would lock it out of the gateway.';
+
+  /// en: 'Remove CORS?'
+  String get removeTitle => 'Remove CORS?';
+
+  /// en: 'Its origins are lost and the route uses the gateway's CORS again.'
+  String get removeBody =>
+      'Its origins are lost and the route uses the gateway\'s CORS again.';
+
+  /// en: 'CORS'
+  String get add => 'CORS';
+
+  /// en: 'Its own allowed origins, and cookies if the service needs them'
+  String get addHint =>
+      'Its own allowed origins, and cookies if the service needs them';
+
+  /// en: 'CORS · {value: String}'
+  String badge({required String value}) => 'CORS · ${value}';
+
+  /// en: 'CORS · off'
+  String get badgeOff => 'CORS · off';
+
+  /// en: '"{name: String}": CORS added'
+  String added({required String name}) => '"${name}": CORS added';
+
+  /// en: '"{name: String}": CORS saved'
+  String saved({required String name}) => '"${name}": CORS saved';
+
+  /// en: '"{name: String}": CORS removed, it uses the gateway's'
+  String removed({required String name}) =>
+      '"${name}": CORS removed, it uses the gateway\'s';
+
+  /// en: '"{name: String}": own CORS on'
+  String routeOn({required String name}) => '"${name}": own CORS on';
+
+  /// en: '"{name: String}": own CORS off, it uses the gateway's'
+  String routeOff({required String name}) =>
+      '"${name}": own CORS off, it uses the gateway\'s';
+
+  /// en: 'Gateway CORS saved'
+  String get gatewaySaved => 'Gateway CORS saved';
+
+  /// en: 'The env {name: String} is in the gateway's CORS now.'
+  String envMigratedTitle({required String name}) =>
+      'The env ${name} is in the gateway\'s CORS now.';
+
+  /// en: 'Its origins were moved into the add-on: edit CORS here. Remove the variable from the deploy and restart the gateway to hide this.'
+  String get envMigratedDetail =>
+      'Its origins were moved into the add-on: edit CORS here. Remove the variable from the deploy and restart the gateway to hide this.';
+
+  /// en: 'The env {name: String} is set but ignored.'
+  String envIgnoredTitle({required String name}) =>
+      'The env ${name} is set but ignored.';
+
+  /// en: 'It differs from the gateway's CORS, which is what applies. Edit CORS here, then remove the variable from the deploy and restart the gateway.'
+  String get envIgnoredDetail =>
+      'It differs from the gateway\'s CORS, which is what applies. Edit CORS here, then remove the variable from the deploy and restart the gateway.';
+
+  /// en: 'Variable'
+  String get envVariable => 'Variable';
+
+  /// en: 'Applies'
+  String get envApplies => 'Applies';
+
+  /// en: 'Edit CORS'
+  String get envOpen => 'Edit CORS';
+}
+
+// Path: map
+class AppMessages$map$en {
+  AppMessages$map$en._(this._root);
+
+  final AppMessages _root; // ignore: unused_field
+
+  // Translations
+
+  /// en: 'Gateway map'
+  String get title => 'Gateway map';
+
+  /// en: 'Redirect only'
+  String get legendRedirect => 'Redirect only';
+
+  /// en: 'Maintenance'
+  String get legendMaintenance => 'Maintenance';
+
+  /// en: 'Zoom in'
+  String get zoomIn => 'Zoom in';
+
+  /// en: 'Zoom out'
+  String get zoomOut => 'Zoom out';
+
+  /// en: 'Fit'
+  String get fit => 'Fit';
+
+  /// en: 'Drag to move · scroll to zoom · click a route to configure it'
+  String get hint =>
+      'Drag to move · scroll to zoom · click a route to configure it';
+
+  /// en: 'Add route'
+  String get addRoute => 'Add route';
+
+  /// en: 'No routes yet'
+  String get noRoutesYet => 'No routes yet';
+
+  /// en: '1 route'
+  String get oneRoute => '1 route';
+
+  /// en: '{count: int} routes'
+  String manyRoutes({required int count}) => '${count} routes';
+
+  /// en: 'In maintenance'
+  String get gatewayInMaintenance => 'In maintenance';
+
+  /// en: '503 on all {count: int} routes'
+  String gatewayAll({required int count}) => '503 on all ${count} routes';
+}
+
+// Path: panel
+class AppMessages$panel$en {
+  AppMessages$panel$en._(this._root);
+
+  final AppMessages _root; // ignore: unused_field
+
+  // Translations
+
+  /// en: 'ROUTE'
+  String get route => 'ROUTE';
+
+  /// en: 'GATEWAY'
+  String get gateway => 'GATEWAY';
+
+  /// en: 'Where every request comes in'
+  String get gatewayDescription => 'Where every request comes in';
+
+  /// en: 'Overview'
+  String get overview => 'Overview';
+
+  /// en: 'Public URL'
+  String get publicUrl => 'Public URL';
+
+  /// en: 'Routes'
+  String get routes => 'Routes';
+
+  /// en: 'Health-checked'
+  String get healthChecked => 'Health-checked';
+
+  /// en: 'Down'
+  String get down => 'Down';
+
+  /// en: 'Maintenance'
+  String get inMaintenance => 'Maintenance';
+
+  /// en: 'Rate-limited'
+  String get rateLimited => 'Rate-limited';
+
+  /// en: 'Own CORS'
+  String get ownCors => 'Own CORS';
+
+  /// en: 'All {count: int} (gateway)'
+  String allRoutes({required int count}) => 'All ${count} (gateway)';
+
+  /// en: 'Redirect'
+  String get redirect => 'Redirect';
+
+  /// en: 'Open in Routes'
+  String get openInRoutes => 'Open in Routes';
+
+  /// en: 'Edit route'
+  String get editRoute => 'Edit route';
+
+  /// en: 'Open in the big panel'
+  String get expand => 'Open in the big panel';
+
+  /// en: 'Back to the side panel'
+  String get collapse => 'Back to the side panel';
+
+  /// en: 'Maintenance'
+  String get maintenance => 'Maintenance';
+
+  /// en: 'Off · requests are forwarded normally'
+  String get offRoute => 'Off · requests are forwarded normally';
+
+  /// en: 'Off · every route forwards normally'
+  String get offGateway => 'Off · every route forwards normally';
+
+  /// en: 'On · callers get a 503 with this message'
+  String get onRoute => 'On · callers get a 503 with this message';
+
+  /// en: 'On · every route answers 503 with this message'
+  String get onGateway => 'On · every route answers 503 with this message';
+
+  /// en: 'On for {time: String}'
+  String onFor({required String time}) => 'On for ${time}';
+
+  /// en: 'Last window: {time: String}'
+  String lastWindow({required String time}) => 'Last window: ${time}';
+
+  /// en: '503 MESSAGE'
+  String get message503 => '503 MESSAGE';
+
+  /// en: 'default'
+  String get defaultTag => 'default';
+
+  /// en: 'No return time'
+  String get noReturn => 'No return time';
+
+  /// en: 'Back around {date: String}'
+  String backAround({required String date}) => 'Back around ${date}';
+
+  /// en: 'Slide right to turn on maintenance'
+  String get slideOn => 'Slide right to turn on maintenance';
+
+  /// en: 'Slide left to turn off'
+  String get slideOff => 'Slide left to turn off';
+
+  /// en: 'Drag the handle, or use the arrow keys'
+  String get slideHint => 'Drag the handle, or use the arrow keys';
+
+  /// en: 'Turn on'
+  String get turnOn => 'Turn on';
+
+  /// en: 'Turn off'
+  String get turnOff => 'Turn off';
+
+  /// en: 'Controlled by the gateway'
+  String get locked => 'Controlled by the gateway';
+
+  /// en: 'The whole gateway is in maintenance: every route answers its message until it is turned off.'
+  String get lockedHint =>
+      'The whole gateway is in maintenance: every route answers its message until it is turned off.';
+
+  /// en: 'Edit'
+  String get edit => 'Edit';
+
+  /// en: 'Remove'
+  String get remove => 'Remove';
+
+  /// en: 'Remove maintenance?'
+  String get removeTitle => 'Remove maintenance?';
+
+  /// en: 'Its message and return time are lost. You can add it again later.'
+  String get removeBody =>
+      'Its message and return time are lost. You can add it again later.';
+
+  /// en: 'Save'
+  String get save => 'Save';
+
+  /// en: 'ADD TO THIS ROUTE'
+  String get addToRoute => 'ADD TO THIS ROUTE';
+
+  /// en: 'ADD TO THE GATEWAY'
+  String get addToGateway => 'ADD TO THE GATEWAY';
+
+  /// en: 'Maintenance mode'
+  String get addMaintenance => 'Maintenance mode';
+
+  /// en: 'Answer 503 with a message while it is on'
+  String get addMaintenanceHint => 'Answer 503 with a message while it is on';
+
+  /// en: '503 message'
+  String get messageLabel => '503 message';
+
+  /// en: 'Empty: “{text: String}”'
+  String messageHint({required String text}) => 'Empty: “${text}”';
+
+  /// en: '{count: int} / {max: int}'
+  String count({required int count, required int max}) => '${count} / ${max}';
+
+  /// en: 'At most {max: int} characters.'
+  String tooLong({required int max}) => 'At most ${max} characters.';
+
+  /// en: 'Back around'
+  String get backLabel => 'Back around';
+
+  /// en: 'Optional. Sent as Retry-After while it is ahead; it never turns off by itself.'
+  String get backHint =>
+      'Optional. Sent as Retry-After while it is ahead; it never turns off by itself.';
+
+  /// en: 'Pick a date and time'
+  String get pickTime => 'Pick a date and time';
+
+  /// en: 'Clear'
+  String get clear => 'Clear';
+}
+
+// Path: info
+class AppMessages$info$en {
+  AppMessages$info$en._(this._root);
+
+  final AppMessages _root; // ignore: unused_field
+
+  // Translations
+
+  /// en: 'What is {name: String}?'
+  String what({required String name}) => 'What is ${name}?';
+
+  /// en: 'Is the service up?'
+  String get healthTitle => 'Is the service up?';
+
+  /// en: 'The gateway calls a path of the service, like /health, on a schedule. A 2xx answer marks the route LIVE; any other answer, or none, marks it DOWN.'
+  String get healthBody =>
+      'The gateway calls a path of the service, like /health, on a schedule. A 2xx answer marks the route LIVE; any other answer, or none, marks it DOWN.';
+
+  /// en: 'It only watches: requests keep going to the service either way. To stop them, turn on maintenance. Run now checks it right away.'
+  String get healthNote =>
+      'It only watches: requests keep going to the service either way. To stop them, turn on maintenance. Run now checks it right away.';
+
+  /// en: 'Close it for a while'
+  String get maintenanceTitle => 'Close it for a while';
+
+  /// en: 'While it is on, the gateway answers every request to this route with a 503 and your message, and doesn't call the service.'
+  String get maintenanceBody =>
+      'While it is on, the gateway answers every request to this route with a 503 and your message, and doesn\'t call the service.';
+
+  /// en: 'While it is on, the gateway answers every request, on every route, with a 503 and your message, and doesn't call any service.'
+  String get maintenanceBodyGateway =>
+      'While it is on, the gateway answers every request, on every route, with a 503 and your message, and doesn\'t call any service.';
+
+  /// en: 'You can add a return time for the clients. Turn it off and requests go through again.'
+  String get maintenanceNote =>
+      'You can add a return time for the clients. Turn it off and requests go through again.';
+
+  /// en: 'How many requests per client'
+  String get rateTitle => 'How many requests per client';
+
+  /// en: 'Each client IP gets a number of requests per second, minute or hour. Burst is how many can arrive at once.'
+  String get rateBody =>
+      'Each client IP gets a number of requests per second, minute or hour. Burst is how many can arrive at once.';
+
+  /// en: 'Each client IP gets a number of requests per second, minute or hour, on all routes together. Burst is how many can arrive at once.'
+  String get rateBodyGateway =>
+      'Each client IP gets a number of requests per second, minute or hour, on all routes together. Burst is how many can arrive at once.';
+
+  /// en: 'Past the limit the gateway answers 429 and doesn't call the service. Any change resets the counts.'
+  String get rateNote =>
+      'Past the limit the gateway answers 429 and doesn\'t call the service. Any change resets the counts.';
+
+  /// en: 'Which websites may call it'
+  String get corsTitle => 'Which websites may call it';
+
+  /// en: 'A web page on another origin can only read this route's answers if its origin is listed. Allow credentials when the service uses cookies.'
+  String get corsBody =>
+      'A web page on another origin can only read this route\'s answers if its origin is listed. Allow credentials when the service uses cookies.';
+
+  /// en: 'A web page on another origin can only call the gateway if its origin is listed. It covers the admin API (this console) and every route without its own CORS.'
+  String get corsBodyGateway =>
+      'A web page on another origin can only call the gateway if its origin is listed. It covers the admin API (this console) and every route without its own CORS.';
+
+  /// en: 'Only browsers apply CORS: curl, Postman and servers aren't affected. The gateway answers the preflights itself.'
+  String get corsNote =>
+      'Only browsers apply CORS: curl, Postman and servers aren\'t affected. The gateway answers the preflights itself.';
+}
+
 /// The flat map containing all translations for locale <en>.
 /// Only for edge cases! For simple maps, use the map function of this library.
 ///
@@ -1023,7 +1819,7 @@ extension on AppMessages {
       'notFound.title' => 'This page doesn’t exist',
       'notFound.description' =>
         'The route or log may have been deleted, or the link is wrong.',
-      'notFound.goToRoutes' => 'Go to Routes',
+      'notFound.goToMap' => 'Go to map',
       'notFound.openLogs' => 'Open Http logs',
       'routes.routes' => 'Routes',
       'routes.oneRoute' => '1 route',
@@ -1088,13 +1884,13 @@ extension on AppMessages {
         required String name,
       }) => 'Step ${step} of 3 · ${name}',
       'form.stepGeneral' => 'General',
-      'form.stepGeneralHint' => 'How the route shows up in the console.',
+      'form.stepGeneralHint' => 'How the route shows up in the console',
       'form.stepForwarding' => 'Forwarding',
       'form.stepForwardingHint' =>
-        'Requests that match the path are sent to the URI.',
+        'Requests that match the path are sent to the URI',
       'form.stepRewrite' => 'Path rewrite',
       'form.stepRewriteHint' =>
-        'Optional. Swap a prefix of the path before forwarding.',
+        'Optional. Swap a prefix of the path before forwarding',
       'form.nameTaken' => 'A route with this name already exists',
       'delete.title' => 'Delete this route?',
       'delete.descriptionStart' => 'Requests to',
@@ -1220,6 +2016,303 @@ extension on AppMessages {
       'calendar.hintStart' => 'Pick a start date',
       'calendar.hintEnd' => 'Now pick the end date',
       'calendar.hintRestart' => 'Click a day to start a new range',
+      'maintenance.maintenance' => 'Maintenance',
+      'maintenance.tagMaint' => 'MAINT',
+      'maintenance.tagPaused' => 'PAUSED',
+      'maintenance.bannerTitle' => 'The gateway is in maintenance.',
+      'maintenance.bannerDetail' =>
+        'Every route answers 503. The console and /health keep working.',
+      'maintenance.bannerUntil' => ({
+        required String date,
+        required String left,
+      }) => 'Every route answers 503 until ${date} (in ${left}). The console and /health keep working.',
+      'maintenance.bannerPassed' => 'Every route answers 503 (the return time has passed, it stays on until you turn it off). The console and /health keep working.',
+      'maintenance.edit' => 'Edit',
+      'maintenance.turnOff' => 'Turn off',
+      'maintenance.defaultMessage' =>
+        'The service is under maintenance, try again later',
+      'maintenance.inCount' => ({
+        required int count,
+      }) => '${count} in maintenance',
+      'maintenance.cardTitle' => 'IN MAINTENANCE · 503',
+      'maintenance.cardBack' => ({required String date}) => 'Back ${date}',
+      'maintenance.cardNoTime' => 'No return time',
+      'maintenance.addons' => 'Add-ons',
+      'maintenance.badgeOn' => 'Maintenance · on',
+      'maintenance.badgeOff' => 'Maintenance · off',
+      'maintenance.chipOn' => 'On',
+      'maintenance.chipOff' => 'Off',
+      'maintenance.redirectOnly' => 'Redirect only',
+      'maintenance.added' => ({
+        required String name,
+      }) => '"${name}": maintenance added',
+      'maintenance.saved' => ({
+        required String name,
+      }) => '"${name}": maintenance saved',
+      'maintenance.removed' => ({
+        required String name,
+      }) => '"${name}": maintenance removed',
+      'maintenance.routeOn' => ({
+        required String name,
+      }) => '"${name}" in maintenance',
+      'maintenance.routeOff' => ({
+        required String name,
+      }) => '"${name}" back in service',
+      'maintenance.gatewayAdded' => 'Gateway maintenance added',
+      'maintenance.gatewaySaved' => 'Gateway maintenance saved',
+      'maintenance.gatewayOn' => 'Gateway in maintenance',
+      'maintenance.gatewayOff' => 'Gateway maintenance off',
+      'maintenance.gatewayRemoved' => 'Gateway maintenance removed',
+      'health.title' => 'Health check',
+      'health.live' => 'LIVE',
+      'health.down' => 'DOWN',
+      'health.off' => 'OFF',
+      'health.endpoint' => 'Endpoint',
+      'health.every' => 'Every',
+      'health.lastCheck' => 'Last check',
+      'health.everyValue' => ({required String time}) => 'Every ${time}',
+      'health.offValue' => ({required String time}) => 'Off · every ${time}',
+      'health.waiting' => 'Waiting for the first check',
+      'health.checking' => 'Checking…',
+      'health.justNow' => 'Just now',
+      'health.ago' => ({required String time}) => '${time} ago',
+      'health.answered' => ({
+        required String ago,
+        required int status,
+        required int millis,
+      }) => '${ago} · ${status} in ${millis} ms',
+      'health.noAnswer' => ({required String ago}) => '${ago} · no answer',
+      'health.runNow' => 'Run now',
+      'health.calledOn' => ({
+        required String host,
+      }) => 'Called on ${host}; any 2xx counts as live.',
+      'health.checkEvery' => 'Check every',
+      'health.enabled' => 'Check on a schedule',
+      'health.hintOn' => ({
+        required String time,
+      }) => 'On · called every ${time}',
+      'health.hintOff' => 'Off · only Run now calls it',
+      'health.slideOn' => 'Slide right to check on a schedule',
+      'health.slideOff' => 'Slide left to stop the schedule',
+      'health.removeTitle' => 'Remove health check?',
+      'health.removeBody' => 'Its endpoint, interval and last result are lost. You can add it again later.',
+      'health.add' => 'Health check',
+      'health.addHint' => 'Check a path on a schedule, LIVE or DOWN',
+      'health.badge' => ({required String time}) => 'Health · every ${time}',
+      'health.badgeOff' => 'Health · off',
+      'health.downCount' => ({required int count}) => '${count} down',
+      'health.legendDown' => 'Down',
+      'health.added' => ({
+        required String name,
+      }) => '"${name}": health check added',
+      'health.saved' => ({
+        required String name,
+      }) => '"${name}": health check saved',
+      'health.routeOn' => ({
+        required String name,
+      }) => '"${name}": health check on',
+      'health.routeOff' => ({
+        required String name,
+      }) => '"${name}": health check off',
+      'health.removed' => ({
+        required String name,
+      }) => '"${name}": health check removed',
+      'rate.title' => 'Rate limit',
+      'rate.limit' => 'Limit',
+      'rate.burst' => 'Burst',
+      'rate.overLimit' => 'Over limit',
+      'rate.tooMany' => '429 Too Many Requests',
+      'rate.limitValue' => ({
+        required int limit,
+        required String period,
+      }) => '${limit} requests per ${period}, per client IP',
+      'rate.limitValueGateway' => ({
+        required int limit,
+        required String period,
+      }) => '${limit} requests per ${period}, per client IP, on all routes together',
+      'rate.burstValue' => ({required int burst}) => '${burst} at once',
+      'rate.burstSame' => 'Same as the limit',
+      'rate.second' => 'second',
+      'rate.minute' => 'minute',
+      'rate.hour' => 'hour',
+      'rate.requests' => 'Requests',
+      'rate.burstPlaceholder' => 'Same as the limit',
+      'rate.per' => 'Per client IP, every',
+      'rate.enabled' => 'Limit requests',
+      'rate.hintOn' => 'On · past the limit, 429',
+      'rate.hintOff' => 'Off · nothing is limited',
+      'rate.slideOn' => 'Slide right to limit requests',
+      'rate.slideOff' => 'Slide left to stop limiting',
+      'rate.resetHint' => 'Saving starts every count from zero.',
+      'rate.removeTitle' => 'Remove rate limit?',
+      'rate.removeBody' =>
+        'Its limit and burst are lost. You can add it again later.',
+      'rate.add' => 'Rate limit',
+      'rate.addHint' => 'Answer 429 past a limit per client IP',
+      'rate.addHintGateway' =>
+        'Answer 429 past a limit per client IP, on all routes together',
+      'rate.badge' => ({required String value}) => 'Rate limit · ${value}',
+      'rate.badgeOff' => 'Rate limit · off',
+      'rate.added' => ({required String name}) => '"${name}": rate limit added',
+      'rate.saved' => ({required String name}) => '"${name}": rate limit saved',
+      'rate.removed' => ({
+        required String name,
+      }) => '"${name}": rate limit removed',
+      'rate.routeOn' => ({required String name}) => '"${name}": rate limit on',
+      'rate.routeOff' => ({
+        required String name,
+      }) => '"${name}": rate limit off',
+      'rate.gatewayAdded' => 'Gateway rate limit added',
+      'rate.gatewaySaved' => 'Gateway rate limit saved',
+      'rate.gatewayOn' => 'Gateway rate limit on',
+      'rate.gatewayOff' => 'Gateway rate limit off',
+      'rate.gatewayRemoved' => 'Gateway rate limit removed',
+      'cors.title' => 'CORS',
+      'cors.all' => 'ALL',
+      'cors.origins' => 'Origins',
+      'cors.credentials' => 'Credentials',
+      'cors.credentialsYes' => 'Sent (cookies, auth headers)',
+      'cors.credentialsNo' => 'Not sent',
+      'cors.credentialsGateway' => 'Not sent · the admin API uses a token',
+      'cors.usedByRoutes' => 'Routes without their own CORS use this one.',
+      'cors.originsCount' => ({required int count}) => '${count} origins',
+      'cors.enabled' => 'Own CORS',
+      'cors.hintOn' => 'On · its own origins apply',
+      'cors.hintOff' => 'Off · the gateway\'s CORS applies',
+      'cors.slideOn' => 'Slide right to use its own CORS',
+      'cors.slideOff' => 'Slide left to use the gateway\'s',
+      'cors.originsLabel' => 'Allowed origins',
+      'cors.originsPlaceholder' => 'https://app.com, then Enter',
+      'cors.clear' => 'Clear',
+      'cors.originsHint' =>
+        'An exact origin, a pattern like https://*.example.com, or * for any.',
+      'cors.invalidOrigin' => ({
+        required String origin,
+      }) => '${origin}: must be * or an origin like https://app.com or https://*.example.com, without a path',
+      'cors.removeOrigin' => ({required String origin}) => 'Remove ${origin}',
+      'cors.credentialsSwitch' => 'Allow credentials',
+      'cors.credentialsSwitchHint' => 'For services with cookie sessions',
+      'cors.credentialsNoAll' => 'Not with an origin that lets in any site (*, or a * in the host other than *.domain.com)',
+      'cors.lockout' => ({
+        required String origin,
+      }) => 'This console runs on ${origin}, which isn\'t in the list: saving would lock it out of the gateway.',
+      'cors.removeTitle' => 'Remove CORS?',
+      'cors.removeBody' =>
+        'Its origins are lost and the route uses the gateway\'s CORS again.',
+      'cors.add' => 'CORS',
+      'cors.addHint' =>
+        'Its own allowed origins, and cookies if the service needs them',
+      'cors.badge' => ({required String value}) => 'CORS · ${value}',
+      'cors.badgeOff' => 'CORS · off',
+      'cors.added' => ({required String name}) => '"${name}": CORS added',
+      'cors.saved' => ({required String name}) => '"${name}": CORS saved',
+      'cors.removed' => ({
+        required String name,
+      }) => '"${name}": CORS removed, it uses the gateway\'s',
+      'cors.routeOn' => ({required String name}) => '"${name}": own CORS on',
+      'cors.routeOff' => ({
+        required String name,
+      }) => '"${name}": own CORS off, it uses the gateway\'s',
+      'cors.gatewaySaved' => 'Gateway CORS saved',
+      'cors.envMigratedTitle' => ({
+        required String name,
+      }) => 'The env ${name} is in the gateway\'s CORS now.',
+      'cors.envMigratedDetail' => 'Its origins were moved into the add-on: edit CORS here. Remove the variable from the deploy and restart the gateway to hide this.',
+      'cors.envIgnoredTitle' => ({
+        required String name,
+      }) => 'The env ${name} is set but ignored.',
+      'cors.envIgnoredDetail' => 'It differs from the gateway\'s CORS, which is what applies. Edit CORS here, then remove the variable from the deploy and restart the gateway.',
+      'cors.envVariable' => 'Variable',
+      'cors.envApplies' => 'Applies',
+      'cors.envOpen' => 'Edit CORS',
+      'map.title' => 'Gateway map',
+      'map.legendRedirect' => 'Redirect only',
+      'map.legendMaintenance' => 'Maintenance',
+      'map.zoomIn' => 'Zoom in',
+      'map.zoomOut' => 'Zoom out',
+      'map.fit' => 'Fit',
+      'map.hint' =>
+        'Drag to move · scroll to zoom · click a route to configure it',
+      'map.addRoute' => 'Add route',
+      'map.noRoutesYet' => 'No routes yet',
+      'map.oneRoute' => '1 route',
+      'map.manyRoutes' => ({required int count}) => '${count} routes',
+      'map.gatewayInMaintenance' => 'In maintenance',
+      'map.gatewayAll' => ({
+        required int count,
+      }) => '503 on all ${count} routes',
+      'panel.route' => 'ROUTE',
+      'panel.gateway' => 'GATEWAY',
+      'panel.gatewayDescription' => 'Where every request comes in',
+      'panel.overview' => 'Overview',
+      'panel.publicUrl' => 'Public URL',
+      'panel.routes' => 'Routes',
+      'panel.healthChecked' => 'Health-checked',
+      'panel.down' => 'Down',
+      'panel.inMaintenance' => 'Maintenance',
+      'panel.rateLimited' => 'Rate-limited',
+      'panel.ownCors' => 'Own CORS',
+      'panel.allRoutes' => ({required int count}) => 'All ${count} (gateway)',
+      'panel.redirect' => 'Redirect',
+      'panel.openInRoutes' => 'Open in Routes',
+      'panel.editRoute' => 'Edit route',
+      'panel.expand' => 'Open in the big panel',
+      'panel.collapse' => 'Back to the side panel',
+      'panel.maintenance' => 'Maintenance',
+      'panel.offRoute' => 'Off · requests are forwarded normally',
+      'panel.offGateway' => 'Off · every route forwards normally',
+      'panel.onRoute' => 'On · callers get a 503 with this message',
+      'panel.onGateway' => 'On · every route answers 503 with this message',
+      'panel.onFor' => ({required String time}) => 'On for ${time}',
+      'panel.lastWindow' => ({required String time}) => 'Last window: ${time}',
+      'panel.message503' => '503 MESSAGE',
+      'panel.defaultTag' => 'default',
+      'panel.noReturn' => 'No return time',
+      'panel.backAround' => ({required String date}) => 'Back around ${date}',
+      'panel.slideOn' => 'Slide right to turn on maintenance',
+      'panel.slideOff' => 'Slide left to turn off',
+      'panel.slideHint' => 'Drag the handle, or use the arrow keys',
+      'panel.turnOn' => 'Turn on',
+      'panel.turnOff' => 'Turn off',
+      'panel.locked' => 'Controlled by the gateway',
+      'panel.lockedHint' => 'The whole gateway is in maintenance: every route answers its message until it is turned off.',
+      'panel.edit' => 'Edit',
+      'panel.remove' => 'Remove',
+      'panel.removeTitle' => 'Remove maintenance?',
+      'panel.removeBody' =>
+        'Its message and return time are lost. You can add it again later.',
+      'panel.save' => 'Save',
+      'panel.addToRoute' => 'ADD TO THIS ROUTE',
+      'panel.addToGateway' => 'ADD TO THE GATEWAY',
+      'panel.addMaintenance' => 'Maintenance mode',
+      'panel.addMaintenanceHint' => 'Answer 503 with a message while it is on',
+      'panel.messageLabel' => '503 message',
+      'panel.messageHint' => ({required String text}) => 'Empty: “${text}”',
+      'panel.count' => ({
+        required int count,
+        required int max,
+      }) => '${count} / ${max}',
+      'panel.tooLong' => ({required int max}) => 'At most ${max} characters.',
+      'panel.backLabel' => 'Back around',
+      'panel.backHint' => 'Optional. Sent as Retry-After while it is ahead; it never turns off by itself.',
+      'panel.pickTime' => 'Pick a date and time',
+      'panel.clear' => 'Clear',
+      'info.what' => ({required String name}) => 'What is ${name}?',
+      'info.healthTitle' => 'Is the service up?',
+      'info.healthBody' => 'The gateway calls a path of the service, like /health, on a schedule. A 2xx answer marks the route LIVE; any other answer, or none, marks it DOWN.',
+      'info.healthNote' => 'It only watches: requests keep going to the service either way. To stop them, turn on maintenance. Run now checks it right away.',
+      'info.maintenanceTitle' => 'Close it for a while',
+      'info.maintenanceBody' => 'While it is on, the gateway answers every request to this route with a 503 and your message, and doesn\'t call the service.',
+      'info.maintenanceBodyGateway' => 'While it is on, the gateway answers every request, on every route, with a 503 and your message, and doesn\'t call any service.',
+      'info.maintenanceNote' => 'You can add a return time for the clients. Turn it off and requests go through again.',
+      'info.rateTitle' => 'How many requests per client',
+      'info.rateBody' => 'Each client IP gets a number of requests per second, minute or hour. Burst is how many can arrive at once.',
+      'info.rateBodyGateway' => 'Each client IP gets a number of requests per second, minute or hour, on all routes together. Burst is how many can arrive at once.',
+      'info.rateNote' => 'Past the limit the gateway answers 429 and doesn\'t call the service. Any change resets the counts.',
+      'info.corsTitle' => 'Which websites may call it',
+      'info.corsBody' => 'A web page on another origin can only read this route\'s answers if its origin is listed. Allow credentials when the service uses cookies.',
+      'info.corsBodyGateway' => 'A web page on another origin can only call the gateway if its origin is listed. It covers the admin API (this console) and every route without its own CORS.',
+      'info.corsNote' => 'Only browsers apply CORS: curl, Postman and servers aren\'t affected. The gateway answers the preflights itself.',
       _ => null,
     };
   }

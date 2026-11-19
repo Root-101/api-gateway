@@ -1008,6 +1008,907 @@
           ]
         },
         {
+          "name": "maintenance - set",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{gateway-url}}/{{gateway-admin-path}}/routes/{{route-id}}/addons/maintenance",
+              "host": [
+                "{{gateway-url}}"
+              ],
+              "path": [
+                "{{gateway-admin-path}}",
+                "routes",
+                "{{route-id}}",
+                "addons",
+                "maintenance"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"enabled\": true,\n    \"message\": \"Back at 14:00\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 200', () => pm.response.to.have.status(200));",
+                  "pm.test('returns the saved maintenance', () => {",
+                  "    const r = pm.response.json();",
+                  "    pm.expect(r.enabled).to.eql(true);",
+                  "    pm.expect(r.message).to.eql('Back at 14:00');",
+                  "    pm.expect(r.default_message).to.be.a('string');",
+                  "    pm.expect(r.state.enabled_at).to.be.a('string');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "maintenance - get route",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{gateway-url}}/{{gateway-admin-path}}/routes/{{route-id}}",
+              "host": [
+                "{{gateway-url}}"
+              ],
+              "path": [
+                "{{gateway-admin-path}}",
+                "routes",
+                "{{route-id}}"
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 200', () => pm.response.to.have.status(200));",
+                  "pm.test('the route is in maintenance', () => pm.expect(pm.response.json().addons.maintenance.enabled).to.eql(true));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "maintenance - disable",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{gateway-url}}/{{gateway-admin-path}}/routes/{{route-id}}/addons/maintenance/disable",
+              "host": [
+                "{{gateway-url}}"
+              ],
+              "path": [
+                "{{gateway-admin-path}}",
+                "routes",
+                "{{route-id}}",
+                "addons",
+                "maintenance",
+                "disable"
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 200', () => pm.response.to.have.status(200));",
+                  "pm.test('off, the message is kept', () => {",
+                  "    const r = pm.response.json();",
+                  "    pm.expect(r.enabled).to.eql(false);",
+                  "    pm.expect(r.message).to.eql('Back at 14:00');",
+                  "    pm.expect(r.state.disabled_at).to.be.a('string');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "maintenance - enable",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{gateway-url}}/{{gateway-admin-path}}/routes/{{route-id}}/addons/maintenance/enable",
+              "host": [
+                "{{gateway-url}}"
+              ],
+              "path": [
+                "{{gateway-admin-path}}",
+                "routes",
+                "{{route-id}}",
+                "addons",
+                "maintenance",
+                "enable"
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 200', () => pm.response.to.have.status(200));",
+                  "pm.test('on again', () => pm.expect(pm.response.json().enabled).to.eql(true));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "maintenance - invalid",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{gateway-url}}/{{gateway-admin-path}}/routes/{{route-id}}/addons/maintenance",
+              "host": [
+                "{{gateway-url}}"
+              ],
+              "path": [
+                "{{gateway-admin-path}}",
+                "routes",
+                "{{route-id}}",
+                "addons",
+                "maintenance"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"message\": \"no enabled\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 422', () => pm.response.to.have.status(422));",
+                  "pm.test('names the field', () => pm.expect(pm.response.json().violations[0].fieldName).to.eql('enabled'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "maintenance - delete",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{gateway-url}}/{{gateway-admin-path}}/routes/{{route-id}}/addons/maintenance",
+              "host": [
+                "{{gateway-url}}"
+              ],
+              "path": [
+                "{{gateway-admin-path}}",
+                "routes",
+                "{{route-id}}",
+                "addons",
+                "maintenance"
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 204', () => pm.response.to.have.status(204));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "maintenance - enable deleted",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{gateway-url}}/{{gateway-admin-path}}/routes/{{route-id}}/addons/maintenance/enable",
+              "host": [
+                "{{gateway-url}}"
+              ],
+              "path": [
+                "{{gateway-admin-path}}",
+                "routes",
+                "{{route-id}}",
+                "addons",
+                "maintenance",
+                "enable"
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 404', () => pm.response.to.have.status(404));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "health check - set",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{gateway-url}}/{{gateway-admin-path}}/routes/{{route-id}}/addons/health-check",
+              "host": [
+                "{{gateway-url}}"
+              ],
+              "path": [
+                "{{gateway-admin-path}}",
+                "routes",
+                "{{route-id}}",
+                "addons",
+                "health-check"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"enabled\": false,\n    \"path\": \"/\",\n    \"interval_seconds\": 60\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 200', () => pm.response.to.have.status(200));",
+                  "pm.test('returns the saved health check', () => {",
+                  "    const r = pm.response.json();",
+                  "    pm.expect(r.enabled).to.eql(false);",
+                  "    pm.expect(r.path).to.eql('/');",
+                  "    pm.expect(r.interval_seconds).to.eql(60);",
+                  "    pm.expect(r.state).to.be.an('object');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "health check - run",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{gateway-url}}/{{gateway-admin-path}}/routes/{{route-id}}/addons/health-check/run",
+              "host": [
+                "{{gateway-url}}"
+              ],
+              "path": [
+                "{{gateway-admin-path}}",
+                "routes",
+                "{{route-id}}",
+                "addons",
+                "health-check",
+                "run"
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 200', () => pm.response.to.have.status(200));",
+                  "pm.test('has a result', () => {",
+                  "    const s = pm.response.json().state;",
+                  "    pm.expect(s.checked_at).to.be.a('string');",
+                  "    pm.expect(s.up).to.be.a('boolean');",
+                  "    pm.expect(s.millis).to.be.a('number');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "health check - invalid",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{gateway-url}}/{{gateway-admin-path}}/routes/{{route-id}}/addons/health-check",
+              "host": [
+                "{{gateway-url}}"
+              ],
+              "path": [
+                "{{gateway-admin-path}}",
+                "routes",
+                "{{route-id}}",
+                "addons",
+                "health-check"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"enabled\": true,\n    \"path\": \"health\",\n    \"interval_seconds\": 5\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 422', () => pm.response.to.have.status(422));",
+                  "pm.test('names the broken fields', () => {",
+                  "    const fields = pm.response.json().violations.map(v => v.fieldName);",
+                  "    pm.expect(fields).to.include.members(['path', 'interval_seconds']);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "health check - delete",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{gateway-url}}/{{gateway-admin-path}}/routes/{{route-id}}/addons/health-check",
+              "host": [
+                "{{gateway-url}}"
+              ],
+              "path": [
+                "{{gateway-admin-path}}",
+                "routes",
+                "{{route-id}}",
+                "addons",
+                "health-check"
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 204', () => pm.response.to.have.status(204));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "health check - run deleted",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{gateway-url}}/{{gateway-admin-path}}/routes/{{route-id}}/addons/health-check/run",
+              "host": [
+                "{{gateway-url}}"
+              ],
+              "path": [
+                "{{gateway-admin-path}}",
+                "routes",
+                "{{route-id}}",
+                "addons",
+                "health-check",
+                "run"
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 404', () => pm.response.to.have.status(404));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "rate limit - set",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{gateway-url}}/{{gateway-admin-path}}/routes/{{route-id}}/addons/rate-limit",
+              "host": [
+                "{{gateway-url}}"
+              ],
+              "path": [
+                "{{gateway-admin-path}}",
+                "routes",
+                "{{route-id}}",
+                "addons",
+                "rate-limit"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"enabled\": true,\n    \"limit\": 100,\n    \"period\": \"minute\",\n    \"burst\": 20\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 200', () => pm.response.to.have.status(200));",
+                  "pm.test('returns the saved rate limit', () => {",
+                  "    const r = pm.response.json();",
+                  "    pm.expect(r.enabled).to.eql(true);",
+                  "    pm.expect(r.limit).to.eql(100);",
+                  "    pm.expect(r.period).to.eql('minute');",
+                  "    pm.expect(r.burst).to.eql(20);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "rate limit - disable",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{gateway-url}}/{{gateway-admin-path}}/routes/{{route-id}}/addons/rate-limit/disable",
+              "host": [
+                "{{gateway-url}}"
+              ],
+              "path": [
+                "{{gateway-admin-path}}",
+                "routes",
+                "{{route-id}}",
+                "addons",
+                "rate-limit",
+                "disable"
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 200', () => pm.response.to.have.status(200));",
+                  "pm.test('off, the rest kept', () => {",
+                  "    const r = pm.response.json();",
+                  "    pm.expect(r.enabled).to.eql(false);",
+                  "    pm.expect(r.limit).to.eql(100);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "rate limit - invalid",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{gateway-url}}/{{gateway-admin-path}}/routes/{{route-id}}/addons/rate-limit",
+              "host": [
+                "{{gateway-url}}"
+              ],
+              "path": [
+                "{{gateway-admin-path}}",
+                "routes",
+                "{{route-id}}",
+                "addons",
+                "rate-limit"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"enabled\": true,\n    \"limit\": 0,\n    \"period\": \"day\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 422', () => pm.response.to.have.status(422));",
+                  "pm.test('names the broken fields', () => {",
+                  "    const fields = pm.response.json().violations.map(v => v.fieldName);",
+                  "    pm.expect(fields).to.include.members(['limit', 'period']);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "rate limit - delete",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{gateway-url}}/{{gateway-admin-path}}/routes/{{route-id}}/addons/rate-limit",
+              "host": [
+                "{{gateway-url}}"
+              ],
+              "path": [
+                "{{gateway-admin-path}}",
+                "routes",
+                "{{route-id}}",
+                "addons",
+                "rate-limit"
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 204', () => pm.response.to.have.status(204));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "rate limit - enable deleted",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{gateway-url}}/{{gateway-admin-path}}/routes/{{route-id}}/addons/rate-limit/enable",
+              "host": [
+                "{{gateway-url}}"
+              ],
+              "path": [
+                "{{gateway-admin-path}}",
+                "routes",
+                "{{route-id}}",
+                "addons",
+                "rate-limit",
+                "enable"
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 404', () => pm.response.to.have.status(404));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "cors - set",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{gateway-url}}/{{gateway-admin-path}}/routes/{{route-id}}/addons/cors",
+              "host": [
+                "{{gateway-url}}"
+              ],
+              "path": [
+                "{{gateway-admin-path}}",
+                "routes",
+                "{{route-id}}",
+                "addons",
+                "cors"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"enabled\": true,\n    \"allowed_origins\": [\n        \"https://app.example.com\",\n        \"https://*.example.org\"\n    ],\n    \"allow_credentials\": true\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 200', () => pm.response.to.have.status(200));",
+                  "pm.test('returns the saved cors', () => {",
+                  "    const r = pm.response.json();",
+                  "    pm.expect(r.enabled).to.eql(true);",
+                  "    pm.expect(r.allowed_origins).to.eql(['https://app.example.com', 'https://*.example.org']);",
+                  "    pm.expect(r.allow_credentials).to.eql(true);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "cors - disable",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{gateway-url}}/{{gateway-admin-path}}/routes/{{route-id}}/addons/cors/disable",
+              "host": [
+                "{{gateway-url}}"
+              ],
+              "path": [
+                "{{gateway-admin-path}}",
+                "routes",
+                "{{route-id}}",
+                "addons",
+                "cors",
+                "disable"
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 200', () => pm.response.to.have.status(200));",
+                  "pm.test('off, origins kept', () => {",
+                  "    const r = pm.response.json();",
+                  "    pm.expect(r.enabled).to.eql(false);",
+                  "    pm.expect(r.allowed_origins).to.have.lengthOf(2);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "cors - credentials with any origin",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{gateway-url}}/{{gateway-admin-path}}/routes/{{route-id}}/addons/cors",
+              "host": [
+                "{{gateway-url}}"
+              ],
+              "path": [
+                "{{gateway-admin-path}}",
+                "routes",
+                "{{route-id}}",
+                "addons",
+                "cors"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"enabled\": true,\n    \"allowed_origins\": [\n        \"*\"\n    ],\n    \"allow_credentials\": true\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 400', () => pm.response.to.have.status(400));",
+                  "pm.test('says why', () => pm.expect(pm.response.json().detail).to.include('Credentials'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "cors - invalid",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{gateway-url}}/{{gateway-admin-path}}/routes/{{route-id}}/addons/cors",
+              "host": [
+                "{{gateway-url}}"
+              ],
+              "path": [
+                "{{gateway-admin-path}}",
+                "routes",
+                "{{route-id}}",
+                "addons",
+                "cors"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"enabled\": true,\n    \"allowed_origins\": [\n        \"https://app.example.com/path\"\n    ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 422', () => pm.response.to.have.status(422));",
+                  "pm.test('names the broken origin', () => {",
+                  "    const fields = pm.response.json().violations.map(v => v.fieldName);",
+                  "    pm.expect(fields).to.include('allowed_origins[0]');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "cors - delete",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{gateway-url}}/{{gateway-admin-path}}/routes/{{route-id}}/addons/cors",
+              "host": [
+                "{{gateway-url}}"
+              ],
+              "path": [
+                "{{gateway-admin-path}}",
+                "routes",
+                "{{route-id}}",
+                "addons",
+                "cors"
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 204', () => pm.response.to.have.status(204));"
+                ]
+              }
+            }
+          ]
+        },
+        {
           "name": "delete",
           "request": {
             "method": "DELETE",
@@ -1172,6 +2073,135 @@
                   "    pm.expect(p).to.include.all.keys('type', 'title', 'status', 'detail', 'instance');",
                   "    pm.expect(p.detail).to.eql(`No route matches /no-route-${pm.collectionVariables.get('run')}/x`);",
                   "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "addons",
+      "description": "The add-ons of the whole gateway. Only read here: turning its maintenance on stops the traffic of every route of the environment the collection runs against. The ones of a route are in `routes`.",
+      "item": [
+        {
+          "name": "get",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{gateway-url}}/{{gateway-admin-path}}/addons",
+              "host": [
+                "{{gateway-url}}"
+              ],
+              "path": [
+                "{{gateway-admin-path}}",
+                "addons"
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 200', () => pm.response.to.have.status(200));",
+                  "pm.test('every type, null or an object with enabled', () => {",
+                  "    const m = pm.response.json().maintenance;",
+                  "    pm.expect(m === null || typeof m.enabled === 'boolean').to.be.true;",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "maintenance - set invalid",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{gateway-url}}/{{gateway-admin-path}}/addons/maintenance",
+              "host": [
+                "{{gateway-url}}"
+              ],
+              "path": [
+                "{{gateway-admin-path}}",
+                "addons",
+                "maintenance"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"enabled\": true,\n    \"retry_after\": \"tomorrow\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 400', () => pm.response.to.have.status(400));",
+                  "pm.test('names the field', () => pm.expect(pm.response.json().detail).to.include('retry_after'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "cors - set with credentials",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{gateway-url}}/{{gateway-admin-path}}/addons/cors",
+              "host": [
+                "{{gateway-url}}"
+              ],
+              "path": [
+                "{{gateway-admin-path}}",
+                "addons",
+                "cors"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"enabled\": true,\n    \"allowed_origins\": [\n        \"https://console.example.com\"\n    ],\n    \"allow_credentials\": true\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 400', () => pm.response.to.have.status(400));",
+                  "pm.test('says why', () => pm.expect(pm.response.json().detail).to.include('credentials'));"
                 ]
               }
             }

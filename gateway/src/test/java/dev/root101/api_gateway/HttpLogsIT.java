@@ -42,7 +42,8 @@ class HttpLogsIT extends IntegrationTest {
                 .expectStatus().isOk();
 
         HttpLogEntity log = awaitLog("/nr-" + id + "/hello");
-        assertThat(log.getSourceIp()).isEqualTo("203.0.113.7");
+        //the default `TRUSTED_PROXIES=.*` believes only the nearest proxy: the rightmost entry
+        assertThat(log.getSourceIp()).isEqualTo("10.0.0.5");
         assertThat(log.getUserAgent()).isEqualTo("it-agent");
         assertThat(log.getHttpMethod()).isEqualTo("GET");
         assertThat(log.getResponseCode()).isEqualTo(200);
@@ -111,6 +112,7 @@ class HttpLogsIT extends IntegrationTest {
 
         HttpLogEntity adminLog = awaitLog(log -> log.getPath().equals(marker) && log.getHttpMethod().equals("DELETE"));
         assertThat(awaitLog("/plain-opt-" + id + "/x").getHttpMethod()).isEqualTo("OPTIONS");
+        assertThat(adminLog.getResponseCode()).isEqualTo(404);
         assertThat(adminLog.getRoute().routeName()).isEqualTo("Admin");
         assertThat(adminLog.getRoute().routeId()).isEqualTo("00000000-0000-0000-0000-000000000000");
 
@@ -131,7 +133,7 @@ class HttpLogsIT extends IntegrationTest {
     @Test
     void rejectedAdminRequestsAreLogged() {
         String id = unique();
-        String ip = "192.0.2." + (int) (Math.random() * 200);
+        String ip = uniqueIp();
         String noAuth = "/" + ADMIN_PATH + "/unknown-noauth-" + id;
         String wrongBasic = "/" + ADMIN_PATH + "/unknown-basic-" + id;
         String wrong = "Basic " + HttpHeaders.encodeBasicAuth("admin", "wrong-" + id, null);

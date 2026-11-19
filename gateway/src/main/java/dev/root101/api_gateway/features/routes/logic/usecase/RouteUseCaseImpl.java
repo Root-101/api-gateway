@@ -1,5 +1,7 @@
 package dev.root101.api_gateway.features.routes.logic.usecase;
 
+import dev.root101.api_gateway.features.addons.base.logic.model.AddonsRequest;
+import dev.root101.api_gateway.features.addons.base.logic.usecase.AddonsUseCase;
 import dev.root101.api_gateway.features.routes.data.entity.RouteEntity;
 import dev.root101.api_gateway.features.routes.data.repo.RouteRepo;
 import dev.root101.api_gateway.features.routes.logic.model.RewritePathModel;
@@ -8,7 +10,6 @@ import dev.root101.api_gateway.features.routes.logic.model.RouteConfigResponse;
 import dev.root101.api_gateway.features.routes.utils.RouteDefinitionMapper;
 import dev.root101.api_gateway.features.routes.utils.RouteUpdater;
 import dev.root101.api_gateway.config.LocalizedException;
-import dev.root101.commons.validation.ValidationService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,9 +26,9 @@ import java.time.Duration;
 import java.time.OffsetDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -45,9 +46,10 @@ class RouteUseCaseImpl implements RouteUseCase, SmartInitializingSingleton {
 
     private final RouteRepo routeRepo;
 
-    private final ValidationService vs;
 
     private final TransactionalOperator tx;
+
+    private final AddonsUseCase addonsUseCase;
 
     private final Map<String, RouteEntity> cache = new ConcurrentHashMap<>();
 
@@ -56,14 +58,14 @@ class RouteUseCaseImpl implements RouteUseCase, SmartInitializingSingleton {
             RouteDefinitionWriter routeDefinitionWriter,
             RouteUpdater routeUpdater,
             RouteRepo routeRepo,
-            ValidationService validationService,
-            TransactionalOperator tx
+            TransactionalOperator tx,
+            AddonsUseCase addonsUseCase
     ) {
         this.routeDefinitionWriter = routeDefinitionWriter;
         this.routeUpdater = routeUpdater;
         this.routeRepo = routeRepo;
-        this.vs = validationService;
         this.tx = tx;
+        this.addonsUseCase = addonsUseCase;
     }
 
     /**
@@ -82,8 +84,7 @@ class RouteUseCaseImpl implements RouteUseCase, SmartInitializingSingleton {
                 )
                 .count()
                 .block(Duration.ofSeconds(60));
-        //on this (main) thread: the gateway listeners block, not allowed in a netty thread
-        routeUpdater.updateRoutes();
+        //no refresh needed: the gateway reads the routes on its first request
         log.info("{} routes loaded", count);
     }
 
@@ -114,16 +115,17 @@ class RouteUseCaseImpl implements RouteUseCase, SmartInitializingSingleton {
                 .map(this::buildEntity)
                 .collectList()
                 .flatMap(
-                        entities -> Mono.fromRunnable(() -> vs.validate(entities))
-                                //all or nothing: a failure in the middle must not leave half the routes in db
-                                .then(routeRepo.saveAll(entities).collectList().as(tx::transactional))
+                        //all or nothing: a failure in the middle must not leave half the routes in db
+                        entities -> routeRepo.saveAll(entities).collectList().as(tx::transactional)
                 )
                 .flatMap(saved -> apply(saved, List.of()));
     }
 
     /**
      * Replace every route with the given ones, all or nothing. A route whose name already exists keeps its id
-     * (and its creation date), so its logs still find it; the others get new ids.
+     * (its creation date and its add-ons), so its logs still find it; the others get new ids. The add-ons of each
+     * route: a key with a value is saved, a key `null` is deleted, a key or `addons` not sent is kept (see
+     * {@link AddonsUseCase#restore}).
      *
      * @param requests The routes that will exist after the call
      * @return The routes, as saved
@@ -133,8 +135,7 @@ class RouteUseCaseImpl implements RouteUseCase, SmartInitializingSingleton {
                 .map(this::buildEntity)
                 .collectList()
                 .flatMap(
-                        entities -> Mono.fromRunnable(() -> vs.validate(entities))
-                                .then(routeRepo.findAll().collectMap(RouteEntity::getName))
+                        entities -> routeRepo.findAll().collectMap(RouteEntity::getName)
                                 .flatMap(current -> {
                                     for (RouteEntity entity : entities) {
                                         RouteEntity old = current.remove(entity.getName());
@@ -148,10 +149,26 @@ class RouteUseCaseImpl implements RouteUseCase, SmartInitializingSingleton {
                                     return routeRepo.deleteAll(removed)
                                             .thenMany(routeRepo.saveAll(entities))
                                             .collectList()
+                                            .flatMap(saved -> restoreAddons(saved, requests).thenReturn(saved))
                                             .as(tx::transactional)
-                                            .flatMap(saved -> apply(saved, removed));
+                                            .flatMap(saved -> addonsUseCase.reload()
+                                                    .then(Mono.defer(() -> apply(saved, removed))));
                                 })
                 );
+    }
+
+    /**
+     * The add-ons that come with each route (by name), in the transaction of the caller
+     */
+    private Mono<Void> restoreAddons(List<RouteEntity> saved, List<RouteConfigRequest> requests) {
+        Map<String, AddonsRequest> byName = new HashMap<>();
+        for (RouteConfigRequest request : requests) {
+            if (request.getAddons() != null) byName.put(request.getName(), request.getAddons());
+        }
+        return Flux.fromIterable(saved)
+                .filter(entity -> byName.containsKey(entity.getName()))
+                .concatMap(entity -> addonsUseCase.restore(entity.getRouteId(), byName.get(entity.getName())))
+                .then();
     }
 
     /**
@@ -207,11 +224,13 @@ class RouteUseCaseImpl implements RouteUseCase, SmartInitializingSingleton {
                     entityToEdit.setRouteId(oldRoute.getRouteId());//maintain same id
                     entityToEdit.setCreatedAt(oldRoute.getCreatedAt());//maintain same create_at
 
-                    return Mono.fromRunnable(() -> vs.validate(entityToEdit))
-                            .then(routeRepo.save(entityToEdit))
+                    boolean uriChanged = !entityToEdit.getUri().equals(oldRoute.getUri());
+                    return routeRepo.save(entityToEdit)
                             //same id: the writer replaces the old definition
                             .flatMap(saved -> apply(List.of(saved), List.of()))
-                            .map(List::getFirst);
+                            //before answering: the add-ons in the response already have the new service's result
+                            .flatMap(edited -> (uriChanged ? addonsUseCase.uriChanged(routeId) : Mono.<Void>empty())
+                                    .thenReturn(edited.getFirst()));
                 });
     }
 
@@ -228,14 +247,7 @@ class RouteUseCaseImpl implements RouteUseCase, SmartInitializingSingleton {
      * The route with this id: `400` if the id isn't a UUID, `404` if there is none
      */
     private Mono<RouteEntity> findEntity(String routeId) {
-        UUID id;
-        try {
-            id = UUID.fromString(routeId);
-        } catch (IllegalArgumentException e) {
-            return Mono.error(new LocalizedException(HttpStatus.BAD_REQUEST, "route.id.invalid", routeId));
-        }
-        return routeRepo.findById(id)
-                .switchIfEmpty(Mono.error(new LocalizedException(HttpStatus.NOT_FOUND, "route.not_found", routeId)));
+        return routeRepo.findExisting(routeId);
     }
 
     /**
@@ -269,7 +281,9 @@ class RouteUseCaseImpl implements RouteUseCase, SmartInitializingSingleton {
                                     ).onErrorResume(org.springframework.cloud.gateway.support.NotFoundException.class, e -> Mono.empty())
                             );
                 })
-                .then(Mono.defer(routeUpdater::updateRoutes)); // Update route after all changes
+                .then(Mono.defer(routeUpdater::updateRoutes)) // Update route after all changes
+                //its add-ons were deleted with it in db (cascade)
+                .then(addonsUseCase.reload());
     }
 
     /**
@@ -326,7 +340,8 @@ class RouteUseCaseImpl implements RouteUseCase, SmartInitializingSingleton {
                 entity.getUri(),
                 entity.getRewritePathFrom() != null && entity.getRewritePathTo() != null ? new RewritePathModel(entity.getRewritePathFrom(), entity.getRewritePathTo()) : null,
                 entity.getDescription(),
-                entity.getCreatedAt()
+                entity.getCreatedAt(),
+                null//added by the controller, in the request's language
         );
     }
 }

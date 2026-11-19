@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'dart:ui' show PathMetric;
 
 import 'package:console/app_exporter.dart';
 import 'package:flutter/material.dart';
@@ -123,7 +122,6 @@ class _RoutesRestoreDialogState extends State<RoutesRestoreDialog> {
                     label: intl.actions.back,
                     kind: AppButtonKind.outlined,
                     height: 44,
-                    autofocus: true,
                     onPressed: () => setState(() => _confirming = false),
                   ),
                   const SizedBox(width: 8),
@@ -178,7 +176,13 @@ class _RoutesRestoreDialogState extends State<RoutesRestoreDialog> {
     return SizedBox(
       height: 240,
       child: CustomPaint(
-        painter: _DashedBorderPainter(color: accent),
+        painter: DashedBorder(
+          color: accent,
+          radius: 18,
+          width: 2,
+          dash: 7,
+          gap: 5,
+        ),
         child: Container(
           decoration: BoxDecoration(
             color: _dragging
@@ -252,7 +256,6 @@ class _RoutesRestoreDialogState extends State<RoutesRestoreDialog> {
                         label: intl.restore.selectFile,
                         icon: app.assets.icons.general.folderOpen,
                         kind: AppButtonKind.tonal,
-                        autofocus: true,
                         onPressed: _pick,
                       ),
                     ],
@@ -394,31 +397,4 @@ class _RoutesRestoreDialogState extends State<RoutesRestoreDialog> {
       ),
     );
   }
-}
-
-class _DashedBorderPainter extends CustomPainter {
-  final Color color;
-
-  _DashedBorderPainter({required this.color});
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = color
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 2;
-    final outline = Path()
-      ..addRRect(
-        RRect.fromRectAndRadius(Offset.zero & size, const Radius.circular(18)),
-      );
-    for (final PathMetric metric in outline.computeMetrics()) {
-      for (double d = 0; d < metric.length; d += 12) {
-        canvas.drawPath(metric.extractPath(d, d + 7), paint);
-      }
-    }
-  }
-
-  @override
-  bool shouldRepaint(_DashedBorderPainter oldDelegate) =>
-      oldDelegate.color != color;
 }

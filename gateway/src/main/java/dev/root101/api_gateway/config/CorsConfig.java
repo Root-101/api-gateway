@@ -1,44 +1,59 @@
 package dev.root101.api_gateway.config;
 
-import org.springframework.beans.factory.annotation.Value;
+import dev.root101.api_gateway.features.addons.cors.logic.model.Cors;
+import dev.root101.api_gateway.features.addons.cors.logic.usecase.CorsUseCase;
 import org.springframework.cloud.gateway.filter.headers.HttpHeadersFilter;
+import org.springframework.cloud.gateway.handler.RoutePredicateHandlerMapping;
+import org.springframework.cloud.gateway.route.Route;
+import org.springframework.cloud.gateway.support.ServerWebExchangeUtils;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpHeaders;
-import org.springframework.web.cors.CorsConfiguration;
-import org.springframework.web.cors.reactive.CorsConfigurationSource;
-import org.springframework.web.cors.reactive.UrlBasedCorsConfigurationSource;
+import org.springframework.web.cors.reactive.CorsWebFilter;
 import org.springframework.web.server.ServerWebExchange;
-
-import java.util.List;
+import org.springframework.web.server.WebFilter;
 
 /**
- * CORS of every path: the admin API (the console calls it from another origin) and the proxied routes.
- * The gateway answers the CORS preflights itself (WebFlux never forwards them to a route), so without
- * this a browser can't send a JSON request to a proxied service.
- * Allowed origins come from `CORS_ALLOWED_ORIGINS` (comma separated origin patterns), default `*` (allow all).
- * No credentials: the console sends its token as a header, never a cookie.
- * <br/>
- * Exposed as a `CorsConfigurationSource` so Spring Security applies it inside its own filter chain
- * (`http.cors(...)` in `SecurityConfig`), otherwise 401/403 responses don't get the CORS headers.
+ * CORS comes from the `cors` add-ons (see decision 20), read on each request, so a change applies without a restart.
+ * The gateway answers the CORS preflights itself (they never reach a service), so without this a browser can't send a
+ * JSON request to a proxied service.
+ * <ul>
+ *     <li>Admin API: the gateway's add-on, in Spring Security's chain ({@link #adminCorsFilter}), so its `401`/`403`
+ *     get the CORS headers too</li>
+ *     <li>Proxied routes: the route's add-on when on, else the gateway's, picked by the gateway's own handler mapping
+ *     after it resolves the route (no path matching by hand)</li>
+ * </ul>
+ * `spring.cloud.gateway.server.webflux.globalcors.enabled=false` (application.yml): its listener would replace this
+ * source on every route refresh.
  */
 @Configuration
 public class CorsConfig {
 
-    //TODO: maybe in a far-far-far away version, add the cors customizable via api
-    @Bean
-    public CorsConfigurationSource corsConfigurationSource(@Value("${app.cors.allowed-origins}") List<String> allowedOrigins) {
-        CorsConfiguration corsConfiguration = new CorsConfiguration();
-        corsConfiguration.setAllowedOriginPatterns(allowedOrigins.stream().map(String::trim).toList());
-        corsConfiguration.setAllowedMethods(List.of("*"));                    // Allow any method
-        corsConfiguration.setAllowedHeaders(List.of("*"));                    // Allow any header
-        corsConfiguration.setExposedHeaders(List.of("*"));                    // Expose all headers
-        corsConfiguration.setAllowCredentials(false);                             // Bearer header, no cookies
+    /**
+     * The CORS of the proxied routes, after the gateway resolved the route of the request
+     */
+    public CorsConfig(RoutePredicateHandlerMapping routePredicateHandlerMapping, CorsUseCase corsUseCase) {
+        routePredicateHandlerMapping.setCorsConfigurationSource(exchange -> {
+            Route route = exchange.getAttribute(ServerWebExchangeUtils.GATEWAY_ROUTE_ATTR);
+            Cors cors = corsUseCase.active(route != null ? route.getId() : null);
+            return cors != null ? cors.toConfiguration() : null;
+        });
+    }
 
-        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration("/**", corsConfiguration);
-
-        return source;
+    /**
+     * The gateway's CORS on the admin API, for `SecurityConfig`. Not a bean: WebFlux would also run it outside the
+     * security chain. Only admin paths: Spring's `CorsWebFilter` ends every preflight, a proxied one would never get
+     * its route's CORS.
+     */
+    public static WebFilter adminCorsFilter(CorsUseCase corsUseCase, String adminBasePath) {
+        String prefix = "/" + adminBasePath + "/";
+        CorsWebFilter cors = new CorsWebFilter(exchange -> {
+            Cors gateway = corsUseCase.ofGateway();
+            return gateway != null ? gateway.toConfiguration() : null;
+        });
+        return (exchange, chain) -> (exchange.getRequest().getPath().pathWithinApplication().value() + "/").startsWith(prefix)
+                ? cors.filter(exchange, chain)
+                : chain.filter(exchange);
     }
 
     /**

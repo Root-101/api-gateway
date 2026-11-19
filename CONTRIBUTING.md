@@ -60,6 +60,37 @@ From `gateway/`:
 The coverage report is in `gateway/build/reports/jacoco/test/html`. A bug fix comes with the test
 that would have caught it.
 
+The integration tests start the whole gateway on a random port with a real PostgreSQL and a fake
+upstream service (`support/IntegrationTest`), and call it over HTTP like a client: every admin
+endpoint, the proxying and what gets logged. `ValidationIT` has one row per broken field of every
+request object, on every endpoint that takes it, pinning the `fieldName` and the message.
+
+### Mutation testing
+
+Coverage says a line ran, not that a test would notice it changing. `gateway/tool/mutate.py` breaks
+one business rule at a time (drop a check, move a limit, remove a transaction, change a filter of
+the log search) and runs the one test that must catch it:
+
+```bash
+python tool/mutate.py               # every mutation (about an hour)
+python tool/mutate.py auth. logs.   # only the ids starting with these
+python tool/mutate.py --list
+```
+
+**When:** only before merging to `master` (a release). While working on a feature or a fix, run
+the unit and integration tests (`./gradlew check`), not the mutations.
+
+- **One mutation per rule**, not per line, each naming the single test that must fail
+  (`Class.method`). The rows of `ValidationIT` pin the annotations' output and are not mutated.
+- **Verdicts:** `KILLED` is the expected one. `SURVIVED` means the test misses the rule: fix the
+  test, never drop the mutation. `COMPILE ERROR`, `NO TESTS` or `BAD PATTERN` (the old text is not
+  there exactly once) mean the mutation itself needs fixing.
+- **A new rule gets its mutation** in the list, proven `KILLED` before the commit. It is run by
+  hand, not in `check` or the CI.
+- The script restores each file from the bytes it read, never with `git checkout` (it would wipe
+  uncommitted work), and checks that `git diff -- src/main` is the same before and after. If it is
+  killed midway, the current mutation stays applied: check that diff and undo it by hand.
+
 The CI (`.github/workflows/ci.yml`) runs the tests and the coverage gate, analyzes and builds the
 console, and builds the native image, starts it and runs a smoke test against it. A version tag
 publishes both images to GHCR once the CI passes.
@@ -67,4 +98,23 @@ publishes both images to GHCR once the CI passes.
 ## Commits
 
 One change per commit, with a message like the history's: `Fix [gateway]: …`, `Impr [console]: …`,
-`Impr [docs]: …`. Open the pull request against `main`.
+`Impr [docs]: …`. Work on a branch from `develop` (`feature/…`, `fix/…`) and open the pull request
+against `develop`.
+
+## Releasing
+
+`master` is production; a release goes from `develop` to `master` with a version tag.
+
+1. **Branch:** `release/<version>` from `develop`.
+2. **Version, on both sides:** the gateway and the console always share the version, even when only
+   one of them changed. Bump `gateway/build.gradle` and `console/pubspec.yaml`, the README's status
+   line, the "currently" line in `ROADMAP.md` and the "needs gateway" note in `console/README.md`.
+3. **Changelogs:** date the version in `CHANGELOG.md` and `console/CHANGELOG.md`. The root one also
+   sums up the console's changes (`**Console**`); a side without changes says so.
+4. **Tests:** the CI green on `develop`, and the [mutations](#mutation-testing) all `KILLED`. A test or
+   mutation that fails is fixed on the release branch, which goes into `develop` again.
+5. **Merge:** `release/<version>` into `develop`, then `develop` into `master`, both with `--no-ff`.
+6. **Tag:** the bare version (`6.1.2`, or `6.2.0-rc.1` for a release candidate) on the merge in
+   `master`, then push `master`, `develop` and the tag. The tag runs `.github/workflows/release.yml`:
+   the CI again, then both images to GHCR (`ghcr.io/root-101/api-gateway` and
+   `api-gateway-console`), tagged with the version; `latest` moves only without `-rc`.

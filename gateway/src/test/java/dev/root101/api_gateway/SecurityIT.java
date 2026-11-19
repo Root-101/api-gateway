@@ -78,7 +78,7 @@ class SecurityIT extends IntegrationTest {
 
         webTestClient.get().uri("/%s/routes".formatted(ADMIN_PATH))
                 .header(HttpHeaders.ORIGIN, ORIGIN)
-                .header("X-Forwarded-For", "192.0.2." + (int) (Math.random() * 200))
+                .header("X-Forwarded-For", uniqueIp())
                 .header(HttpHeaders.AUTHORIZATION, "Basic " + HttpHeaders.encodeBasicAuth("admin", "wrong", null))
                 .exchange()
                 .expectStatus().isUnauthorized()
@@ -105,7 +105,7 @@ class SecurityIT extends IntegrationTest {
 
         webTestClient.post().uri("/%s/auth/login".formatted(ADMIN_PATH))
                 .header(HttpHeaders.ORIGIN, ORIGIN)
-                .header("X-Forwarded-For", "192.0.2." + (int) (Math.random() * 200))
+                .header("X-Forwarded-For", uniqueIp())
                 .bodyValue(Map.of("username", "admin", "password", "wrong"))
                 .exchange()
                 .expectStatus().isUnauthorized()
@@ -151,7 +151,7 @@ class SecurityIT extends IntegrationTest {
      */
     @Test
     void bearerToken() {
-        String ip = "203.0.113." + (int) (Math.random() * 200);
+        String ip = uniqueIp();
         String token = loginToken(ip);
 
         webTestClient.get().uri("/%s/routes".formatted(ADMIN_PATH))
@@ -185,11 +185,12 @@ class SecurityIT extends IntegrationTest {
 
     /**
      * A successful login resets the failed attempts: a client using only tokens never sends Basic, which also resets them.
+     * A correct Basic auth resets them too.
      */
     @Test
     void successfulLoginResetsFailedAttempts() {
-        String ip = "203.0.113." + (int) (Math.random() * 200);
-        for (int round = 0; round < 2; round++) {
+        String ip = uniqueIp();
+        for (int round = 0; round < 3; round++) {
             for (int i = 0; i < 4; i++) {
                 webTestClient.post().uri("/%s/auth/login".formatted(ADMIN_PATH))
                         .header("X-Forwarded-For", ip)
@@ -197,13 +198,21 @@ class SecurityIT extends IntegrationTest {
                         .exchange()
                         .expectStatus().isUnauthorized();
             }
-            loginToken(ip);
+            if (round == 1) {
+                webTestClient.get().uri("/%s/routes".formatted(ADMIN_PATH))
+                        .header("X-Forwarded-For", ip)
+                        .header(HttpHeaders.AUTHORIZATION, adminAuth())
+                        .exchange()
+                        .expectStatus().isOk();
+            } else {
+                loginToken(ip);
+            }
         }
     }
 
     /**
      * Preflight requests to the admin answer with CORS and no auth, without credentials (the console sends
-     * a header, never a cookie). Proxied paths get the same CORS.
+     * a header, never a cookie): the gateway's CORS add-on.
      */
     @Test
     void preflightWithoutAuth() {
@@ -217,12 +226,12 @@ class SecurityIT extends IntegrationTest {
                 .expectHeader().exists(HttpHeaders.ACCESS_CONTROL_ALLOW_METHODS)
                 .expectHeader().doesNotExist(HttpHeaders.ACCESS_CONTROL_ALLOW_CREDENTIALS);
 
+        //a path with no route gets no CORS (each route has its own, see CorsIT): an error either way
         webTestClient.options().uri("/any-proxied/path")
                 .header(HttpHeaders.ORIGIN, ORIGIN)
                 .header(HttpHeaders.ACCESS_CONTROL_REQUEST_METHOD, "POST")
                 .exchange()
-                .expectStatus().isOk()
-                .expectHeader().valueEquals(HttpHeaders.ACCESS_CONTROL_ALLOW_ORIGIN, ORIGIN);
+                .expectHeader().doesNotExist(HttpHeaders.ACCESS_CONTROL_ALLOW_ORIGIN);
     }
 
     /**
@@ -231,7 +240,7 @@ class SecurityIT extends IntegrationTest {
      */
     @Test
     void optionsToLoginDoesNotResetTheLockout() {
-        String ip = "198.51.100." + (int) (Math.random() * 200);
+        String ip = uniqueIp();
         for (int round = 0; round < 2; round++) {
             for (int i = 0; i < (round == 0 ? 4 : 1); i++) {
                 webTestClient.post().uri("/%s/auth/login".formatted(ADMIN_PATH))
@@ -257,7 +266,7 @@ class SecurityIT extends IntegrationTest {
      */
     @Test
     void basicOnHealthDoesNotCount() {
-        String ip = "198.51.100." + (int) (Math.random() * 200);
+        String ip = uniqueIp();
         for (int i = 0; i < 8; i++) {
             webTestClient.get().uri("/%s/health".formatted(ADMIN_PATH))
                     .header("X-Forwarded-For", ip)
@@ -292,7 +301,7 @@ class SecurityIT extends IntegrationTest {
      */
     @Test
     void lockoutAfterFailedAttempts() {
-        String attackerIp = "198.51.100." + (int) (Math.random() * 200);
+        String attackerIp = uniqueIp();
         String token = loginToken(attackerIp);
         for (int i = 0; i < 5; i++) {
             webTestClient.post()

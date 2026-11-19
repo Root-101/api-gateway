@@ -10,7 +10,7 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 @EnableScheduling
 public class App {
 
-    public static void main(String[] args) {
+    static void main(String[] args) {
         //every date of the api in UTC (`...Z`), whatever the time zone of the machine
         TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
         SpringApplication.run(App.class, args);

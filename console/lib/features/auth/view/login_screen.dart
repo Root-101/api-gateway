@@ -88,7 +88,7 @@ class _LoginScreenState extends State<LoginScreen> {
       setState(() => _signingIn = true);
     } else if (state is AuthLoginOkState) {
       //no going back to login
-      RoutesScreen.navigator.neglectGo();
+      GatewayMapScreen.navigator.neglectGo();
     } else if (state is AuthLoginErrorState) {
       setState(() {
         _signingIn = false;

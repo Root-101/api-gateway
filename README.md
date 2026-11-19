@@ -11,11 +11,11 @@ and searches the logs, all without redeploying anything.
   routes and logs in PostgreSQL.
 - **`console/`**: the web console, in Flutter Web, served by nginx in its own image.
 
-> **Status: `6.0.0`.** A restructuring release, with breaking changes in the admin API: read
+> **Status: `6.1.2`.** 6.1.0 adds the add-ons (maintenance, health check, rate limit, CORS). 6.0.0 was a restructuring release, with breaking changes in the admin API: read
 > [`CHANGELOG.md`](CHANGELOG.md) before upgrading from 5.x, and deploy the gateway and the console
 > of the same version together.
 
-![The routes in the console](docs/design/screens/04-routes.png)
+![The gateway map in the console](docs/design/screens/21-gateway-map.png)
 
 ## How it works
 
@@ -44,10 +44,11 @@ With a rewrite of the path, the prefix of the route is dropped on the way:
 | **Routes**      | A path (`/users/**`), the service it goes to and an optional rewrite of the path; created, edited and deleted live         |
 | **Protocols**   | HTTP and HTTPS, Server-Sent Events and WebSocket (see [Supported protocols](#supported-protocols))                        |
 | **HTTP logs**   | Every request: when, method, path, route, status, duration, source IP and user agent; searchable, kept 14 days by default |
+| **Add-ons**     | Optional, per route or for the whole gateway: maintenance (`503`), health check of the service, rate limit per IP (`429`), CORS |
 | **Backup**      | Every route to a JSON file, and back, all or nothing                                                                       |
 | **Admin API**   | Everything the console does, for scripts and pipelines: token or Basic auth, with a lockout of brute force by IP           |
 | **Console**     | Routes and logs, in English and Spanish; one image for every environment, configured at start                              |
-| **Operations**  | A health check for load balancers, timeouts to the services (`502`/`504`), a native image of ~150 MB of memory             |
+| **Operations**  | A health check for load balancers, timeouts to the services (`502`/`504`), a native image of ~100 MB of memory             |
 
 |                                                                 |                                                                          |
 |-----------------------------------------------------------------|--------------------------------------------------------------------------|
@@ -106,7 +107,7 @@ exposing it: the gateway warns in its log when it runs with the default ones.
 [![Deploy on Railway](https://railway.app/button.svg)](https://railway.app/template/IR4lVv?referralCode=6_5_ta)
 
 The template deploys PostgreSQL, the gateway and the console (see [`docs/railway.md`](docs/railway.md)).
-The whole stack runs in 200–250 MB of memory, about 1.50–2.00 USD a month.
+The whole stack runs in 100–150 MB of memory, about 1.00–1.50 USD a month.
 
 ### Locally
 
@@ -146,11 +147,18 @@ Environment variables of the gateway, read on start:
 | `DB_USERNAME`, `DB_PASSWORD`  | `postgres`, `admin123`   | Its user and password; change the password                                                                 |
 | `MAINTAIN_LOGS_FOR_DAYS`      | `14`                     | Days the HTTP logs are kept; older ones are deleted every night                                            |
 | `MAX_LOGS_SEARCH_SIZE`        | `10000`                  | The biggest page a log search returns                                                                      |
-| `CORS_ALLOWED_ORIGINS`        | `*`                      | Origins allowed by CORS, comma separated (`https://*.example.com`): the console's, at least. Applies to the admin API and every proxied route; the services' own CORS headers are replaced |
+| `CORS_ALLOWED_ORIGINS`        | `*`                      | :warning: Deprecated, removed in 7.0. Only seeds the gateway's CORS add-on on its first start (comma separated origins, `https://*.example.com`); after that it is ignored and CORS is edited from the console or the admin API (`docs/api.md`, "CORS") |
 | `GATEWAY_CONNECT_TIMEOUT_MS`  | `10000`                  | Wait to connect to a service (`504` after it)                                                              |
 | `GATEWAY_RESPONSE_TIMEOUT`    | `60s`                    | Wait for a service to start answering (`504` after it); empty for no limit, for slow exports or long polling |
+| `TRUSTED_PROXIES`             | `.*`                     | Regex of the IPs of the proxies in front of the gateway: only their `X-Forwarded-*` are believed (client IP of the logs and the lockout) and passed on to the services. Empty = none. `.*` believes only the nearest proxy (the last entry). Narrow it if the gateway can be reached without the proxy (see `SECURITY.md`) |
 | `PORT`                        | `8080`                   | Port of the gateway                                                                                        |
-| `PROFILE`, `APPLICATION_NAME` | `default`, `Api-Gateway` | Spring profile and name; they can stay as they are                                                         |
+| `APPLICATION_NAME`            | `Api-Gateway`            | Name in the logs; it can stay as it is                                                                    |
+
+Variables no longer read: setting them does nothing, they can be taken out of any deployment.
+
+| Variable  | Removed in | Why                                                                     |
+|-----------|------------|-------------------------------------------------------------------------|
+| `PROFILE` | `6.1.0`    | There is no profile-specific config: the Spring profile changed nothing |
 
 The database is set in parts (host, port, name, user, password) instead of as a connection URL
 because the gateway needs two URLs: an `r2dbc:` one for its reactive queries and a `jdbc:` one for
@@ -180,6 +188,19 @@ dates in UTC, and every error a Problem Details (RFC 9457), with its `violations
 | `PUT`    | `/_admin/routes`        | Replaces every route with the ones in the body (same name, same id) |
 | `PUT`    | `/_admin/routes/{id}`   | Edits a route                                                       |
 | `DELETE` | `/_admin/routes/{id}`   | Deletes a route: `204`                                              |
+| `PUT`    | `/_admin/routes/{id}/addons/maintenance` | Sets the maintenance of a route (`503` to its clients while on) |
+| `DELETE` | `/_admin/routes/{id}/addons/maintenance` | Removes it: `204`                                        |
+| `POST`   | `/_admin/routes/{id}/addons/maintenance/enable` | Turns it on (`/disable`: off), keeping the rest   |
+| `PUT`    | `/_admin/routes/{id}/addons/health-check` | Sets the health check of a route (`DELETE`: removes it) |
+| `POST`   | `/_admin/routes/{id}/addons/health-check/run` | Calls it now (`/enable`, `/disable`: on, off) |
+| `PUT`    | `/_admin/routes/{id}/addons/rate-limit` | Sets the rate limit of a route (`429` past it; `DELETE`: removes it) |
+| `POST`   | `/_admin/routes/{id}/addons/rate-limit/enable` | Turns it on (`/disable`: off), keeping the rest |
+| `PUT`    | `/_admin/routes/{id}/addons/cors` | Sets the CORS of a route (`/enable`, `/disable`; `DELETE`: back to the gateway's) |
+| `GET`    | `/_admin/addons`        | The add-ons of the whole gateway: `{"maintenance": …, "rate_limit": …, "cors": …}` |
+| `PUT`    | `/_admin/addons/maintenance` | Sets the maintenance of the whole gateway (`DELETE`: removes it) |
+| `POST`   | `/_admin/addons/maintenance/enable` | Turns it on (`/disable`: off)                           |
+| `PUT`    | `/_admin/addons/rate-limit` | Sets the rate limit of the whole gateway, per IP on every route (`/enable`, `/disable`; `DELETE`: removes it) |
+| `PUT`    | `/_admin/addons/cors`   | Replaces the CORS of the whole gateway (always on)                  |
 | `GET`    | `/_admin/http-logs`     | Searches the HTTP logs: page and filters in the query               |
 
 Every call, with real requests and responses and its errors: [`docs/api.md`](docs/api.md). The
@@ -200,7 +221,7 @@ major for its fixes. What changed in each one: [`CHANGELOG.md`](CHANGELOG.md).
 | **3.x** | The admin API: routes changed live                                                                                     |
 | **4.x** | PostgreSQL keeps the routes across restarts; the native image (~500 MB → ~150 MB of memory) and the first console      |
 | **5.x** | The HTTP logs                                                                                                          |
-| **6.x** | A restructuring: Java 25 and Spring Boot 4, login tokens, lockout, timeouts, health check, a new console, tests and CI |
+| **6.x** | A restructuring: Java 25 and Spring Boot 4, login tokens, lockout, timeouts, health check, a new console, tests and CI; 6.1, the add-ons |
 
 ## Documentation
 

@@ -9,7 +9,7 @@ reads where the gateway is at container start, from `GATEWAY_SERVICE_URL` (requi
 `ADMIN_PATH` (optional, `_admin` by default, like the gateway's) (see
 [`console/README.md`](../console/README.md)), and talks to it only through the
 [admin API](api.md), with the token of the login as `Authorization: Bearer …`. So the gateway must
-allow the console's origin in `CORS_ALLOWED_ORIGINS`.
+allow the console's origin in its CORS add-on (`*` by default; see [CORS](api.md#cors)).
 
 The console uses hash URLs: the screen goes after `#` (`https://console.example.com/#/logs`). Every
 screen has its own URL, so it can be bookmarked, reloaded and reached with back and forward.
@@ -47,7 +47,7 @@ tries from the same IP, the gateway stops taking its logins for `ADMIN_LOCKOUT_M
 whose message says how long to wait). In a narrow
 window the brand goes above the form.
 
-Logged out, any URL brings you here; logged in, this one takes you to Routes.
+Logged out, any URL brings you here; logged in, this one takes you to the [Gateway map](#gateway-map), the start screen.
 
 **Behind it:** [`GET /_admin/health`](api.md#health) for the badge, and
 [`POST /_admin/auth/login`](api.md#log-in) with `{"username", "password"}`, which answers the token
@@ -57,7 +57,8 @@ Logged out, any URL brings you here; logged in, this one takes you to Routes.
 
 ![The rail, expanded](design/screens/20-rail-expanded.png)
 
-The rail on the left: **Routes** and **Http logs**; at its foot the **language** (English or
+The rail on the left: **Gateway map** (see [Gateway map](#gateway-map)), **Routes** and **Http
+logs**; at its foot the **language** (English or
 Spanish; the browser's at first, the chosen one after that), **Logout** and the version of the
 console. Every request carries it as `Accept-Language`, so the messages of the gateway (a field
 it rejects, a route that doesn't exist) come in that language too
@@ -74,7 +75,12 @@ mouse or keyboard activity.
 
 Every route of the gateway as a card: its name and description, **FROM** (the public URL it
 answers, the gateway's URL plus its path) and **TO** (where it forwards, with the rewrite of the
-path applied), each with a button to copy it. Each card has **Edit**, **Duplicate** and **Delete**.
+path applied), each with a button to copy it. Each card has **Edit**, **Duplicate** and
+**Delete**, and at its foot a badge per add-on (**Health · every 30 s**, **Maintenance · on/off**,
+**Rate limit · 60/min**, **CORS · app.com**)
+and **+ Add-ons**; both open the panel of the route on the right (see [Add-ons](#add-ons)). Next to
+the name, **MAINT** when its maintenance is on, or **PAUSED** for every route while the whole
+gateway is in maintenance; otherwise **LIVE** or **DOWN** from its [health check](#health-check).
 The search at the top filters by name, path or URI, in the browser.
 
 ![No routes yet](design/screens/05-routes-empty.png)
@@ -133,7 +139,9 @@ Asks first, with the route it deletes: requests to its path stop being forwarded
 ### Backup and restore
 
 **Backup** downloads every route as a JSON file, `routes-backup-<date>.json`: a list with the same
-fields as the form.
+fields as the form, and the add-ons of each route (`addons`, as the gateway sends them, without what
+the gateway writes itself). The gateway's own add-ons (CORS, maintenance, rate limit) are not in it,
+and restore leaves them as they are.
 
 ![Restore routes](design/screens/10-routes-restore.png)
 
@@ -143,11 +151,150 @@ list of routes, or that repeats a name (case-sensitive, like the API), says why 
 ![Restore routes, confirm](design/screens/11-routes-restore-confirm.png)
 
 Then it asks to confirm, with the routes there are now and the ones in the file side by side:
-**every current route is removed** and replaced with the ones in the file, all or nothing. The
-routes get new ids, so the logs of the old ones no longer find them by route.
+**every current route is replaced** by the ones in the file, all or nothing. Routes are matched by
+name (case-sensitive): one that already exists keeps its id, its logs and its add-ons, unless the
+file says otherwise for an add-on (`null` removes it); one that isn't in the file is removed with
+its add-ons; a new name is a new route.
 
 **Behind it:** [`GET /_admin/routes`](api.md#list-routes) for the backup and
 [`PUT /_admin/routes`](api.md#replace-every-route) to restore.
+
+## Gateway map
+
+![Gateway map](design/screens/21-gateway-map.png)
+
+**URL:** `/#/map` · the start screen
+
+The gateway as a diagram: its public URL on top, the gateway below it and a branch to each route,
+with the path of the route on it. The gateway shows its add-ons at the bottom: **Maintenance** and
+**Rate limit** with **on** or **off** when configured (orange and blue when on), and **CORS**,
+always there. Each route card shows its name, description, the host it
+forwards to and its add-ons (**Redirect only** when it has none). A branch is dashed lilac and
+moving while the route forwards, dotted orange while it answers `503`, dotted red while its health
+check says **DOWN** (it still forwards). Drag to move, the wheel to
+zoom (40 % to 200 %), or the **−**, **+** and **Fit** buttons. **Create route** opens the usual
+form.
+
+A click on a route opens its panel on the right and dims the others; a click on the gateway opens
+the gateway's; a click on the background closes it (see [Add-ons](#add-ons)). **Open in Routes**
+goes to Routes with the search set to that route. The button next to the panel's close opens it
+as the big panel, in the middle of the screen with its blocks in three columns; the same button
+takes it back to the side, and a click outside closes it.
+
+![Gateway map, no routes yet](design/screens/23-gateway-map-empty.png)
+
+Without routes the map shows an **Add route** card that opens the form.
+
+## Add-ons
+
+Every route forwards its requests; everything else is an add-on, added, edited, turned on or off
+and removed on its own. This version has four: **health check** (routes only), **maintenance**,
+**rate limit** and **CORS** (all three also for the whole gateway, from its panel in the map).
+Each block ends with a slide across it to turn it on or off, with a line on what happens now. The
+gateway's panel starts with an **Overview**: its public URL and how many routes there are, are
+health-checked, down, in maintenance, rate-limited and have their own CORS.
+The panel of a route (from the map, or from the badges and **+ Add-ons** of its card in Routes)
+shows its redirect, its add-ons and, under **Add to this route**, the ones it doesn't have yet (the
+types the gateway lists for it).
+
+### Health check
+
+The gateway calls a path of the route's service on its own, every so often, and keeps the last
+result: **LIVE** when it answered a 2xx, **DOWN** otherwise. It never changes the routing: a route
+that is down still gets its requests.
+
+| In the block                          | What it does                                                                     |
+|---------------------------------------|----------------------------------------------------------------------------------|
+| **Add to this route → Health check**  | Adds it, on, calling `/health` every 30 s                                        |
+| **Run now** (play)                    | Calls it now and shows the result (up to 5 s), also while it's off               |
+| **Check on a schedule** (slide)       | On: called every interval; off: no calls, **Every** says `Off · every 30 s` and **Run now** still works. Keeps the endpoint, interval and last result |
+| **Edit** (pencil)                     | **Endpoint** (added to the route's URI) and **Check every** (10 s to 1 h)        |
+| **Remove** (trash)                    | Asks in the block itself, then removes it with its last result                   |
+
+The block shows the endpoint, the interval and the **Last check**, ending in the state while it's on
+(`12 s ago · 200 in 18 ms · LIVE`, `no answer · DOWN` when the service couldn't be reached or didn't
+answer in 5 s). The (i) beside its name, as beside every add-on's, explains it in a popup. The gateway doesn't push the
+results: the console rereads the routes every 10 seconds while one of them has it on.
+
+**Behind it:** the [health check endpoints](api.md#health-check) of a route
+(`/_admin/routes/{id}/addons/health-check`: `PUT`, `DELETE`, `POST …/enable`, `…/disable`, `…/run`).
+
+### Rate limit
+
+Past a number of requests per second, minute or hour from the same client IP, a `429 Too Many
+Requests` with `Retry-After`, without reaching the service. A route's counts that route only; the
+gateway's counts each IP on every route together; with both, both apply. Maintenance (`503`) is
+checked first, and the admin API is never limited.
+
+| In the block                        | What it does                                                                       |
+|-------------------------------------|------------------------------------------------------------------------------------|
+| **Add to this route → Rate limit**  | Adds it, off, at 60 per minute with a burst of 10                                  |
+| **Limit requests** (slide)          | Turns it on or off, keeping the rest                                               |
+| **Edit** (pencil)                   | **Requests**, **Burst** (the most at once; empty: the same as the limit) and the period (second, minute, hour) |
+| **Remove** (trash)                  | Asks in the block itself, then removes it: it shows under **Add to …** again      |
+
+Any change (save, on, off, remove) starts every count from zero.
+
+**Behind it:** the [rate limit endpoints](api.md#rate-limit) of a route
+(`/_admin/routes/{id}/addons/rate-limit`: `PUT`, `DELETE`, `POST …/enable`, `POST …/disable`) and
+of the gateway (`/_admin/addons/rate-limit`: `PUT`, `DELETE`, `POST …/enable`, `POST …/disable`).
+
+### CORS
+
+Which browser origins may call it, and whether they may send cookies. Only browsers apply it
+(curl, Postman and servers aren't affected), and the gateway answers the preflights itself. The
+gateway's is always there: it covers the admin API (this console) and every route without its own
+CORS, or with it off.
+
+| In the block                   | What it does                                                                        |
+|--------------------------------|-------------------------------------------------------------------------------------|
+| **Add to this route → CORS**   | Adds it, off, with the gateway's origins                                            |
+| **Own CORS** (slide)           | Routes only. On: its origins apply; off: the gateway's                              |
+| **Edit** (pencil)              | **Allowed origins** as chips (type one, Enter, checked right away; the trash takes it out): `https://app.com`, `https://*.example.com` or `*`. Routes also have **Allow credentials**, locked off while an origin lets in any site (`*`, or a `*` in the host other than `*.domain.com`) |
+| **Remove** (trash)             | Routes only. Asks in the block itself; the route uses the gateway's CORS again       |
+
+The gateway's has no slide, no remove and no credentials (the admin API uses a token). Editing it
+warns when the list leaves out the origin this console runs on: the gateway rejects that save, so a
+browser can't lock itself out (curl can still fix any list).
+
+While the deprecated `CORS_ALLOWED_ORIGINS` is still set, a banner on top of every screen says so:
+blue when its origins were moved into the gateway's CORS (it can be closed), yellow with both lists
+when it differs and is ignored (the add-on applies). It goes away once the variable is removed from
+the deploy and the gateway restarted.
+
+**Behind it:** the [CORS endpoints](api.md#cors) of a route (`/_admin/routes/{id}/addons/cors`:
+`PUT`, `DELETE`, `POST …/enable`, `POST …/disable`) and of the gateway (`/_admin/addons/cors`:
+`PUT` only).
+
+### Maintenance
+
+A route in maintenance answers every request with a `503` without reaching its service; the whole
+gateway can be put in maintenance too, from its own panel in the map, and then every route does.
+The console, `/health` and the admin API keep working. It never turns off by itself.
+
+| In the block        | What it does                                                                                       |
+|---------------------|----------------------------------------------------------------------------------------------------|
+| **Add to this route → Maintenance mode** | Adds it, off, with the gateway's default message                              |
+| The slide           | Right turns it on, left turns it off (or the arrow keys), no confirmation                           |
+| **Edit** (pencil)   | **503 message**, optional, up to 500 characters (empty: the default one, marked *default*), and **Back around**, optional: callers get it as `Retry-After` while it's ahead |
+| **Remove** (trash)  | Asks in the block itself, then removes it with its message and time: it shows under **Add to …** again |
+
+Under its state, how long it has been on, or how long the last window lasted, in large units (`2h 30 min`,
+`1d 3h`); it moves on by itself every 10 seconds, like the gateway node of the map and the banner's countdown.
+
+![Gateway map, the gateway in maintenance](design/screens/22-gateway-map-maintenance.png)
+
+While the whole gateway is in maintenance it wins: every route answers its message and shows
+**PAUSED**, and their slides are locked (**Controlled by the gateway**) until it's off; they keep
+their own settings. A banner on every screen says so, with when it is back, **Edit** (the map with
+the gateway's panel open) and **Turn off** (which keeps the message and the time).
+
+![Routes while the gateway is in maintenance](design/screens/24-routes-gateway-maintenance.png)
+
+**Behind it:** [`GET /_admin/routes`](api.md#list-routes) and [`GET /_admin/addons`](api.md#add-ons)
+to draw it, and the [maintenance endpoints](api.md#maintenance) of a route
+(`/_admin/routes/{id}/addons/maintenance`: `PUT`, `DELETE`, `POST …/enable`, `POST …/disable`) and
+of the gateway (`/_admin/addons/maintenance`: `PUT`, `DELETE`, `POST …/enable`, `POST …/disable`).
 
 ## Http logs
 
@@ -218,5 +365,5 @@ environment variables of the credentials.
 
 **URL:** `/#/not-found?path=…`
 
-A URL of the console that doesn't exist, with the one asked for and buttons to Routes and Http
+A URL of the console that doesn't exist, with the one asked for and buttons to the Gateway map and Http
 logs.
