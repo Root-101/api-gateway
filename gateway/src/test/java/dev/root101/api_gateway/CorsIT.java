@@ -193,7 +193,7 @@ class CorsIT extends IntegrationTest {
 
         admin(HttpMethod.PUT, routePath(routeId)).bodyValue(cors(true, List.of("*"), true)).exchange()
                 .expectStatus().isBadRequest()
-                .expectBody().jsonPath("$.detail").isEqualTo("Credentials can't be allowed with an origin that matches every origin (*)");
+                .expectBody().jsonPath("$.detail").isEqualTo("Credentials can't be allowed with an origin that lets in any site (*, or a * in the host other than *.domain.com)");
         admin(HttpMethod.PUT, routePath(routeId)).bodyValue(cors(true, List.of(APP, "https://*"), true)).exchange()
                 .expectStatus().isBadRequest();
         admin(HttpMethod.GET, "/routes/" + routeId).exchange().expectBody().jsonPath("$.addons.cors").isEmpty();

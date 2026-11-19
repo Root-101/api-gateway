@@ -33,6 +33,13 @@ final class TokenBucket {
     }
 
     /**
+     * Returns one request taken, up to `capacity`
+     */
+    synchronized void giveBack() {
+        tokens = Math.min(capacity, tokens + 1);
+    }
+
+    /**
      * Back to full: as if never used, so it can be forgotten
      */
     synchronized boolean full(long now) {

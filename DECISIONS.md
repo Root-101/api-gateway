@@ -220,7 +220,8 @@ with a token bucket in memory: `limit` per `period`, up to `burst` at once.
   total load would be another add-on (concurrency), not this one.
 - With both, both apply (the gateway's first): not "the gateway wins" as in maintenance. The
   gateway's stops a client that spreads its requests over many routes, a route's protects a weaker
-  service; neither replaces the other.
+  service; neither replaces the other. A request the route's stops gives the gateway's its request
+  back: it never went, so a client retrying a busy route doesn't lose the others.
 - Only the IP for now: an API key belongs to the authentication towards the services (roadmap).
   A header chosen by the admin would be faked by the client unless the service checks it.
 - Only `Retry-After` on the `429`, no `RateLimit-*` headers on every answer: they are still an IETF
@@ -229,7 +230,8 @@ with a token bucket in memory: `limit` per `period`, up to `burst` at once.
 - In memory, never a write per request, and every count starts again on any change (the buckets of
   the old limits are dropped whole): simpler than moving each count to a new limit. With several
   instances each counts on its own; Redis then (see 6). A bucket full again is forgotten every
-  minute, so the memory follows the clients of the last minute.
+  minute, so the memory follows the clients of the last period. Past 100,000 counts at once (many
+  IPs: IPv6, or faked ones) every count starts again: bounded memory over exact counts.
 
 ## 20. CORS as an add-on of the gateway and of each route
 

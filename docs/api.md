@@ -57,7 +57,8 @@ can't try credentials again until the window ends: the login and every request w
 a `429`, also with the right password. A valid token keeps working from that IP, and so does the
 health check. Proxied traffic is not affected. Only correct credentials reset the count. The client
 IP is the connection's, or, when the connection comes from a proxy of `TRUSTED_PROXIES`, the last
-entry of `X-Forwarded-For` that isn't one of those proxies (the first one with the default `.*`).
+entry of `X-Forwarded-For` that isn't one of those proxies. With the default `.*` (any IP is a
+proxy) only the nearest proxy is believed: the last entry, the one it wrote.
 
 ```http
 HTTP/1.1 429 Too Many Requests
@@ -488,7 +489,8 @@ The [add-ons](#add-ons) of each route (a backup has them): a route without `addo
 it had; in `addons`, a key with a value is saved, a key `null` deletes that add-on, a key left out is
 kept, and a key this version doesn't know is ignored (a backup of a newer gateway), as the read-only
 `default_message` and `state`. Their errors name the route: `[0].addons.maintenance.enabled`. A route
-not in the body is deleted with its add-ons.
+not in the body is deleted with its add-ons. The gateway's own add-ons are not part of a backup:
+the restore leaves them as they are.
 
 ```json
 [
@@ -795,7 +797,8 @@ Content-Type: application/problem+json
 ```
 
 - The gateway's counts each IP on **every route together**; a route's, on that route only. With
-  both, a request has to pass both: the gateway's first, then the route's.
+  both, a request has to pass both: the gateway's first, then the route's. A request the route's
+  stops doesn't count for the gateway's.
 - Only the proxied traffic: the admin API has its own lockout. A route in
   [maintenance](#maintenance) answers its `503` first, and those requests don't count.
 - Any change to a rate limit (set, enable, disable, delete), a [restore](#replace-every-route) or
@@ -841,8 +844,10 @@ PUT /_admin/addons/cors
 - `PUT` creates or replaces it: `200` with it as saved, in use right away. `422` with the broken
   fields (`enabled`, `allowed_origins`, `allowed_origins[1]` for a bad origin).
 - `400` (only a `detail`, no field) when it breaks a rule:
-  - `allow_credentials` with an origin that lets every origin in (`*`, `https://*`): `Credentials
-    can't be allowed with an origin that matches every origin (*)`.
+  - `allow_credentials` with an origin that lets in any site: `*`, or a `*` in the host other than
+    a leading `*.` before a domain with a dot (`https://*`, `https://*.*`, `https://*.com`; `https://*.example.com`
+    is fine): `Credentials can't be allowed with an origin that lets in any site (*, or a * in the
+    host other than *.domain.com)`.
   - On the gateway, `enabled: false`: `The gateway's CORS can't be turned off: ...`.
   - On the gateway, `allow_credentials: true`: `The gateway's CORS can't allow credentials: ...`.
   - On the gateway, sent from a browser whose `Origin` the new origins don't allow: `These origins

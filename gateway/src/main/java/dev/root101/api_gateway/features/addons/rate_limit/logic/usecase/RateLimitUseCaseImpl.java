@@ -27,9 +27,10 @@ import java.util.concurrent.ConcurrentHashMap;
  * The rate limit of the gateway and of each route, and the requests each client ip has left, all in memory: every
  * proxied request reads it and nothing is written to db per request. Per instance (see decision 6).
  * <br/>
- * shortcut: one bucket per client ip and limit, forgotten once full again (every minute); many distinct ips within
- * that minute (a spoofed `X-Forwarded-For` with `TRUSTED_PROXIES=.*` exposed directly) grow the map. Move to a
- * bounded cache, or Redis with several replicas, if that is ever seen.
+ * shortcut: one bucket per client ip and limit, forgotten once full again (up to its `period`, an hour); past
+ * MAX_BUCKETS of them (many distinct ips: IPv6, or a spoofed `X-Forwarded-For` with the gateway exposed directly)
+ * every count starts again instead of running out of memory. Move to a bounded LRU cache, or Redis with several
+ * replicas, if that is ever seen.
  */
 @Service
 class RateLimitUseCaseImpl implements RateLimitUseCase, SmartInitializingSingleton {
@@ -38,6 +39,9 @@ class RateLimitUseCaseImpl implements RateLimitUseCase, SmartInitializingSinglet
 
     //the key of the gateway's buckets, a route id never is empty
     private static final String GATEWAY = "";
+
+    //~200 bytes each: ~20 MB at most
+    static final int MAX_BUCKETS = 100_000;
 
     private final AddonRepo addonRepo;
     private final RouteRepo routeRepo;
@@ -79,14 +83,35 @@ class RateLimitUseCaseImpl implements RateLimitUseCase, SmartInitializingSinglet
         long now = System.nanoTime();
         //the gateway's first: a request it stops never counts for the route
         long wait = take(current, current.gateway(), GATEWAY, clientIp, now);
-        if (wait == 0) wait = take(current, current.routes().get(routeId), routeId, clientIp, now);
+        if (wait == 0) {
+            wait = take(current, current.routes().get(routeId), routeId, clientIp, now);
+            //and one the route's stops gives the gateway's its request back: it never went
+            if (wait > 0) giveBack(current, clientIp);
+        }
         //rounded up: never tells to come back before the time
         return wait == 0 ? 0 : Math.max(1, (wait + 999_999_999) / 1_000_000_000);
     }
 
     private static long take(State current, RateLimit config, String scope, String clientIp, long now) {
         if (config == null || !config.on()) return 0;
-        return current.buckets().computeIfAbsent(scope + " " + clientIp, key -> new TokenBucket(config, now)).take(now);
+        String key = scope + " " + clientIp;
+        return bounded(current.buckets(), key, MAX_BUCKETS).computeIfAbsent(key, k -> new TokenBucket(config, now)).take(now);
+    }
+
+    private static void giveBack(State current, String clientIp) {
+        TokenBucket bucket = current.buckets().get(GATEWAY + " " + clientIp);
+        if (bucket != null) bucket.giveBack();
+    }
+
+    /**
+     * Empties the map when a new key would pass `max`: every count starts again, the memory stays bounded
+     */
+    static <V> Map<String, V> bounded(Map<String, V> map, String key, int max) {
+        if (map.size() >= max && !map.containsKey(key)) {
+            log.warn("More than {} rate limit counts at once: every count starts again", max);
+            map.clear();
+        }
+        return map;
     }
 
     /**

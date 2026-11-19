@@ -11,6 +11,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.SmartInitializingSingleton;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
@@ -86,6 +87,8 @@ class CorsUseCaseImpl implements CorsUseCase, SmartInitializingSingleton {
                     log.info("Creating the gateway's CORS add-on with the origins {}", cors.allowedOrigins());
                     return write(newAddon(null), cors);
                 }))
+                //two instances starting together: the other one created it first
+                .onErrorResume(DataIntegrityViolationException.class, e -> Mono.empty())
                 .then();
     }
 

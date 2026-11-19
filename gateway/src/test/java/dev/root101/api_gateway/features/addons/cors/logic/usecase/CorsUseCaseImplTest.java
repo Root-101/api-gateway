@@ -88,5 +88,11 @@ class CorsUseCaseImplTest {
         assertThat(new Cors(true, List.of("https://a.com", "https://*"), true).allowsAnyOrigin()).isTrue();
         assertThat(new Cors(true, List.of("https://*:8080"), true).allowsAnyOrigin()).isTrue();
         assertThat(new Cors(true, List.of("https://*.a.com", "http://localhost:[*]"), true).allowsAnyOrigin()).isFalse();
+        //a wildcard host that isn't `*.` before a domain with a dot lets in sites nobody listed
+        assertThat(new Cors(true, List.of("https://*.*"), true).allowsAnyOrigin()).isTrue();
+        assertThat(new Cors(true, List.of("https://*.com"), true).allowsAnyOrigin()).isTrue();
+        assertThat(new Cors(true, List.of("https://a*.com"), true).allowsAnyOrigin()).isTrue();
+        assertThat(new Cors(true, List.of("http*://*.*:[*]"), true).allowsAnyOrigin()).isTrue();
+        assertThat(new Cors(true, List.of("https://*.a.com:8443", "*://a.com", "http://[::1]:[*]"), true).allowsAnyOrigin()).isFalse();
     }
 }

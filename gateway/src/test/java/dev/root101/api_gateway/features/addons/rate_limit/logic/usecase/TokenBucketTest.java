@@ -44,6 +44,27 @@ class TokenBucketTest {
     }
 
     @Test
+    void giveBackUpToItsSize() {
+        TokenBucket bucket = new TokenBucket(new RateLimit(true, 1, "hour", null), 0);
+        bucket.giveBack();
+        assertThat(bucket.take(0)).isZero();
+        assertThat(bucket.take(0)).isPositive();
+        bucket.giveBack();
+        assertThat(bucket.take(0)).isZero();
+    }
+
+    /**
+     * Past its size the map starts again: the memory stays bounded
+     */
+    @Test
+    void bucketsAreBounded() {
+        java.util.Map<String, Integer> map = new java.util.HashMap<>(java.util.Map.of("a", 1, "b", 2));
+        assertThat(RateLimitUseCaseImpl.bounded(map, "a", 2)).containsOnlyKeys("a", "b");
+        assertThat(RateLimitUseCaseImpl.bounded(map, "c", 3)).containsOnlyKeys("a", "b");
+        assertThat(RateLimitUseCaseImpl.bounded(map, "c", 2)).isEmpty();
+    }
+
+    @Test
     void periods() {
         assertThat(new TokenBucket(new RateLimit(true, 1, "hour", null), 0).take(0)).isZero();
         TokenBucket hour = new TokenBucket(new RateLimit(true, 1, "hour", null), 0);

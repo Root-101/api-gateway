@@ -88,6 +88,9 @@ class RateLimitIT extends IntegrationTest {
                 .jsonPath("$.limit").isEqualTo(2)
                 .jsonPath("$.period").isEqualTo("minute")
                 .jsonPath("$.burst").isEmpty();
+        //and in the route's `addons`
+        admin(HttpMethod.GET, "/routes/" + routeId).exchange()
+                .expectBody().jsonPath("$.addons.rate_limit.limit").isEqualTo(2);
 
         String ana = ip();
         get("/rl-%s/1".formatted(id), ana).expectStatus().isOk();
@@ -199,6 +202,10 @@ class RateLimitIT extends IntegrationTest {
             String luis = ip();
             get("/rlg3-%s/x".formatted(id), luis).expectStatus().isOk();
             get("/rlg3-%s/x".formatted(id), luis).expectStatus().isEqualTo(HttpStatus.TOO_MANY_REQUESTS);
+            //the one the route's stopped never counted for the gateway's: 2 left of 3
+            get("/rlg1-%s/x".formatted(id), luis).expectStatus().isOk();
+            get("/rlg1-%s/x".formatted(id), luis).expectStatus().isOk();
+            get("/rlg1-%s/x".formatted(id), luis).expectStatus().isEqualTo(HttpStatus.TOO_MANY_REQUESTS);
 
             //the gateway's stops a route that has room of its own
             String eva = ip();

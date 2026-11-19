@@ -28,13 +28,15 @@ class HttpLogsWebFilterTest {
     }
 
     /**
-     * Every proxy trusted (the default `.*`): the first entry, as before `TRUSTED_PROXIES`.
+     * Every ip trusted (the default `.*`): only the nearest proxy is believed, its rightmost entry. The entries on its
+     * left can be written by the client (a spoofed ip to dodge the rate limit or the lockout).
      */
     @Test
     void clientIpTrustingAnyProxy() {
         assertThat(clientIp(null, ANY)).isEqualTo("10.1.1.1");
         assertThat(clientIp("203.0.113.7", ANY)).isEqualTo("203.0.113.7");
-        assertThat(clientIp(" 203.0.113.7 , 10.0.0.1, 10.0.0.2", ANY)).isEqualTo("203.0.113.7");
+        assertThat(clientIp(" 1.2.3.4 , 203.0.113.7 ", ANY)).isEqualTo("203.0.113.7");
+        assertThat(clientIp("spoofed, 10.0.0.1, 10.0.0.2", ANY)).isEqualTo("10.0.0.2");
         assertThat(clientIp("", ANY)).isEqualTo("10.1.1.1");
         //an empty entry: the client is unknown from there on, the last entry read is kept
         assertThat(clientIp(" , 10.0.0.1", ANY)).isEqualTo("10.0.0.1");

@@ -41,10 +41,15 @@ public record Cors(
     }
 
     /**
-     * Whether a pattern lets every origin in: `*`, or a host that is only a wildcard (`https://*`, `https://*:8080`)
+     * Whether a pattern lets in origins nobody listed: `*`, or a `*` in the host other than a leading `*.` before a
+     * domain with a dot (`https://*`, `https://*:8080`, `https://*.*`, `https://*.com`, `https://a*.com`). The port
+     * (`:[*]`) doesn't count.
      */
     public boolean allowsAnyOrigin() {
-        return allowedOrigins.stream().anyMatch(origin -> origin.equals("*") || origin.matches(".*://\\*([^.].*)?"));
+        return allowedOrigins.stream().anyMatch(origin -> {
+            String host = origin.replaceFirst("^[^:]*://", "").replaceFirst(":(\\[[^]]*]|[^:\\]]*)$", "");
+            return origin.equals("*") || host.contains("*") && !host.matches("\\*\\.[^*]+\\.[^*]+");
+        });
     }
 
     /**

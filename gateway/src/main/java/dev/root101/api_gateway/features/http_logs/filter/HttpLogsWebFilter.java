@@ -135,15 +135,18 @@ public class HttpLogsWebFilter implements WebFilter {
      * The client: the connection's ip, unless it is a trusted proxy. Then `X-Forwarded-For` ("client, proxy1, proxy2",
      * each proxy appends who it got the request from) is read from the right, and the first entry that is not a
      * trusted proxy is the client: the entries on its left were written by the client itself, so they are never believed.
+     * A regex that trusts any ip (the default `.*`) trusts only the nearest proxy, its rightmost entry: walking on would
+     * end on the leftmost one, written by the client.
      */
     public static String getClientIp(ServerWebExchange exchange, TrustedProxies trustedProxies) {
         String tempClientIp = connectionIp(exchange);
         String forwardedFor = exchange.getRequest().getHeaders().getFirst("X-Forwarded-For");
         if (forwardedFor != null && isTrustedProxy(tempClientIp, trustedProxies)) {
+            boolean trustsAny = trustedProxies.isTrusted("not-an-ip");
             String[] hops = forwardedFor.split(",");
             for (int i = hops.length - 1; i >= 0 && !hops[i].isBlank(); i--) {
                 tempClientIp = hops[i].trim();
-                if (!trustedProxies.isTrusted(tempClientIp)) break;
+                if (trustsAny || !trustedProxies.isTrusted(tempClientIp)) break;
             }
         }
         //column is varchar(50) (IPv6 max is 45), never lose the log for a weird header
