@@ -74,10 +74,10 @@ class NotFoundScreen extends StatelessWidget {
                 runSpacing: 10,
                 children: [
                   AppButton(
-                    label: intl.notFound.goToRoutes,
+                    label: intl.notFound.goToMap,
                     height: 42,
                     onPressed: () =>
-                        app.navigator.go(RoutesScreen.navigator.name),
+                        app.navigator.go(GatewayMapScreen.navigator.name),
                   ),
                   AppButton(
                     label: intl.notFound.openLogs,

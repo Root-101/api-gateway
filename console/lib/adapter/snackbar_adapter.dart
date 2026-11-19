@@ -1,11 +1,12 @@
 import 'dart:async';
+import 'dart:ui';
 
 import 'package:console/app_exporter.dart';
 import 'package:flutter/material.dart';
 
 typedef ToastData = ({String message, bool error, int id});
 
-///toasts: bottom right, one at a time, gone after 3.2 s or with their close button.
+///toasts: bottom center, one at a time, gone after 3.2 s or with their close button.
 ///Shown by [ToastHost], which wraps the whole app (MaterialApp.builder)
 class SnackBarAdapter {
   static final SnackBarAdapter _instance = SnackBarAdapter._internal();
@@ -44,14 +45,32 @@ class ToastHost extends StatelessWidget {
     return Stack(
       children: [
         child,
+        //while an action runs: blocks the app, under the toast that reports it
+        Positioned.fill(
+          child: ValueListenableBuilder<bool>(
+            valueListenable: app.loading.visible,
+            builder: (context, loading, _) => loading
+                ? AbsorbPointer(
+                    child: BackdropFilter(
+                      filter: ImageFilter.blur(sigmaX: 4.5, sigmaY: 4.5),
+                      child: const Center(child: CircularProgressIndicator()),
+                    ),
+                  )
+                : const SizedBox.shrink(),
+          ),
+        ),
+        //bottom center: on the right it covered the map's side panel
         Positioned(
-          right: 20,
+          left: 0,
+          right: 0,
           bottom: 20,
-          child: ValueListenableBuilder<ToastData?>(
-            valueListenable: app.snack.current,
-            builder: (context, toast, _) => toast == null
-                ? const SizedBox.shrink()
-                : _Toast(key: ValueKey(toast.id), data: toast),
+          child: Center(
+            child: ValueListenableBuilder<ToastData?>(
+              valueListenable: app.snack.current,
+              builder: (context, toast, _) => toast == null
+                  ? const SizedBox.shrink()
+                  : _Toast(key: ValueKey(toast.id), data: toast),
+            ),
           ),
         ),
       ],

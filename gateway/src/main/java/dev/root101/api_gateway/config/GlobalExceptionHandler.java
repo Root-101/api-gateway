@@ -162,6 +162,13 @@ public class GlobalExceptionHandler implements ErrorWebExceptionHandler {
         return write(exchange, status, locale, text(key, locale, args), null);
     }
 
+    /**
+     * Writes a Problem Details with a text written by the admin (ej: the message of a maintenance), as is
+     */
+    public Mono<Void> writeDetail(ServerWebExchange exchange, HttpStatusCode status, String detail) {
+        return write(exchange, status, I18n.locale(exchange), detail, null);
+    }
+
     private String text(String key, Locale locale, Object... args) {
         return I18n.text(messages, key, args, locale);
     }

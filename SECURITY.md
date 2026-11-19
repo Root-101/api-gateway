@@ -25,6 +25,8 @@ The gateway has two faces on the same port:
 | Audit                 | Every request is logged, also the admin requests the security layer rejects (401, 429)                                   |
 | CORS                  | Every path (admin API and proxied routes), without credentials; replaces the services' own CORS headers                  |
 | Errors                | A `500` says only `Internal server error`; the detail stays in the server log                                            |
+| Rate limit add-on     | Per client IP (`TRUSTED_PROXIES`), per route and on every route together; in memory, per instance. With `.*` and the gateway exposed directly, a faked `X-Forwarded-For` dodges it; at most 100,000 counts at once (decision 19) |
+| Health check add-on   | The gateway calls `GET {uri of the route}{path}` on its own: the route's host only, no redirects, no client headers, body thrown away, 5 s max (decision 18 in `DECISIONS.md`) |
 | Defaults              | The gateway warns in its log when it runs with the default admin or database password                                    |
 | Container             | The image runs as a non-root user                                                                                        |
 | Console               | A strict Content Security Policy, `X-Frame-Options: DENY`; it keeps only the token (with *Remember me*), never the password |
@@ -35,16 +37,22 @@ The gateway has two faces on the same port:
 - **Put a proxy in front for TLS**, and set `TRUSTED_PROXIES` to the IPs of that proxy (a regex).
   `X-Forwarded-For` is only believed when the connection comes from a trusted proxy, and the client
   is the last entry that isn't one: what the client writes there itself is ignored. The default
-  `.*` trusts any connection, which is right only if the gateway can't be reached without the proxy
-  (Railway). Exposed directly with `.*`, the IP in the logs can be faked and the lockout dodged by
+  `.*` trusts any connection and believes only the last entry (the one the nearest proxy wrote),
+  which is right only if the gateway can't be reached without the proxy (Railway). Behind two or
+  more proxies, `.*` sees the inner proxy's IP as the client: list their IPs instead. Exposed
+  directly with `.*`, the IP in the logs can be faked and the lockout and the rate limit dodged by
   changing that header: set the proxy's IPs, or empty (`""`) if there is no proxy.
 - **Know what the lockout blocks.** A locked IP gets `429` (with `Retry-After`) only on new tries
   of the credentials: the login and Basic auth. A token it already has and the health check keep
   working. Behind a proxy that doesn't set `X-Forwarded-For`, every client shares the proxy's IP,
   so a few wrong passwords keep every admin from logging in until the window ends.
-- **Restrict CORS** with `CORS_ALLOWED_ORIGINS` to the origins of the console and your web apps:
-  the default `*` lets any page call the admin API with a token it has, and read any proxied
-  service. Cookies are never allowed cross-origin (no credentials).
+- **Restrict CORS** in the gateway's CORS add-on (console, or `PUT /_admin/addons/cors`) to the
+  origins of the console and your web apps: the default `*` lets any page call the admin API with a
+  token it has, and read any proxied service. The gateway's never allows cookies cross-origin (no
+  credentials); a route's can, only with explicit origins, never with `*`. A change from a browser
+  that would leave that browser out is refused (`400`); if a wrong list locks the console out
+  anyway, fix it without a browser, where CORS doesn't apply:
+  `curl -X PUT -H "Authorization: Basic …" -H "Content-Type: application/json" -d '{"enabled":true,"allowed_origins":["https://console.example.com"]}' https://gateway.example.com/_admin/addons/cors`.
 - **Rename the admin path** (`ADMIN_PATH`) if you want it off the default `_admin`; it is not a
   secret, only a way to keep it out of the way of the services.
 - **Run one instance.** Tokens, the lockout count and the routes in use live in memory per

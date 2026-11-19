@@ -72,7 +72,7 @@ jobs:
         run: |
           set -eu
           docker network create gw
-          docker run -d --name db --network gw -e POSTGRES_DB=api-gateway -e POSTGRES_PASSWORD=smoke postgres:16
+          docker run -d --name db --network gw -e POSTGRES_DB=api-gateway -e POSTGRES_PASSWORD=smoke postgres:18
           until docker exec db pg_isready -U postgres -d api-gateway; do sleep 1; done
           docker run -d --name gw --network gw -p 8080:8080 -e DB_HOST=db -e DB_PASSWORD=smoke api-gateway
           for i in $(seq 60); do curl -sf localhost:8080/_admin/health && break || sleep 1; done

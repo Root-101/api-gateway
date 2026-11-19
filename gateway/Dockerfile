@@ -2,8 +2,8 @@
 #GraalVM CE 25 (same java version as the project)
 FROM ghcr.io/graalvm/native-image-community:25 AS builder
 
-#gradlew needs xargs (findutils), and git to fetch the `java-commons` source dependency
-RUN microdnf install -y findutils git && microdnf clean all
+#gradlew needs xargs (findutils)
+RUN microdnf install -y findutils && microdnf clean all
 
 WORKDIR /workspace
 

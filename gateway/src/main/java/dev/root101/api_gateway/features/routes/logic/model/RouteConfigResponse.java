@@ -1,5 +1,6 @@
 package dev.root101.api_gateway.features.routes.logic.model;
 
+import dev.root101.api_gateway.features.addons.base.logic.model.Addons;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -51,4 +52,9 @@ public class RouteConfigResponse {
      * When the route was created.
      */
     private OffsetDateTime createdAt;
+
+    /**
+     * The add-ons of the route: every type this version knows, `null` when not configured
+     */
+    private Addons addons;
 }

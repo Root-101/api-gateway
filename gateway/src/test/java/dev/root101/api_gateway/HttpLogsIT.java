@@ -42,7 +42,8 @@ class HttpLogsIT extends IntegrationTest {
                 .expectStatus().isOk();
 
         HttpLogEntity log = awaitLog("/nr-" + id + "/hello");
-        assertThat(log.getSourceIp()).isEqualTo("203.0.113.7");
+        //the default `TRUSTED_PROXIES=.*` believes only the nearest proxy: the rightmost entry
+        assertThat(log.getSourceIp()).isEqualTo("10.0.0.5");
         assertThat(log.getUserAgent()).isEqualTo("it-agent");
         assertThat(log.getHttpMethod()).isEqualTo("GET");
         assertThat(log.getResponseCode()).isEqualTo(200);

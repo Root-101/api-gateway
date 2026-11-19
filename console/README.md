@@ -20,12 +20,16 @@ This is the **next iteration** of the integration with the API Gateway.
 
 It allows administrators to:
 
+* 🗺️ **See the gateway as a map** — The gateway and a branch per route, with what each one is doing (forwarding,
+  in maintenance, down).
 * 🔀 **Manage routes** — Create, edit, delete, backup, and restore routes.
+* 🧩 **Manage add-ons** — Health check, maintenance, rate limit and CORS, per route and (except the health check) for
+  the whole gateway.
 * 📜 **View HTTP logs** — Filter, search, and inspect requests passing through the gateway.
 * 🔐 **Authenticate safely** — Login using the same credentials as the gateway admin endpoints.
 
-> ⚡ **Note:** The console shares its version number with the API Gateway. Console `6.0.0` needs gateway `6.0.0` or
-> later (restore uses `PUT /routes`, and older gateways send a `401` as a connection error).
+> ⚡ **Note:** The console shares its version number with the API Gateway. Console `6.1.0` needs gateway `6.1.0` or
+> later (the add-ons use `GET /addons` and the `/addons/...` endpoints of each route and of the gateway).
 
 ---
 
@@ -73,12 +77,16 @@ This project is developed using **Flutter**, currently version `3.47.9` (pinned 
 
 ## Screenshots<a name="4"></a>
 
-[docs/console.md](../docs/console.md) describes every screen, its URL and the endpoints it calls. All 20 screens of
+[docs/console.md](../docs/console.md) describes every screen, its URL and the endpoints it calls. All 24 screens of
 the design are in [docs/design/screens](../docs/design/screens).
 
 #### Login
 
 ![Login](../docs/design/screens/02-login.png)
+
+#### Gateway map
+
+![Gateway map](../docs/design/screens/21-gateway-map.png)
 
 #### Routes
 

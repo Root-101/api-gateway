@@ -147,6 +147,8 @@ reading the list again.
 
 ## 15. One CORS policy for every path, without credentials
 
+Superseded by [20](#20-cors-as-an-add-on-of-the-gateway-and-of-each-route).
+
 The CORS policy (`CORS_ALLOWED_ORIGINS`, `*` by default) applies to every path, the admin API and
 the proxied routes, without credentials. The `Access-Control-*` headers a service sends are dropped:
 the gateway's are the only ones.
@@ -160,9 +162,100 @@ cookie-authenticated service through the gateway. A CORS policy per route is a
 
 ## 16. Rejected admin requests are logged
 
-The HTTP logs filter runs before the security chain (order `-101`, security is `-100`), and answers
-errors itself so their status is known when the log is saved.
+The HTTP logs filter runs before the security chain (order `-101`, security is `-100`). It saves the
+log once the request ends, and the errors already have their status by then: the
+`ErrorWebExceptionHandler` sets it first.
 
 After it, the 401 of a missing or wrong credential and the 429 of the lockout ended the request
 before the filter ran: guessing the password over Basic left no trace.
 
+## 17. Add-ons in one table, a row per type
+
+The optional features of the gateway and of each route (maintenance today; rate limit and health
+check next) live in `addon`: `route_id` (null = the whole gateway), `type` (`maintenance`),
+`config` and `state` (`jsonb`), unique per route and type. A new add-on is a new `type`, without a
+migration: there is no `CHECK` on it, the code owns the valid types and the shape of each json (a
+record with `@Valid`).
+
+- A column per feature in `route` would need a migration for each one, and the gateway's own values
+  another table. One `jsonb` with every feature inside would make two changes to different features
+  of the same route overwrite each other: here each one is its own row.
+- `config` is what the admin sets, `state` what the gateway writes (when the maintenance was turned
+  on and off; the last result of a health check). Apart, a job that updates the state every few
+  seconds never overwrites an edit of the admin, a backup never carries runtime data, and
+  `updated_at` keeps meaning "the admin changed it".
+- Each type has its own endpoints (`/routes/{id}/addons/maintenance`), not a generic `{type}`: its own
+  body, its own validation, its own actions (`enable`/`disable`). Every route comes with all of them
+  in `addons`, `null` when not configured, so the console knows what can be added.
+- Reading never stops the gateway: a row of a type this version doesn't know (after a downgrade) or
+  with a json it can't read is skipped with a warning, as if it wasn't configured. A new field is
+  always optional, so the old rows read without a migration.
+- Deleting a route deletes its add-ons (`ON DELETE CASCADE`). They are read into memory at startup
+  and after each change: a proxied request never waits for the database. Counters (rate limit) stay
+  in memory too, never a write per request.
+
+## 18. The health check calls only the route's own host
+
+The health check add-on is the first time the gateway calls a service on its own, not on behalf of
+a client. What it can reach is limited to what the admin could already reach through a route:
+
+- The url is `{uri of the route}{path}`, built as text: the host is always the route's, a path like
+  `//other-host` or `/@other-host` stays a path. The path must start with `/` and have no spaces.
+- Redirects aren't followed, the body is thrown away, and only the status and the time are kept:
+  it can't be used to read another service's answers.
+- A plain `GET` with no headers of a client and no credentials; a call ends after 5 s, under the
+  shortest interval (10 s), and one route never has two calls at a time.
+- The result goes to the add-on's `state` with an `UPDATE` of that column only (see 17): a check
+  never overwrites what the admin set, and a check of an add-on deleted meanwhile writes nothing.
+- It never changes the routing. Taking a route out when it is down would be a new decision: a
+  flapping service would come and go for every client.
+
+## 19. Rate limit per client IP, the gateway's and the route's together
+
+The rate limit add-on counts per client IP (the one of the logs and the lockout, `TRUSTED_PROXIES`),
+with a token bucket in memory: `limit` per `period`, up to `burst` at once.
+
+- The gateway's counts each IP on every route together, not one total for everyone: with one total,
+  a single abusive client would use it up and every other client would get `429`s. A cap on the
+  total load would be another add-on (concurrency), not this one.
+- With both, both apply (the gateway's first): not "the gateway wins" as in maintenance. The
+  gateway's stops a client that spreads its requests over many routes, a route's protects a weaker
+  service; neither replaces the other. A request the route's stops gives the gateway's its request
+  back: it never went, so a client retrying a busy route doesn't lose the others.
+- Only the IP for now: an API key belongs to the authentication towards the services (roadmap).
+  A header chosen by the admin would be faked by the client unless the service checks it.
+- Only `Retry-After` on the `429`, no `RateLimit-*` headers on every answer: they are still an IETF
+  draft and, with two limits, which one to show is a choice of its own. They can be added later
+  without breaking anyone.
+- In memory, never a write per request, and every count starts again on any change (the buckets of
+  the old limits are dropped whole): simpler than moving each count to a new limit. With several
+  instances each counts on its own; Redis then (see 6). A bucket full again is forgotten every
+  minute, so the memory follows the clients of the last period. Past 100,000 counts at once (many
+  IPs: IPv6, or faked ones) every count starts again: bounded memory over exact counts.
+
+## 20. CORS as an add-on of the gateway and of each route
+
+CORS is the `cors` add-on (see 17): the gateway's covers the admin API and every route without its
+own, a route's covers only that route. Only the origins and the credentials can be set; methods,
+headers and exposed headers stay `*`. It replaces `CORS_ALLOWED_ORIGINS` (15).
+
+- **Applied where the gateway already knows the route.** Spring Cloud Gateway's handler mapping
+  resolves the route (`GATEWAY_ROUTE_ATTR`) and then runs its CORS step: its
+  `CorsConfigurationSource` reads that route's add-on, never a path matched by hand, so it is
+  always the route that gets the request. Its own `globalcors` listener is off: it replaces that
+  source on every route refresh. Spring Security's CORS filter only covers the admin API (it ends
+  every preflight, a proxied one would never reach the handler mapping), so its `401`/`403` keep
+  their CORS headers.
+- **The gateway's always exists, always on, never with credentials.** Without it the console
+  can't reach the admin API; the admin API uses a header token, credentials are per service.
+- **No credentials with any origin**, at any level: it was the hole closed in 6.0.0.
+- **Lockout guard.** A `PUT` of the gateway's from a browser whose `Origin` the new list doesn't
+  allow is a `400`. Without a browser there is no CORS, so a wrong list is fixed with curl.
+- **The env var only seeds it, once.** No row: created from `CORS_ALLOWED_ORIGINS`, or `*`. A row:
+  the env var is ignored, with a warning. Rejected: the env var winning while set, with the console
+  read-only: two sources of truth and more to delete in 7.0, where the env var goes.
+- **Rejected: passing the preflight to the service.** Spring answers every preflight in the
+  handler mapping, even without a config; forwarding it means hiding it from Spring and restoring
+  it later, fragile. A route's own origins and credentials cover the need.
+- A path with no route gets no CORS headers: an error either way.
+- In memory, per instance, as the other add-ons.

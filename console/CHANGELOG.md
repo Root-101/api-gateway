@@ -1,4 +1,129 @@
 * 6.x:
+    * 6.1.0:
+        * **DATE** :date: : 2026-11-18.
+        * **Add-ons** :jigsaw: : Each route forwards its requests; everything else is an add-on, added, turned
+          on or off, edited and removed on its own (needs the gateway `6.1.0`). The first is maintenance,
+          per route and for the whole gateway. Its panel (the same one in the map and in Routes) shows the redirect,
+          the add-ons with an in-place editor and a slide to turn them on or off, and "Add to this route" with the
+          ones missing. The 503 message is optional (empty, the gateway's own, marked "default"), and the panel
+          shows how long it has been on or the last window. While the gateway is in maintenance it wins: every
+          route shows `PAUSED` and its slide is locked. API: `addons` in each route, `GET /addons`, and `PUT`,
+          `DELETE`, `POST .../enable` and `.../disable` under `/routes/{id}/addons/maintenance` and
+          `/addons/maintenance`.
+        * **Health check** :heartpulse: : A second add-on, routes only: the gateway calls a path of the route's
+          service every 10 s to 1 h and the console shows the last result. `LIVE` (a 2xx) or `DOWN` at the end of
+          the last check (maintenance wins), a `Health · every 30 s` badge on the card, a chip on the map node, and, while it is
+          down, a red, still branch in the map with a red path label and a reddish node (it still gets its requests). Its block in the panel shows the
+          endpoint, the interval and the last check ("12 s ago · 200 in 18 ms · LIVE"), with "Run now", a "Check on a schedule"
+          slide (as rate limit's, `POST .../enable` and `.../disable`), edit in place (endpoint, one of 10 s / 30 s /
+          1 min / 5 min / 15 min / 1 h) and remove. Added as
+          `/health` every 30 s, on. The routes are reread every 10 s while one has it on (the gateway doesn't
+          push). "Add to this route" lists the types the route's `addons` has as keys. API: `PUT`, `DELETE` and
+          `POST .../run` under `/routes/{id}/addons/health-check`.
+        * **Rate limit** :stopwatch: : A third add-on, per route and for the whole gateway: past a number of requests
+          per second, minute or hour per client IP, a 429 (the gateway's counts every route together). Its block
+          shows the limit, the burst ("Same as the limit" when empty) and the 429, with a slide to turn it on or
+          off, edit in place (requests, burst, period; saving starts every count from zero) and remove. Added as 60 / minute, burst 10, off, since it changes traffic. A `Rate limit · 60/min` badge on
+          the card and a `60/min` chip on the map node. API: `rate_limit` in each route and in `GET /addons`, and
+          `PUT`, `DELETE`, `POST .../enable` and `.../disable` under `/routes/{id}/addons/rate-limit` and
+          `/addons/rate-limit`. The gateway's maintenance and rate limit can be removed too, like a route's
+          (`DELETE /addons/maintenance`, `DELETE /addons/rate-limit`).
+        * **CORS** :globe_with_meridians: : A fourth add-on, per route and for the whole gateway: the browser origins
+          allowed to call it (`https://app.com`, `https://*.example.com`, `*`) and, routes only, credentials
+          (cookies). Origins are chips: type one and press Enter (checked right away: a bad one stays in the field with its error), the trash to take it out. The gateway's is always
+          there, with no slide and no remove: it covers the admin API and every route without its own; editing it
+          warns, without blocking, when the list leaves out the origin this console runs on (the gateway rejects
+          that save). A route's is added off with the gateway's origins, has a slide (off: the gateway's applies)
+          and can be removed. Credentials are off and locked while an origin matches all. A bad origin marks its
+          chip; the gateway's rule errors show in the block. A `CORS · app.com` badge on the card and a globe chip
+          on the map node. API: `cors` in each route and in `GET /addons`, `PUT /addons/cors`, and `PUT`, `DELETE`,
+          `POST .../enable` and `.../disable` under `/routes/{id}/addons/cors`. While the deprecated
+          `CORS_ALLOWED_ORIGINS` is still set, a banner on top of every screen says so: blue when it was moved into
+          the gateway's CORS (can be closed), yellow with both lists when it differs and is ignored; both with
+          "Edit CORS", and both gone once the variable is removed and the gateway restarted (`env_var` in the
+          gateway's `cors`).
+        * **Add-on info** :information_source: : An (i) beside each add-on's name, in its block and in "Add to this
+          route", even before it is added. Hover, focus or a tap opens a popup with what it is for and how it works
+          (for the gateway's maintenance and rate limit, the gateway-wide wording), as in the canvas.
+        * **Gateway map** :world_map: : New first entry of the rail: the gateway's URL, the gateway
+          and a branch per route with its path, dashed and moving while it forwards, dotted orange while it answers
+          `503`. Drag, wheel zoom, `Fit`, an "Add route" card when there are none, and the panel of a route or of the
+          gateway on a click. `Open in Routes` filters Routes by that route. It is the start screen: opening the
+          console and logging in land on the map instead of Routes. The 404 page offers "Go to map" instead of "Go to
+          Routes". The grid behind it pans and zooms with the map.
+          An expand button next to the panel's close opens it as the big panel: centered over the dimmed map (up to
+          1180 px wide), the blocks in 3 columns and "Add to..." below them. The panel's box animates from the side
+          to the middle and back, and the blocks fade in once it has resized. A click outside or the close button
+          closes it. Only in the map: the panel in Routes stays on the side.
+          Over the canvas the cursor is the drag hand (closed while dragging); nodes and buttons keep the click hand.
+          In code it is its own feature, `features/map`: the screen keeps the view and the selection, and the header,
+          the diagram, the branches, the legend and each node are widgets of their own in `view/widgets`. Routes got
+          the same split: its screen keeps the search and the delete confirmation, and the header, the grid, the card
+          (with its maintenance strip, add-on badges and skeleton) and the delete dialog live in
+          `features/routes/view/widgets`. So did the route form: `routes_form_screen.dart` keeps the dialog and its
+          cubit, `routes_form_widget.dart` the fields, steps, validation and saving, and the header, preview, step,
+          stepper, footer and duplicate chip live in `form/widgets`. And Logs: its screen keeps the debounced search
+          and the snacks, and the header, the toolbar (search, filter chips, Filters button), the table (rows, empty
+          state) and the footer (rows per page, pages) live in `features/logs/view/widgets`. The date range calendar
+          of the logs filter is now a design system component, `AppDateRangeDialog`. The three add-on blocks share
+          their header (icon, name, info, Edit, Remove) and their remove confirmation: `AddonHeader` and
+          `AddonRemoveConfirm` in `addons/addon_block_parts.dart`. The health check's and the rate limit's on / off are
+          compact slides on the right of their row (120 px, green and blue), like maintenance's full-width one
+          (`SlideSwitch` takes a `color` and `compact`). The shell (`base_screen.dart`) keeps the add-on loads,
+          the health check poll and the layout; the rail with its items, the maintenance and offline banners and the
+          snack listeners (`ShellListeners`) live in `features/base`. The restore dialog's drop area uses the design
+          system's `DashedBorder` (now with `dash` and `gap`) instead of its own copy.
+        * **Route form** :pencil2: : The preview is no longer a card inside the form: the strip under the title takes
+          the card color, as in the canvas.
+        * **Routes** :twisted_rightwards_arrows: : Each card has the `MAINT` / `PAUSED` tag, a badge per add-on and
+          `+ Add-ons`. Backups keep the `addons` of each route as the gateway sends them (unknown ones too, without
+          `default_message` and `state`), and restore sends them back.
+        * **Maintenance** :construction: : The banner stays on every screen while the gateway is in maintenance:
+          `Edit` opens the map with the gateway's panel, `Turn off` calls `disable`. The first 6.1.0 version (rail
+          entry, dialog and wrench on the card, never released) was replaced by the add-ons.
+        * **Canvas match** :art: : After comparing every screen with the canvas: "+ Add-ons" on the route cards has a
+          dashed border; Routes keeps 3 columns with the rail expanded (380 px cards, 12 px gaps); the route form shows
+          each step's title and hint on one line; the maintenance slide is drawn as in the canvas (44 px track, 38 px
+          knob with a shadow and a double-chevron, an orange fill behind it, the label fading while dragged; the label
+          keeps clear of the knob only on its side, so it isn't cut in the panel); text buttons (Clear all, Go to the
+          login page) are bold; dialogs no longer focus a button or the close button when they open (the route form
+          still focuses Name).
+        * **Maintenance time** :stopwatch: : "On for", "Last window", the gateway node and the banner's countdown use
+          larger units ("2h 30 min", "1d 3h") and update every 10 s on their own.
+        * **Route panel** :jigsaw: : `Open in Routes` / `Edit route` has the external-link icon of the canvas. Each
+          "Add to this route" card has a dashed 1.5 px border, as in the canvas. The
+          maintenance slide keeps the handle where it was dropped while it saves (it jumped back to the old side and
+          then to the new one), slides to its side when not dragged, and shows the click hand. Removing an add-on asks
+          with the canvas buttons: outlined Cancel (no longer focused, so no lilac ring) and filled red Remove. The edit
+          buttons (Cancel, Save) are 34 px too, as in the canvas. Every add-on ends like maintenance: its data, a
+          divider, what the slide does with a line on what happens now ("On · called every 30 s", "Off · nothing is
+          limited"), and the slide across the whole block, instead of a small switch on the right. The gateway's
+          panel starts with an **Overview** block, like a route's Redirect: its public URL and how many routes there
+          are, health-checked, down, in maintenance (all of them while the gateway is), rate-limited and with their
+          own CORS.
+        * **Toasts** :speech_balloon: : They show at the bottom center instead of the bottom right, where they
+          covered the side panel of the map.
+        * **Fix** :bug: : The version under the rail, the login and the splash was empty with `flutter run`: its
+          `version.json` comes as javascript there, so it was not read as a map. It is now read as text and decoded.
+        * **Fix** :bug: : No toast showed after an action with the loading layer (delete, backup, restore, save a
+          route): the `loader_overlay` package painted above the app. The loading layer is now drawn under the
+          toast, and the dependency was removed.
+        * **Fix** :bug: : Logs with many rows per page scrolled the whole screen. The screen now fits the window:
+          the header, search and footer stay, the column titles too, and only the rows scroll.
+        * **Fix** :bug: : An older reload of the routes could answer after a newer one and overwrite it (the 10 s
+          health check poll landing after a maintenance toggle showed maintenance off again). Only the latest reload
+          is applied now, its error too, and none after logout.
+        * **Credentials** :lock: : Locked off, as the gateway now asks, while an origin lets in any site: `*`, or a `*` in
+          the host other than `*.domain.com` (`https://*.com`, `https://a*.com`, `https://*:8080`); `https://*.a.com`,
+          `*://a.com` and `http://localhost:[*]` still allow them. Its hint says so.
+        * **Docs** :books: : `docs/console.md` has the Gateway map and Add-ons sections, and the map as the start
+          screen; `docs/design` screens 21–24 are the map, and every screen shows the rail and cards as built. The
+          canvas has no Experimental page any more (the map and the route panel are with the other screens, the
+          superseded maintenance boards are gone), its sample URLs are generic (`example.com`), and the export was
+          regenerated from it (`export.py` takes screen 24 from Routes and draws the map with 3 routes). The
+          console README lists the map and the add-ons, says console `6.1.0` needs gateway `6.1.0`, counts the 24
+          screens and shows the map.
+        * **Version** :bookmark: : `6.1.0` in `pubspec.yaml` (it said `6.0.1`).
     * 6.0.0:
         * **DATE** :date: : 2026-11-12.
         * **Redesign** :art: : New visual identity and rebuilt screens: login, side menu with notch, route cards,

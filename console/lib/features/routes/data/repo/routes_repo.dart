@@ -86,6 +86,173 @@ class RoutesRepo {
     }
   }
 
+  ///[routeId] null = the gateway; null when it isn't configured
+  Future<MaintenanceModel?> findGatewayMaintenance() async {
+    try {
+      return (await client.findGatewayMaintenance())?.toModel();
+    } on Exception catch (exc) {
+      throw ExceptionConverter.parse(exc);
+    }
+  }
+
+  ///creates or replaces it; a 422 arrives as a validation GlobalException (fields `enabled`, `message`)
+  Future<MaintenanceModel> putMaintenance({
+    required MaintenanceModel model,
+    String? routeId,
+  }) async {
+    try {
+      final response = await client.putMaintenance(
+        routeId: routeId,
+        model: model.toEntity(),
+      );
+      return response.toModel();
+    } on Exception catch (exc) {
+      throw ExceptionConverter.parse(exc);
+    }
+  }
+
+  Future deleteMaintenance({String? routeId}) async {
+    try {
+      await client.deleteMaintenance(routeId: routeId);
+    } on Exception catch (exc) {
+      throw ExceptionConverter.parse(exc);
+    }
+  }
+
+  Future<MaintenanceModel> setMaintenanceEnabled({
+    required bool enabled,
+    String? routeId,
+  }) async {
+    try {
+      final response = await client.setMaintenanceEnabled(
+        routeId: routeId,
+        enabled: enabled,
+      );
+      return response.toModel();
+    } on Exception catch (exc) {
+      throw ExceptionConverter.parse(exc);
+    }
+  }
+
+  Future<Map<String, dynamic>> findGatewayAddons() async {
+    try {
+      return await client.findGatewayAddons();
+    } on Exception catch (exc) {
+      throw ExceptionConverter.parse(exc);
+    }
+  }
+
+  ///[routeId] null = the gateway's
+  Future<RateLimitModel?> putRateLimit({
+    required RateLimitModel model,
+    String? routeId,
+  }) async {
+    try {
+      return await client.putRateLimit(model: model, routeId: routeId);
+    } on Exception catch (exc) {
+      throw ExceptionConverter.parse(exc);
+    }
+  }
+
+  Future deleteRateLimit({String? routeId}) async {
+    try {
+      await client.deleteRateLimit(routeId: routeId);
+    } on Exception catch (exc) {
+      throw ExceptionConverter.parse(exc);
+    }
+  }
+
+  Future<RateLimitModel?> setRateLimitEnabled({
+    required bool enabled,
+    String? routeId,
+  }) async {
+    try {
+      return await client.setRateLimitEnabled(
+        enabled: enabled,
+        routeId: routeId,
+      );
+    } on Exception catch (exc) {
+      throw ExceptionConverter.parse(exc);
+    }
+  }
+
+  ///[routeId] null = the gateway's
+  Future<CorsModel?> putCors({
+    required CorsModel model,
+    String? routeId,
+  }) async {
+    try {
+      return await client.putCors(model: model, routeId: routeId);
+    } on Exception catch (exc) {
+      throw ExceptionConverter.parse(exc);
+    }
+  }
+
+  Future deleteCors({required String routeId}) async {
+    try {
+      await client.deleteCors(routeId: routeId);
+    } on Exception catch (exc) {
+      throw ExceptionConverter.parse(exc);
+    }
+  }
+
+  Future<CorsModel?> setCorsEnabled({
+    required bool enabled,
+    required String routeId,
+  }) async {
+    try {
+      return await client.setCorsEnabled(enabled: enabled, routeId: routeId);
+    } on Exception catch (exc) {
+      throw ExceptionConverter.parse(exc);
+    }
+  }
+
+  ///a 422 arrives as a validation GlobalException (fields `enabled`, `path`, `interval_seconds`)
+  Future putHealthCheck({
+    required String routeId,
+    required HealthCheckModel model,
+  }) async {
+    try {
+      await client.putHealthCheck(
+        routeId: routeId,
+        model: HealthCheckEntity(
+          enabled: model.enabled,
+          path: model.path.trim(),
+          intervalSeconds: model.intervalSeconds,
+        ),
+      );
+    } on Exception catch (exc) {
+      throw ExceptionConverter.parse(exc);
+    }
+  }
+
+  Future deleteHealthCheck({required String routeId}) async {
+    try {
+      await client.deleteHealthCheck(routeId: routeId);
+    } on Exception catch (exc) {
+      throw ExceptionConverter.parse(exc);
+    }
+  }
+
+  Future setHealthCheckEnabled({
+    required String routeId,
+    required bool enabled,
+  }) async {
+    try {
+      await client.setHealthCheckEnabled(routeId: routeId, enabled: enabled);
+    } on Exception catch (exc) {
+      throw ExceptionConverter.parse(exc);
+    }
+  }
+
+  Future runHealthCheck({required String routeId}) async {
+    try {
+      await client.runHealthCheck(routeId: routeId);
+    } on Exception catch (exc) {
+      throw ExceptionConverter.parse(exc);
+    }
+  }
+
   Future<RouteModel> details({required String routeId}) async {
     try {
       RouteResponse response = await client.details(routeId: routeId);
@@ -125,7 +292,42 @@ extension RouteModelParser on RouteResponse {
             replaceFrom: rewritePath!.replaceFrom,
             replaceTo: rewritePath!.replaceTo,
           ),
+    maintenance: maintenance?.toModel(),
+    healthCheck: switch (healthCheck) {
+      null => null,
+      final h => HealthCheckModel(
+        enabled: h.enabled,
+        path: h.path,
+        intervalSeconds: h.intervalSeconds,
+        checkedAt: DateTime.tryParse(h.checkedAt ?? ''),
+        up: h.up,
+        status: h.status,
+        millis: h.millis,
+      ),
+    },
+    rateLimit: RateLimitModel.tryFromJson(addons['rate_limit']),
+    cors: CorsModel.tryFromJson(addons['cors']),
+    addons: addons,
     gatewayUrl: gatewayUrl,
+  );
+}
+
+extension MaintenanceModelParser on MaintenanceEntity {
+  MaintenanceModel toModel() => MaintenanceModel(
+    enabled: enabled,
+    message: message,
+    retryAfter: DateTime.tryParse(retryAfter ?? ''),
+    defaultMessage: defaultMessage,
+    enabledAt: DateTime.tryParse(enabledAt ?? ''),
+    disabledAt: DateTime.tryParse(disabledAt ?? ''),
+  );
+}
+
+extension MaintenanceEntityParser on MaintenanceModel {
+  MaintenanceEntity toEntity() => MaintenanceEntity(
+    enabled: enabled,
+    message: hasOwnMessage ? message!.trim() : null,
+    retryAfter: retryAfter?.toUtc().toIso8601String(),
   );
 }
 

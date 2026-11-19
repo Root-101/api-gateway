@@ -42,6 +42,140 @@ class RoutesClient extends BaseClient {
     Response rawResponse = await dio.get('$baseUrl/$routeId');
     return RouteResponse.fromJson(rawResponse.data! as Map<String, dynamic>);
   }
+
+  ///add-ons of a route, or of the gateway when [routeId] is null
+  String _addons(String? routeId) => routeId == null
+      ? '${Environment.baseApiUrl}/addons'
+      : '$baseUrl/$routeId/addons';
+
+  ///the gateway's add-ons: its maintenance, null when it isn't configured
+  Future<MaintenanceEntity?> findGatewayMaintenance() async {
+    Response rawResponse = await dio.get(_addons(null));
+    final data = rawResponse.data;
+    return MaintenanceEntity.tryFromJson(
+      data is Map ? data['maintenance'] : null,
+    );
+  }
+
+  ///creates or replaces it: 200 with the saved object; 404 when the route doesn't exist, 422 when invalid
+  Future<MaintenanceEntity> putMaintenance({
+    required MaintenanceEntity model,
+    String? routeId,
+  }) async {
+    Response rawResponse = await dio.put(
+      '${_addons(routeId)}/maintenance',
+      data: model.toJson(),
+    );
+    return MaintenanceEntity.fromJson(rawResponse.data as Map<String, dynamic>);
+  }
+
+  ///204, also when there is none; [routeId] null = the gateway's
+  Future deleteMaintenance({String? routeId}) async {
+    await dio.delete('${_addons(routeId)}/maintenance');
+  }
+
+  ///idempotent; 404 when it isn't configured
+  Future<MaintenanceEntity> setMaintenanceEnabled({
+    required bool enabled,
+    String? routeId,
+  }) async {
+    Response rawResponse = await dio.post(
+      '${_addons(routeId)}/maintenance/${enabled ? 'enable' : 'disable'}',
+    );
+    return MaintenanceEntity.fromJson(rawResponse.data as Map<String, dynamic>);
+  }
+
+  ///the gateway's add-ons as sent (`maintenance`, `rate_limit`...: null = not configured)
+  Future<Map<String, dynamic>> findGatewayAddons() async {
+    Response rawResponse = await dio.get(_addons(null));
+    final data = rawResponse.data;
+    return data is Map<String, dynamic> ? data : {};
+  }
+
+  ///creates or replaces it; 422 fields `enabled`, `limit`, `period`, `burst`
+  Future<RateLimitModel?> putRateLimit({
+    required RateLimitModel model,
+    String? routeId,
+  }) async {
+    Response rawResponse = await dio.put(
+      '${_addons(routeId)}/rate-limit',
+      data: model.toJson(),
+    );
+    return RateLimitModel.tryFromJson(rawResponse.data);
+  }
+
+  ///204, also when there is none; [routeId] null = the gateway's
+  Future deleteRateLimit({String? routeId}) async {
+    await dio.delete('${_addons(routeId)}/rate-limit');
+  }
+
+  ///keeps the rest; 404 when it isn't configured
+  Future<RateLimitModel?> setRateLimitEnabled({
+    required bool enabled,
+    String? routeId,
+  }) async {
+    Response rawResponse = await dio.post(
+      '${_addons(routeId)}/rate-limit/${enabled ? 'enable' : 'disable'}',
+    );
+    return RateLimitModel.tryFromJson(rawResponse.data);
+  }
+
+  ///creates or replaces it; 422 fields `enabled`, `allowed_origins`, `allowed_origins[i]`; the
+  ///rules (credentials with `*`, the gateway's off or with credentials, a console lockout) a 400
+  Future<CorsModel?> putCors({
+    required CorsModel model,
+    String? routeId,
+  }) async {
+    Response rawResponse = await dio.put(
+      '${_addons(routeId)}/cors',
+      data: model.toJson(),
+    );
+    return CorsModel.tryFromJson(rawResponse.data);
+  }
+
+  ///routes only (the gateway's: 405); 204, also when there is none
+  Future deleteCors({required String routeId}) async {
+    await dio.delete('${_addons(routeId)}/cors');
+  }
+
+  ///routes only (the gateway's: 405); keeps the rest; 404 when it isn't configured
+  Future<CorsModel?> setCorsEnabled({
+    required bool enabled,
+    required String routeId,
+  }) async {
+    Response rawResponse = await dio.post(
+      '${_addons(routeId)}/cors/${enabled ? 'enable' : 'disable'}',
+    );
+    return CorsModel.tryFromJson(rawResponse.data);
+  }
+
+  ///creates or replaces it (keeps the last state); 422 fields `enabled`, `path`, `interval_seconds`
+  Future putHealthCheck({
+    required String routeId,
+    required HealthCheckEntity model,
+  }) async {
+    await dio.put('${_addons(routeId)}/health-check', data: model.toJson());
+  }
+
+  ///204, also when there is none
+  Future deleteHealthCheck({required String routeId}) async {
+    await dio.delete('${_addons(routeId)}/health-check');
+  }
+
+  ///keeps the endpoint, interval and last result; 404 when it isn't configured
+  Future setHealthCheckEnabled({
+    required String routeId,
+    required bool enabled,
+  }) async {
+    await dio.post(
+      '${_addons(routeId)}/health-check/${enabled ? 'enable' : 'disable'}',
+    );
+  }
+
+  ///waits for the call (up to ~5 s); 404 when it isn't configured
+  Future runHealthCheck({required String routeId}) async {
+    await dio.post('${_addons(routeId)}/health-check/run');
+  }
 }
 
 class RouteRequest {
@@ -52,12 +186,17 @@ class RouteRequest {
   final RewritePathEntity? rewritePath;
   final String description;
 
+  ///only restore (PUT /routes) applies it, as it came in the backup; create, edit and validate ignore it.
+  ///null = the key wasn't in the file (the route keeps its own add-ons)
+  final Map<String, dynamic>? addons;
+
   RouteRequest({
     required this.name,
     required this.path,
     required this.uri,
     required this.description,
     this.rewritePath,
+    this.addons,
   });
 
   Map<String, dynamic> toJson() {
@@ -67,6 +206,7 @@ class RouteRequest {
       'uri': uri,
       'description': description,
       'rewrite_path': rewritePath?.toJson(),
+      if (addons != null) 'addons': addons,
     };
   }
 
@@ -77,6 +217,7 @@ class RouteRequest {
       uri: json['uri'],
       rewritePath: RewritePathEntity.tryFromJson(json['rewrite_path']),
       description: json['description'] ?? '',
+      addons: json['addons'] is Map<String, dynamic> ? json['addons'] : null,
     );
   }
 }
@@ -91,6 +232,15 @@ class RouteResponse {
   final RewritePathEntity? rewritePath;
   final String description;
 
+  ///every add-on this gateway knows, `null` the ones not configured; kept whole for the backup
+  final Map<String, dynamic> addons;
+
+  MaintenanceEntity? get maintenance =>
+      MaintenanceEntity.tryFromJson(addons['maintenance']);
+
+  HealthCheckEntity? get healthCheck =>
+      HealthCheckEntity.tryFromJson(addons['health_check']);
+
   RouteResponse({
     required this.name,
     required this.path,
@@ -99,6 +249,7 @@ class RouteResponse {
     required this.id,
     required this.createdAt,
     this.rewritePath,
+    this.addons = const {},
   });
 
   factory RouteResponse.fromJson(Map<String, dynamic> json) {
@@ -110,7 +261,103 @@ class RouteResponse {
       rewritePath: RewritePathEntity.tryFromJson(json['rewrite_path']),
       description: json['description'] ?? '',
       createdAt: json['created_at'],
+      addons: json['addons'] is Map<String, dynamic> ? json['addons'] : {},
     );
+  }
+}
+
+class MaintenanceEntity {
+  final bool enabled;
+  final String? message;
+  //ISO-8601 with offset
+  final String? retryAfter;
+
+  //read-only, written by the gateway
+  final String? defaultMessage;
+  final String? enabledAt;
+  final String? disabledAt;
+
+  MaintenanceEntity({
+    required this.enabled,
+    this.message,
+    this.retryAfter,
+    this.defaultMessage,
+    this.enabledAt,
+    this.disabledAt,
+  });
+
+  factory MaintenanceEntity.fromJson(Map<String, dynamic> json) {
+    final state = json['state'];
+    return MaintenanceEntity(
+      enabled: json['enabled'] as bool,
+      message: json['message'] as String?,
+      retryAfter: json['retry_after'] as String?,
+      defaultMessage: json['default_message'] as String?,
+      enabledAt: state is Map ? state['enabled_at'] as String? : null,
+      disabledAt: state is Map ? state['disabled_at'] as String? : null,
+    );
+  }
+
+  ///null when it isn't configured (the api sends `maintenance: null`)
+  static MaintenanceEntity? tryFromJson(dynamic json) {
+    if (json is! Map<String, dynamic> || json['enabled'] is! bool) return null;
+    return MaintenanceEntity.fromJson(json);
+  }
+
+  ///only what the admin writes: `default_message` and `state` are read-only
+  Map<String, dynamic> toJson() {
+    return {'enabled': enabled, 'message': message, 'retry_after': retryAfter};
+  }
+}
+
+class HealthCheckEntity {
+  final bool enabled;
+  final String path;
+  final int intervalSeconds;
+
+  //read-only `state`, written by the gateway; null until the first call
+  final String? checkedAt;
+  final bool? up;
+  final int? status;
+  final int? millis;
+
+  HealthCheckEntity({
+    required this.enabled,
+    required this.path,
+    required this.intervalSeconds,
+    this.checkedAt,
+    this.up,
+    this.status,
+    this.millis,
+  });
+
+  ///null when it isn't configured (`health_check: null`) or the route can't have one (no key)
+  static HealthCheckEntity? tryFromJson(dynamic json) {
+    if (json is! Map<String, dynamic> ||
+        json['enabled'] is! bool ||
+        json['path'] is! String ||
+        json['interval_seconds'] is! int) {
+      return null;
+    }
+    final state = json['state'];
+    return HealthCheckEntity(
+      enabled: json['enabled'] as bool,
+      path: json['path'] as String,
+      intervalSeconds: json['interval_seconds'] as int,
+      checkedAt: state is Map ? state['checked_at'] as String? : null,
+      up: state is Map ? state['up'] as bool? : null,
+      status: state is Map ? state['status'] as int? : null,
+      millis: state is Map ? state['millis'] as int? : null,
+    );
+  }
+
+  ///only what the admin writes: `state` is read-only
+  Map<String, dynamic> toJson() {
+    return {
+      'enabled': enabled,
+      'path': path,
+      'interval_seconds': intervalSeconds,
+    };
   }
 }
 

@@ -30,16 +30,59 @@ class RoutesCubit extends Cubit<RoutesState>
     onBus<RoutesRestoreOkState>((event) {
       search(emitLoading: false);
     });
+
+    //if a route's maintenance changes (or failed: someone may have changed it meanwhile), update
+    onBus<MaintenanceSaveOkState>((event) {
+      if (event.route != null) search(emitLoading: false);
+    });
+    //same for its rate limit
+    onBus<RateLimitSaveOkState>((event) {
+      if (event.route != null) search(emitLoading: false);
+    });
+    onBus<RateLimitSaveErrorState>((event) {
+      if (event.route != null &&
+          event.exception.type != GlobalExceptionType.validation) {
+        search(emitLoading: false);
+      }
+    });
+    //same for its CORS
+    onBus<CorsSaveOkState>((event) {
+      if (event.route != null) search(emitLoading: false);
+    });
+    onBus<CorsSaveErrorState>((event) {
+      if (event.route != null &&
+          event.exception.type != GlobalExceptionType.validation) {
+        search(emitLoading: false);
+      }
+    });
+    //same for its health check ("Run now" too: the new state is in the route)
+    onBus<HealthCheckSaveOkState>((event) => search(emitLoading: false));
+    onBus<HealthCheckSaveErrorState>((event) {
+      if (event.exception.type != GlobalExceptionType.validation) {
+        search(emitLoading: false);
+      }
+    });
+    onBus<MaintenanceSaveErrorState>((event) {
+      if (event.route != null &&
+          event.exception.type != GlobalExceptionType.validation) {
+        search(emitLoading: false);
+      }
+    });
   }
 
   void reset() {
+    _seq++; //a search still on its way after logout is dropped
     routes.clear();
     loaded = false;
     query.value = '';
     emit(const RoutesInitialState());
   }
 
+  ///number of the latest search: an older one that answers later is dropped
+  int _seq = 0;
+
   Future search({bool emitLoading = true}) async {
+    final my = ++_seq;
     try {
       //if there is a delete, create, restore, don't show the loading, just add/remove the route
       if (emitLoading) {
@@ -47,6 +90,7 @@ class RoutesCubit extends Cubit<RoutesState>
       }
 
       final found = await repo.findAll();
+      if (my != _seq) return;
       routes
         ..clear()
         ..addAll(found);
@@ -54,6 +98,7 @@ class RoutesCubit extends Cubit<RoutesState>
 
       emit(RoutesSearchOkState(routes: routes));
     } on Exception catch (exc) {
+      if (my != _seq) return;
       emit(RoutesSearchErrorState(ExceptionConverter.parse(exc)));
     }
   }

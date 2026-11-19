@@ -1,13 +1,14 @@
 package dev.root101.api_gateway.security;
 
+import dev.root101.api_gateway.config.CorsConfig;
 import dev.root101.api_gateway.config.GlobalExceptionHandler;
+import dev.root101.api_gateway.features.addons.cors.logic.usecase.CorsUseCase;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cloud.gateway.filter.headers.TrustedProxies;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
-import org.springframework.security.config.Customizer;
 import org.springframework.security.config.web.server.SecurityWebFiltersOrder;
 import org.springframework.security.config.web.server.ServerHttpSecurity;
 import org.springframework.security.web.server.SecurityWebFilterChain;
@@ -24,7 +25,8 @@ public class SecurityConfig {
             @Value("${app.admin.base-path}") String adminBasePath,
             @Value("${app.admin.role}") String adminRole,
             GlobalExceptionHandler errorHandler,
-            TrustedProxies trustedProxies
+            TrustedProxies trustedProxies,
+            CorsUseCase corsUseCase
     ) {
         String loginPathMatcher = "/%s/auth/login".formatted(adminBasePath);
         String healthPathMatcher = "/%s/health".formatted(adminBasePath);
@@ -34,7 +36,8 @@ public class SecurityConfig {
         AdminAuthenticationWebFilter adminAuthenticationWebFilter = new AdminAuthenticationWebFilter(adminAuthenticationManager, adminTokens, loginAttemptsGuard, adminBasePath, errorHandler, trustedProxies);
         return http
                 .csrf(ServerHttpSecurity.CsrfSpec::disable)                                       // Disable CSRF (this is a stateless api, don't need csrf)
-                .cors(Customizer.withDefaults())                                                  // Uses the CorsConfigurationSource bean, so 401/403 also get CORS headers
+                .cors(ServerHttpSecurity.CorsSpec::disable)                                       // Replaced by the admin CORS filter below
+                .addFilterAt(CorsConfig.adminCorsFilter(corsUseCase, adminBasePath), SecurityWebFiltersOrder.CORS) // The gateway's CORS add-on on the admin API, so 401/403 also get CORS headers
                 .exceptionHandling(exc -> exc
                         // Problem Details, and no `WWW-Authenticate: Basic` header: it makes browsers open the native login popup
                         .authenticationEntryPoint((exchange, e) -> errorHandler.writeProblem(exchange, HttpStatus.UNAUTHORIZED, "auth.required"))

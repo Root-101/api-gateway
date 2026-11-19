@@ -49,7 +49,7 @@ public abstract class IntegrationTest {
     public static final String ADMIN_PASSWORD = "admin123**";
 
     //singleton container: started once, stopped by testcontainers (ryuk) when the JVM ends
-    protected static final PostgreSQLContainer POSTGRES = new PostgreSQLContainer("postgres:16");
+    protected static final PostgreSQLContainer POSTGRES = new PostgreSQLContainer("postgres:18");
 
     private static final Pattern STATUS = Pattern.compile("/status/(\\d{3})");
 
@@ -132,7 +132,7 @@ public abstract class IntegrationTest {
      * Route `/{prefix}-{id}/**` → fake upstream, no rewrite
      */
     protected static RouteConfigRequest route(String name, String pathPrefix) {
-        return new RouteConfigRequest(name, "/" + pathPrefix + "/**", upstreamUrl(), null, null);
+        return new RouteConfigRequest(name, "/" + pathPrefix + "/**", upstreamUrl(), null, null, null);
     }
 
     /**
@@ -141,7 +141,7 @@ public abstract class IntegrationTest {
     protected static RouteConfigRequest rewriteRoute(String name, String pathPrefix) {
         return new RouteConfigRequest(
                 name, "/" + pathPrefix + "/**", upstreamUrl(),
-                new RewritePathModel("/" + pathPrefix + "/(?<segment>.*)", "/${segment}"), null
+                new RewritePathModel("/" + pathPrefix + "/(?<segment>.*)", "/${segment}"), null, null
         );
     }
 

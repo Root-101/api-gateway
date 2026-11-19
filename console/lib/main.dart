@@ -93,35 +93,33 @@ class App extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return LoadingOverlay.buildGlobal(
-      child: LanguageListener(
-        onLanguageChangeBuilder: (locale) {
-          Size size = MediaQuery.of(context).size;
-          if (size.width < 800 || size.height < 400) {
-            return MaterialApp(
-              debugShowCheckedModeBanner: false,
-              theme: ThemeConfig.theme,
-              locale: locale,
-              localizationsDelegates: appLocalizationsDelegates,
-              supportedLocales: appSupportedLocales,
-              builder: (context, child) => Scaffold(
-                body: Center(child: Text(context.intl.app.needMoreSpace)),
-              ),
-            );
-          } else {
-            return MaterialApp.router(
-              debugShowCheckedModeBanner: false,
-              onGenerateTitle: (context) => context.intl.app.name,
-              theme: ThemeConfig.theme,
-              locale: locale,
-              routerConfig: RouteConfig.router,
-              builder: (context, child) => ToastHost(child: child!),
-              localizationsDelegates: appLocalizationsDelegates,
-              supportedLocales: appSupportedLocales,
-            );
-          }
-        },
-      ),
+    return LanguageListener(
+      onLanguageChangeBuilder: (locale) {
+        Size size = MediaQuery.of(context).size;
+        if (size.width < 800 || size.height < 400) {
+          return MaterialApp(
+            debugShowCheckedModeBanner: false,
+            theme: ThemeConfig.theme,
+            locale: locale,
+            localizationsDelegates: appLocalizationsDelegates,
+            supportedLocales: appSupportedLocales,
+            builder: (context, child) => Scaffold(
+              body: Center(child: Text(context.intl.app.needMoreSpace)),
+            ),
+          );
+        } else {
+          return MaterialApp.router(
+            debugShowCheckedModeBanner: false,
+            onGenerateTitle: (context) => context.intl.app.name,
+            theme: ThemeConfig.theme,
+            locale: locale,
+            routerConfig: RouteConfig.router,
+            builder: (context, child) => ToastHost(child: child!),
+            localizationsDelegates: appLocalizationsDelegates,
+            supportedLocales: appSupportedLocales,
+          );
+        }
+      },
     );
   }
 }

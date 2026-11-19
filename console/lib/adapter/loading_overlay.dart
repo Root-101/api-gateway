@@ -1,9 +1,7 @@
-import 'dart:ui';
+import 'package:flutter/foundation.dart';
 
-import 'package:console/app_exporter.dart';
-import 'package:flutter/material.dart';
-import 'package:loader_overlay/loader_overlay.dart';
-
+///the blur with a spinner over the whole app while an action runs. Drawn by [ToastHost], under its
+///toast: the loader_overlay package painted above the app and the toast that follows never showed
 class LoadingOverlay {
   static final LoadingOverlay _instance = LoadingOverlay._internal();
 
@@ -11,29 +9,11 @@ class LoadingOverlay {
 
   factory LoadingOverlay() => _instance;
 
-  static GlobalLoaderOverlay buildGlobal({required Widget child}) {
-    return GlobalLoaderOverlay(
-      overlayColor: Colors.transparent,
-      overlayWidgetBuilder: (progress) => BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 4.5, sigmaY: 4.5),
-        child: const Center(child: CircularProgressIndicator()),
-      ),
-      child: child,
-    );
-  }
+  final ValueNotifier<bool> visible = ValueNotifier(false);
 
-  void show({BuildContext? context}) {
-    BuildContext safeContext = context ?? app.context;
-    safeContext.loaderOverlay.show();
-  }
+  void show() => visible.value = true;
 
-  bool isShowing({BuildContext? context}) {
-    BuildContext safeContext = context ?? app.context;
-    return safeContext.loaderOverlay.visible;
-  }
+  bool isShowing() => visible.value;
 
-  void hide({BuildContext? context}) {
-    BuildContext safeContext = context ?? app.context;
-    safeContext.loaderOverlay.hide();
-  }
+  void hide() => visible.value = false;
 }

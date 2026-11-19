@@ -9,7 +9,7 @@ plugins {
 
 group = 'dev.root101'
 
-version = '6.0.1'
+version = '6.1.0'
 
 repositories {
     mavenCentral()
@@ -66,6 +66,10 @@ dependencyManagement {
         mavenBom 'org.springframework.cloud:spring-cloud-dependencies:2025.1.4'
     }
 }
+
+//netty loads its native libraries: without this, java 24+ warns about it (and will block it in a later release)
+tasks.withType(JavaExec).configureEach { jvmArgs '--enable-native-access=ALL-UNNAMED' }
+tasks.withType(Test).configureEach { jvmArgs '--enable-native-access=ALL-UNNAMED' }
 
 //`test`: fast unit tests. `integrationTest`: `*IT` classes (Spring context + Testcontainers, Docker required)
 test {
