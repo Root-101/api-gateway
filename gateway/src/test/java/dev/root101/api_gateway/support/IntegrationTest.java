@@ -21,6 +21,7 @@ import reactor.netty.http.server.HttpServer;
 import java.time.Duration;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Predicate;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -126,6 +127,17 @@ public abstract class IntegrationTest {
 
     protected static String unique() {
         return UUID.randomUUID().toString().substring(0, 8);
+    }
+
+    private static final AtomicInteger IPS = new AtomicInteger();
+
+    /**
+     * A client ip (`X-Forwarded-For`) no other test uses: the lockout and the rate limit count per ip in the shared
+     * context, so two tests picking the same random ip made one of them fail now and then
+     */
+    protected static String uniqueIp() {
+        int n = IPS.incrementAndGet();
+        return "10.%d.%d.%d".formatted(n >> 16 & 255, n >> 8 & 255, n & 255);
     }
 
     /**

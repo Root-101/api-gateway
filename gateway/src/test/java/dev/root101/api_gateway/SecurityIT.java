@@ -78,7 +78,7 @@ class SecurityIT extends IntegrationTest {
 
         webTestClient.get().uri("/%s/routes".formatted(ADMIN_PATH))
                 .header(HttpHeaders.ORIGIN, ORIGIN)
-                .header("X-Forwarded-For", "192.0.2." + (int) (Math.random() * 200))
+                .header("X-Forwarded-For", uniqueIp())
                 .header(HttpHeaders.AUTHORIZATION, "Basic " + HttpHeaders.encodeBasicAuth("admin", "wrong", null))
                 .exchange()
                 .expectStatus().isUnauthorized()
@@ -105,7 +105,7 @@ class SecurityIT extends IntegrationTest {
 
         webTestClient.post().uri("/%s/auth/login".formatted(ADMIN_PATH))
                 .header(HttpHeaders.ORIGIN, ORIGIN)
-                .header("X-Forwarded-For", "192.0.2." + (int) (Math.random() * 200))
+                .header("X-Forwarded-For", uniqueIp())
                 .bodyValue(Map.of("username", "admin", "password", "wrong"))
                 .exchange()
                 .expectStatus().isUnauthorized()
@@ -151,7 +151,7 @@ class SecurityIT extends IntegrationTest {
      */
     @Test
     void bearerToken() {
-        String ip = "203.0.113." + (int) (Math.random() * 200);
+        String ip = uniqueIp();
         String token = loginToken(ip);
 
         webTestClient.get().uri("/%s/routes".formatted(ADMIN_PATH))
@@ -189,7 +189,7 @@ class SecurityIT extends IntegrationTest {
      */
     @Test
     void successfulLoginResetsFailedAttempts() {
-        String ip = "203.0.113." + (int) (Math.random() * 200);
+        String ip = uniqueIp();
         for (int round = 0; round < 3; round++) {
             for (int i = 0; i < 4; i++) {
                 webTestClient.post().uri("/%s/auth/login".formatted(ADMIN_PATH))
@@ -240,7 +240,7 @@ class SecurityIT extends IntegrationTest {
      */
     @Test
     void optionsToLoginDoesNotResetTheLockout() {
-        String ip = "198.51.100." + (int) (Math.random() * 200);
+        String ip = uniqueIp();
         for (int round = 0; round < 2; round++) {
             for (int i = 0; i < (round == 0 ? 4 : 1); i++) {
                 webTestClient.post().uri("/%s/auth/login".formatted(ADMIN_PATH))
@@ -266,7 +266,7 @@ class SecurityIT extends IntegrationTest {
      */
     @Test
     void basicOnHealthDoesNotCount() {
-        String ip = "198.51.100." + (int) (Math.random() * 200);
+        String ip = uniqueIp();
         for (int i = 0; i < 8; i++) {
             webTestClient.get().uri("/%s/health".formatted(ADMIN_PATH))
                     .header("X-Forwarded-For", ip)
@@ -301,7 +301,7 @@ class SecurityIT extends IntegrationTest {
      */
     @Test
     void lockoutAfterFailedAttempts() {
-        String attackerIp = "198.51.100." + (int) (Math.random() * 200);
+        String attackerIp = uniqueIp();
         String token = loginToken(attackerIp);
         for (int i = 0; i < 5; i++) {
             webTestClient.post()

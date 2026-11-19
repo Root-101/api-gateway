@@ -65,7 +65,7 @@ class RateLimitIT extends IntegrationTest {
     }
 
     private static String ip() {
-        return "10.%d.%d.%d".formatted((int) (Math.random() * 250), (int) (Math.random() * 250), (int) (Math.random() * 250));
+        return uniqueIp();
     }
 
     /**
