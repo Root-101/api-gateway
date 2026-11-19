@@ -1,4 +1,8 @@
 * 6.x:
+    * 6.1.2:
+        * **DATE** :date: : 2026-11-19.
+        * **Docs** :books: : `CONTRIBUTING.md` explains how to release (versions, changelog, mutations, merge to `master`, tag and images); pull requests go against `develop`.
+        * **Console** :computer: : Version adjustment to match the gateway.
     * 6.1.1:
         * **DATE** :date: : 2026-11-19.
         * **Console** :computer: : The map's gateway node shows the gateway's add-ons (maintenance, rate limit and CORS), as the route nodes do.
