@@ -166,7 +166,9 @@ its add-ons; a new name is a new route.
 **URL:** `/#/map` · the start screen
 
 The gateway as a diagram: its public URL on top, the gateway below it and a branch to each route,
-with the path of the route on it. Each route card shows its name, description, the host it
+with the path of the route on it. The gateway shows its add-ons at the bottom: **Maintenance** and
+**Rate limit** with **on** or **off** when configured (orange and blue when on), and **CORS**,
+always there. Each route card shows its name, description, the host it
 forwards to and its add-ons (**Redirect only** when it has none). A branch is dashed lilac and
 moving while the route forwards, dotted orange while it answers `503`, dotted red while its health
 check says **DOWN** (it still forwards). Drag to move, the wheel to

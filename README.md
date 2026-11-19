@@ -15,7 +15,7 @@ and searches the logs, all without redeploying anything.
 > [`CHANGELOG.md`](CHANGELOG.md) before upgrading from 5.x, and deploy the gateway and the console
 > of the same version together.
 
-![The routes in the console](docs/design/screens/04-routes.png)
+![The gateway map in the console](docs/design/screens/21-gateway-map.png)
 
 ## How it works
 

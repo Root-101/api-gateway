@@ -1,7 +1,7 @@
 * 6.x:
     * 6.1.2:
         * **DATE** :date: : 2026-11-19.
-        * **Docs** :books: : `CONTRIBUTING.md` explains how to release (versions, changelog, mutations, merge to `master`, tag and images); pull requests go against `develop`.
+        * **Docs** :books: : `CONTRIBUTING.md` explains how to release (versions, changelog, mutations, merge to `master`, tag and images); pull requests go against `develop`. The console's design export (`docs/design/`) regenerated from the canvas: the map's gateway node with its add-ons and the screens' new example data; the README shows the gateway map instead of the routes.
         * **Console** :computer: : Version adjustment to match the gateway.
     * 6.1.1:
         * **DATE** :date: : 2026-11-19.
