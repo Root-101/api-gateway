@@ -6,221 +6,82 @@
           (always on). The node is wider and taller and the routes sit lower to keep the branches' length.
     * 6.1.0:
         * **DATE** :date: : 2026-11-18.
-        * **Add-ons** :jigsaw: : Each route forwards its requests; everything else is an add-on, added, turned
-          on or off, edited and removed on its own (needs the gateway `6.1.0`). The first is maintenance,
-          per route and for the whole gateway. Its panel (the same one in the map and in Routes) shows the redirect,
-          the add-ons with an in-place editor and a slide to turn them on or off, and "Add to this route" with the
-          ones missing. The 503 message is optional (empty, the gateway's own, marked "default"), and the panel
-          shows how long it has been on or the last window. While the gateway is in maintenance it wins: every
-          route shows `PAUSED` and its slide is locked. API: `addons` in each route, `GET /addons`, and `PUT`,
-          `DELETE`, `POST .../enable` and `.../disable` under `/routes/{id}/addons/maintenance` and
-          `/addons/maintenance`.
-        * **Health check** :heartpulse: : A second add-on, routes only: the gateway calls a path of the route's
-          service every 10 s to 1 h and the console shows the last result. `LIVE` (a 2xx) or `DOWN` at the end of
-          the last check (maintenance wins), a `Health · every 30 s` badge on the card, a chip on the map node, and, while it is
-          down, a red, still branch in the map with a red path label and a reddish node (it still gets its requests). Its block in the panel shows the
-          endpoint, the interval and the last check ("12 s ago · 200 in 18 ms · LIVE"), with "Run now", a "Check on a schedule"
-          slide (as rate limit's, `POST .../enable` and `.../disable`), edit in place (endpoint, one of 10 s / 30 s /
-          1 min / 5 min / 15 min / 1 h) and remove. Added as
-          `/health` every 30 s, on. The routes are reread every 10 s while one has it on (the gateway doesn't
-          push). "Add to this route" lists the types the route's `addons` has as keys. API: `PUT`, `DELETE` and
-          `POST .../run` under `/routes/{id}/addons/health-check`.
-        * **Rate limit** :stopwatch: : A third add-on, per route and for the whole gateway: past a number of requests
-          per second, minute or hour per client IP, a 429 (the gateway's counts every route together). Its block
-          shows the limit, the burst ("Same as the limit" when empty) and the 429, with a slide to turn it on or
-          off, edit in place (requests, burst, period; saving starts every count from zero) and remove. Added as 60 / minute, burst 10, off, since it changes traffic. A `Rate limit · 60/min` badge on
-          the card and a `60/min` chip on the map node. API: `rate_limit` in each route and in `GET /addons`, and
-          `PUT`, `DELETE`, `POST .../enable` and `.../disable` under `/routes/{id}/addons/rate-limit` and
-          `/addons/rate-limit`. The gateway's maintenance and rate limit can be removed too, like a route's
-          (`DELETE /addons/maintenance`, `DELETE /addons/rate-limit`).
-        * **CORS** :globe_with_meridians: : A fourth add-on, per route and for the whole gateway: the browser origins
-          allowed to call it (`https://app.com`, `https://*.example.com`, `*`) and, routes only, credentials
-          (cookies). Origins are chips: type one and press Enter (checked right away: a bad one stays in the field with its error), the trash to take it out. The gateway's is always
-          there, with no slide and no remove: it covers the admin API and every route without its own; editing it
-          warns, without blocking, when the list leaves out the origin this console runs on (the gateway rejects
-          that save). A route's is added off with the gateway's origins, has a slide (off: the gateway's applies)
-          and can be removed. Credentials are off and locked while an origin matches all. A bad origin marks its
-          chip; the gateway's rule errors show in the block. A `CORS · app.com` badge on the card and a globe chip
-          on the map node. API: `cors` in each route and in `GET /addons`, `PUT /addons/cors`, and `PUT`, `DELETE`,
-          `POST .../enable` and `.../disable` under `/routes/{id}/addons/cors`. While the deprecated
-          `CORS_ALLOWED_ORIGINS` is still set, a banner on top of every screen says so: blue when it was moved into
-          the gateway's CORS (can be closed), yellow with both lists when it differs and is ignored; both with
-          "Edit CORS", and both gone once the variable is removed and the gateway restarted (`env_var` in the
-          gateway's `cors`).
-        * **Add-on info** :information_source: : An (i) beside each add-on's name, in its block and in "Add to this
-          route", even before it is added. Hover, focus or a tap opens a popup with what it is for and how it works
-          (for the gateway's maintenance and rate limit, the gateway-wide wording), as in the canvas.
-        * **Gateway map** :world_map: : New first entry of the rail: the gateway's URL, the gateway
-          and a branch per route with its path, dashed and moving while it forwards, dotted orange while it answers
-          `503`. Drag, wheel zoom, `Fit`, an "Add route" card when there are none, and the panel of a route or of the
-          gateway on a click. `Open in Routes` filters Routes by that route. It is the start screen: opening the
-          console and logging in land on the map instead of Routes. The 404 page offers "Go to map" instead of "Go to
-          Routes". The grid behind it pans and zooms with the map.
-          An expand button next to the panel's close opens it as the big panel: centered over the dimmed map (up to
-          1180 px wide), the blocks in 3 columns and "Add to..." below them. The panel's box animates from the side
-          to the middle and back, and the blocks fade in once it has resized. A click outside or the close button
-          closes it. Only in the map: the panel in Routes stays on the side.
-          Over the canvas the cursor is the drag hand (closed while dragging); nodes and buttons keep the click hand.
-          In code it is its own feature, `features/map`: the screen keeps the view and the selection, and the header,
-          the diagram, the branches, the legend and each node are widgets of their own in `view/widgets`. Routes got
-          the same split: its screen keeps the search and the delete confirmation, and the header, the grid, the card
-          (with its maintenance strip, add-on badges and skeleton) and the delete dialog live in
-          `features/routes/view/widgets`. So did the route form: `routes_form_screen.dart` keeps the dialog and its
-          cubit, `routes_form_widget.dart` the fields, steps, validation and saving, and the header, preview, step,
-          stepper, footer and duplicate chip live in `form/widgets`. And Logs: its screen keeps the debounced search
-          and the snacks, and the header, the toolbar (search, filter chips, Filters button), the table (rows, empty
-          state) and the footer (rows per page, pages) live in `features/logs/view/widgets`. The date range calendar
-          of the logs filter is now a design system component, `AppDateRangeDialog`. The three add-on blocks share
-          their header (icon, name, info, Edit, Remove) and their remove confirmation: `AddonHeader` and
-          `AddonRemoveConfirm` in `addons/addon_block_parts.dart`. The health check's and the rate limit's on / off are
-          compact slides on the right of their row (120 px, green and blue), like maintenance's full-width one
-          (`SlideSwitch` takes a `color` and `compact`). The shell (`base_screen.dart`) keeps the add-on loads,
-          the health check poll and the layout; the rail with its items, the maintenance and offline banners and the
-          snack listeners (`ShellListeners`) live in `features/base`. The restore dialog's drop area uses the design
-          system's `DashedBorder` (now with `dash` and `gap`) instead of its own copy.
-        * **Route form** :pencil2: : The preview is no longer a card inside the form: the strip under the title takes
-          the card color, as in the canvas.
-        * **Routes** :twisted_rightwards_arrows: : Each card has the `MAINT` / `PAUSED` tag, a badge per add-on and
-          `+ Add-ons`. Backups keep the `addons` of each route as the gateway sends them (unknown ones too, without
-          `default_message` and `state`), and restore sends them back.
-        * **Maintenance** :construction: : The banner stays on every screen while the gateway is in maintenance:
-          `Edit` opens the map with the gateway's panel, `Turn off` calls `disable`. The first 6.1.0 version (rail
-          entry, dialog and wrench on the card, never released) was replaced by the add-ons.
-        * **Canvas match** :art: : After comparing every screen with the canvas: "+ Add-ons" on the route cards has a
-          dashed border; Routes keeps 3 columns with the rail expanded (380 px cards, 12 px gaps); the route form shows
-          each step's title and hint on one line; the maintenance slide is drawn as in the canvas (44 px track, 38 px
-          knob with a shadow and a double-chevron, an orange fill behind it, the label fading while dragged; the label
-          keeps clear of the knob only on its side, so it isn't cut in the panel); text buttons (Clear all, Go to the
-          login page) are bold; dialogs no longer focus a button or the close button when they open (the route form
-          still focuses Name).
-        * **Maintenance time** :stopwatch: : "On for", "Last window", the gateway node and the banner's countdown use
-          larger units ("2h 30 min", "1d 3h") and update every 10 s on their own.
-        * **Route panel** :jigsaw: : `Open in Routes` / `Edit route` has the external-link icon of the canvas. Each
-          "Add to this route" card has a dashed 1.5 px border, as in the canvas. The
-          maintenance slide keeps the handle where it was dropped while it saves (it jumped back to the old side and
-          then to the new one), slides to its side when not dragged, and shows the click hand. Removing an add-on asks
-          with the canvas buttons: outlined Cancel (no longer focused, so no lilac ring) and filled red Remove. The edit
-          buttons (Cancel, Save) are 34 px too, as in the canvas. Every add-on ends like maintenance: its data, a
-          divider, what the slide does with a line on what happens now ("On · called every 30 s", "Off · nothing is
-          limited"), and the slide across the whole block, instead of a small switch on the right. The gateway's
-          panel starts with an **Overview** block, like a route's Redirect: its public URL and how many routes there
-          are, health-checked, down, in maintenance (all of them while the gateway is), rate-limited and with their
-          own CORS.
-        * **Toasts** :speech_balloon: : They show at the bottom center instead of the bottom right, where they
-          covered the side panel of the map.
-        * **Fix** :bug: : The version under the rail, the login and the splash was empty with `flutter run`: its
-          `version.json` comes as javascript there, so it was not read as a map. It is now read as text and decoded.
-        * **Fix** :bug: : No toast showed after an action with the loading layer (delete, backup, restore, save a
-          route): the `loader_overlay` package painted above the app. The loading layer is now drawn under the
-          toast, and the dependency was removed.
-        * **Fix** :bug: : Logs with many rows per page scrolled the whole screen. The screen now fits the window:
-          the header, search and footer stay, the column titles too, and only the rows scroll.
-        * **Fix** :bug: : An older reload of the routes could answer after a newer one and overwrite it (the 10 s
-          health check poll landing after a maintenance toggle showed maintenance off again). Only the latest reload
-          is applied now, its error too, and none after logout.
-        * **Credentials** :lock: : Locked off, as the gateway now asks, while an origin lets in any site: `*`, or a `*` in
-          the host other than `*.domain.com` (`https://*.com`, `https://a*.com`, `https://*:8080`); `https://*.a.com`,
-          `*://a.com` and `http://localhost:[*]` still allow them. Its hint says so.
-        * **Docs** :books: : `docs/console.md` has the Gateway map and Add-ons sections, and the map as the start
-          screen; `docs/design` screens 21–24 are the map, and every screen shows the rail and cards as built. The
-          canvas has no Experimental page any more (the map and the route panel are with the other screens, the
-          superseded maintenance boards are gone), its sample URLs are generic (`example.com`), and the export was
-          regenerated from it (`export.py` takes screen 24 from Routes and draws the map with 3 routes). The
-          console README lists the map and the add-ons, says console `6.1.0` needs gateway `6.1.0`, counts the 24
-          screens and shows the map.
-        * **Version** :bookmark: : `6.1.0` in `pubspec.yaml` (it said `6.0.1`).
+        * **Add-ons** :jigsaw: : Each route forwards its requests; everything else is an add-on, added, turned on or
+          off, edited and removed on its own (needs the gateway `6.1.0`), per route and, except the health check, for
+          the whole gateway. Its panel (the same one in the map and in Routes) shows the redirect (for the gateway, an
+          **Overview** with its URL and how many routes are checked, down, in maintenance, limited or with their own
+          CORS), a block per add-on with its data, an in-place editor, a slide across the block to turn it on or off and
+          an (i) popup with what it does, and "Add to this route" with the ones missing.
+        * **Maintenance** :construction: : An optional 503 message (empty: the gateway's own, marked "default"), and how
+          long it has been on or the last window ("2h 30 min", updated every 10 s). While the gateway is in maintenance
+          it wins: every route shows `PAUSED` with its slide locked, and a banner on every screen offers `Edit` and
+          `Turn off`.
+        * **Health check** :heartpulse: : Routes only: the gateway calls a path of the service every 10 s to 1 h. `LIVE`
+          or `DOWN` with the last check ("12 s ago · 200 in 18 ms"), "Run now", and a red, still branch in the map while
+          it is down. Added as `/health` every 30 s, on; the routes are reread every 10 s while one has it on.
+        * **Rate limit** :stopwatch: : A limit of requests per second, minute or hour per client IP, with an optional
+          burst; past it, a 429. Added as 60 / minute, burst 10, off, since it changes traffic.
+        * **CORS** :globe_with_meridians: : The allowed browser origins (`https://app.com`, `https://*.example.com`,
+          `*`) as chips, checked as they are typed, and, routes only, credentials, locked off while an origin lets in
+          any site. The gateway's always exists (no slide, no remove) and warns when its list leaves out the origin this
+          console runs on; a route's is added off with the gateway's origins. While the deprecated
+          `CORS_ALLOWED_ORIGINS` is set, a banner says whether it was moved into the gateway's CORS (blue, can be
+          closed) or differs and is ignored (yellow, with both lists).
+        * **Gateway map** :world_map: : The new start screen, first in the rail: the gateway's URL, the gateway and a
+          branch per route with its path, dashed and moving while it forwards, dotted orange in maintenance, red while
+          down. Drag, wheel zoom, `Fit`, and the panel of a route or of the gateway on a click, which can expand to a
+          big centered panel with the blocks in 3 columns. `Open in Routes` filters Routes by that route.
+        * **Routes** :twisted_rightwards_arrows: : Each card has the `MAINT` / `PAUSED` tag, a badge per add-on and `+
+          Add-ons`. Backups keep each route's `addons` and restore sends them back.
+        * **Design** :art: : Matched with the canvas: route cards, the route form's preview strip and step titles, the
+          maintenance slide, bold text buttons, and dialogs that don't focus a button when they open. Toasts at the
+          bottom center, so they don't cover the map's panel.
+        * **Fix** :bug: : The version was empty with `flutter run`; no toast showed after an action with the loading
+          layer (`loader_overlay` removed); Logs with many rows scrolled the whole screen (now only the rows scroll); an
+          older reload of the routes could overwrite a newer one.
+        * **Code** :broom: : The map, Routes, the route form, Logs and the shell split into widgets of their own, the
+          add-on blocks share their header and remove confirmation, and `AppDateRangeDialog` and `DashedBorder` are in
+          the design system.
+        * **Docs** :books: : `docs/console.md` has the map and the add-ons, `docs/design` has screens 21–24 and every
+          screen as built, and the console README lists the map and the add-ons.
     * 6.0.0:
         * **DATE** :date: : 2026-11-12.
-        * **Redesign** :art: : New visual identity and rebuilt screens: login, side menu with notch, route cards,
-          route form with live preview, logs table and filter dialog. New tokens, line icons and DM Mono font.
-        * **Routes** :twisted_rightwards_arrows: : Restore has two steps and now replaces every route atomically
-          (`PUT /routes`, needs the gateway `6.0.0`). Duplicate opens a pre-filled form named `<name>-copy`.
-          The form validates a unique name, a path starting with `/` and an http(s) URL on save.
-        * **Logs** :memo: : Numbered pagination (10, 25 or 50 rows) replaces the infinite scroll. Search is automatic
-          with a 400 ms debounce. Status filter by family (`2xx`...) or exact code, and a date range calendar.
-          Filters are shown as chips in the search box, aligned to its right edge. Fixed the export failing with a
-          date filter.
-        * **Auth** :lock: : An expired session asks for the password in a dialog over the current screen instead of
-          logging out.
-        * **States** :traffic_light: : Added first-load skeletons, toasts, a 404 page inside the app and an offline
-          banner that retries every 10 s. Errors and warnings are now printed in the browser console of release
-          builds (the logger was silent there).
-        * **Splash** :art: : The splash of the design is now in `index.html`, so it shows while the app downloads
-          instead of a blank page, and it is removed on the first frame. Fixed a refresh (F5) or deep link with a
-          remembered session always opening the routes: the splash's navigator reset the url to `/` before the
-          router read it.
-        * **Docker** :whale: : New `GET /health` in nginx (`{"status":"up"}`), used by the healthcheck in
-          `docker-compose.yml`. Before, every path answered `200` with `index.html`.
-        * **Dependencies** :package: : Removed `syncfusion_flutter_datagrid` and `top_snackbar_flutter`.
-        * **Version** :bookmark: : The console now shares the version of the API Gateway, so both projects are
-          released with the same number. It jumps from `1.1.1` to `6.0.0` for that reason.
-        * **Deploy** :warning: : Deploy together with the gateway `6.0.0`: with an older gateway a `401`
-          arrives as a connection error and does not log out.
-        * **Versions** :arrow_up: : Upgrade Flutter to `3.47.9` and all dependencies to their latest versions.
-        * **Routes** :twisted_rightwards_arrows: : Fixes: routes without rewrite-path broke the list, editing or
-          duplicating wiped the description, the `Redirected to` preview did not match the gateway. Delete asks
-          for confirmation and restore validates the file before creating anything.
-        * **Routes** :twisted_rightwards_arrows: : Added description field, search, copy URL buttons and edit by
-          URL (`/routes/:id/edit`).
-        * **Logs** :memo: : Fixes: filter by local day, pagination and retry of failed pages, duplicated logs
-          after logout. The export is paginated. Added refresh button, total of results and loading indicator.
-        * **Logs** :memo: : A date filter with the dates reversed now covers both days completely.
-        * **Auth** :lock: : A `401`/`403` on any screen logs out and a network error no longer does. Added route
-          guard, optional inactivity logout (`SESSION_TIMEOUT_MINUTES`), `Remember me` warning and gateway
-          status on login. The password is no longer printed in the logs.
-        * **Auth** :lock: : Login now uses the gateway token (`Authorization: Bearer`). `Remember me` stores the
-          token instead of the password, and a password stored by an older version is removed on start.
-        * **Auth** :lock: : A Dio interceptor adds the `Authorization` header, so clients, repositories and cubits
-          no longer receive the credential. No change in behaviour.
-        * **Routes** :twisted_rightwards_arrows: : `GET /routes/{id}` is parsed with the same shape as the list.
-        * **Routes** :twisted_rightwards_arrows: : New `Advanced` section in the route form to set `order`,
-          `methods`, `hosts`, `headers` and `filters`. Editing, duplicating, backup and restore keep them.
-        * **Routes** :twisted_rightwards_arrows: : `order`, `methods`, `hosts`, `headers` and `filters` are removed,
-          following the gateway: the `Advanced` section of the form and the fields in requests, responses and
-          backups. A backup that still has them restores without them.
-        * **Errors** :hammer_and_wrench: : API errors are parsed safely whatever their format and clear error screen
-          when `env.js` is invalid.
-        * **i18n** :globe_with_meridians: : Texts migrated to `slang` and all the error messages translated.
-        * **i18n** :globe_with_meridians: : Dates (calendar month, log timestamps) and numbers follow the selected
-          language; they were always in English.
-        * **Docker** :whale: : Reproducible build, `nginx` 1.28 with security headers and no stale files after a deploy.
-          `env.js` is generated on container start, so one image serves every environment.
-        * **Config** :wrench: : `ADMIN_PATH` is optional and defaults to `_admin`, the same default as the gateway.
-          Before, a missing value stopped the console with a configuration error.
-        * **API** :electric_plug: : Adapted to the gateway `6.0.0` admin API. Errors are RFC 9457 problem details:
-          the field errors of a `422` come from `violations` (`fieldName`, `message`), and the message of any other
-          error from `detail`. Login reads `access_token`. Logs use `GET /http-logs` with query parameters and read
-          `items`.
-        * **Logs** :memo: : The export freezes the end date when it starts, so logs that arrive meanwhile don't
-          repeat rows, and it stops at 100 000 logs (the newest), telling you to narrow the filters.
-        * **Logs** :memo: : When more than 100 000 logs match, the gateway caps the count (`total_capped`) and
-          the console shows `100,000+`. Pages only reach the capped count.
-        * **General** :hammer_and_wrench: : Removed unused code (`RouteModel.fromJson`) and the unused `build_runner`
-          dependency.
-        * **Auth** :lock: : The session expired dialog shows and hides the password, like the login, and says the
-          credentials come from `ADMIN_USERNAME` and `ADMIN_PASSWORD`.
-        * **Routes** :twisted_rightwards_arrows: : The route form, in three steps (General, Forwarding, Path rewrite) with a compact stepper in the footer. A preview like the card in Routes stays on top and fills in while typing, with a pencil per value that opens its field. Duplicate shows the original route as a chip next to the title, with its warning in a popup. Each Next is checked by the gateway (`POST /routes/validate`): the form no longer keeps its own copy of the rules. The dialog takes the whole height.
-        * **Design** :art: : Matched with the canvas: the login brand keeps its side margin (8 % of the window, not
-          of its column) and the columns split like the design; the route filter of the logs lists `Admin` and
-          `No-Route` before the routes. Restore rejects a file whose names repeat.
-        * **Routes** :twisted_rightwards_arrows: : Route names are case-sensitive, like the API: restore, the form's
-          taken-name check and the name of a duplicate compare them exactly (`whoami` and `WHOAMI` are two routes).
-          They used to ignore case, so a backup with both could not be restored.
-        * **Routes** :twisted_rightwards_arrows: : Route form fixes: `Required field` shows on steps 1 and 2, the
-          first field with an error gets the focus and scrolls into view with its message, and a route that fails
-          to load shows its id once.
-        * **Language** :globe_with_meridians: : Every request sends `Accept-Language` with the language of the console, so the gateway answers its validation errors in that language (needs the gateway `6.0.0`).
-        * **Logs** :memo: : The details of a log without a route show `No-Route` in the selected language, like the
-          table, instead of `NO-ROUTE`.
-        * **Docs** :books: : README screenshots now come from `docs/design/screens` and link to `docs/console.md`.
-          The README is titled `API Gateway Console`, and says that `GATEWAY_SERVICE_URL` may omit the scheme and
-          that nginx answers `GET /health`.
-        * **General** :hammer_and_wrench: : Added CI job (analyze and build), updated README, console version in
-          the side menu and several memory and UI fixes. The unit tests were removed.
-        * **General** :hammer_and_wrench: : Dart package renamed to `console`.
-        * **i18n** :globe_with_meridians: : The language change no longer uses `reassembleApplication()`, a
-          hot-reload API: the screens behind the selector read their texts with `context.intl`.
-        * **General** :hammer_and_wrench: : `get` is only used for dependency injection.
+        * **Version** :bookmark: : The console shares the version of the API Gateway, so it jumps from `1.1.1` to
+          `6.0.0`. Deploy it together with the gateway `6.0.0`.
+        * **Redesign** :art: : New visual identity and rebuilt screens: login, side menu with notch, route cards, route
+          form with live preview, logs table and filter dialog. New tokens, line icons and DM Mono font. The splash is
+          in `index.html`, so it shows while the app downloads.
+        * **API** :electric_plug: : Adapted to the gateway `6.0.0` admin API: the login's Bearer token (`access_token`),
+          Problem Details errors (`violations` for a `422`, `detail` otherwise, parsed safely whatever their format),
+          `GET /http-logs`, and `Accept-Language` on every request so the gateway answers in the console's language.
+        * **Auth** :lock: : `Remember me` stores the token, not the password (one stored by an older version is
+          removed). A `401`/`403` logs out, a network error doesn't, and an expired session asks for the password in a
+          dialog over the current screen. Route guard, optional inactivity logout (`SESSION_TIMEOUT_MINUTES`) and the
+          gateway's status on the login. The password is no longer printed in the logs.
+        * **Routes** :twisted_rightwards_arrows: : The route form in three steps (General, Forwarding, Path rewrite)
+          with a live preview, each step checked by the gateway (`POST /routes/validate`). Description, search, copy URL
+          buttons, edit by URL (`/routes/:id/edit`), duplicate as `<name>-copy`, and delete with confirmation. Restore
+          in two steps, checked first and atomic (`PUT /routes`); names are case-sensitive, like the API. `order`,
+          `methods`, `hosts`, `headers` and `filters` removed, following the gateway (a backup that has them restores
+          without them). Fixes: routes without rewrite-path broke the list, editing wiped the description, the
+          `Redirected to` preview didn't match the gateway.
+        * **Logs** :memo: : Numbered pagination (10, 25 or 50 rows) instead of the infinite scroll, automatic search,
+          status filter by family or exact code, a date range calendar, filters as chips, refresh and the total of
+          results (`100,000+` when the gateway caps it). The export is paginated, freezes its end date and stops at 100
+          000 logs. Fixes: filter by local day, reversed dates, retry of failed pages, duplicated logs after logout.
+        * **States** :traffic_light: : First-load skeletons, toasts, a 404 page inside the app and an offline banner
+          that retries every 10 s. Errors are printed in the browser console of release builds.
+        * **i18n** :globe_with_meridians: : Texts with `slang`, every error message translated, and dates and numbers in
+          the selected language.
+        * **Docker** :whale: : Reproducible build, `nginx` 1.28 with security headers, `GET /health` for the
+          healthcheck, and `env.js` generated on container start, so one image serves every environment. `ADMIN_PATH` is
+          optional (default `_admin`).
+        * **Versions** :arrow_up: : Flutter `3.47.9` and every dependency to its latest version;
+          `syncfusion_flutter_datagrid`, `top_snackbar_flutter` and `build_runner` removed.
+        * **General** :hammer_and_wrench: : CI job (analyze and build), the console version in the side menu, the Dart
+          package renamed to `console`, and `get` only for dependency injection. The unit tests were removed.
+        * **Docs** :books: : The README is titled `API Gateway Console`, with screenshots from `docs/design/screens` and
+          a link to `docs/console.md`.
 * 1.x:
     * 1.1.1:
         * **DATE** :date: : 2026-05-17.
