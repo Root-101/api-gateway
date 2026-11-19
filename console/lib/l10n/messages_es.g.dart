@@ -1054,7 +1054,8 @@ class AppMessages$cors$es implements AppMessages$cors$en {
   @override
   String get credentialsSwitchHint => 'Para servicios con sesión por cookies';
   @override
-  String get credentialsNoAll => 'No con un origen que admite todos, como *';
+  String get credentialsNoAll =>
+      'No con un origen que deja pasar cualquier sitio (*, o un * en el host que no sea *.dominio.com)';
   @override
   String lockout({required Object origin}) =>
       'Esta consola está en ${origin}, que no está en la lista: al guardar se quedaría sin acceso al gateway.';
@@ -1786,7 +1787,7 @@ extension on AppMessagesEs {
       'cors.removeOrigin' => ({required Object origin}) => 'Quitar ${origin}',
       'cors.credentialsSwitch' => 'Permitir credenciales',
       'cors.credentialsSwitchHint' => 'Para servicios con sesión por cookies',
-      'cors.credentialsNoAll' => 'No con un origen que admite todos, como *',
+      'cors.credentialsNoAll' => 'No con un origen que deja pasar cualquier sitio (*, o un * en el host que no sea *.dominio.com)',
       'cors.lockout' => ({
         required Object origin,
       }) => 'Esta consola está en ${origin}, que no está en la lista: al guardar se quedaría sin acceso al gateway.',

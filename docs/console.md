@@ -140,7 +140,8 @@ Asks first, with the route it deletes: requests to its path stop being forwarded
 
 **Backup** downloads every route as a JSON file, `routes-backup-<date>.json`: a list with the same
 fields as the form, and the add-ons of each route (`addons`, as the gateway sends them, without what
-the gateway writes itself). The add-ons of the whole gateway are not in it.
+the gateway writes itself). The gateway's own add-ons (CORS, maintenance, rate limit) are not in it,
+and restore leaves them as they are.
 
 ![Restore routes](design/screens/10-routes-restore.png)
 
@@ -247,7 +248,7 @@ CORS, or with it off.
 |--------------------------------|-------------------------------------------------------------------------------------|
 | **Add to this route → CORS**   | Adds it, off, with the gateway's origins                                            |
 | **Own CORS** (slide)           | Routes only. On: its origins apply; off: the gateway's                              |
-| **Edit** (pencil)              | **Allowed origins** as chips (type one, Enter, checked right away; the trash takes it out): `https://app.com`, `https://*.example.com` or `*`. Routes also have **Allow credentials**, locked off while an origin matches all |
+| **Edit** (pencil)              | **Allowed origins** as chips (type one, Enter, checked right away; the trash takes it out): `https://app.com`, `https://*.example.com` or `*`. Routes also have **Allow credentials**, locked off while an origin lets in any site (`*`, or a `*` in the host other than `*.domain.com`) |
 | **Remove** (trash)             | Routes only. Asks in the block itself; the route uses the gateway's CORS again       |
 
 The gateway's has no slide, no remove and no credentials (the admin API uses a token). Editing it

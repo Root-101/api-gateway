@@ -1370,8 +1370,9 @@ class AppMessages$cors$en {
   /// en: 'For services with cookie sessions'
   String get credentialsSwitchHint => 'For services with cookie sessions';
 
-  /// en: 'Not with an origin that matches all, like *'
-  String get credentialsNoAll => 'Not with an origin that matches all, like *';
+  /// en: 'Not with an origin that lets in any site (*, or a * in the host other than *.domain.com)'
+  String get credentialsNoAll =>
+      'Not with an origin that lets in any site (*, or a * in the host other than *.domain.com)';
 
   /// en: 'This console runs on {origin: String}, which isn't in the list: saving would lock it out of the gateway.'
   String lockout({required String origin}) =>
@@ -2191,7 +2192,7 @@ extension on AppMessages {
       'cors.removeOrigin' => ({required String origin}) => 'Remove ${origin}',
       'cors.credentialsSwitch' => 'Allow credentials',
       'cors.credentialsSwitchHint' => 'For services with cookie sessions',
-      'cors.credentialsNoAll' => 'Not with an origin that matches all, like *',
+      'cors.credentialsNoAll' => 'Not with an origin that lets in any site (*, or a * in the host other than *.domain.com)',
       'cors.lockout' => ({
         required String origin,
       }) => 'This console runs on ${origin}, which isn\'t in the list: saving would lock it out of the gateway.',

@@ -71,13 +71,18 @@ class RoutesCubit extends Cubit<RoutesState>
   }
 
   void reset() {
+    _seq++; //a search still on its way after logout is dropped
     routes.clear();
     loaded = false;
     query.value = '';
     emit(const RoutesInitialState());
   }
 
+  ///number of the latest search: an older one that answers later is dropped
+  int _seq = 0;
+
   Future search({bool emitLoading = true}) async {
+    final my = ++_seq;
     try {
       //if there is a delete, create, restore, don't show the loading, just add/remove the route
       if (emitLoading) {
@@ -85,6 +90,7 @@ class RoutesCubit extends Cubit<RoutesState>
       }
 
       final found = await repo.findAll();
+      if (my != _seq) return;
       routes
         ..clear()
         ..addAll(found);
@@ -92,6 +98,7 @@ class RoutesCubit extends Cubit<RoutesState>
 
       emit(RoutesSearchOkState(routes: routes));
     } on Exception catch (exc) {
+      if (my != _seq) return;
       emit(RoutesSearchErrorState(ExceptionConverter.parse(exc)));
     }
   }

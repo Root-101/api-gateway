@@ -89,10 +89,20 @@ bool corsOriginValid(String origin) => RegExp(
   caseSensitive: false,
 ).hasMatch(origin);
 
-///a pattern that lets every origin in (`*`, `https://*`...): the api rejects it with credentials
+///a pattern that lets every origin in (`*`, `https://*`...): the badge says `ALL`
 bool corsAllowsAll(String pattern) =>
     pattern == '*' ||
     RegExp(r'^[a-z]+://\*(:(\*|\[\*\]|\d+))?$').hasMatch(pattern);
+
+///a pattern that lets any site in: `*`, or a `*` in the host other than `*.domain.com`. The api
+///rejects it with credentials (twin of the gateway's `Cors.allowsAnyOrigin`)
+bool corsAllowsAnySite(String pattern) {
+  final host = pattern
+      .replaceFirst(RegExp(r'^[^:]*://'), '')
+      .replaceFirst(RegExp(r':(\[[^\]]*\]|[^:\]]*)$'), '');
+  return pattern == '*' ||
+      host.contains('*') && !RegExp(r'^\*\.[^*]+\.[^*]+$').hasMatch(host);
+}
 
 ///whether [origin] (`https://console.app.com`) passes [patterns], to warn before the gateway's
 ///own CORS locks this console out.

@@ -32,7 +32,7 @@ class _CorsBlockState extends State<CorsBlock> {
 
   bool get _gateway => widget.route == null;
 
-  bool get _allowsAll => _origins.any(corsAllowsAll);
+  bool get _allowsAll => _origins.any(corsAllowsAnySite);
 
   ///where this console runs (`http://localhost:3000`); null off the web
   static final String? _consoleOrigin = () {
@@ -397,7 +397,7 @@ class _CorsBlockState extends State<CorsBlock> {
     );
   }
 
-  ///off (and not sent) while an origin matches all: the api rejects that pair
+  ///off (and not sent) while an origin lets any site in: the api rejects that pair
   Widget _credentialsRow(BuildContext context) {
     final c = app.colors;
     final intl = context.intl.cors;

@@ -375,7 +375,7 @@ cors:
   removeOrigin: 'Remove {origin: String}'
   credentialsSwitch: 'Allow credentials'
   credentialsSwitchHint: 'For services with cookie sessions'
-  credentialsNoAll: 'Not with an origin that matches all, like *'
+  credentialsNoAll: 'Not with an origin that lets in any site (*, or a * in the host other than *.domain.com)'
   lockout: 'This console runs on {origin: String}, which isn''t in the list: saving would lock it out of the gateway.'
   removeTitle: 'Remove CORS?'
   removeBody: 'Its origins are lost and the route uses the gateway''s CORS again.'

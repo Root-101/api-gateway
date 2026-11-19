@@ -373,7 +373,7 @@ cors:
   removeOrigin: 'Quitar {origin}'
   credentialsSwitch: 'Permitir credenciales'
   credentialsSwitchHint: 'Para servicios con sesión por cookies'
-  credentialsNoAll: 'No con un origen que admite todos, como *'
+  credentialsNoAll: 'No con un origen que deja pasar cualquier sitio (*, o un * en el host que no sea *.dominio.com)'
   lockout: 'Esta consola está en {origin}, que no está en la lista: al guardar se quedaría sin acceso al gateway.'
   removeTitle: '¿Quitar el CORS?'
   removeBody: 'Se pierden sus orígenes y la ruta vuelve a usar el CORS del gateway.'
