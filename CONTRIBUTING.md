@@ -111,7 +111,8 @@ against `develop`.
    line, the "currently" line in `ROADMAP.md` and the "needs gateway" note in `console/README.md`.
 3. **Changelogs:** date the version in `CHANGELOG.md` and `console/CHANGELOG.md`. The root one also
    sums up the console's changes (`**Console**`); a side without changes says so.
-4. **Tests:** the CI green on `develop`, and the [mutations](#mutation-testing) all `KILLED`.
+4. **Tests:** the CI green on `develop`, and the [mutations](#mutation-testing) all `KILLED`. A test or
+   mutation that fails is fixed on the release branch, which goes into `develop` again.
 5. **Merge:** `release/<version>` into `develop`, then `develop` into `master`, both with `--no-ff`.
 6. **Tag:** the bare version (`6.1.2`, or `6.2.0-rc.1` for a release candidate) on the merge in
    `master`, then push `master`, `develop` and the tag. The tag runs `.github/workflows/release.yml`:
