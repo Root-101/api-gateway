@@ -1,7 +1,7 @@
 * 6.x:
     * 6.1.2:
         * **DATE** :date: : 2026-11-19.
-        * **Docs** :books: : `CONTRIBUTING.md` explains how to release (versions, changelog, mutations, merge to `master`, tag and images); pull requests go against `develop`. The console's design export (`docs/design/`) regenerated from the canvas: the map's gateway node with its add-ons and the screens' new example data; the README shows the gateway map instead of the routes. The design shows the version as `6.x.x`, changed only in 7.0. The whole stack's memory on Railway updated to 100–150 MB, about 1.00–1.50 USD a month (README, `docs/railway.md`).
+        * **Docs** :books: : `CONTRIBUTING.md` explains how to release (versions, changelog, mutations, merge to `master`, tag and images); pull requests go against `develop`. The console's design export (`docs/design/`) regenerated from the canvas: the map's gateway node with its add-ons and the screens' new example data; the README shows the gateway map instead of the routes. The design shows the version as `6.x.x`, changed only in 7.0. The whole stack's memory on Railway updated to 100–150 MB (the gateway alone, ~100 MB), about 1.00–1.50 USD a month (README, `docs/railway.md`).
         * **Console** :computer: : Version adjustment to match the gateway.
     * 6.1.1:
         * **DATE** :date: : 2026-11-19.

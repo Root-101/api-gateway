@@ -48,7 +48,7 @@ With a rewrite of the path, the prefix of the route is dropped on the way:
 | **Backup**      | Every route to a JSON file, and back, all or nothing                                                                       |
 | **Admin API**   | Everything the console does, for scripts and pipelines: token or Basic auth, with a lockout of brute force by IP           |
 | **Console**     | Routes and logs, in English and Spanish; one image for every environment, configured at start                              |
-| **Operations**  | A health check for load balancers, timeouts to the services (`502`/`504`), a native image of ~150 MB of memory             |
+| **Operations**  | A health check for load balancers, timeouts to the services (`502`/`504`), a native image of ~100 MB of memory             |
 
 |                                                                 |                                                                          |
 |-----------------------------------------------------------------|--------------------------------------------------------------------------|
