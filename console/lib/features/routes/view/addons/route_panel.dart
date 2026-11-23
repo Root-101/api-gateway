@@ -79,6 +79,9 @@ class StatusTag extends StatelessWidget {
 ///its redirect, its add-ons and the ones it can still get. Reads the route from [RoutesCubit],
 ///so it always shows what was saved last
 class RoutePanel extends StatelessWidget {
+  /// The panel as a sheet on the right of the screen (Routes; the map shows it inside its canvas)
+  static final RoutePanelSheetNavigator navigator = RoutePanelSheetNavigator();
+
   final String? routeId;
   final VoidCallback onClose;
 
@@ -760,8 +763,11 @@ class _AddTile extends StatelessWidget {
 }
 
 ///the panel as a sheet on the right of the screen (Routes; the map shows it inside its canvas)
-class RoutePanelSheet {
-  static Future<void> show(BuildContext context, RouteModel route) {
+class RoutePanelSheetNavigator {
+  Future<void> open({
+    required BuildContext context,
+    required RouteModel route,
+  }) {
     return app.dialog.open(
       context: context,
       dialog: Align(

@@ -5,6 +5,7 @@ export 'components/brand/app_wordmark.dart';
 export 'components/buttons/app_button.dart';
 export 'components/buttons/app_icon_button.dart';
 export 'components/feedback/app_skeleton.dart';
+export 'components/feedback/app_toast.dart';
 export 'components/feedback/empty_state.dart';
 export 'components/feedback/small_spinner.dart';
 export 'components/inputs/app_choice_chip.dart';

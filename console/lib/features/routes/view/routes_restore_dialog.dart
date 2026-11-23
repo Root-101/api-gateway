@@ -6,8 +6,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_dropzone/flutter_dropzone.dart';
 
 ///two steps: pick a valid backup, then confirm replacing every current route
-class RoutesRestoreDialog extends StatefulWidget {
-  static void show() {
+class RoutesRestoreDialogNavigator {
+  void open() {
     app.dialog.open(
       dialog: BlocProvider(
         create: (BuildContext context) =>
@@ -17,6 +17,11 @@ class RoutesRestoreDialog extends StatefulWidget {
       ),
     );
   }
+}
+
+class RoutesRestoreDialog extends StatefulWidget {
+  static final RoutesRestoreDialogNavigator navigator =
+      RoutesRestoreDialogNavigator();
 
   const RoutesRestoreDialog({super.key});
 
@@ -88,18 +93,16 @@ class _RoutesRestoreDialogState extends State<RoutesRestoreDialog> {
   }
 
   void _onState(BuildContext context, RoutesRestoreState state) {
-    if (state is RoutesRestoreProcessingState) {
+    if (state is RoutesRestoringState) {
       app.loading.show();
-    } else if (state is RoutesRestoreOkState) {
+    } else if (state is RoutesRestoredOkState) {
       app.loading.hide();
       app.di.find<RoutesCubit>().query.value = '';
-      app.snack.showSuccess(
-        message: context.intl.restore.restored(count: state.count),
-      );
+      app.toast.success(context.intl.restore.restored(count: state.count));
       Navigator.of(context).pop();
-    } else if (state is RoutesRestoreErrorState) {
+    } else if (state is RoutesRestoringErrorState) {
       app.loading.hide();
-      app.snack.showError(message: state.exception.intlMessage);
+      app.toast.error(state.exception.intlMessage);
     }
   }
 

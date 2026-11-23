@@ -23,7 +23,7 @@ class _RouteCardState extends State<RouteCard> {
 
   Future<void> _copy(String url) async {
     await Clipboard.setData(ClipboardData(text: url));
-    app.snack.showSuccess(message: app.intl.actions.copiedToClipboard);
+    app.toast.success(app.intl.actions.copiedToClipboard);
   }
 
   @override

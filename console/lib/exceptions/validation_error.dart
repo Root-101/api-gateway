@@ -15,11 +15,12 @@ class ValidationError {
     required this.message,
   });
 
-  factory ValidationError.fromJson(Map<String, dynamic> json) => ValidationError(
-    source: '${json['pointer'] ?? ''}'.replaceFirst('#/', ''),
-    code: '${json['code'] ?? ''}',
-    message: '${json['detail'] ?? ''}',
-  );
+  factory ValidationError.fromJson(Map<String, dynamic> json) =>
+      ValidationError(
+        source: '${json['pointer'] ?? ''}'.replaceFirst('#/', ''),
+        code: '${json['code'] ?? ''}',
+        message: '${json['detail'] ?? ''}',
+      );
 
   @override
   String toString() {

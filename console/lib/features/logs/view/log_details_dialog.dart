@@ -1,25 +1,29 @@
 import 'package:console/app_exporter.dart';
 import 'package:material_ui/material_ui.dart';
 
-class LogDetailsScreen extends StatefulWidget {
-  static void open(HttpLogModel log) {
-    app.dialog.open(dialog: LogDetailsScreen(log: log));
-  }
+class LogDetailsDialogNavigator {
+  void open({required HttpLogModel log}) =>
+      app.dialog.open(dialog: LogDetailsDialog(log: log));
+}
+
+class LogDetailsDialog extends StatefulWidget {
+  static final LogDetailsDialogNavigator navigator =
+      LogDetailsDialogNavigator();
 
   final HttpLogModel log;
 
-  const LogDetailsScreen({required this.log, super.key});
+  const LogDetailsDialog({required this.log, super.key});
 
   @override
-  State<LogDetailsScreen> createState() => _LogDetailsScreenState();
+  State<LogDetailsDialog> createState() => _LogDetailsScreenState();
 }
 
-class _LogDetailsScreenState extends State<LogDetailsScreen> {
+class _LogDetailsScreenState extends State<LogDetailsDialog> {
   void _openRoute(String name) {
     final routes = app.di.find<RoutesCubit>();
     routes.query.value = name;
     Navigator.of(context).pop();
-    app.navigator.go(RoutesScreen.navigator.name);
+    RoutesScreen.navigator.go();
   }
 
   @override

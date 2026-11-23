@@ -20,8 +20,8 @@ const List<String> httpMethods = [
   'OPTIONS',
 ];
 
-class LogsFilterDialog extends StatefulWidget {
-  static void show({
+class LogsFilterDialogNavigator {
+  void open({
     required LogsSearchFilters filters,
     required FilterCallback callback,
     required List<RouteLogModel> routes,
@@ -34,6 +34,11 @@ class LogsFilterDialog extends StatefulWidget {
       ),
     );
   }
+}
+
+class LogsFilterDialog extends StatefulWidget {
+  static final LogsFilterDialogNavigator navigator =
+      LogsFilterDialogNavigator();
 
   final LogsSearchFilters filters;
   final FilterCallback callback;

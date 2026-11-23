@@ -61,7 +61,7 @@ class RoutesHeader extends StatelessWidget {
               label: intl.routes.restore,
               icon: app.assets.icons.actions.upload,
               kind: AppButtonKind.outlined,
-              onPressed: RoutesRestoreDialog.show,
+              onPressed: RoutesRestoreDialog.navigator.open,
             ),
             Container(
               width: 1,

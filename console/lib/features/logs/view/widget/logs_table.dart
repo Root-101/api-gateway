@@ -114,7 +114,7 @@ class LogRow extends StatelessWidget {
         label: '${log.httpMethod} ${log.path}',
         child: InkWell(
           hoverColor: c.surface,
-          onTap: () => LogDetailsScreen.open(log),
+          onTap: () => LogDetailsDialog.navigator.open(log: log),
           child: _LogCells(
             Text(
               app.dateFormatter.logsTime.format(log.requestedAtLocal),

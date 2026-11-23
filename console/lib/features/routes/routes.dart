@@ -1,5 +1,6 @@
 export 'data/repo/routes_repo.dart';
 export 'data/rest/routes_client.dart';
+export 'logic/cors_intl.dart';
 export 'logic/cubit/cors_cubit.dart';
 export 'logic/cubit/health_check_cubit.dart';
 export 'logic/cubit/maintenance_cubit.dart';

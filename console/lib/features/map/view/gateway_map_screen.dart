@@ -14,6 +14,12 @@ class GatewayMapScreenNavigator {
     return const GatewayMapScreen();
   }
 
+  void go() => app.navigator.go(name);
+
+  List<RouteBase> routes({List<RouteBase> children = const []}) => [
+    GoRoute(name: name, path: path, builder: builder, routes: children),
+  ];
+
   void neglectGo() {
     Router.neglect(app.context, () {
       app.navigator.go(name);
@@ -296,7 +302,7 @@ class _GatewayMapScreenState extends State<GatewayMapScreen>
                   onClose: () => GatewayMapScreen.selected.value = null,
                   onRedirect: (route) {
                     _routes.query.value = route.name;
-                    app.navigator.go(RoutesScreen.navigator.name);
+                    RoutesScreen.navigator.go();
                   },
                 ),
               ),

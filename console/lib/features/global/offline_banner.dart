@@ -3,7 +3,7 @@ import 'package:material_ui/material_ui.dart';
 
 ///the gateway is unreachable: when the last data came, and retry
 class OfflineBanner extends StatelessWidget {
-  final GatewayStatus status;
+  final GatewayStatusState status;
 
   const OfflineBanner(this.status, {super.key});
 

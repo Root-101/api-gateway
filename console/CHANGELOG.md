@@ -11,6 +11,13 @@
           language even for a network error that happened before a language change. The login tells wrong credentials
           by the gateway's `auth.wrong-credentials`, not by any `401`. A `422`'s fields are named by their pointer
           (`rewrite_path/replace_from`), the first error of a field wins. `Accept-Language` by `LanguageHeaderInterceptor`.
+        * **Code** :broom: : Cubits, navigation and toasts as the standard: action states named `X<Verb>ingState` /
+          `X<Verb>edOkState` / `X<Verb>ingErrorState` (`RoutesDeletingState`, `CorsSavedOkState`...) and `final`, every
+          cubit on the global bus with its `reset()`, `blocProviders` and the logout reset in init order. Every dialog
+          opens through its `navigator` (`DeleteRouteDialog.navigator.open(route:)`; the log's details are
+          `LogDetailsDialog`), each screen gives its routes to `route_config.dart` (`routes({children})`, `go()`).
+          `app.toast.success()` / `error()` (`AppToast`) instead of `app.snack`; no toast or `BuildContext` in a cubit or
+          model (the CORS badge text is `CorsModelIntl.short`).
         * **Errors** :warning: : Reads the gateway 6.2.0 errors: the `422`'s `errors` (`pointer`, `code`, `detail`) instead
           of `violations`, shown on the same fields as before. Needs gateway 6.2.0.
         * **Versions** :arrow_up: : Flutter `3.47.9` → `3.50.1` (Dart `3.14`) in `.fvmrc`, the `Dockerfile` and the CI.

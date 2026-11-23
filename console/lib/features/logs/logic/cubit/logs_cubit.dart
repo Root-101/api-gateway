@@ -115,11 +115,11 @@ class LogsCubit extends Cubit<LogsState>
       _updateRoutes();
     });
     //if a route is deleted, update
-    onBus<RoutesDeleteOkState>((event) {
+    onBus<RoutesDeletedOkState>((event) {
       _updateRoutes();
     });
     //if routes are restored, update
-    onBus<RoutesRestoreOkState>((event) {
+    onBus<RoutesRestoredOkState>((event) {
       _updateRoutes();
     });
   }
@@ -295,7 +295,7 @@ class LogsCubit extends Cubit<LogsState>
 
   Future export() async {
     try {
-      emit(LogsBackupProcessingState());
+      emit(LogsBackingUpState());
 
       //the gateway caps size (MAX_LOGS_SEARCH_SIZE) and truncates silently, so walk every page.
       //`to` is frozen at the start: rows logged meanwhile would shift the offset pages and repeat rows
@@ -343,9 +343,9 @@ class LogsCubit extends Cubit<LogsState>
         filename: 'logs-export-$stamp.json',
       );
 
-      emit(LogsBackupOkState(all.length, capped: capped));
+      emit(LogsBackedUpOkState(all.length, capped: capped));
     } on Exception catch (exc) {
-      emit(LogsBackupErrorState(ExceptionConverter.parse(exc)));
+      emit(LogsBackingUpErrorState(ExceptionConverter.parse(exc)));
     }
   }
 }
@@ -354,7 +354,7 @@ abstract class LogsState {
   const LogsState();
 }
 
-class LogsInitialState extends LogsState {
+final class LogsInitialState extends LogsState {
   const LogsInitialState();
 }
 
@@ -363,11 +363,11 @@ abstract class LogsSearchState extends LogsState {
   LogsSearchState();
 }
 
-class LogsSearchingState extends LogsSearchState {
+final class LogsSearchingState extends LogsSearchState {
   LogsSearchingState();
 }
 
-class LogsSearchOkState extends LogsSearchState {
+final class LogsSearchOkState extends LogsSearchState {
   final LogsSearchFilters filters;
   final List<HttpLogModel> items;
 
@@ -380,14 +380,14 @@ class LogsSearchOkState extends LogsSearchState {
   });
 }
 
-class LogsSearchErrorState extends LogsSearchState {
+final class LogsSearchErrorState extends LogsSearchState {
   GlobalException exception;
 
   LogsSearchErrorState(this.exception);
 }
 
 //the screen keeps the current table, dimmed, under the loading bar
-class LogsFilteringState extends LogsSearchState {
+final class LogsFilteringState extends LogsSearchState {
   LogsFilteringState();
 }
 
@@ -396,21 +396,21 @@ abstract class LogsBackupState extends LogsState {
   LogsBackupState();
 }
 
-class LogsBackupProcessingState extends LogsBackupState {
-  LogsBackupProcessingState();
+final class LogsBackingUpState extends LogsBackupState {
+  LogsBackingUpState();
 }
 
-class LogsBackupOkState extends LogsBackupState {
+final class LogsBackedUpOkState extends LogsBackupState {
   final int count;
 
   ///more logs matched than [LogsCubit.exportMaxRows]: only the newest were exported
   final bool capped;
 
-  LogsBackupOkState(this.count, {this.capped = false});
+  LogsBackedUpOkState(this.count, {this.capped = false});
 }
 
-class LogsBackupErrorState extends LogsBackupState {
+final class LogsBackingUpErrorState extends LogsBackupState {
   GlobalException exception;
 
-  LogsBackupErrorState(this.exception);
+  LogsBackingUpErrorState(this.exception);
 }

@@ -1,7 +1,16 @@
 import 'package:console/app_exporter.dart';
 import 'package:material_ui/material_ui.dart';
 
+class DeleteRouteDialogNavigator {
+  /// `true` when the user confirms
+  Future<bool?> open({required RouteModel route}) =>
+      app.dialog.open<bool>(dialog: DeleteRouteDialog(route: route));
+}
+
 class DeleteRouteDialog extends StatelessWidget {
+  static final DeleteRouteDialogNavigator navigator =
+      DeleteRouteDialogNavigator();
+
   final RouteModel route;
 
   const DeleteRouteDialog({required this.route, super.key});

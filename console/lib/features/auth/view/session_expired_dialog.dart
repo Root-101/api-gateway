@@ -3,14 +3,19 @@ import 'package:material_ui/material_ui.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 ///asks for the password again over the current screen; can only be left by signing in or going to login
-class SessionExpiredDialog extends StatefulWidget {
-  static void show() {
+class SessionExpiredDialogNavigator {
+  void open() {
     app.dialog.open(
       dialog: const SessionExpiredDialog(),
       barrierDismissible: false,
       barrierColor: const Color(0xb80a090f),
     );
   }
+}
+
+class SessionExpiredDialog extends StatefulWidget {
+  static final SessionExpiredDialogNavigator navigator =
+      SessionExpiredDialogNavigator();
 
   const SessionExpiredDialog({super.key});
 
@@ -58,7 +63,7 @@ class _SessionExpiredDialogState extends State<SessionExpiredDialog> {
         _busy = false;
         _failed = state.exception.hasCode(ApiErrorCode.wrongCredentials);
       });
-      if (!_failed) app.snack.showError(message: state.exception.intlMessage);
+      if (!_failed) app.toast.error(state.exception.intlMessage);
     }
   }
 

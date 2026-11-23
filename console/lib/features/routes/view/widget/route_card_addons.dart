@@ -13,7 +13,7 @@ class RouteCardAddons extends StatelessWidget {
     final intl = context.intl;
     final maintenance = route.maintenance;
     final health = route.healthCheck;
-    void open() => RoutePanelSheet.show(context, route);
+    void open() => RoutePanel.navigator.open(context: context, route: route);
     return Wrap(
       spacing: 8,
       runSpacing: 8,
@@ -49,7 +49,7 @@ class RouteCardAddons extends StatelessWidget {
           RouteBadge(
             icon: app.assets.icons.general.globe,
             label: cors.enabled
-                ? intl.cors.badge(value: corsShort(context, cors))
+                ? intl.cors.badge(value: cors.short)
                 : intl.cors.badgeOff,
             color: cors.enabled ? c.lilac : c.label,
             onPressed: open,

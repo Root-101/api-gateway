@@ -8,20 +8,20 @@ typedef ToastData = ({String message, bool error, int id});
 
 ///toasts: bottom center, one at a time, gone after 3.2 s or with their close button.
 ///Shown by [ToastHost], which wraps the whole app (MaterialApp.builder)
-class SnackBarAdapter {
-  static final SnackBarAdapter _instance = SnackBarAdapter._internal();
+class AppToast {
+  static final AppToast _instance = AppToast._internal();
 
-  SnackBarAdapter._internal();
+  AppToast._internal();
 
-  factory SnackBarAdapter() => _instance;
+  factory AppToast() => _instance;
 
   final ValueNotifier<ToastData?> current = ValueNotifier(null);
   Timer? _timer;
   int _id = 0;
 
-  void showSuccess({required String message}) => _show(message, error: false);
+  void success(String message) => _show(message, error: false);
 
-  void showError({required String message}) => _show(message, error: true);
+  void error(String message) => _show(message, error: true);
 
   void dismiss() {
     _timer?.cancel();
@@ -66,7 +66,7 @@ class ToastHost extends StatelessWidget {
           bottom: 20,
           child: Center(
             child: ValueListenableBuilder<ToastData?>(
-              valueListenable: app.snack.current,
+              valueListenable: app.toast.current,
               builder: (context, toast, _) => toast == null
                   ? const SizedBox.shrink()
                   : _Toast(key: ValueKey(toast.id), data: toast),
@@ -137,7 +137,7 @@ class _Toast extends StatelessWidget {
                 button: true,
                 label: context.intl.actions.dismiss,
                 child: InkWell(
-                  onTap: app.snack.dismiss,
+                  onTap: app.toast.dismiss,
                   borderRadius: BorderRadius.circular(10),
                   child: SizedBox.square(
                     dimension: 36,

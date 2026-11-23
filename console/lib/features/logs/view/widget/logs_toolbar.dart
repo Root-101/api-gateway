@@ -44,7 +44,7 @@ class LogsToolbar extends StatelessWidget {
           const SizedBox(width: 10),
           LogsFilterButton(
             count: cubit.filters.filterCount,
-            onPressed: () => LogsFilterDialog.show(
+            onPressed: () => LogsFilterDialog.navigator.open(
               filters: cubit.filters,
               routes: cubit.routes,
               callback: cubit.applyFilter,

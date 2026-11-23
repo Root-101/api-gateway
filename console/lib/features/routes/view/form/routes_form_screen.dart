@@ -41,6 +41,16 @@ class RoutesFormScreenNavigator {
     );
   }
 
+  /// `/routes/:id/edit`, a dialog over the whole app (root navigator)
+  List<RouteBase> routes() => [
+    GoRoute(
+      name: editName,
+      path: editPath,
+      parentNavigatorKey: navigatorKey,
+      pageBuilder: editPageBuilder,
+    ),
+  ];
+
   void edit({required RouteModel model}) {
     app.navigator.push(
       editName,
@@ -71,6 +81,18 @@ class RoutesFormScreen extends StatefulWidget {
 }
 
 class _RoutesFormScreenState extends State<RoutesFormScreen> {
+  ///null when it couldn't be checked: the error is shown (an expired session has its own dialog)
+  Future<Map<String, String>?> _validate(RouteFormModel model) async {
+    try {
+      return await cubit.validate(model: model);
+    } on GlobalException catch (global) {
+      if (global.type != GlobalExceptionType.auth) {
+        app.toast.error(global.intlMessage);
+      }
+      return null;
+    }
+  }
+
   late final RoutesFormCubit cubit;
 
   @override
@@ -85,13 +107,13 @@ class _RoutesFormScreenState extends State<RoutesFormScreen> {
       app.loading.show();
     } else if (state is RoutesFormProcessingErrorState) {
       app.loading.hide();
-      app.snack.showError(message: state.exception.intlMessage);
+      app.toast.error(state.exception.intlMessage);
     } else if (state is RoutesFormValidationErrorState) {
       app.loading.hide();
     } else if (state is RoutesFormProcessingOKState) {
       app.loading.hide();
-      app.snack.showSuccess(
-        message: state.created
+      app.toast.success(
+        state.created
             ? intl.routes.created(name: state.name)
             : intl.routes.updated(name: state.name),
       );
@@ -116,7 +138,7 @@ class _RoutesFormScreenState extends State<RoutesFormScreen> {
             onSave: (model) => state.action == RoutesFormAction.edit
                 ? cubit.edit(model: model)
                 : cubit.create(model: model),
-            onValidate: (model) => cubit.validate(model: model),
+            onValidate: _validate,
           );
         }
         return DialogTemplate(

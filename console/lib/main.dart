@@ -36,7 +36,9 @@ void main() {
   WidgetsFlutterBinding.ensureInitialized();
   RouteConfig.launchLocation = PlatformDispatcher.instance.defaultRouteName;
   //until LanguageCubit loads the saved one: the browser's language (an unknown one: English)
-  AppIntl.current = AppIntl.resolve(PlatformDispatcher.instance.locale.languageCode);
+  AppIntl.current = AppIntl.resolve(
+    PlatformDispatcher.instance.locale.languageCode,
+  );
   //the html splash (web/index.html) covers the download of the app; Flutter's SplashScreen looks the same
   WidgetsBinding.instance.addPostFrameCallback((_) => _removeWebSplash());
 
@@ -156,7 +158,7 @@ class AppGlobal {
 
   DateFormatter dateFormatter = DateFormatter();
 
-  SnackBarAdapter snack = SnackBarAdapter();
+  AppToast toast = AppToast();
 
   DialogHelper dialog = DialogHelper();
 

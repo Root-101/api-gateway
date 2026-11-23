@@ -103,7 +103,7 @@ abstract class AuthState {
   const AuthState();
 }
 
-class AuthInitialState extends AuthState {
+final class AuthInitialState extends AuthState {
   const AuthInitialState();
 }
 
@@ -113,34 +113,34 @@ abstract class AuthLoginState extends AuthState {
   AuthLoginState();
 }
 
-class AuthLoginInProgressState extends AuthLoginState {
+final class AuthLoginInProgressState extends AuthLoginState {
   AuthLoginInProgressState();
 }
 
-class AuthLoginOkState extends AuthLoginState {
+final class AuthLoginOkState extends AuthLoginState {
   AuthLoginOkState();
 }
 
-class AuthLoginErrorState extends AuthLoginState {
+final class AuthLoginErrorState extends AuthLoginState {
   GlobalException exception;
 
   AuthLoginErrorState(this.exception);
 }
 
 //------------------------- SESSION -------------------------\\
-class AuthSessionExpiredState extends AuthState {
+final class AuthSessionExpiredState extends AuthState {
   AuthSessionExpiredState();
 }
 
-class AuthReauthInProgressState extends AuthState {
+final class AuthReauthInProgressState extends AuthState {
   AuthReauthInProgressState();
 }
 
-class AuthReauthOkState extends AuthState {
+final class AuthReauthOkState extends AuthState {
   AuthReauthOkState();
 }
 
-class AuthReauthErrorState extends AuthState {
+final class AuthReauthErrorState extends AuthState {
   GlobalException exception;
 
   AuthReauthErrorState(this.exception);
@@ -152,15 +152,15 @@ abstract class AuthLogoutState extends AuthState {
   AuthLogoutState();
 }
 
-class AuthLogoutInProgressState extends AuthLogoutState {
+final class AuthLogoutInProgressState extends AuthLogoutState {
   AuthLogoutInProgressState();
 }
 
-class AuthLogoutOkState extends AuthLogoutState {
+final class AuthLogoutOkState extends AuthLogoutState {
   AuthLogoutOkState();
 }
 
-class AuthLogoutErrorState extends AuthLogoutState {
+final class AuthLogoutErrorState extends AuthLogoutState {
   GlobalException exception;
 
   AuthLogoutErrorState(this.exception);

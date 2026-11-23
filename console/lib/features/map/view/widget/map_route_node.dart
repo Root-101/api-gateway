@@ -140,7 +140,7 @@ class MapRouteNode extends StatelessWidget {
                   if (cors != null)
                     Tooltip(
                       message: cors.enabled
-                          ? intl.cors.badge(value: corsShort(context, cors))
+                          ? intl.cors.badge(value: cors.short)
                           : intl.cors.badgeOff,
                       child: MapChip(
                         icon: app.assets.icons.general.globe,

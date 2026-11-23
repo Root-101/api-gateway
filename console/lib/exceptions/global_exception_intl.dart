@@ -15,7 +15,9 @@ extension GlobalExceptionIntl on GlobalException {
     GlobalExceptionCode.connectionError => app.intl.errors.connection,
     GlobalExceptionCode.validation => app.intl.errors.validation,
     GlobalExceptionCode.auth => app.intl.errors.auth,
-    GlobalExceptionCode.httpStatus => app.intl.errors.status(status: statusCode ?? 0),
+    GlobalExceptionCode.httpStatus => app.intl.errors.status(
+      status: statusCode ?? 0,
+    ),
     GlobalExceptionCode.serverError => app.intl.errors.server,
     GlobalExceptionCode.unknown => app.intl.errors.unknown,
   };

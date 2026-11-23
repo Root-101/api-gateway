@@ -12,6 +12,12 @@ class RoutesScreenNavigator {
     return const RoutesScreen();
   }
 
+  void go() => app.navigator.go(name);
+
+  List<RouteBase> routes({List<RouteBase> children = const []}) => [
+    GoRoute(name: name, path: path, builder: builder, routes: children),
+  ];
+
   void neglectGo() {
     Router.neglect(app.context, () {
       app.navigator.go(name);
@@ -76,23 +82,20 @@ class _RoutesScreenState extends State<RoutesScreen> {
 
   void _onState(BuildContext context, RoutesState state) {
     final intl = context.intl;
-    if (state is RoutesBackupProcessingState ||
-        state is RoutesDeleteProcessingState) {
+    if (state is RoutesBackingUpState || state is RoutesDeletingState) {
       app.loading.show();
-    } else if (state is RoutesBackupOkState) {
+    } else if (state is RoutesBackedUpOkState) {
       app.loading.hide();
-      app.snack.showSuccess(
-        message: intl.routes.backupSaved(count: state.count),
-      );
-    } else if (state is RoutesDeleteOkState) {
+      app.toast.success(intl.routes.backupSaved(count: state.count));
+    } else if (state is RoutesDeletedOkState) {
       app.loading.hide();
-      app.snack.showSuccess(message: intl.routes.deleted(name: state.name));
-    } else if (state is RoutesBackupErrorState) {
+      app.toast.success(intl.routes.deleted(name: state.name));
+    } else if (state is RoutesBackingUpErrorState) {
       app.loading.hide();
-      app.snack.showError(message: state.exception.intlMessage);
-    } else if (state is RoutesDeleteErrorState) {
+      app.toast.error(state.exception.intlMessage);
+    } else if (state is RoutesDeletingErrorState) {
       app.loading.hide();
-      app.snack.showError(message: state.exception.intlMessage);
+      app.toast.error(state.exception.intlMessage);
     }
   }
 
@@ -178,9 +181,7 @@ class _RoutesScreenState extends State<RoutesScreen> {
   }
 
   Future<void> _confirmDelete(RouteModel route) async {
-    final confirmed = await app.dialog.open<bool>(
-      dialog: DeleteRouteDialog(route: route),
-    );
+    final confirmed = await DeleteRouteDialog.navigator.open(route: route);
     if (confirmed == true) cubit.delete(route: route);
   }
 }

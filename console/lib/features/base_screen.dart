@@ -7,7 +7,7 @@ import 'package:go_router/go_router.dart';
 
 ///shell of the logged-in screens: collapsible rail + content (with the offline and maintenance
 ///banners on top). It loads the gateway's add-ons and polls the health checks; [ShellListeners]
-///shows the snacks, [AppRail] and the banners are widgets of their own
+///shows the toasts, [AppRail] and the banners are widgets of their own
 class BaseScreen extends StatefulWidget {
   /// The navigation shell and container for the branch Navigators.
   final StatefulNavigationShell navigationShell;
@@ -56,7 +56,7 @@ class _BaseScreenState extends State<BaseScreen> {
             AppRail(currentIndex: shell.currentIndex, onSelect: shell.goBranch),
             Expanded(
               child: GridBackground(
-                child: BlocBuilder<GatewayStatusCubit, GatewayStatus>(
+                child: BlocBuilder<GatewayStatusCubit, GatewayStatusState>(
                   buildWhen: (previous, current) =>
                       previous.offline != current.offline ||
                       previous.retrying != current.retrying,

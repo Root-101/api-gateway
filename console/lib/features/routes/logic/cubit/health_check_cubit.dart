@@ -12,6 +12,8 @@ class HealthCheckCubit extends Cubit<HealthCheckState>
   HealthCheckCubit({required this.repo})
     : super(const HealthCheckInitialState());
 
+  void reset() => emit(const HealthCheckInitialState());
+
   ///creates ([HealthCheckAction.added]) or replaces it
   Future<GlobalException?> put({
     required RouteModel route,
@@ -54,11 +56,11 @@ class HealthCheckCubit extends Cubit<HealthCheckState>
     try {
       emit(HealthCheckSavingState());
       await call();
-      emit(HealthCheckSaveOkState(route: route, action: action));
+      emit(HealthCheckSavedOkState(route: route, action: action));
       return null;
     } on Exception catch (exc) {
       final error = ExceptionConverter.parse(exc);
-      emit(HealthCheckSaveErrorState(error, route: route));
+      emit(HealthCheckSavingErrorState(error, route: route));
       return error;
     }
   }
@@ -68,26 +70,26 @@ abstract class HealthCheckState {
   const HealthCheckState();
 }
 
-class HealthCheckInitialState extends HealthCheckState {
+final class HealthCheckInitialState extends HealthCheckState {
   const HealthCheckInitialState();
 }
 
-class HealthCheckSavingState extends HealthCheckState {
+final class HealthCheckSavingState extends HealthCheckState {
   HealthCheckSavingState();
 }
 
-class HealthCheckSaveOkState extends HealthCheckState {
+final class HealthCheckSavedOkState extends HealthCheckState {
   final RouteModel route;
   final HealthCheckAction action;
 
-  HealthCheckSaveOkState({required this.route, required this.action});
+  HealthCheckSavedOkState({required this.route, required this.action});
 }
 
-class HealthCheckSaveErrorState extends HealthCheckState {
+final class HealthCheckSavingErrorState extends HealthCheckState {
   final GlobalException exception;
   final RouteModel route;
 
-  HealthCheckSaveErrorState(this.exception, {required this.route});
+  HealthCheckSavingErrorState(this.exception, {required this.route});
 
   ///a 422 names what's wrong in its errors, the rest in the message
   String get message {

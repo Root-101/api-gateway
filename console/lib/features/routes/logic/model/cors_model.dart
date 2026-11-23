@@ -1,5 +1,3 @@
-import 'package:console/app_exporter.dart';
-import 'package:flutter/widgets.dart';
 
 ///CORS add-on of a route or of the whole gateway: which browser origins may call it, and (routes
 ///only) whether they may send cookies. The gateway's is always there, can't be turned off and has
@@ -117,14 +115,3 @@ bool corsAllows(List<String> patterns, String origin) => patterns.any((p) {
       .join(r'(:\d+)?');
   return RegExp('^$regex\$', caseSensitive: false).hasMatch(origin);
 });
-
-///its origins in a few characters: `ALL` for `*`, the origin when there's one, else how many
-String corsShort(BuildContext context, CorsModel cors) {
-  final intl = context.intl.cors;
-  final origins = cors.allowedOrigins;
-  if (origins.any(corsAllowsAll)) return intl.all;
-  if (origins.length == 1) {
-    return origins.first.replaceFirst(RegExp(r'^[a-z]+://'), '');
-  }
-  return intl.originsCount(count: origins.length);
-}

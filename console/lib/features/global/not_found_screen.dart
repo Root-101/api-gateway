@@ -1,11 +1,25 @@
 import 'package:console/app_exporter.dart';
+import 'package:go_router/go_router.dart';
 import 'package:material_ui/material_ui.dart';
 
-class NotFoundScreen extends StatelessWidget {
-  static const String path = '/not-found';
+class NotFoundScreenNavigator {
+  String get path => '/not-found';
 
-  static String location(String requested) =>
+  /// The 404 of [requested] (an url the router doesn't know)
+  String location(String requested) =>
       Uri(path: path, queryParameters: {'path': requested}).toString();
+
+  List<RouteBase> routes() => [
+    GoRoute(
+      path: path,
+      builder: (context, state) =>
+          NotFoundScreen(requested: state.uri.queryParameters['path'] ?? ''),
+    ),
+  ];
+}
+
+class NotFoundScreen extends StatelessWidget {
+  static final NotFoundScreenNavigator navigator = NotFoundScreenNavigator();
 
   final String requested;
 
@@ -76,15 +90,13 @@ class NotFoundScreen extends StatelessWidget {
                   AppButton(
                     label: intl.notFound.goToMap,
                     height: 42,
-                    onPressed: () =>
-                        app.navigator.go(GatewayMapScreen.navigator.name),
+                    onPressed: () => GatewayMapScreen.navigator.go(),
                   ),
                   AppButton(
                     label: intl.notFound.openLogs,
                     kind: AppButtonKind.outlined,
                     height: 42,
-                    onPressed: () =>
-                        app.navigator.go(LogsScreen.navigator.name),
+                    onPressed: () => LogsScreen.navigator.go(),
                   ),
                 ],
               ),

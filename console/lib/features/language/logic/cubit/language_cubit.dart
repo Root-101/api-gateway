@@ -86,14 +86,14 @@ abstract class LanguageState {
   const LanguageState({required this.current, required this.allLanguages});
 }
 
-class LanguageInitialState extends LanguageState {
+final class LanguageInitialState extends LanguageState {
   const LanguageInitialState({
     required super.current,
     required super.allLanguages,
   });
 }
 
-class LanguageChangedState extends LanguageState {
+final class LanguageChangedState extends LanguageState {
   const LanguageChangedState({
     required super.current,
     required super.allLanguages,

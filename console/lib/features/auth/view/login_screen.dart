@@ -12,6 +12,12 @@ class LoginScreenNavigator {
     return const LoginScreen();
   }
 
+  void go() => app.navigator.go(name);
+
+  List<RouteBase> routes({List<RouteBase> children = const []}) => [
+    GoRoute(name: name, path: path, builder: builder, routes: children),
+  ];
+
   void neglectGo() {
     Router.neglect(app.context, () {
       app.navigator.go(name);
@@ -91,9 +97,11 @@ class _LoginScreenState extends State<LoginScreen> {
     } else if (state is AuthLoginErrorState) {
       setState(() {
         _signingIn = false;
-        _wrongCredentials = state.exception.hasCode(ApiErrorCode.wrongCredentials);
+        _wrongCredentials = state.exception.hasCode(
+          ApiErrorCode.wrongCredentials,
+        );
       });
-      app.snack.showError(message: state.exception.intlMessage);
+      app.toast.error(state.exception.intlMessage);
       app.logger.e(state.exception.toString());
     }
   }

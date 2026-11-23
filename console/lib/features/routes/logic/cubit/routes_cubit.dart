@@ -22,47 +22,47 @@ class RoutesCubit extends Cubit<RoutesState>
     });
 
     //if a route is deleted, update
-    onBus<RoutesDeleteOkState>((event) {
+    onBus<RoutesDeletedOkState>((event) {
       search(emitLoading: false);
     });
 
     //if routes are restored, update
-    onBus<RoutesRestoreOkState>((event) {
+    onBus<RoutesRestoredOkState>((event) {
       search(emitLoading: false);
     });
 
     //if a route's maintenance changes (or failed: someone may have changed it meanwhile), update
-    onBus<MaintenanceSaveOkState>((event) {
+    onBus<MaintenanceSavedOkState>((event) {
       if (event.route != null) search(emitLoading: false);
     });
     //same for its rate limit
-    onBus<RateLimitSaveOkState>((event) {
+    onBus<RateLimitSavedOkState>((event) {
       if (event.route != null) search(emitLoading: false);
     });
-    onBus<RateLimitSaveErrorState>((event) {
+    onBus<RateLimitSavingErrorState>((event) {
       if (event.route != null &&
           event.exception.type != GlobalExceptionType.validation) {
         search(emitLoading: false);
       }
     });
     //same for its CORS
-    onBus<CorsSaveOkState>((event) {
+    onBus<CorsSavedOkState>((event) {
       if (event.route != null) search(emitLoading: false);
     });
-    onBus<CorsSaveErrorState>((event) {
+    onBus<CorsSavingErrorState>((event) {
       if (event.route != null &&
           event.exception.type != GlobalExceptionType.validation) {
         search(emitLoading: false);
       }
     });
     //same for its health check ("Run now" too: the new state is in the route)
-    onBus<HealthCheckSaveOkState>((event) => search(emitLoading: false));
-    onBus<HealthCheckSaveErrorState>((event) {
+    onBus<HealthCheckSavedOkState>((event) => search(emitLoading: false));
+    onBus<HealthCheckSavingErrorState>((event) {
       if (event.exception.type != GlobalExceptionType.validation) {
         search(emitLoading: false);
       }
     });
-    onBus<MaintenanceSaveErrorState>((event) {
+    onBus<MaintenanceSavingErrorState>((event) {
       if (event.route != null &&
           event.exception.type != GlobalExceptionType.validation) {
         search(emitLoading: false);
@@ -105,19 +105,19 @@ class RoutesCubit extends Cubit<RoutesState>
 
   Future delete({required RouteModel route}) async {
     try {
-      emit(RoutesDeleteProcessingState());
+      emit(RoutesDeletingState());
 
       await repo.delete(route: route);
 
-      emit(RoutesDeleteOkState(route.name));
+      emit(RoutesDeletedOkState(route.name));
     } on Exception catch (exc) {
-      emit(RoutesDeleteErrorState(ExceptionConverter.parse(exc)));
+      emit(RoutesDeletingErrorState(ExceptionConverter.parse(exc)));
     }
   }
 
   Future backup() async {
     try {
-      emit(RoutesBackupProcessingState());
+      emit(RoutesBackingUpState());
 
       List<RouteModel> routes = await repo.findAll();
       final stamp = app.dateFormatter.fileStamp.format(DateTime.now());
@@ -128,9 +128,9 @@ class RoutesCubit extends Cubit<RoutesState>
         filename: 'routes-backup-$stamp.json',
       );
 
-      emit(RoutesBackupOkState(routes.length));
+      emit(RoutesBackedUpOkState(routes.length));
     } on Exception catch (exc) {
-      emit(RoutesBackupErrorState(ExceptionConverter.parse(exc)));
+      emit(RoutesBackingUpErrorState(ExceptionConverter.parse(exc)));
     }
   }
 }
@@ -139,7 +139,7 @@ abstract class RoutesState {
   const RoutesState();
 }
 
-class RoutesInitialState extends RoutesState {
+final class RoutesInitialState extends RoutesState {
   const RoutesInitialState();
 }
 
@@ -148,17 +148,17 @@ abstract class RoutesSearchState extends RoutesState {
   RoutesSearchState();
 }
 
-class RoutesSearchingState extends RoutesSearchState {
+final class RoutesSearchingState extends RoutesSearchState {
   RoutesSearchingState();
 }
 
-class RoutesSearchOkState extends RoutesSearchState {
+final class RoutesSearchOkState extends RoutesSearchState {
   final List<RouteModel> routes;
 
   RoutesSearchOkState({required this.routes});
 }
 
-class RoutesSearchErrorState extends RoutesSearchState {
+final class RoutesSearchErrorState extends RoutesSearchState {
   GlobalException exception;
 
   RoutesSearchErrorState(this.exception);
@@ -169,20 +169,20 @@ abstract class RoutesBackupState extends RoutesState {
   RoutesBackupState();
 }
 
-class RoutesBackupProcessingState extends RoutesBackupState {
-  RoutesBackupProcessingState();
+final class RoutesBackingUpState extends RoutesBackupState {
+  RoutesBackingUpState();
 }
 
-class RoutesBackupOkState extends RoutesBackupState {
+final class RoutesBackedUpOkState extends RoutesBackupState {
   final int count;
 
-  RoutesBackupOkState(this.count);
+  RoutesBackedUpOkState(this.count);
 }
 
-class RoutesBackupErrorState extends RoutesBackupState {
+final class RoutesBackingUpErrorState extends RoutesBackupState {
   GlobalException exception;
 
-  RoutesBackupErrorState(this.exception);
+  RoutesBackingUpErrorState(this.exception);
 }
 
 //------------------------- DELETE -------------------------\\
@@ -190,18 +190,18 @@ abstract class RoutesDeleteState extends RoutesState {
   RoutesDeleteState();
 }
 
-class RoutesDeleteProcessingState extends RoutesDeleteState {
-  RoutesDeleteProcessingState();
+final class RoutesDeletingState extends RoutesDeleteState {
+  RoutesDeletingState();
 }
 
-class RoutesDeleteOkState extends RoutesDeleteState {
+final class RoutesDeletedOkState extends RoutesDeleteState {
   final String name;
 
-  RoutesDeleteOkState(this.name);
+  RoutesDeletedOkState(this.name);
 }
 
-class RoutesDeleteErrorState extends RoutesDeleteState {
+final class RoutesDeletingErrorState extends RoutesDeleteState {
   GlobalException exception;
 
-  RoutesDeleteErrorState(this.exception);
+  RoutesDeletingErrorState(this.exception);
 }

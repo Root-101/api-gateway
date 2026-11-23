@@ -69,17 +69,9 @@ class RoutesFormCubit extends Cubit<RoutesFormState>
     }
   }
 
-  ///the fields the api rejects, without saving; null when it couldn't be checked (the error is shown)
-  Future<Map<String, String>?> validate({required RouteFormModel model}) async {
-    try {
-      return await repo.validate(model: model);
-    } on GlobalException catch (global) {
-      if (global.type != GlobalExceptionType.auth) {
-        app.snack.showError(message: global.intlMessage);
-      }
-      return null;
-    }
-  }
+  ///the fields the api rejects, without saving; a [GlobalException] when it couldn't be checked
+  Future<Map<String, String>> validate({required RouteFormModel model}) =>
+      repo.validate(model: model);
 
   Future create({required RouteFormModel model}) async {
     emit(RoutesFormProcessInProgressState());
@@ -131,20 +123,20 @@ abstract class RoutesFormState {
   const RoutesFormState();
 }
 
-class RoutesFormInitialState extends RoutesFormState {
+final class RoutesFormInitialState extends RoutesFormState {
   const RoutesFormInitialState();
 }
 
 //----------------- loading -----------------\\
-abstract class RoutesFormLoadingState extends RoutesFormInitialState {
+abstract class RoutesFormLoadingState extends RoutesFormState {
   RoutesFormLoadingState();
 }
 
-class RoutesFormLoadingInProgressState extends RoutesFormLoadingState {
+final class RoutesFormLoadingInProgressState extends RoutesFormLoadingState {
   RoutesFormLoadingInProgressState();
 }
 
-class RoutesFormLoadingSuccessState extends RoutesFormLoadingState {
+final class RoutesFormLoadingSuccessState extends RoutesFormLoadingState {
   final RoutesFormAction action;
   final RouteModel? routeModel;
   final String gatewayUrl;
@@ -156,7 +148,8 @@ class RoutesFormLoadingSuccessState extends RoutesFormLoadingState {
   });
 }
 
-class RoutesFormValidationErrorState extends RoutesFormLoadingSuccessState {
+final class RoutesFormValidationErrorState
+    extends RoutesFormLoadingSuccessState {
   final Map<String, String>? failValidations;
 
   RoutesFormValidationErrorState(
@@ -167,27 +160,27 @@ class RoutesFormValidationErrorState extends RoutesFormLoadingSuccessState {
   });
 }
 
-class RoutesFormLoadingErrorState extends RoutesFormLoadingState {
+final class RoutesFormLoadingErrorState extends RoutesFormLoadingState {
   final String text;
 
   RoutesFormLoadingErrorState(this.text);
 }
 
 //----------------- form -----------------\\
-abstract class RoutesFormProcessState extends RoutesFormInitialState {}
+abstract class RoutesFormProcessState extends RoutesFormState {}
 
-class RoutesFormProcessInProgressState extends RoutesFormProcessState {
+final class RoutesFormProcessInProgressState extends RoutesFormProcessState {
   RoutesFormProcessInProgressState();
 }
 
-class RoutesFormProcessingOKState extends RoutesFormProcessState {
+final class RoutesFormProcessingOKState extends RoutesFormProcessState {
   final String name;
   final bool created;
 
   RoutesFormProcessingOKState(this.name, {required this.created});
 }
 
-class RoutesFormProcessingErrorState extends RoutesFormProcessState {
+final class RoutesFormProcessingErrorState extends RoutesFormProcessState {
   final GlobalException exception;
 
   RoutesFormProcessingErrorState(this.exception);

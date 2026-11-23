@@ -47,7 +47,9 @@ class GlobalException<T> implements Exception {
   bool hasCode(String apiCode) =>
       errorCode == apiCode ||
       (data is List<ValidationError> &&
-          (data as List<ValidationError>).any((error) => error.code == apiCode));
+          (data as List<ValidationError>).any(
+            (error) => error.code == apiCode,
+          ));
 
   @override
   String toString() {
