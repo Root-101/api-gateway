@@ -30,7 +30,7 @@ class LogsFooter extends StatelessWidget {
     final count = total == 1
         ? logs.oneRequest
         : logs.manyRequests(count: logsCount(total, capped: cubit.totalCapped));
-    return '$count${cubit.filters.isEmpty ? '' : logs.matchSuffix}${logs.rowHint}';
+    return '$count${cubit.filters.isEmpty ? '' : logs.matchSuffix(count: total)}${logs.rowHint}';
   }
 
   @override

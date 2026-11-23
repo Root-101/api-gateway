@@ -630,7 +630,12 @@ class AppMessages$logs$es implements AppMessages$logs$en {
   @override
   String manyRequests({required Object count}) => '${count} peticiones';
   @override
-  String get matchSuffix => ' coinciden con tu búsqueda y filtros';
+  String matchSuffix({required num count}) =>
+      (_root.$meta.cardinalResolver ?? PluralResolvers.cardinal('es'))(
+        count,
+        one: ' coincide con tu búsqueda y filtros',
+        other: ' coinciden con tu búsqueda y filtros',
+      );
   @override
   String get rowHint => ' · haz clic en una fila para ver sus detalles';
   @override
@@ -1582,7 +1587,13 @@ extension on AppMessagesEs {
       'logs.filtering' => 'Filtrando…',
       'logs.oneRequest' => '1 petición',
       'logs.manyRequests' => ({required Object count}) => '${count} peticiones',
-      'logs.matchSuffix' => ' coinciden con tu búsqueda y filtros',
+      'logs.matchSuffix' =>
+        ({required num count}) =>
+            (_root.$meta.cardinalResolver ?? PluralResolvers.cardinal('es'))(
+              count,
+              one: ' coincide con tu búsqueda y filtros',
+              other: ' coinciden con tu búsqueda y filtros',
+            ),
       'logs.rowHint' => ' · haz clic en una fila para ver sus detalles',
       'logs.rowsPerPage' => 'Filas por página',
       'logs.range' => ({

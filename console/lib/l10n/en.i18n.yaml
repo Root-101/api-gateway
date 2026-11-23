@@ -198,7 +198,9 @@ logs:
   filtering: 'Filtering…'
   oneRequest: '1 request'
   manyRequests: '{count: String} requests'
-  matchSuffix: ' match your search and filters'
+  matchSuffix(plural, param=count):
+    one: ' matches your search and filters'
+    other: ' match your search and filters'
   rowHint: ' · click a row to see its details'
   rowsPerPage: 'Rows per page'
   range: '{start: String}–{end: String} of {total: String}'

@@ -772,8 +772,13 @@ class AppMessages$logs$en {
   /// en: '{count: String} requests'
   String manyRequests({required String count}) => '${count} requests';
 
-  /// en: ' match your search and filters'
-  String get matchSuffix => ' match your search and filters';
+  /// en: '(one) { matches your search and filters} (other) { match your search and filters}'
+  String matchSuffix({required num count}) =>
+      (_root.$meta.cardinalResolver ?? PluralResolvers.cardinal('en'))(
+        count,
+        one: ' matches your search and filters',
+        other: ' match your search and filters',
+      );
 
   /// en: ' · click a row to see its details'
   String get rowHint => ' · click a row to see its details';
@@ -1993,7 +1998,13 @@ extension on AppMessages {
       'logs.filtering' => 'Filtering…',
       'logs.oneRequest' => '1 request',
       'logs.manyRequests' => ({required String count}) => '${count} requests',
-      'logs.matchSuffix' => ' match your search and filters',
+      'logs.matchSuffix' =>
+        ({required num count}) =>
+            (_root.$meta.cardinalResolver ?? PluralResolvers.cardinal('en'))(
+              count,
+              one: ' matches your search and filters',
+              other: ' match your search and filters',
+            ),
       'logs.rowHint' => ' · click a row to see its details',
       'logs.rowsPerPage' => 'Rows per page',
       'logs.range' => ({

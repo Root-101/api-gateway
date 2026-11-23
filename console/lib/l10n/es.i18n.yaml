@@ -196,7 +196,9 @@ logs:
   filtering: 'Filtrando…'
   oneRequest: '1 petición'
   manyRequests: '{count} peticiones'
-  matchSuffix: ' coinciden con tu búsqueda y filtros'
+  matchSuffix(plural, param=count):
+    one: ' coincide con tu búsqueda y filtros'
+    other: ' coinciden con tu búsqueda y filtros'
   rowHint: ' · haz clic en una fila para ver sus detalles'
   rowsPerPage: 'Filas por página'
   range: '{start}–{end} de {total}'
