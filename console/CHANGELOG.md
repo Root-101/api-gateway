@@ -8,6 +8,8 @@
           `18.1.4`, `flutter_svg` `2.5.0`). No lint warnings left.
         * **Texts** :pencil2: : Spanish slide switches shortened to "Desliza para …" (the handle already shows the
           direction): the longer ones were cut in the route panel ("Desliza a la izquierda para dejar de co…").
+        * **Texts** :pencil2: : Counts with a singular: "1 caída", "1 ruta lista para restaurar", "Filtros, 1 activo",
+          the backup and restore notices (it said "1 caídas" in the routes header).
     * 6.1.2:
         * **DATE** :date: : 2026-11-19.
         * **Version** :bookmark: : Version adjustment to match the gateway, no changes in the console.

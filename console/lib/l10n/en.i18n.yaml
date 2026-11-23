@@ -106,7 +106,9 @@ routes:
   to: 'TO'
   copyFrom: 'Copy source URL'
   copyTo: 'Copy target URL'
-  backupSaved: 'Backup saved · {count: int} routes'
+  backupSaved(plural, param=count):
+    one: 'Backup saved · {count} route'
+    other: 'Backup saved · {count} routes'
   created: 'Route "{name: String}" created'
   updated: 'Route "{name: String}" updated'
   deleted: 'Route "{name: String}" deleted'
@@ -159,7 +161,9 @@ restore:
   dropFileHere: 'Drag a backup file here'
   releaseFile: 'Release to load the file'
   hint: 'A .json file created with Backup'
-  ready: '{count: int} routes ready to restore'
+  ready(plural, param=count):
+    one: '{count} route ready to restore'
+    other: '{count} routes ready to restore'
   invalidFile: 'Not a valid routes backup — use a .json list of routes with name, path and uri.'
   duplicatedNames: 'Duplicated names in the file: {names: String}'
   confirmTitle: 'Replace {current: int} routes with {next: int}?'
@@ -168,14 +172,18 @@ restore:
   current: 'CURRENT · {count: int}'
   fromBackup: 'FROM BACKUP · {count: int}'
   replace: 'Replace routes'
-  restored: 'Restored {count: int} routes'
+  restored(plural, param=count):
+    one: 'Restored {count} route'
+    other: 'Restored {count} routes'
 logs:
   logs: 'Http logs'
   captured: '{count: String} requests captured · newest first'
   search: 'Search by user agent, source IP, path or route'
   export: 'Export'
   filters: 'Filters'
-  filtersActive: 'Filters, {count: int} active'
+  filtersActive(plural, param=count):
+    one: 'Filters, {count} active'
+    other: 'Filters, {count} active'
   removeFilter: 'Remove filter {label: String}'
   columnTimestamp: 'TIMESTAMP'
   columnMethod: 'METHOD'
@@ -306,7 +314,9 @@ health:
   addHint: 'Check a path on a schedule, LIVE or DOWN'
   badge: 'Health · every {time: String}'
   badgeOff: 'Health · off'
-  downCount: '{count: int} down'
+  downCount(plural, param=count):
+    one: '{count} down'
+    other: '{count} down'
   legendDown: 'Down'
   added: '"{name: String}": health check added'
   saved: '"{name: String}": health check saved'

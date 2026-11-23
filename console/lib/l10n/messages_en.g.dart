@@ -464,8 +464,13 @@ class AppMessages$routes$en {
   /// en: 'Copy target URL'
   String get copyTo => 'Copy target URL';
 
-  /// en: 'Backup saved · {count: int} routes'
-  String backupSaved({required int count}) => 'Backup saved · ${count} routes';
+  /// en: '(one) {Backup saved · {count} route} (other) {Backup saved · {count} routes}'
+  String backupSaved({required num count}) =>
+      (_root.$meta.cardinalResolver ?? PluralResolvers.cardinal('en'))(
+        count,
+        one: 'Backup saved · ${count} route',
+        other: 'Backup saved · ${count} routes',
+      );
 
   /// en: 'Route "{name: String}" created'
   String created({required String name}) => 'Route "${name}" created';
@@ -648,8 +653,13 @@ class AppMessages$restore$en {
   /// en: 'A .json file created with Backup'
   String get hint => 'A .json file created with Backup';
 
-  /// en: '{count: int} routes ready to restore'
-  String ready({required int count}) => '${count} routes ready to restore';
+  /// en: '(one) {{count} route ready to restore} (other) {{count} routes ready to restore}'
+  String ready({required num count}) =>
+      (_root.$meta.cardinalResolver ?? PluralResolvers.cardinal('en'))(
+        count,
+        one: '${count} route ready to restore',
+        other: '${count} routes ready to restore',
+      );
 
   /// en: 'Not a valid routes backup — use a .json list of routes with name, path and uri.'
   String get invalidFile =>
@@ -679,8 +689,13 @@ class AppMessages$restore$en {
   /// en: 'Replace routes'
   String get replace => 'Replace routes';
 
-  /// en: 'Restored {count: int} routes'
-  String restored({required int count}) => 'Restored ${count} routes';
+  /// en: '(one) {Restored {count} route} (other) {Restored {count} routes}'
+  String restored({required num count}) =>
+      (_root.$meta.cardinalResolver ?? PluralResolvers.cardinal('en'))(
+        count,
+        one: 'Restored ${count} route',
+        other: 'Restored ${count} routes',
+      );
 }
 
 // Path: logs
@@ -707,8 +722,13 @@ class AppMessages$logs$en {
   /// en: 'Filters'
   String get filters => 'Filters';
 
-  /// en: 'Filters, {count: int} active'
-  String filtersActive({required int count}) => 'Filters, ${count} active';
+  /// en: '(one) {Filters, {count} active} (other) {Filters, {count} active}'
+  String filtersActive({required num count}) =>
+      (_root.$meta.cardinalResolver ?? PluralResolvers.cardinal('en'))(
+        count,
+        one: 'Filters, ${count} active',
+        other: 'Filters, ${count} active',
+      );
 
   /// en: 'Remove filter {label: String}'
   String removeFilter({required String label}) => 'Remove filter ${label}';
@@ -1145,8 +1165,13 @@ class AppMessages$health$en {
   /// en: 'Health · off'
   String get badgeOff => 'Health · off';
 
-  /// en: '{count: int} down'
-  String downCount({required int count}) => '${count} down';
+  /// en: '(one) {{count} down} (other) {{count} down}'
+  String downCount({required num count}) =>
+      (_root.$meta.cardinalResolver ?? PluralResolvers.cardinal('en'))(
+        count,
+        one: '${count} down',
+        other: '${count} down',
+      );
 
   /// en: 'Down'
   String get legendDown => 'Down';
@@ -1843,9 +1868,13 @@ extension on AppMessages {
       'routes.to' => 'TO',
       'routes.copyFrom' => 'Copy source URL',
       'routes.copyTo' => 'Copy target URL',
-      'routes.backupSaved' => ({
-        required int count,
-      }) => 'Backup saved · ${count} routes',
+      'routes.backupSaved' =>
+        ({required num count}) =>
+            (_root.$meta.cardinalResolver ?? PluralResolvers.cardinal('en'))(
+              count,
+              one: 'Backup saved · ${count} route',
+              other: 'Backup saved · ${count} routes',
+            ),
       'routes.created' => ({required String name}) => 'Route "${name}" created',
       'routes.updated' => ({required String name}) => 'Route "${name}" updated',
       'routes.deleted' => ({required String name}) => 'Route "${name}" deleted',
@@ -1904,9 +1933,13 @@ extension on AppMessages {
       'restore.dropFileHere' => 'Drag a backup file here',
       'restore.releaseFile' => 'Release to load the file',
       'restore.hint' => 'A .json file created with Backup',
-      'restore.ready' => ({
-        required int count,
-      }) => '${count} routes ready to restore',
+      'restore.ready' =>
+        ({required num count}) =>
+            (_root.$meta.cardinalResolver ?? PluralResolvers.cardinal('en'))(
+              count,
+              one: '${count} route ready to restore',
+              other: '${count} routes ready to restore',
+            ),
       'restore.invalidFile' => 'Not a valid routes backup — use a .json list of routes with name, path and uri.',
       'restore.duplicatedNames' => ({
         required String names,
@@ -1923,9 +1956,13 @@ extension on AppMessages {
         required int count,
       }) => 'FROM BACKUP · ${count}',
       'restore.replace' => 'Replace routes',
-      'restore.restored' => ({
-        required int count,
-      }) => 'Restored ${count} routes',
+      'restore.restored' =>
+        ({required num count}) =>
+            (_root.$meta.cardinalResolver ?? PluralResolvers.cardinal('en'))(
+              count,
+              one: 'Restored ${count} route',
+              other: 'Restored ${count} routes',
+            ),
       'logs.logs' => 'Http logs',
       'logs.captured' => ({
         required String count,
@@ -1933,9 +1970,13 @@ extension on AppMessages {
       'logs.search' => 'Search by user agent, source IP, path or route',
       'logs.export' => 'Export',
       'logs.filters' => 'Filters',
-      'logs.filtersActive' => ({
-        required int count,
-      }) => 'Filters, ${count} active',
+      'logs.filtersActive' =>
+        ({required num count}) =>
+            (_root.$meta.cardinalResolver ?? PluralResolvers.cardinal('en'))(
+              count,
+              one: 'Filters, ${count} active',
+              other: 'Filters, ${count} active',
+            ),
       'logs.removeFilter' => ({
         required String label,
       }) => 'Remove filter ${label}',
@@ -2100,7 +2141,13 @@ extension on AppMessages {
       'health.addHint' => 'Check a path on a schedule, LIVE or DOWN',
       'health.badge' => ({required String time}) => 'Health · every ${time}',
       'health.badgeOff' => 'Health · off',
-      'health.downCount' => ({required int count}) => '${count} down',
+      'health.downCount' =>
+        ({required num count}) =>
+            (_root.$meta.cardinalResolver ?? PluralResolvers.cardinal('en'))(
+              count,
+              one: '${count} down',
+              other: '${count} down',
+            ),
       'health.legendDown' => 'Down',
       'health.added' => ({
         required String name,

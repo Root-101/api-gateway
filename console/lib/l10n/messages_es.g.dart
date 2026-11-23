@@ -401,8 +401,12 @@ class AppMessages$routes$es implements AppMessages$routes$en {
   @override
   String get copyTo => 'Copiar URL de destino';
   @override
-  String backupSaved({required Object count}) =>
-      'Backup guardado · ${count} rutas';
+  String backupSaved({required num count}) =>
+      (_root.$meta.cardinalResolver ?? PluralResolvers.cardinal('es'))(
+        count,
+        one: 'Backup guardado · ${count} ruta',
+        other: 'Backup guardado · ${count} rutas',
+      );
   @override
   String created({required Object name}) => 'Ruta "${name}" creada';
   @override
@@ -537,8 +541,12 @@ class AppMessages$restore$es implements AppMessages$restore$en {
   @override
   String get hint => 'Un archivo .json creado con Backup';
   @override
-  String ready({required Object count}) =>
-      '${count} rutas listas para restaurar';
+  String ready({required num count}) =>
+      (_root.$meta.cardinalResolver ?? PluralResolvers.cardinal('es'))(
+        count,
+        one: '${count} ruta lista para restaurar',
+        other: '${count} rutas listas para restaurar',
+      );
   @override
   String get invalidFile =>
       'No es un backup de rutas válido: usa una lista .json de rutas con name, path y uri.';
@@ -560,7 +568,12 @@ class AppMessages$restore$es implements AppMessages$restore$en {
   @override
   String get replace => 'Reemplazar rutas';
   @override
-  String restored({required Object count}) => 'Restauradas ${count} rutas';
+  String restored({required num count}) =>
+      (_root.$meta.cardinalResolver ?? PluralResolvers.cardinal('es'))(
+        count,
+        one: 'Restaurada ${count} ruta',
+        other: 'Restauradas ${count} rutas',
+      );
 }
 
 // Path: logs
@@ -582,7 +595,12 @@ class AppMessages$logs$es implements AppMessages$logs$en {
   @override
   String get filters => 'Filtros';
   @override
-  String filtersActive({required Object count}) => 'Filtros, ${count} activos';
+  String filtersActive({required num count}) =>
+      (_root.$meta.cardinalResolver ?? PluralResolvers.cardinal('es'))(
+        count,
+        one: 'Filtros, ${count} activo',
+        other: 'Filtros, ${count} activos',
+      );
   @override
   String removeFilter({required Object label}) => 'Quitar filtro ${label}';
   @override
@@ -896,7 +914,12 @@ class AppMessages$health$es implements AppMessages$health$en {
   @override
   String get badgeOff => 'Health · off';
   @override
-  String downCount({required Object count}) => '${count} caídas';
+  String downCount({required num count}) =>
+      (_root.$meta.cardinalResolver ?? PluralResolvers.cardinal('es'))(
+        count,
+        one: '${count} caída',
+        other: '${count} caídas',
+      );
   @override
   String get legendDown => 'Caída';
   @override
@@ -1428,9 +1451,13 @@ extension on AppMessagesEs {
       'routes.to' => 'HACIA',
       'routes.copyFrom' => 'Copiar URL de origen',
       'routes.copyTo' => 'Copiar URL de destino',
-      'routes.backupSaved' => ({
-        required Object count,
-      }) => 'Backup guardado · ${count} rutas',
+      'routes.backupSaved' =>
+        ({required num count}) =>
+            (_root.$meta.cardinalResolver ?? PluralResolvers.cardinal('es'))(
+              count,
+              one: 'Backup guardado · ${count} ruta',
+              other: 'Backup guardado · ${count} rutas',
+            ),
       'routes.created' => ({required Object name}) => 'Ruta "${name}" creada',
       'routes.updated' => ({
         required Object name,
@@ -1495,9 +1522,13 @@ extension on AppMessagesEs {
       'restore.dropFileHere' => 'Arrastra aquí un archivo de backup',
       'restore.releaseFile' => 'Suelta para cargar el archivo',
       'restore.hint' => 'Un archivo .json creado con Backup',
-      'restore.ready' => ({
-        required Object count,
-      }) => '${count} rutas listas para restaurar',
+      'restore.ready' =>
+        ({required num count}) =>
+            (_root.$meta.cardinalResolver ?? PluralResolvers.cardinal('es'))(
+              count,
+              one: '${count} ruta lista para restaurar',
+              other: '${count} rutas listas para restaurar',
+            ),
       'restore.invalidFile' => 'No es un backup de rutas válido: usa una lista .json de rutas con name, path y uri.',
       'restore.duplicatedNames' => ({
         required Object names,
@@ -1514,9 +1545,13 @@ extension on AppMessagesEs {
         required Object count,
       }) => 'DEL BACKUP · ${count}',
       'restore.replace' => 'Reemplazar rutas',
-      'restore.restored' => ({
-        required Object count,
-      }) => 'Restauradas ${count} rutas',
+      'restore.restored' =>
+        ({required num count}) =>
+            (_root.$meta.cardinalResolver ?? PluralResolvers.cardinal('es'))(
+              count,
+              one: 'Restaurada ${count} ruta',
+              other: 'Restauradas ${count} rutas',
+            ),
       'logs.logs' => 'Http logs',
       'logs.captured' => ({
         required Object count,
@@ -1524,9 +1559,13 @@ extension on AppMessagesEs {
       'logs.search' => 'Buscar por user agent, IP de origen, path o ruta',
       'logs.export' => 'Exportar',
       'logs.filters' => 'Filtros',
-      'logs.filtersActive' => ({
-        required Object count,
-      }) => 'Filtros, ${count} activos',
+      'logs.filtersActive' =>
+        ({required num count}) =>
+            (_root.$meta.cardinalResolver ?? PluralResolvers.cardinal('es'))(
+              count,
+              one: 'Filtros, ${count} activo',
+              other: 'Filtros, ${count} activos',
+            ),
       'logs.removeFilter' => ({
         required Object label,
       }) => 'Quitar filtro ${label}',
@@ -1691,7 +1730,13 @@ extension on AppMessagesEs {
       'health.addHint' => 'Comprueba una ruta periódicamente, LIVE o CAÍDA',
       'health.badge' => ({required Object time}) => 'Health · cada ${time}',
       'health.badgeOff' => 'Health · off',
-      'health.downCount' => ({required Object count}) => '${count} caídas',
+      'health.downCount' =>
+        ({required num count}) =>
+            (_root.$meta.cardinalResolver ?? PluralResolvers.cardinal('es'))(
+              count,
+              one: '${count} caída',
+              other: '${count} caídas',
+            ),
       'health.legendDown' => 'Caída',
       'health.added' => ({
         required Object name,

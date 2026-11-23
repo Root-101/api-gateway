@@ -104,7 +104,9 @@ routes:
   to: 'HACIA'
   copyFrom: 'Copiar URL de origen'
   copyTo: 'Copiar URL de destino'
-  backupSaved: 'Backup guardado · {count} rutas'
+  backupSaved(plural, param=count):
+    one: 'Backup guardado · {count} ruta'
+    other: 'Backup guardado · {count} rutas'
   created: 'Ruta "{name}" creada'
   updated: 'Ruta "{name}" actualizada'
   deleted: 'Ruta "{name}" eliminada'
@@ -157,7 +159,9 @@ restore:
   dropFileHere: 'Arrastra aquí un archivo de backup'
   releaseFile: 'Suelta para cargar el archivo'
   hint: 'Un archivo .json creado con Backup'
-  ready: '{count} rutas listas para restaurar'
+  ready(plural, param=count):
+    one: '{count} ruta lista para restaurar'
+    other: '{count} rutas listas para restaurar'
   invalidFile: 'No es un backup de rutas válido: usa una lista .json de rutas con name, path y uri.'
   duplicatedNames: 'Nombres duplicados en el archivo: {names}'
   confirmTitle: '¿Reemplazar {current} rutas por {next}?'
@@ -166,14 +170,18 @@ restore:
   current: 'ACTUALES · {count}'
   fromBackup: 'DEL BACKUP · {count}'
   replace: 'Reemplazar rutas'
-  restored: 'Restauradas {count} rutas'
+  restored(plural, param=count):
+    one: 'Restaurada {count} ruta'
+    other: 'Restauradas {count} rutas'
 logs:
   logs: 'Http logs'
   captured: '{count} peticiones capturadas · las más recientes primero'
   search: 'Buscar por user agent, IP de origen, path o ruta'
   export: 'Exportar'
   filters: 'Filtros'
-  filtersActive: 'Filtros, {count} activos'
+  filtersActive(plural, param=count):
+    one: 'Filtros, {count} activo'
+    other: 'Filtros, {count} activos'
   removeFilter: 'Quitar filtro {label}'
   columnTimestamp: 'FECHA'
   columnMethod: 'MÉTODO'
@@ -304,7 +312,9 @@ health:
   addHint: 'Comprueba una ruta periódicamente, LIVE o CAÍDA'
   badge: 'Health · cada {time}'
   badgeOff: 'Health · off'
-  downCount: '{count} caídas'
+  downCount(plural, param=count):
+    one: '{count} caída'
+    other: '{count} caídas'
   legendDown: 'Caída'
   added: '"{name}": health check añadido'
   saved: '"{name}": health check guardado'
