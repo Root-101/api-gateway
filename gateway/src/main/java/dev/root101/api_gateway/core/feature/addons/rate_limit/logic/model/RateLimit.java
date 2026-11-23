@@ -19,7 +19,7 @@ import java.time.Duration;
 public record RateLimit(
         @NotNull Boolean enabled,
         @NotNull @Min(1) @Max(1_000_000) Integer limit,
-        @NotNull @Pattern(regexp = "second|minute|hour", message = "{rate_limit.period.invalid}") String period,
+        @NotNull @Pattern(regexp = "second|minute|hour", message = "{error.rate-limit.invalid-period}") String period,
         @Min(1) @Max(1_000_000) Integer burst
 ) {
 

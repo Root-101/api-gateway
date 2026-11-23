@@ -124,11 +124,11 @@ class CorsUseCase_Impl implements CorsUseCase, SmartInitializingSingleton {
     @Override
     public Mono<CorsResponse> setGateway(Cors cors, String origin) {
         return Mono.defer(() -> {
-                    if (!cors.on()) return Mono.error(Errors.badRequest("cors.gateway.disabled"));
-                    if (cors.credentials()) return Mono.error(Errors.badRequest("cors.gateway.credentials"));
+                    if (!cors.on()) return Mono.error(Errors.badRequest("error.cors.gateway-disabled"));
+                    if (cors.credentials()) return Mono.error(Errors.badRequest("error.cors.gateway-credentials"));
                     //without a browser (curl) CORS doesn't apply: a broken policy is always fixable from there
                     if (origin != null && cors.toConfiguration().checkOrigin(origin) == null) {
-                        return Mono.error(Errors.badRequest("cors.gateway.lockout", origin));
+                        return Mono.error(Errors.badRequest("error.cors.gateway-lockout", origin));
                     }
                     return addonRepo.findByRouteIdIsNullAndType(Cors.TYPE).defaultIfEmpty(newAddon(null));
                 })
@@ -150,7 +150,7 @@ class CorsUseCase_Impl implements CorsUseCase, SmartInitializingSingleton {
         return routeRepo.findExisting(routeId)
                 .flatMap(route -> addonRepo.findByRouteIdAndType(route.getRouteId(), Cors.TYPE))
                 .filter(addon -> valid(read(addon.getConfig())))
-                .switchIfEmpty(Mono.error(Errors.notFound("cors.route.not_found", routeId)))
+                .switchIfEmpty(Mono.error(Errors.notFound("error.cors.route-not-found", routeId)))
                 .flatMap(addon -> {
                     Cors current = read(addon.getConfig());
                     return write(addon, new Cors(enabled, current.allowedOrigins(), current.allowCredentials()));
@@ -174,7 +174,7 @@ class CorsUseCase_Impl implements CorsUseCase, SmartInitializingSingleton {
         }
         //the pre-6.0.0 hole: any page reads a cookie-authenticated service through the gateway
         if (cors.credentials() && cors.allowsAnyOrigin()) {
-            return Mono.error(Errors.badRequest("cors.credentials.any_origin"));
+            return Mono.error(Errors.badRequest("error.cors.credentials-any-origin"));
         }
         return current.defaultIfEmpty(newAddon(routeId))
                 .flatMap(addon -> write(addon, cors))

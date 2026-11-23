@@ -33,7 +33,7 @@ class AuthUseCase_Impl implements AuthUseCase {
                 String token = adminTokens.issue();
                 return Mono.just(new LoginResponse(token, adminTokens.ttlMillis(), adminTokens.expireAt(token)));
             } else {
-                return Mono.error(Errors.unauthorized("auth.wrong_credentials"));
+                return Mono.error(Errors.unauthorized("error.auth.wrong-credentials"));
             }
         });
     }

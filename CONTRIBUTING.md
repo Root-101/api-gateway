@@ -23,7 +23,9 @@ How to run each one locally is in the [README](README.md#locally).
   `Search{Name}Request`, `{Name}Response` with a static `build(...)`). Controllers only bind, call the
   use case and return; they inject the interface, never an `_Impl` or a repo. A use case reaches
   another feature only through its interface. Errors are thrown with `core/error/Errors`
-  (`Errors.notFound("route.not_found", id)`), logs with Lombok's `@Slf4j`, beans by their single
+  (`Errors.notFound("error.route.not-found", id)`); a key is `error.{feature}.{rule}` in kebab-case,
+  `error.{rule}` when shared (`error.conflict`), `status.{code}` for the titles, in both
+  `messages*.properties`. Logs with Lombok's `@Slf4j`, beans by their single
   constructor (no `@Autowired`). Security is in `security/`, cross-cutting config in `config/`, the
   languages in `core/i18n/`. Schema changes are new Flyway migrations
   (`src/main/resources/db/migration/`), never an edit of an old one.

@@ -21,9 +21,9 @@ public interface RouteRepo extends ReactiveCrudRepository<RouteEntity, UUID> {
         try {
             id = UUID.fromString(routeId);
         } catch (IllegalArgumentException e) {
-            return Mono.error(Errors.badRequest("route.id.invalid", routeId));
+            return Mono.error(Errors.badRequest("error.route.invalid-id", routeId));
         }
         return findById(id)
-                .switchIfEmpty(Mono.error(Errors.notFound("route.not_found", routeId)));
+                .switchIfEmpty(Mono.error(Errors.notFound("error.route.not-found", routeId)));
     }
 }

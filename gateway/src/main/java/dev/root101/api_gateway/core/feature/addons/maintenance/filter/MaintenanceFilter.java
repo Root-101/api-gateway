@@ -50,7 +50,7 @@ public class MaintenanceFilter implements GlobalFilter, Ordered {
         if (maintenance.message() != null && !maintenance.message().isBlank()) {
             return errors.writeDetail(exchange, HttpStatus.SERVICE_UNAVAILABLE, maintenance.message());
         }
-        return errors.writeProblem(exchange, HttpStatus.SERVICE_UNAVAILABLE, "maintenance.default");
+        return errors.writeProblem(exchange, HttpStatus.SERVICE_UNAVAILABLE, "error.maintenance.default");
     }
 
     //before every other filter: nothing of the request is done for a route in maintenance

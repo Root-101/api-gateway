@@ -43,7 +43,7 @@ public class RateLimitFilter implements GlobalFilter, Ordered {
             return chain.filter(exchange);
         }
         exchange.getResponse().getHeaders().set(HttpHeaders.RETRY_AFTER, String.valueOf(seconds));
-        return errors.writeProblem(exchange, HttpStatus.TOO_MANY_REQUESTS, "rate_limit.exceeded", seconds);
+        return errors.writeProblem(exchange, HttpStatus.TOO_MANY_REQUESTS, "error.rate-limit.exceeded", seconds);
     }
 
     //right after the maintenance: a request it stops never counts

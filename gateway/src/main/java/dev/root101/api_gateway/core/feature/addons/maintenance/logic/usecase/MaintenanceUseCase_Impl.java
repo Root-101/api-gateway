@@ -77,7 +77,7 @@ class MaintenanceUseCase_Impl implements MaintenanceUseCase, SmartInitializingSi
                 config.enabled(),
                 config.message(),
                 config.retryAfter(),
-                messages.getMessage("maintenance.default", null, locale),
+                messages.getMessage("error.maintenance.default", null, locale),
                 entry.state()
         );
     }
@@ -102,7 +102,7 @@ class MaintenanceUseCase_Impl implements MaintenanceUseCase, SmartInitializingSi
     @Override
     public Mono<MaintenanceResponse> enableGateway(boolean enabled, Locale locale) {
         return addonRepo.findByRouteIdIsNullAndType(Maintenance.TYPE)
-                .switchIfEmpty(Mono.error(Errors.notFound("maintenance.gateway.not_found")))
+                .switchIfEmpty(Mono.error(Errors.notFound("error.maintenance.gateway-not-found")))
                 .flatMap(addon -> enable(addon, enabled))
                 .then(reload())
                 .then(Mono.fromSupplier(() -> ofGateway(locale)));
@@ -127,7 +127,7 @@ class MaintenanceUseCase_Impl implements MaintenanceUseCase, SmartInitializingSi
     public Mono<MaintenanceResponse> enableRoute(String routeId, boolean enabled, Locale locale) {
         return routeRepo.findExisting(routeId)
                 .flatMap(route -> addonRepo.findByRouteIdAndType(route.getRouteId(), Maintenance.TYPE)
-                        .switchIfEmpty(Mono.error(Errors.notFound("maintenance.route.not_found", routeId))))
+                        .switchIfEmpty(Mono.error(Errors.notFound("error.maintenance.route-not-found", routeId))))
                 .flatMap(addon -> enable(addon, enabled))
                 .then(reload())
                 .then(Mono.fromSupplier(() -> ofRoute(routeId, locale)));
@@ -160,8 +160,8 @@ class MaintenanceUseCase_Impl implements MaintenanceUseCase, SmartInitializingSi
         Maintenance current = read(addon.getConfig(), Maintenance.class);
         if (current == null || current.enabled() == null) {
             return addon.getRouteId() == null
-                    ? Mono.error(Errors.notFound("maintenance.gateway.not_found"))
-                    : Mono.error(Errors.notFound("maintenance.route.not_found", addon.getRouteId()));
+                    ? Mono.error(Errors.notFound("error.maintenance.gateway-not-found"))
+                    : Mono.error(Errors.notFound("error.maintenance.route-not-found", addon.getRouteId()));
         }
         return write(addon, new Maintenance(enabled, current.message(), current.retryAfter()));
     }

@@ -104,7 +104,7 @@ class RouteUseCase_Impl implements RouteUseCase, SmartInitializingSingleton {
                 // Check for duplicates in the database
                 .concatMap(
                         request -> routeRepo.findByName(request.getName())
-                                .flatMap(existing -> Mono.<RouteRequest>error(Errors.conflict("route.exists", request.getName())))
+                                .flatMap(existing -> Mono.<RouteRequest>error(Errors.conflict("error.route.name-taken", request.getName())))
                                 .switchIfEmpty(Mono.just(request))
                 )
                 .map(this::buildEntity)
@@ -194,7 +194,7 @@ class RouteUseCase_Impl implements RouteUseCase, SmartInitializingSingleton {
                 .flatMapMany(frequencyMap -> {
                     for (Map.Entry<String, Collection<RouteRequest>> entry : frequencyMap.entrySet()) {
                         if (entry.getValue().size() > 1) {
-                            return Mono.error(Errors.conflict("route.duplicated", entry.getKey()));
+                            return Mono.error(Errors.conflict("error.route.duplicated-name", entry.getKey()));
                         }
                     }
                     return Flux.fromIterable(requests);
@@ -213,7 +213,7 @@ class RouteUseCase_Impl implements RouteUseCase, SmartInitializingSingleton {
                 //the new name can't be used by another route
                 .flatMap(oldRoute -> routeRepo.findByName(request.getName())
                         .filter(existing -> !existing.getRouteId().equals(oldRoute.getRouteId()))
-                        .flatMap(existing -> Mono.<RouteEntity>error(Errors.conflict("route.exists", request.getName())))
+                        .flatMap(existing -> Mono.<RouteEntity>error(Errors.conflict("error.route.name-taken", request.getName())))
                         .defaultIfEmpty(oldRoute)
                 )
                 .flatMap(oldRoute -> {

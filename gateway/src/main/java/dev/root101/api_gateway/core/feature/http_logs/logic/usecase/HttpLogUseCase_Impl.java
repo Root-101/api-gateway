@@ -139,16 +139,16 @@ class HttpLogUseCase_Impl implements HttpLogUseCase {
      */
     private static void validate(SearchHttpLogRequest request) {
         if (request.getPage() < 0) {
-            throw Errors.badRequest("logs.page.invalid");
+            throw Errors.badRequest("error.http-log.invalid-page");
         }
         if (request.getSize() != null && request.getSize() < 1) {
-            throw Errors.badRequest("logs.size.invalid");
+            throw Errors.badRequest("error.http-log.invalid-size");
         }
         if (request.getStatus() != null && !request.getStatus().isBlank()) {
             try {
                 Integer.parseInt(request.getStatus().trim());
             } catch (NumberFormatException e) {
-                throw Errors.badRequest("logs.status.invalid");
+                throw Errors.badRequest("error.http-log.invalid-status");
             }
         }
         String routeId = request.getRouteId();
@@ -156,7 +156,7 @@ class HttpLogUseCase_Impl implements HttpLogUseCase {
             try {
                 UUID.fromString(routeId.trim());
             } catch (IllegalArgumentException e) {
-                throw Errors.badRequest("logs.route_id.invalid");
+                throw Errors.badRequest("error.http-log.invalid-route-id");
             }
         }
     }

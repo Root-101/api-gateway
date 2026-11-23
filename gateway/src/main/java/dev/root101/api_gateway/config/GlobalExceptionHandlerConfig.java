@@ -96,7 +96,7 @@ public class GlobalExceptionHandlerConfig implements ErrorWebExceptionHandler {
             //a path that no route matches (and isn't an admin endpoint): don't expose the static resources message
             case NoResourceFoundException ex -> {
                 status = HttpStatus.NOT_FOUND;
-                detail = text("error.no_route", locale, exchange.getRequest().getPath().value());
+                detail = text("error.no-route", locale, exchange.getRequest().getPath().value());
             }
             //the gateway's response-timeout: its message names the configured timeout
             case ResponseStatusException ex when ex.getStatusCode().value() == HttpStatus.GATEWAY_TIMEOUT.value() -> {
@@ -116,7 +116,7 @@ public class GlobalExceptionHandlerConfig implements ErrorWebExceptionHandler {
             //upstream errors: don't expose the internal host/port in the message
             case ConnectTimeoutException ex -> {
                 status = HttpStatus.GATEWAY_TIMEOUT;
-                detail = text("error.upstream.connect_timeout", locale);
+                detail = text("error.upstream.connect-timeout", locale);
             }
             case TimeoutException ex -> {
                 status = HttpStatus.GATEWAY_TIMEOUT;
@@ -136,7 +136,7 @@ public class GlobalExceptionHandlerConfig implements ErrorWebExceptionHandler {
             }
             default -> {
                 status = HttpStatus.INTERNAL_SERVER_ERROR;
-                detail = text("error.internal", locale);
+                detail = text("error.internal-server-error", locale);
             }
         }
 
@@ -173,7 +173,7 @@ public class GlobalExceptionHandlerConfig implements ErrorWebExceptionHandler {
         body.put("type", "about:blank");
         HttpStatus known = HttpStatus.resolve(status.value());
         String reasonPhrase = known != null ? known.getReasonPhrase() : String.valueOf(status.value());
-        body.put("title", messages.getMessage("title." + status.value(), null, reasonPhrase, locale));
+        body.put("title", messages.getMessage("status." + status.value(), null, reasonPhrase, locale));
         body.put("status", status.value());
         if (detail != null && !detail.isBlank()) {
             body.put("detail", detail);
@@ -234,18 +234,18 @@ public class GlobalExceptionHandlerConfig implements ErrorWebExceptionHandler {
                         path.append('[').append(ref.getIndex()).append(']');
                     }
                 }
-                return text("error.input.field", locale, path.toString());
+                return text("validation.invalid-value", locale, path.toString());
             }
             if (cause instanceof JacksonException) {
-                return text("error.input.json", locale);
+                return text("error.bad-request", locale);
             }
         }
         //a query parameter of the wrong type (ej: ): name it
         if (ex.getMethodParameter() != null && ex.getMethodParameter().getParameterName() != null) {
             RequestParam param = ex.getMethodParameter().getParameterAnnotation(RequestParam.class);
             String name = param != null && !param.name().isEmpty() ? param.name() : ex.getMethodParameter().getParameterName();
-            return text("error.input.field", locale, name);
+            return text("validation.invalid-value", locale, name);
         }
-        return text("error.input.unreadable", locale);
+        return text("error.unreadable-request", locale);
     }
 }

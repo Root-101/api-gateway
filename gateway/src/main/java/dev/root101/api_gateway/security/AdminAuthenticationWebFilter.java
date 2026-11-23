@@ -77,7 +77,7 @@ public class AdminAuthenticationWebFilter implements WebFilter {
             exchange.getResponse().getHeaders().set(HttpHeaders.RETRY_AFTER, String.valueOf(seconds));
             return errorHandler.writeProblem(exchange, HttpStatus.TOO_MANY_REQUESTS,
                     //in minutes (rounded up) from one minute on: "559 s" is hard to read; Retry-After keeps the seconds
-                    seconds >= 60 ? "auth.locked.minutes" : "auth.locked.seconds",
+                    seconds >= 60 ? "error.auth.locked-minutes" : "error.auth.locked-seconds",
                     String.valueOf(seconds >= 60 ? (seconds + 59) / 60 : seconds));
         }
 

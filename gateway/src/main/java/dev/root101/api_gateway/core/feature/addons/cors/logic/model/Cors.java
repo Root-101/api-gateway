@@ -18,7 +18,7 @@ import java.util.List;
  */
 public record Cors(
         @NotNull Boolean enabled,
-        @NotEmpty List<@NotNull @Pattern(regexp = ORIGIN, message = "{cors.origin.invalid}") String> allowedOrigins,
+        @NotEmpty List<@NotNull @Pattern(regexp = ORIGIN, message = "{error.cors.invalid-origin}") String> allowedOrigins,
         Boolean allowCredentials
 ) {
 

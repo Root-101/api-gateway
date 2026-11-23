@@ -16,7 +16,7 @@ import jakarta.validation.constraints.Size;
  */
 public record HealthCheck(
         @NotNull Boolean enabled,
-        @NotNull @Size(max = 2000) @Pattern(regexp = "/\\S*", message = "{health_check.path.invalid}") String path,
+        @NotNull @Size(max = 2000) @Pattern(regexp = "/\\S*", message = "{error.health-check.invalid-path}") String path,
         @NotNull @Min(10) @Max(3600) Integer intervalSeconds
 ) {
 

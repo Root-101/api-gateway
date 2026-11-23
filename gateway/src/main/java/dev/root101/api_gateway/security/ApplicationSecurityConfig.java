@@ -40,8 +40,8 @@ public class ApplicationSecurityConfig {
                 .addFilterAt(CorsConfig.adminCorsFilter(corsUseCase, adminBasePath), SecurityWebFiltersOrder.CORS) // The gateway's CORS add-on on the admin API, so 401/403 also get CORS headers
                 .exceptionHandling(exc -> exc
                         // Problem Details, and no `WWW-Authenticate: Basic` header: it makes browsers open the native login popup
-                        .authenticationEntryPoint((exchange, e) -> errorHandler.writeProblem(exchange, HttpStatus.UNAUTHORIZED, "auth.required"))
-                        .accessDeniedHandler((exchange, e) -> errorHandler.writeProblem(exchange, HttpStatus.FORBIDDEN, "auth.forbidden"))
+                        .authenticationEntryPoint((exchange, e) -> errorHandler.writeProblem(exchange, HttpStatus.UNAUTHORIZED, "error.unauthorized"))
+                        .accessDeniedHandler((exchange, e) -> errorHandler.writeProblem(exchange, HttpStatus.FORBIDDEN, "error.forbidden"))
                 )
                 .authorizeExchange(
                         exchange -> exchange

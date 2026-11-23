@@ -95,7 +95,7 @@ class GlobalExceptionHandlerConfigTest {
 
     static Stream<Arguments> errors() {
         return Stream.of(
-                Arguments.of(Errors.notFound("route.not_found", "x"), HttpStatus.NOT_FOUND, "Route does not exist: x"),
+                Arguments.of(Errors.notFound("error.route.not-found", "x"), HttpStatus.NOT_FOUND, "Route does not exist: x"),
                 Arguments.of(new DataIntegrityViolationException("duplicate key value violates unique constraint \"unique_route_name\""),
                         HttpStatus.CONFLICT, "Conflict with existing data"),
                 Arguments.of(new ResponseStatusException(HttpStatus.TOO_MANY_REQUESTS, "Too many"), HttpStatus.TOO_MANY_REQUESTS, "\"detail\":\"Too many\""),
@@ -116,7 +116,7 @@ class GlobalExceptionHandlerConfigTest {
     void detailIsUtf8() {
         MockServerWebExchange exchange = exchange();
 
-        handler.handle(exchange, Errors.conflict("route.exists", "ñ")).block();
+        handler.handle(exchange, Errors.conflict("error.route.name-taken", "ñ")).block();
 
         assertThat(exchange.getResponse().getStatusCode()).isEqualTo(HttpStatus.CONFLICT);
         assertThat(exchange.getResponse().getBodyAsString().block()).contains("\"detail\":\"Route already exists: ñ\"");
@@ -124,7 +124,7 @@ class GlobalExceptionHandlerConfigTest {
 
     @Test
     void textsInTheLanguageOfTheRequest() {
-        ErrorResponseException notFound = Errors.notFound("route.not_found", "x");
+        ErrorResponseException notFound = Errors.notFound("error.route.not-found", "x");
 
         assertThat(body(notFound, "es")).contains("\"title\":\"No encontrado\"", "\"detail\":\"La ruta no existe: x\"");
         assertThat(body(notFound, "es-ES,es;q=0.9")).contains("La ruta no existe: x");

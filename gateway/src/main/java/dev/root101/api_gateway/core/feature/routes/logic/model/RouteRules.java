@@ -24,13 +24,13 @@ public class RouteRules implements ConstraintValidator<ValidRoute, RouteRequest>
         boolean valid = true;
         if (route.getPath() != null && !route.getPath().isBlank() && !route.getPath().startsWith("/")) {
             //request paths always start with `/`: without it the pattern parses but never matches
-            valid = violation(context, "{route.path.no_leading_slash}", "path");
+            valid = violation(context, "{error.route.path-without-leading-slash}", "path");
         } else if (route.getPath() != null) {
             try {
                 //the parser of the gateway's Path predicate
                 PathPatternParser.defaultInstance.parse(route.getPath());
             } catch (RuntimeException e) {
-                valid = violation(context, "{route.path.invalid}", "path");
+                valid = violation(context, "{error.route.invalid-path}", "path");
             }
         }
         if (route.getUri() != null) {
@@ -38,7 +38,7 @@ public class RouteRules implements ConstraintValidator<ValidRoute, RouteRequest>
                 String uriPath = URI.create(route.getUri()).getPath();
                 //the gateway only takes scheme, host and port from the uri
                 if (uriPath != null && !uriPath.isEmpty() && !uriPath.equals("/")) {
-                    valid = violation(context, "{route.uri.has_path}", "uri");
+                    valid = violation(context, "{error.route.uri-with-path}", "uri");
                 }
             } catch (IllegalArgumentException e) {
                 //not a URI at all: the @URL validation already reports it
@@ -48,7 +48,7 @@ public class RouteRules implements ConstraintValidator<ValidRoute, RouteRequest>
             try {
                 Pattern.compile(route.getRewritePath().getReplaceFrom());
             } catch (RuntimeException e) {
-                valid = violation(context, "{route.replace_from.invalid}", "rewritePath", "replaceFrom");
+                valid = violation(context, "{error.route.invalid-replace-from}", "rewritePath", "replaceFrom");
             }
         }
         return valid;

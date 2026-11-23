@@ -5,10 +5,10 @@ import org.springframework.http.ProblemDetail;
 import org.springframework.web.ErrorResponseException;
 
 /**
- * Errors with a message key ({@code route.not_found}) and its arguments instead of a fixed text: Spring's
+ * Errors with a message key ({@code error.route.not-found}) and its arguments instead of a fixed text: Spring's
  * {@link ErrorResponseException} with the key as its detail message code. {@code GlobalExceptionHandlerConfig} answers
  * them as Problem Details: the key, translated to the request language, is the {@code detail}.
- * {@code throw Errors.notFound("route.not_found", id)}.
+ * {@code throw Errors.notFound("error.route.not-found", id)}.
  */
 public final class Errors {
 

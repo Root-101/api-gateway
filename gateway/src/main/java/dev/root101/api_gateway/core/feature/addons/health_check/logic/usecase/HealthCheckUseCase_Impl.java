@@ -115,7 +115,7 @@ class HealthCheckUseCase_Impl implements HealthCheckUseCase, SmartInitializingSi
         return routeRepo.findExisting(routeId)
                 .flatMap(route -> addonRepo.findByRouteIdAndType(route.getRouteId(), HealthCheck.TYPE))
                 .filter(addon -> valid(read(addon.getConfig(), HealthCheck.class)))
-                .switchIfEmpty(Mono.error(Errors.notFound("health_check.route.not_found", routeId)));
+                .switchIfEmpty(Mono.error(Errors.notFound("error.health-check.route-not-found", routeId)));
     }
 
     /**

@@ -133,7 +133,7 @@ class RateLimitUseCase_Impl implements RateLimitUseCase, SmartInitializingSingle
     public Mono<RateLimit> enableGateway(boolean enabled) {
         return addonRepo.findByRouteIdIsNullAndType(RateLimit.TYPE)
                 .filter(addon -> valid(read(addon.getConfig())))
-                .switchIfEmpty(Mono.error(Errors.notFound("rate_limit.gateway.not_found")))
+                .switchIfEmpty(Mono.error(Errors.notFound("error.rate-limit.gateway-not-found")))
                 .flatMap(addon -> enable(addon, enabled))
                 .then(reload())
                 .then(Mono.fromSupplier(this::ofGateway));
@@ -159,7 +159,7 @@ class RateLimitUseCase_Impl implements RateLimitUseCase, SmartInitializingSingle
         return routeRepo.findExisting(routeId)
                 .flatMap(route -> addonRepo.findByRouteIdAndType(route.getRouteId(), RateLimit.TYPE))
                 .filter(addon -> valid(read(addon.getConfig())))
-                .switchIfEmpty(Mono.error(Errors.notFound("rate_limit.route.not_found", routeId)))
+                .switchIfEmpty(Mono.error(Errors.notFound("error.rate-limit.route-not-found", routeId)))
                 .flatMap(addon -> enable(addon, enabled))
                 .then(reload())
                 .then(Mono.fromSupplier(() -> ofRoute(routeId)));
