@@ -9,6 +9,7 @@ export 'logic/cubit/routes_cubit.dart';
 export 'logic/cubit/routes_form_cubit.dart';
 export 'logic/cubit/routes_restore_cubit.dart';
 export 'logic/model/cors_model.dart';
+export 'logic/model/gateway_addons_model.dart';
 export 'logic/model/health_check_model.dart';
 export 'logic/model/maintenance_model.dart';
 export 'logic/model/rate_limit_model.dart';

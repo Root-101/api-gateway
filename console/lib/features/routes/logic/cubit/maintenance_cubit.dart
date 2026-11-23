@@ -23,7 +23,7 @@ class MaintenanceCubit extends Cubit<MaintenanceState>
 
   Future load() async {
     try {
-      gateway = await repo.findGatewayMaintenance();
+      gateway = (await repo.gatewayAddons()).maintenance;
       emit(MaintenanceLoadedOkState());
     } on Exception catch (exc) {
       //no banner is better than a broken screen: the next load or save fixes it

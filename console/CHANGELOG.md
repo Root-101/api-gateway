@@ -18,6 +18,11 @@
           `LogDetailsDialog`), each screen gives its routes to `route_config.dart` (`routes({children})`, `go()`).
           `app.toast.success()` / `error()` (`AppToast`) instead of `app.snack`; no toast or `BuildContext` in a cubit or
           model (the CORS badge text is `CorsModelIntl.short`).
+        * **Code** :broom: : Data layer as the standard: the clients return DTOs only, a `*Request` (what the admin
+          writes) and a `*Response` (what the gateway answers, read-only state included) per add-on, each under its header;
+          the models no longer read or write the API's JSON, the repo maps them (`XResponseToModel` extensions). The
+          gateway's add-ons in one `GatewayAddonsModel`; methods named as the gateway's (`list`, `search`, `details`).
+          `CONTRIBUTING.md` describes the console's layout by the standard, with a table of its known exceptions.
         * **Errors** :warning: : Reads the gateway 6.2.0 errors: the `422`'s `errors` (`pointer`, `code`, `detail`) instead
           of `violations`, shown on the same fields as before. Needs gateway 6.2.0.
         * **Versions** :arrow_up: : Flutter `3.47.9` → `3.50.1` (Dart `3.14`) in `.fvmrc`, the `Dockerfile` and the CI.

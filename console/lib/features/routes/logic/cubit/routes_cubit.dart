@@ -89,7 +89,7 @@ class RoutesCubit extends Cubit<RoutesState>
         emit(RoutesSearchingState());
       }
 
-      final found = await repo.findAll();
+      final found = await repo.list();
       if (my != _seq) return;
       routes
         ..clear()
@@ -119,7 +119,7 @@ class RoutesCubit extends Cubit<RoutesState>
     try {
       emit(RoutesBackingUpState());
 
-      List<RouteModel> routes = await repo.findAll();
+      List<RouteModel> routes = await repo.list();
       final stamp = app.dateFormatter.fileStamp.format(DateTime.now());
       final encoder = const JsonEncoder.withIndent('  ');
       String rawData = encoder.convert(routes.map((e) => e.toJson()).toList());

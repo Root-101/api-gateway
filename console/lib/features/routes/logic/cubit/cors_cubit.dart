@@ -25,7 +25,7 @@ class CorsCubit extends Cubit<CorsState>
 
   Future load() async {
     try {
-      gateway = CorsModel.tryFromJson((await repo.findGatewayAddons())['cors']);
+      gateway = (await repo.gatewayAddons()).cors;
       emit(CorsLoadedOkState());
     } on Exception catch (exc) {
       //the panel just doesn't show it: the next load or save fixes it

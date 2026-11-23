@@ -168,7 +168,7 @@ class LogsCubit extends Cubit<LogsState>
     try {
       emit(LogsFilteringState());
 
-      HttpLogSearchModel response = await repo.findAll(
+      HttpLogSearchModel response = await repo.search(
         page: currentPage,
         size: pageSize,
         query: filters.query,
@@ -272,7 +272,7 @@ class LogsCubit extends Cubit<LogsState>
   }
 
   Future _updateRoutes() async {
-    List<RouteModel> rawRoutes = await routesRepo.findAll();
+    List<RouteModel> rawRoutes = await routesRepo.list();
     routes.clear();
     List<RouteLogModel> tempRoutes = rawRoutes
         .map(
@@ -305,7 +305,7 @@ class LogsCubit extends Cubit<LogsState>
       int page = 0;
       int totalPages = 1;
       while (page < totalPages && all.length < exportMaxRows) {
-        HttpLogSearchModel response = await repo.findAll(
+        HttpLogSearchModel response = await repo.search(
           page: page,
           size: exportPageSize,
           query: filters.query,

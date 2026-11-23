@@ -48,9 +48,31 @@ How to run each one locally is in the [README](README.md#locally).
 - **Native image:** a class read by reflection (JSON models, entities, gateway predicates and
   filters) needs its hint in `config/ReflectionConfig.java`; the CI builds the native image and
   runs a smoke test against it, which is where a missing hint shows up.
-- **Console:** a feature is `data/rest` → `data/repo` → `logic/cubit` and `logic/model` → `view`,
-  wired in its `<name>_init.dart`. No user-visible text is hardcoded (`lib/i18n/*.i18n.yaml`, both
-  languages, then `fvm dart run slang`). See [`console/README.md`](console/README.md).
+- **Console:** follows the house Flutter app standard (`flutter-app-standard`), with the exceptions
+  below. A feature is `features/<name>/` with `data/rest/` (the client, which returns `*Response`
+  DTOs and lets `DioException` out) → `data/repo/` (models in and out, `ExceptionConverter.parse`,
+  the mapping as `XResponseToModel` extensions) → `logic/model/` and `logic/cubit/` (states below
+  each cubit, `X<Verb>ingState` / `X<Verb>edOkState` / `X<Verb>ingErrorState`, on the global bus)
+  → `view/`, wired in its `<name>_init.dart`; a singleton cubit also goes into `blocProviders` and
+  `_resetCubits()` of `features_init.dart`. Every screen and dialog opens through its
+  `static final navigator` (`DeleteRouteDialog.navigator.open(route: …)`), screens give their
+  routes to `config/route_config.dart` with `routes()`. Errors are shown with
+  `exception.intlMessage`, decided on with `hasCode(ApiErrorCode.…)`, never on the text. Files import
+  only `app_exporter.dart`; the UI comes from `design_system/` (`app.colors`, `App*` components,
+  `app.toast`). No user-visible text is hardcoded (`lib/i18n/*.i18n.yaml`, both languages, then
+  `fvm dart run slang`). See [`console/README.md`](console/README.md).
+- **Known exceptions of the console** (on purpose):
+
+  | Standard                                       | Console                                                   | Why                                          |
+  |------------------------------------------------|-----------------------------------------------------------|----------------------------------------------|
+  | Tests for every cubit, repo and model          | None                                                      | Tests only in `gateway/` for now             |
+  | `token` param on every call (`accessToken`)    | `AuthInterceptor` adds it and logs out on a `401`         | One admin session                            |
+  | Light theme                                    | Dark only                                                 | The design is dark                           |
+  | `AuthCubit.syncAppLanguage()`                  | The language stays in the browser                         | The gateway has no users                     |
+  | Admin forms in an `AppFormDialog`              | `RoutesFormScreen`, a stepper dialog with its own URL     | The design's three-step form                 |
+  | `app.intl` everywhere                          | `context.intl` in widgets, `app.intl` elsewhere           | Rebuilds the widget on a language change     |
+  | Models without JSON                            | `RouteModel` and the logs' models write the backup files  | The backup is the API's own JSON             |
+  | One version per package                        | Console and gateway share the version                     | They are released together                   |
 - **Both:** JSON keys are `snake_case`. A change to the contract of `/auth`, `/routes` or
   `/http-logs` changes both folders in the same change. Every error goes through
   `GlobalExceptionHandlerConfig` as a Problem Details; don't write an error body anywhere else.

@@ -5,7 +5,7 @@ class LogsRepo {
 
   LogsRepo({required this.client});
 
-  Future<HttpLogSearchModel> findAll({
+  Future<HttpLogSearchModel> search({
     required int page,
     int? size,
     String? responseCode,
@@ -16,7 +16,7 @@ class LogsRepo {
     DateTime? toDate,
   }) async {
     try {
-      HttpLogSearchResponse response = await client.findAll(
+      HttpLogSearchResponse response = await client.search(
         search: HttpLogSearchRequest(
           page: page,
           size: size,
@@ -35,7 +35,7 @@ class LogsRepo {
   }
 }
 
-extension HttpLogSearchModelParser on HttpLogSearchResponse {
+extension HttpLogSearchResponseToModel on HttpLogSearchResponse {
   HttpLogSearchModel toModel() => HttpLogSearchModel(
     page: page,
     size: size,
@@ -46,7 +46,7 @@ extension HttpLogSearchModelParser on HttpLogSearchResponse {
   );
 }
 
-extension HttpLogModelParser on HttpLogResponse {
+extension HttpLogResponseToModel on HttpLogResponse {
   HttpLogModel toModel() => HttpLogModel(
     id: id,
     sourceIp: sourceIp,
@@ -60,7 +60,7 @@ extension HttpLogModelParser on HttpLogResponse {
   );
 }
 
-extension RouteLogModelParser on RouteLogResponse {
+extension RouteLogResponseToModel on RouteLogResponse {
   RouteLogModel toModel() => RouteLogModel(
     routeId: routeId,
     routeName: routeName,

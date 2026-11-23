@@ -25,9 +25,9 @@ class RateLimitCubit extends Cubit<RateLimitState>
 
   Future load() async {
     try {
-      final addons = await repo.findGatewayAddons();
-      gatewayCanHave = addons.containsKey('rate_limit');
-      gateway = RateLimitModel.tryFromJson(addons['rate_limit']);
+      final addons = await repo.gatewayAddons();
+      gatewayCanHave = addons.rateLimitSupported;
+      gateway = addons.rateLimit;
       emit(RateLimitLoadedOkState());
     } on Exception catch (exc) {
       //the panel just doesn't show it: the next load or save fixes it
