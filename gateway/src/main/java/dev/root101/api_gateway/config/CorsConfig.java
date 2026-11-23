@@ -1,7 +1,7 @@
 package dev.root101.api_gateway.config;
 
-import dev.root101.api_gateway.features.addons.cors.logic.model.Cors;
-import dev.root101.api_gateway.features.addons.cors.logic.usecase.CorsUseCase;
+import dev.root101.api_gateway.core.feature.addons.cors.logic.model.Cors;
+import dev.root101.api_gateway.core.feature.addons.cors.logic.usecase.CorsUseCase;
 import org.springframework.cloud.gateway.filter.headers.HttpHeadersFilter;
 import org.springframework.cloud.gateway.handler.RoutePredicateHandlerMapping;
 import org.springframework.cloud.gateway.route.Route;
@@ -41,7 +41,7 @@ public class CorsConfig {
     }
 
     /**
-     * The gateway's CORS on the admin API, for `SecurityConfig`. Not a bean: WebFlux would also run it outside the
+     * The gateway's CORS on the admin API, for `ApplicationSecurityConfig`. Not a bean: WebFlux would also run it outside the
      * security chain. Only admin paths: Spring's `CorsWebFilter` ends every preflight, a proxied one would never get
      * its route's CORS.
      */

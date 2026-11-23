@@ -93,7 +93,7 @@ class GatewayProxyIT extends IntegrationTest {
         var closed = reactor.netty.http.server.HttpServer.create().port(0).bindNow();
         int closedPort = closed.port();
         closed.disposeNow();
-        createRoute(new dev.root101.api_gateway.features.routes.logic.model.RouteConfigRequest(
+        createRoute(new dev.root101.api_gateway.core.feature.routes.logic.model.RouteRequest(
                 "down-" + id, "/down-" + id + "/**", "http://localhost:" + closedPort, null, null, null));
         createRoute(route("slow-" + id, "slow-" + id));
 

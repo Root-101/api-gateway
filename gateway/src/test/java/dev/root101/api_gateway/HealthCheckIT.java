@@ -1,11 +1,11 @@
 package dev.root101.api_gateway;
 
-import dev.root101.api_gateway.features.addons.base.data.entity.AddonEntity;
-import dev.root101.api_gateway.features.addons.base.data.entity.AddonJson;
-import dev.root101.api_gateway.features.addons.base.data.repo.AddonRepo;
-import dev.root101.api_gateway.features.addons.base.logic.usecase.AddonsUseCase;
-import dev.root101.api_gateway.features.addons.health_check.logic.model.HealthCheck;
-import dev.root101.api_gateway.features.routes.logic.model.RouteConfigRequest;
+import dev.root101.api_gateway.core.feature.addons.base.data.entity.AddonEntity;
+import dev.root101.api_gateway.core.feature.addons.base.data.entity.AddonJson;
+import dev.root101.api_gateway.core.feature.addons.base.data.repo.AddonRepo;
+import dev.root101.api_gateway.core.feature.addons.base.logic.usecase.AddonsUseCase;
+import dev.root101.api_gateway.core.feature.addons.health_check.logic.model.HealthCheck;
+import dev.root101.api_gateway.core.feature.routes.logic.model.RouteRequest;
 import dev.root101.api_gateway.support.IntegrationTest;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -128,7 +128,7 @@ class HealthCheckIT extends IntegrationTest {
                 .expectBody().jsonPath("$.state.up").isEqualTo(true);
 
         admin(HttpMethod.PUT, "/routes/" + routeId)
-                .bodyValue(new RouteConfigRequest("hce-" + id, "/hce-" + id + "/**", "http://localhost:1", null, null, null))
+                .bodyValue(new RouteRequest("hce-" + id, "/hce-" + id + "/**", "http://localhost:1", null, null, null))
                 .exchange()
                 .expectStatus().isOk()
                 .expectBody()
@@ -140,7 +140,7 @@ class HealthCheckIT extends IntegrationTest {
         admin(HttpMethod.GET, "/routes/" + routeId).exchange()
                 .expectBody().jsonPath("$.addons.health_check.state.checked_at").value(checkedAt::set);
         admin(HttpMethod.PUT, "/routes/" + routeId)
-                .bodyValue(new RouteConfigRequest("hce-" + id, "/hce2-" + id + "/**", "http://localhost:1", null, null, null))
+                .bodyValue(new RouteRequest("hce-" + id, "/hce2-" + id + "/**", "http://localhost:1", null, null, null))
                 .exchange()
                 .expectStatus().isOk()
                 .expectBody()
@@ -153,7 +153,7 @@ class HealthCheckIT extends IntegrationTest {
     @Test
     void unreachableAndSameHost() {
         String id = unique();
-        String downId = createRoute(new RouteConfigRequest("hcd-" + id, "/hcd-" + id + "/**", "http://localhost:1", null, null, null));
+        String downId = createRoute(new RouteRequest("hcd-" + id, "/hcd-" + id + "/**", "http://localhost:1", null, null, null));
         set(downId, healthCheck(false, "/health", 60));
         admin(HttpMethod.POST, routePath(downId) + "/run").exchange()
                 .expectStatus().isOk()

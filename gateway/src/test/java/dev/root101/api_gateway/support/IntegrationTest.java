@@ -1,10 +1,10 @@
 package dev.root101.api_gateway.support;
 
-import dev.root101.api_gateway.features.http_logs.data.entity.HttpLogEntity;
-import dev.root101.api_gateway.features.http_logs.data.repo.HttpLogRepo;
-import dev.root101.api_gateway.features.routes.data.repo.RouteRepo;
-import dev.root101.api_gateway.features.routes.logic.model.RewritePathModel;
-import dev.root101.api_gateway.features.routes.logic.model.RouteConfigRequest;
+import dev.root101.api_gateway.core.feature.http_logs.data.entity.HttpLogEntity;
+import dev.root101.api_gateway.core.feature.http_logs.data.repo.HttpLogRepo;
+import dev.root101.api_gateway.core.feature.routes.data.repo.RouteRepo;
+import dev.root101.api_gateway.core.feature.routes.logic.model.RewritePathModel;
+import dev.root101.api_gateway.core.feature.routes.logic.model.RouteRequest;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -143,15 +143,15 @@ public abstract class IntegrationTest {
     /**
      * Route `/{prefix}-{id}/**` → fake upstream, no rewrite
      */
-    protected static RouteConfigRequest route(String name, String pathPrefix) {
-        return new RouteConfigRequest(name, "/" + pathPrefix + "/**", upstreamUrl(), null, null, null);
+    protected static RouteRequest route(String name, String pathPrefix) {
+        return new RouteRequest(name, "/" + pathPrefix + "/**", upstreamUrl(), null, null, null);
     }
 
     /**
      * Route `/{prefix}/**` → fake upstream, removing the prefix
      */
-    protected static RouteConfigRequest rewriteRoute(String name, String pathPrefix) {
-        return new RouteConfigRequest(
+    protected static RouteRequest rewriteRoute(String name, String pathPrefix) {
+        return new RouteRequest(
                 name, "/" + pathPrefix + "/**", upstreamUrl(),
                 new RewritePathModel("/" + pathPrefix + "/(?<segment>.*)", "/${segment}"), null, null
         );
@@ -166,7 +166,7 @@ public abstract class IntegrationTest {
     /**
      * Creates the route (`201`) and returns its id
      */
-    protected String createRoute(RouteConfigRequest request) {
+    protected String createRoute(RouteRequest request) {
         return (String) admin(org.springframework.http.HttpMethod.POST, "/routes")
                 .bodyValue(request)
                 .exchange()
