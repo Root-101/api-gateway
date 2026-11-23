@@ -879,9 +879,9 @@ class AppMessages$health$es implements AppMessages$health$en {
   @override
   String get hintOff => 'Apagado · solo lo llama Comprobar ahora';
   @override
-  String get slideOn => 'Desliza a la derecha para comprobar periódicamente';
+  String get slideOn => 'Desliza para comprobar periódicamente';
   @override
-  String get slideOff => 'Desliza a la izquierda para dejar de comprobar';
+  String get slideOff => 'Desliza para dejar de comprobar';
   @override
   String get removeTitle => '¿Quitar el health check?';
   @override
@@ -957,9 +957,9 @@ class AppMessages$rate$es implements AppMessages$rate$en {
   @override
   String get hintOff => 'Apagado · no se limita nada';
   @override
-  String get slideOn => 'Desliza a la derecha para limitar peticiones';
+  String get slideOn => 'Desliza para limitar peticiones';
   @override
-  String get slideOff => 'Desliza a la izquierda para dejar de limitar';
+  String get slideOff => 'Desliza para dejar de limitar';
   @override
   String get resetHint => 'Al guardar, todas las cuentas vuelven a cero.';
   @override
@@ -1032,9 +1032,9 @@ class AppMessages$cors$es implements AppMessages$cors$en {
   @override
   String get hintOff => 'Apagado · se aplica el CORS del gateway';
   @override
-  String get slideOn => 'Desliza a la derecha para usar su propio CORS';
+  String get slideOn => 'Desliza para usar su propio CORS';
   @override
-  String get slideOff => 'Desliza a la izquierda para usar el del gateway';
+  String get slideOff => 'Desliza para usar el del gateway';
   @override
   String get originsLabel => 'Orígenes permitidos';
   @override
@@ -1193,7 +1193,7 @@ class AppMessages$panel$es implements AppMessages$panel$en {
   @override
   String get slideOn => 'Desliza para encender el mantenimiento';
   @override
-  String get slideOff => 'Desliza a la izquierda para apagar';
+  String get slideOff => 'Desliza para apagar';
   @override
   String get slideHint => 'Arrastra el control o usa las flechas';
   @override
@@ -1683,8 +1683,8 @@ extension on AppMessagesEs {
         required Object time,
       }) => 'Encendido · se llama cada ${time}',
       'health.hintOff' => 'Apagado · solo lo llama Comprobar ahora',
-      'health.slideOn' => 'Desliza a la derecha para comprobar periódicamente',
-      'health.slideOff' => 'Desliza a la izquierda para dejar de comprobar',
+      'health.slideOn' => 'Desliza para comprobar periódicamente',
+      'health.slideOff' => 'Desliza para dejar de comprobar',
       'health.removeTitle' => '¿Quitar el health check?',
       'health.removeBody' => 'Se pierden su endpoint, su intervalo y el último resultado. Puedes volver a añadirlo después.',
       'health.add' => 'Health check',
@@ -1732,8 +1732,8 @@ extension on AppMessagesEs {
       'rate.enabled' => 'Limitar peticiones',
       'rate.hintOn' => 'Encendido · al pasar el límite, 429',
       'rate.hintOff' => 'Apagado · no se limita nada',
-      'rate.slideOn' => 'Desliza a la derecha para limitar peticiones',
-      'rate.slideOff' => 'Desliza a la izquierda para dejar de limitar',
+      'rate.slideOn' => 'Desliza para limitar peticiones',
+      'rate.slideOff' => 'Desliza para dejar de limitar',
       'rate.resetHint' => 'Al guardar, todas las cuentas vuelven a cero.',
       'rate.removeTitle' => '¿Quitar el rate limit?',
       'rate.removeBody' =>
@@ -1775,8 +1775,8 @@ extension on AppMessagesEs {
       'cors.enabled' => 'CORS propio',
       'cors.hintOn' => 'Encendido · se aplican sus propios orígenes',
       'cors.hintOff' => 'Apagado · se aplica el CORS del gateway',
-      'cors.slideOn' => 'Desliza a la derecha para usar su propio CORS',
-      'cors.slideOff' => 'Desliza a la izquierda para usar el del gateway',
+      'cors.slideOn' => 'Desliza para usar su propio CORS',
+      'cors.slideOff' => 'Desliza para usar el del gateway',
       'cors.originsLabel' => 'Orígenes permitidos',
       'cors.originsPlaceholder' => 'https://app.com y Enter',
       'cors.clear' => 'Limpiar',
@@ -1862,7 +1862,7 @@ extension on AppMessagesEs {
       'panel.noReturn' => 'Sin hora de vuelta',
       'panel.backAround' => ({required Object date}) => 'Vuelve hacia ${date}',
       'panel.slideOn' => 'Desliza para encender el mantenimiento',
-      'panel.slideOff' => 'Desliza a la izquierda para apagar',
+      'panel.slideOff' => 'Desliza para apagar',
       'panel.slideHint' => 'Arrastra el control o usa las flechas',
       'panel.turnOn' => 'Encender',
       'panel.turnOff' => 'Apagar',
