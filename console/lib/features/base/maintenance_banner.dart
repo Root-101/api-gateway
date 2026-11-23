@@ -1,5 +1,5 @@
 import 'package:console/app_exporter.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 ///the whole gateway answers 503: edit or turn it off from any screen
 class MaintenanceBanner extends StatelessWidget {

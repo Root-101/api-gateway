@@ -1,5 +1,5 @@
 import 'package:console/app_exporter.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 ///one step's body: its title and help in one line, as in the canvas
 ///("General · How the route shows up in the console"), then its fields

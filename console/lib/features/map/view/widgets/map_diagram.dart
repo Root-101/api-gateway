@@ -1,5 +1,5 @@
 import 'package:console/app_exporter.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 ///what pans and zooms: the url, the gateway, a branch with its path per route and the route nodes
 class MapDiagram extends StatelessWidget {

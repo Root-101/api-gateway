@@ -1,6 +1,6 @@
 import 'package:console/app_exporter.dart';
 import 'package:console/features/routes/view/form/routes_form_screen.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 ///the map's top bar: title, legend, zoom, fit and "Create route"
 class MapHeader extends StatelessWidget {

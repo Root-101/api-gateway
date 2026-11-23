@@ -1,5 +1,5 @@
 import 'package:console/app_exporter.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 ///duplicate: the name of the source route; its ⓘ opens the note about reviewing the copy
 class RouteFormDuplicateChip extends StatefulWidget {

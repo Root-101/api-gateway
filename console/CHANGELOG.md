@@ -2,6 +2,10 @@
     * 6.2.0:
         * **Errors** :warning: : Reads the gateway 6.2.0 errors: the `422`'s `errors` (`pointer`, `code`, `detail`) instead
           of `violations`, shown on the same fields as before. Needs gateway 6.2.0.
+        * **Versions** :arrow_up: : Flutter `3.47.9` → `3.50.1` (Dart `3.14`) in `.fvmrc`, the `Dockerfile` and the CI.
+          Material widgets from the `material_ui` package (`package:flutter/material.dart` is deprecated since 3.47),
+          `flutter_localizations` no longer a direct dependency. Every package on its latest version (`go_router`
+          `18.1.4`, `flutter_svg` `2.5.0`). No lint warnings left.
     * 6.1.2:
         * **DATE** :date: : 2026-11-19.
         * **Version** :bookmark: : Version adjustment to match the gateway, no changes in the console.

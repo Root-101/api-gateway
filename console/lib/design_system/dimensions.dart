@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 class AppDimensions {
   static final AppDimensions _instance = AppDimensions._internal();

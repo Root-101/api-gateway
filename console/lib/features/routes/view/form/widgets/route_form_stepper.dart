@@ -1,5 +1,5 @@
 import 'package:console/app_exporter.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 ///compact steps: only the current one shows its name, the others their number (✓ when done) with a tooltip
 class RouteFormStepper extends StatelessWidget {

@@ -1,7 +1,7 @@
 import 'dart:math';
 
 import 'package:console/app_exporter.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter/services.dart';
 
 ///slide control: drag the handle right to turn on, left to turn off, no confirmation.

@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 extension ThemeAdapter on ThemeData {
   Color Function({required Color light, required Color dark}) get color =>

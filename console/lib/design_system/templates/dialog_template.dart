@@ -1,5 +1,5 @@
 import 'package:console/app_exporter.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 ///the dialog of the console: header with close, scrollable body and an optional footer.
 ///Focus is kept inside by the modal route and returns to the opener when it closes

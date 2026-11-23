@@ -1,5 +1,5 @@
 import 'package:console/app_exporter.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 ///a node of the map: clickable card with a hover shadow and the selection ring
 class MapNode extends StatefulWidget {

@@ -1,6 +1,6 @@
 import 'package:console/app_exporter.dart';
 import 'package:console/features/language/view/language_widget.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 ///the side menu: logo, a notch that opens and closes it, map / routes / logs, and at the bottom

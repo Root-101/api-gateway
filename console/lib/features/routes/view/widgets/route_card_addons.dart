@@ -1,5 +1,5 @@
 import 'package:console/app_exporter.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 ///a badge per add-on of the route, then + Add-ons; both open the route's panel
 class RouteCardAddons extends StatelessWidget {

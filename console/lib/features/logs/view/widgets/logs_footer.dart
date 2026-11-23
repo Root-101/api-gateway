@@ -1,7 +1,7 @@
 import 'dart:math';
 
 import 'package:console/app_exporter.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 ///up to 3 page numbers around the current one (1-based)
 List<int> visiblePages({required int page, required int pageCount}) {

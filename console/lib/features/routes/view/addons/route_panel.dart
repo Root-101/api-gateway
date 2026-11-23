@@ -4,7 +4,7 @@ import 'package:console/features/routes/view/addons/health_check_block.dart';
 import 'package:console/features/routes/view/addons/maintenance_block.dart';
 import 'package:console/features/routes/view/addons/rate_limit_block.dart';
 import 'package:console/features/routes/view/form/routes_form_screen.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 ///what a route shows by its name: maintenance (the gateway's first) beats its health check

@@ -1,6 +1,6 @@
 import 'dart:math';
 
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 ///like a css auto-fill grid: as many 380 px+ columns as fit, cards of a row share their height
 class RoutesGrid extends StatelessWidget {

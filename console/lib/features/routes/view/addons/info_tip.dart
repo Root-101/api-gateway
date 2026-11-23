@@ -1,5 +1,5 @@
 import 'package:console/app_exporter.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 ///the (i) beside an add-on's name: hover, focus or a tap shows what it is for and how it works
 class InfoTip extends StatelessWidget {

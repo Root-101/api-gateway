@@ -1,7 +1,7 @@
 import 'dart:math';
 
 import 'package:console/app_exporter.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 ///the requests table: column titles, then skeleton rows while it boots or a row per log.
 ///Under 860 px it scrolls sideways

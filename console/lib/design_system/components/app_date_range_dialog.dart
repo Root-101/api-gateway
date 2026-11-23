@@ -1,5 +1,5 @@
 import 'package:console/app_exporter.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 ///a day range: from and to, either can be empty
 typedef DayRange = ({DateTime? from, DateTime? to});

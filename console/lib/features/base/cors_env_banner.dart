@@ -1,5 +1,5 @@
 import 'package:console/app_exporter.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 ///`CORS_ALLOWED_ORIGINS` is still set (deprecated): migrated into the gateway's CORS (blue, can be
 ///closed) or set but ignored because it differs from it (yellow, with both lists). Only removing
