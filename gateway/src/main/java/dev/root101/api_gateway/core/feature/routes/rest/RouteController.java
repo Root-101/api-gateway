@@ -33,8 +33,8 @@ public class RouteController {
      * @return Flux with all the routes
      */
     @GetMapping
-    public Flux<RouteResponse> getRoutes(ServerWebExchange exchange) {
-        return routeUseCase.getRoutes(I18n.locale(exchange));
+    public Flux<RouteResponse> list(ServerWebExchange exchange) {
+        return routeUseCase.list(I18n.locale(exchange));
     }
 
     /**
@@ -45,8 +45,8 @@ public class RouteController {
      */
     @PostMapping("/batch")
     @ResponseStatus(HttpStatus.CREATED)
-    public Mono<List<RouteResponse>> addAllRoutes(@RequestBody List<@Valid RouteRequest> routeDefinition, ServerWebExchange exchange) {
-        return routeUseCase.addAllRoutes(routeDefinition, I18n.locale(exchange));
+    public Mono<List<RouteResponse>> createBatch(@RequestBody List<@Valid RouteRequest> routeDefinition, ServerWebExchange exchange) {
+        return routeUseCase.createBatch(routeDefinition, I18n.locale(exchange));
     }
 
     /**
@@ -56,8 +56,8 @@ public class RouteController {
      * @return The routes, as saved
      */
     @PutMapping
-    public Mono<List<RouteResponse>> replaceAllRoutes(@RequestBody List<@Valid RouteRequest> routeDefinition, ServerWebExchange exchange) {
-        return routeUseCase.replaceAllRoutes(routeDefinition, I18n.locale(exchange));
+    public Mono<List<RouteResponse>> replaceAll(@RequestBody List<@Valid RouteRequest> routeDefinition, ServerWebExchange exchange) {
+        return routeUseCase.replaceAll(routeDefinition, I18n.locale(exchange));
     }
 
     /**
@@ -68,8 +68,8 @@ public class RouteController {
      */
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public Mono<RouteResponse> addRoute(@Valid @RequestBody RouteRequest routeDefinition, ServerWebExchange exchange) {
-        return routeUseCase.addRoute(routeDefinition, I18n.locale(exchange));
+    public Mono<RouteResponse> create(@Valid @RequestBody RouteRequest routeDefinition, ServerWebExchange exchange) {
+        return routeUseCase.create(routeDefinition, I18n.locale(exchange));
     }
 
     /**
@@ -81,7 +81,7 @@ public class RouteController {
      */
     @PostMapping("/validate")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public Mono<Void> validateRoute(@Valid @RequestBody RouteRequest routeDefinition) {
+    public Mono<Void> validate(@Valid @RequestBody RouteRequest routeDefinition) {
         return Mono.empty();
     }
 
@@ -92,8 +92,8 @@ public class RouteController {
      * @return The route
      */
     @GetMapping("/{route-id}")
-    public Mono<RouteResponse> getRoute(@PathVariable("route-id") String routeId, ServerWebExchange exchange) {
-        return routeUseCase.findById(routeId, I18n.locale(exchange));
+    public Mono<RouteResponse> details(@PathVariable("route-id") String routeId, ServerWebExchange exchange) {
+        return routeUseCase.details(routeId, I18n.locale(exchange));
     }
 
     /**
@@ -104,8 +104,8 @@ public class RouteController {
      * @return The edited route
      */
     @PutMapping("/{route-id}")
-    public Mono<RouteResponse> editRoute(@PathVariable("route-id") String routeId, @Valid @RequestBody RouteRequest routeDefinition, ServerWebExchange exchange) {
-        return routeUseCase.editRoute(routeId, routeDefinition, I18n.locale(exchange));
+    public Mono<RouteResponse> edit(@PathVariable("route-id") String routeId, @Valid @RequestBody RouteRequest routeDefinition, ServerWebExchange exchange) {
+        return routeUseCase.edit(routeId, routeDefinition, I18n.locale(exchange));
     }
 
     /**
@@ -116,7 +116,7 @@ public class RouteController {
      */
     @DeleteMapping("/{route-id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public Mono<Void> deleteRoute(@PathVariable("route-id") String routeId) {
-        return routeUseCase.deleteRoute(routeId);
+    public Mono<Void> delete(@PathVariable("route-id") String routeId) {
+        return routeUseCase.delete(routeId);
     }
 }

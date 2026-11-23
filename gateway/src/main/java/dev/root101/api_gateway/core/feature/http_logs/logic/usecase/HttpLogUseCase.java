@@ -12,7 +12,7 @@ public interface HttpLogUseCase {
      *
      * @param request The log to add
      */
-    void saveHttpLog(HttpLogRequest request);
+    void save(HttpLogRequest request);
 
     Mono<SearchHttpLogResponse> search(SearchHttpLogRequest request);
 }

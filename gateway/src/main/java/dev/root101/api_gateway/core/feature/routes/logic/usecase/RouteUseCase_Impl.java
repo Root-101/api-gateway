@@ -89,8 +89,8 @@ class RouteUseCase_Impl implements RouteUseCase, SmartInitializingSingleton {
      * @param request The route to add
      * @return The created route
      */
-    public Mono<RouteResponse> addRoute(RouteRequest request, Locale locale) {
-        return addAllRoutes(List.of(request), locale).map(List::getFirst);
+    public Mono<RouteResponse> create(RouteRequest request, Locale locale) {
+        return createBatch(List.of(request), locale).map(List::getFirst);
     }
 
     /**
@@ -99,7 +99,7 @@ class RouteUseCase_Impl implements RouteUseCase, SmartInitializingSingleton {
      * @param requests List of routes to create
      * @return The created routes
      */
-    public Mono<List<RouteResponse>> addAllRoutes(List<RouteRequest> requests, Locale locale) {
+    public Mono<List<RouteResponse>> createBatch(List<RouteRequest> requests, Locale locale) {
         return withoutDuplicatedNames(requests)
                 // Check for duplicates in the database
                 .concatMap(
@@ -126,7 +126,7 @@ class RouteUseCase_Impl implements RouteUseCase, SmartInitializingSingleton {
      * @param requests The routes that will exist after the call
      * @return The routes, as saved
      */
-    public Mono<List<RouteResponse>> replaceAllRoutes(List<RouteRequest> requests, Locale locale) {
+    public Mono<List<RouteResponse>> replaceAll(List<RouteRequest> requests, Locale locale) {
         return withoutDuplicatedNames(requests)
                 .map(this::buildEntity)
                 .collectList()
@@ -208,7 +208,7 @@ class RouteUseCase_Impl implements RouteUseCase, SmartInitializingSingleton {
      * @param request The new config of route
      * @return The edited route
      */
-    public Mono<RouteResponse> editRoute(String routeId, RouteRequest request, Locale locale) {
+    public Mono<RouteResponse> edit(String routeId, RouteRequest request, Locale locale) {
         return findEntity(routeId)
                 //the new name can't be used by another route
                 .flatMap(oldRoute -> routeRepo.findByName(request.getName())
@@ -236,7 +236,7 @@ class RouteUseCase_Impl implements RouteUseCase, SmartInitializingSingleton {
      *
      * @param routeId The id of the route to find.
      */
-    public Mono<RouteResponse> findById(String routeId, Locale locale) {
+    public Mono<RouteResponse> details(String routeId, Locale locale) {
         return findEntity(routeId).map(route -> response(route, locale));
     }
 
@@ -263,7 +263,7 @@ class RouteUseCase_Impl implements RouteUseCase, SmartInitializingSingleton {
      *
      * @param routeId The name of the route to delete
      */
-    public Mono<Void> deleteRoute(String routeId) {
+    public Mono<Void> delete(String routeId) {
         // Search old route
         return findEntity(routeId)
                 .flatMap(route -> {
@@ -289,7 +289,7 @@ class RouteUseCase_Impl implements RouteUseCase, SmartInitializingSingleton {
      * 2 - Calling `routeDefinitionLocator.getRouteDefinitions();`
      * 3 - This will return `Flux<RouteConfigModel>`
      */
-    public Flux<RouteResponse> getRoutes(Locale locale) {
+    public Flux<RouteResponse> list(Locale locale) {
         return routeRepo.findAll().map(route -> response(route, locale));
     }
 

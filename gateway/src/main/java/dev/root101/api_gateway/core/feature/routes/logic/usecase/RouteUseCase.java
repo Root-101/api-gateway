@@ -21,7 +21,7 @@ public interface RouteUseCase {
      * @param request The route to add
      * @return The created route
      */
-    Mono<RouteResponse> addRoute(RouteRequest request, Locale locale);
+    Mono<RouteResponse> create(RouteRequest request, Locale locale);
 
     /**
      * Create multiple routes at the same time
@@ -29,7 +29,7 @@ public interface RouteUseCase {
      * @param requests List of routes to create
      * @return The created routes
      */
-    Mono<List<RouteResponse>> addAllRoutes(List<RouteRequest> requests, Locale locale);
+    Mono<List<RouteResponse>> createBatch(List<RouteRequest> requests, Locale locale);
 
     /**
      * Replace every route with the given ones, all or nothing. A route whose name already exists keeps its id.
@@ -37,7 +37,7 @@ public interface RouteUseCase {
      * @param requests The routes that will exist after the call
      * @return The routes, as saved
      */
-    Mono<List<RouteResponse>> replaceAllRoutes(List<RouteRequest> requests, Locale locale);
+    Mono<List<RouteResponse>> replaceAll(List<RouteRequest> requests, Locale locale);
 
     /**
      * Edit a route, keeping its id
@@ -46,21 +46,21 @@ public interface RouteUseCase {
      * @param request The new config of route
      * @return The edited route
      */
-    Mono<RouteResponse> editRoute(String routeId, RouteRequest request, Locale locale);
+    Mono<RouteResponse> edit(String routeId, RouteRequest request, Locale locale);
 
     /**
      * Find a route by its id: `400` if it is not a UUID, `404` if there is none
      *
      * @param routeId The id the route to find
      */
-    Mono<RouteResponse> findById(String routeId, Locale locale);
+    Mono<RouteResponse> details(String routeId, Locale locale);
 
     /**
      * Delete a route from the gateway
      *
      * @param routeId The id of the route to delete
      */
-    Mono<Void> deleteRoute(String routeId);
+    Mono<Void> delete(String routeId);
 
     /**
      * This can also be achieved with:
@@ -68,7 +68,7 @@ public interface RouteUseCase {
      * 2 - Calling `routeDefinitionLocator.getRouteDefinitions();`
      * 3 - This will return `Flux<RouteConfigModel>`
      */
-    Flux<RouteResponse> getRoutes(Locale locale);
+    Flux<RouteResponse> list(Locale locale);
 
     /**
      * Find a cached route by its id, or null if it's not found.

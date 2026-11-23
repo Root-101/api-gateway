@@ -32,7 +32,7 @@ public class HttpLogController {
      * Search the logs, newest first. Every filter is optional; an empty one is no filter.
      */
     @GetMapping
-    public Mono<SearchHttpLogResponse> searchLogs(
+    public Mono<SearchHttpLogResponse> search(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(required = false) Integer size,
             @RequestParam(required = false) String query,

@@ -69,7 +69,7 @@ class HttpLogUseCase_Impl implements HttpLogUseCase {
     }
 
     @Override
-    public void saveHttpLog(HttpLogRequest request) {
+    public void save(HttpLogRequest request) {
         try {
             //check if it's a request to a configured route, if it is, load the corresponding RouteEntity
             RouteEntity routeEntity = (request.getRoute() != null) ? routeUseCase.findCachedById(request.getRoute().getId()) : null;

@@ -95,7 +95,7 @@ public class HttpLogsWebFilter implements WebFilter {
                                     duration,
                                     route
                             );
-                            httpLogUseCase.saveHttpLog(request);
+                            httpLogUseCase.save(request);
                         }
                 );
     }

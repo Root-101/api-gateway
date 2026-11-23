@@ -52,15 +52,15 @@ MUTATIONS = [
 
     # --- every write endpoint validates the body (bean validation and route rules: `@Valid`)
     ("routes.post.validate", "core/feature/routes/rest/RouteController.java",
-     "addRoute(@Valid @RequestBody", "addRoute(@RequestBody", "ValidationIT.invalidRouteFieldIs422"),
+     "create(@Valid @RequestBody", "create(@RequestBody", "ValidationIT.invalidRouteFieldIs422"),
     ("routes.batch.validate", "core/feature/routes/rest/RouteController.java",
-     "addAllRoutes(@RequestBody List<@Valid RouteRequest>", "addAllRoutes(@RequestBody List<RouteRequest>", "ValidationIT.invalidRouteFieldIs422"),
+     "createBatch(@RequestBody List<@Valid RouteRequest>", "createBatch(@RequestBody List<RouteRequest>", "ValidationIT.invalidRouteFieldIs422"),
     ("routes.replace.validate", "core/feature/routes/rest/RouteController.java",
-     "replaceAllRoutes(@RequestBody List<@Valid RouteRequest>", "replaceAllRoutes(@RequestBody List<RouteRequest>", "ValidationIT.invalidRouteFieldIs422"),
+     "replaceAll(@RequestBody List<@Valid RouteRequest>", "replaceAll(@RequestBody List<RouteRequest>", "ValidationIT.invalidRouteFieldIs422"),
     ("routes.edit.validate", "core/feature/routes/rest/RouteController.java",
      "String routeId, @Valid @RequestBody RouteRequest", "String routeId, @RequestBody RouteRequest", "ValidationIT.invalidRouteFieldIs422"),
     ("routes.validate.validate", "core/feature/routes/rest/RouteController.java",
-     "validateRoute(@Valid @RequestBody", "validateRoute(@RequestBody", "ValidationIT.invalidRouteFieldIs422"),
+     "validate(@Valid @RequestBody", "validate(@RequestBody", "ValidationIT.invalidRouteFieldIs422"),
     ("auth.login.validate", "core/feature/auth/rest/AuthController.java",
      "login(@Valid @RequestBody", "login(@RequestBody", "ValidationIT.invalidLoginFieldIs422"),
 
