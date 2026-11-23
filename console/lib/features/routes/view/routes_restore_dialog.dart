@@ -72,7 +72,7 @@ class _RoutesRestoreDialogState extends State<RoutesRestoreDialog> {
         _error = null;
       });
     } on GlobalException catch (exc) {
-      _fail(name, exc.message);
+      _fail(name, exc.intlMessage);
     } catch (_) {
       _fail(name, app.intl.restore.invalidFile);
     }
@@ -99,7 +99,7 @@ class _RoutesRestoreDialogState extends State<RoutesRestoreDialog> {
       Navigator.of(context).pop();
     } else if (state is RoutesRestoreErrorState) {
       app.loading.hide();
-      app.snack.showError(message: state.exception.message);
+      app.snack.showError(message: state.exception.intlMessage);
     }
   }
 

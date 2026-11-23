@@ -1,66 +1,53 @@
 import 'package:console/app_exporter.dart';
 import 'package:dio/dio.dart';
 
+/// `message` is an English fallback for the logs; the view shows `intlMessage`
 class ApiExceptionConverter {
   static GlobalException parse(DioException error) {
     switch (error.type) {
       case DioExceptionType.cancel:
-        return GlobalException(
-          type: GlobalExceptionType.general,
-          message: app.intl.errors.requestCancelled,
-        );
+        return _network(GlobalExceptionCode.cancelled, 'Request to API server was cancelled');
       case DioExceptionType.connectionTimeout:
-        return GlobalException(
-          type: GlobalExceptionType.general,
-          message: app.intl.errors.connectionTimeout,
-        );
+        return _network(GlobalExceptionCode.connectionTimeout, 'Connection timeout with API server');
       case DioExceptionType.unknown:
-        return GlobalException(
-          type: GlobalExceptionType.general,
-          message: app.intl.errors.noConnection,
-        );
+        return _network(GlobalExceptionCode.noConnection, 'Connection to API server failed');
       case DioExceptionType.receiveTimeout:
-        return GlobalException(
-          type: GlobalExceptionType.general,
-          message: app.intl.errors.receiveTimeout,
-        );
+        return _network(GlobalExceptionCode.receiveTimeout, 'Receive timeout in connection with API server');
       case DioExceptionType.sendTimeout:
-        return GlobalException(
-          type: GlobalExceptionType.general,
-          message: app.intl.errors.sendTimeout,
-        );
+        return _network(GlobalExceptionCode.sendTimeout, 'Send timeout with API server');
       case DioExceptionType.transformTimeout:
-        return GlobalException(
-          type: GlobalExceptionType.general,
-          message: app.intl.errors.transformTimeout,
-        );
+        return _network(GlobalExceptionCode.transformTimeout, 'Transform timeout processing the API response');
       case DioExceptionType.badCertificate:
-        return GlobalException(
-          type: GlobalExceptionType.general,
-          message: app.intl.errors.badCertificate,
-        );
+        return _network(GlobalExceptionCode.badCertificate, 'Bad certificate');
       case DioExceptionType.connectionError:
-        return GlobalException(
-          //the gateway now sends CORS headers on 401/403 (next release after 5.0.1), so a connection error is a real network error
-          //(before, 401/403 arrived here and it was mapped to auth, logging the user out on any outage)
-          type: GlobalExceptionType.general,
-          message: app.intl.errors.connection,
-        );
+        //the gateway sends CORS headers on 401/403 too, so a connection error is a real network error
+        return _network(GlobalExceptionCode.connectionError, 'Connection error');
       case DioExceptionType.badResponse:
         return _parseBadResponse(error);
     }
   }
 
+  static GlobalException _network(GlobalExceptionCode code, String message) =>
+      GlobalException(type: GlobalExceptionType.general, code: code, message: message);
+
+  /// The gateway answers RFC 9457 problem json (`detail`, `code`, and `errors` in a 422); plain strings came from
+  /// gateways before 6.0.0
   static GlobalException _parseBadResponse(DioException error) {
     final int status = error.response?.statusCode ?? 0;
     final dynamic data = error.response?.data;
-    final dynamic errors = data is Map ? data['errors'] : null;
+    final Map<String, dynamic>? problem = data is Map<String, dynamic> ? data : null;
+    final Object? code = problem?['code'];
+    final String? errorCode = code is String ? code : null;
+    final String? detail = _messageFrom(data);
 
-    if (status == 422 && errors is List) {
+    if (status == 422 && problem?['errors'] is List) {
       return GlobalException(
         type: GlobalExceptionType.validation,
-        message: app.intl.errors.validation,
-        data: errors
+        code: GlobalExceptionCode.validation,
+        message: detail ?? 'Validation error',
+        statusCode: status,
+        errorCode: errorCode,
+        data: (problem!['errors'] as List)
             .whereType<Map<String, dynamic>>()
             .map(ValidationError.fromJson)
             .toList(),
@@ -68,25 +55,34 @@ class ApiExceptionConverter {
     } else if (status == 401 || status == 403) {
       return GlobalException(
         type: GlobalExceptionType.auth,
-        message: app.intl.errors.auth,
+        code: GlobalExceptionCode.auth,
+        message: detail ?? 'Authentication error',
+        statusCode: status,
+        errorCode: errorCode,
         data: data,
       );
     } else if (status >= 500) {
       return GlobalException(
         type: GlobalExceptionType.general,
-        message: app.intl.errors.server,
+        code: GlobalExceptionCode.serverError,
+        message: detail ?? 'Server error',
+        statusCode: status,
+        errorCode: errorCode,
         data: data,
       );
     } else {
+      //`detail` comes in the request's language: shown as it is
       return GlobalException(
         type: GlobalExceptionType.general,
-        message: _messageFrom(data) ?? app.intl.errors.status(status: status),
+        code: detail == null ? GlobalExceptionCode.httpStatus : GlobalExceptionCode.custom,
+        message: detail ?? 'HTTP $status',
+        statusCode: status,
+        errorCode: errorCode,
         data: data,
       );
     }
   }
 
-  ///body is an RFC 9457 problem json (`detail` is the message); plain strings came from gateways before 6.0.0
   static String? _messageFrom(dynamic data) {
     if (data is String && data.isNotEmpty) return data;
     if (data is Map) {

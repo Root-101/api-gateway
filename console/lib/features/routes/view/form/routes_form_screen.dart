@@ -85,7 +85,7 @@ class _RoutesFormScreenState extends State<RoutesFormScreen> {
       app.loading.show();
     } else if (state is RoutesFormProcessingErrorState) {
       app.loading.hide();
-      app.snack.showError(message: state.exception.message);
+      app.snack.showError(message: state.exception.intlMessage);
     } else if (state is RoutesFormValidationErrorState) {
       app.loading.hide();
     } else if (state is RoutesFormProcessingOKState) {

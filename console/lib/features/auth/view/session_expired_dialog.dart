@@ -56,9 +56,9 @@ class _SessionExpiredDialogState extends State<SessionExpiredDialog> {
     } else if (state is AuthReauthErrorState) {
       setState(() {
         _busy = false;
-        _failed = state.exception.type == GlobalExceptionType.auth;
+        _failed = state.exception.hasCode(ApiErrorCode.wrongCredentials);
       });
-      if (!_failed) app.snack.showError(message: state.exception.message);
+      if (!_failed) app.snack.showError(message: state.exception.intlMessage);
     }
   }
 

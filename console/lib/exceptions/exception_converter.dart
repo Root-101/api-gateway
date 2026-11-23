@@ -8,7 +8,8 @@ class ExceptionConverter {
       DioException() => ApiExceptionConverter.parse(exception),
       _ => GlobalException(
         type: GlobalExceptionType.general,
-        message: app.intl.errors.unknown,
+        code: GlobalExceptionCode.unknown,
+        message: 'Unknown error',
         data: exception,
       ),
     };

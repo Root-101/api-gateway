@@ -2,7 +2,6 @@ import 'package:console/app_exporter.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import 'package:intl/intl.dart';
 
 class FeaturesInit {
   static Future<void> init() async {
@@ -24,13 +23,7 @@ class FeaturesInit {
     final gatewayStatus = GatewayStatusCubit(ping: auth.isGatewayUp);
     app.di.put(gatewayStatus);
     dio.interceptors.addAll([
-      //the api answers its messages (validation errors) in the language of the console
-      InterceptorsWrapper(
-        onRequest: (options, handler) {
-          options.headers['accept-language'] = Intl.defaultLocale ?? 'en';
-          handler.next(options);
-        },
-      ),
+      LanguageHeaderInterceptor(languageCode: () => AppIntl.current.languageCode),
       AuthInterceptor(auth),
       GatewayStatusInterceptor(status: gatewayStatus, auth: auth),
     ]);

@@ -162,7 +162,7 @@ class _GatewayMapScreenState extends State<GatewayMapScreen>
             builder: (context, _) {
               if (state is RoutesSearchErrorState && !_routes.loaded) {
                 return ErrorPage(
-                  errorMessage: state.exception.message,
+                  errorMessage: state.exception.intlMessage,
                   buttonText: context.intl.actions.tryAgain,
                   onPressed: _routes.search,
                 );

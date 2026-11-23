@@ -36,8 +36,8 @@ class _RoutesFormWidgetState extends State<RoutesFormWidget> {
   final _description = RouteFormField('description', 1);
   final _path = RouteFormField('path', 2);
   final _uri = RouteFormField('uri', 2);
-  final _rewriteFrom = RouteFormField('rewrite_path.replace_from', 3);
-  final _rewriteTo = RouteFormField('rewrite_path.replace_to', 3);
+  final _rewriteFrom = RouteFormField('rewrite_path/replace_from', 3);
+  final _rewriteTo = RouteFormField('rewrite_path/replace_to', 3);
 
   late final List<RouteFormField> _fields = [
     _name,

@@ -95,6 +95,6 @@ class HealthCheckSaveErrorState extends HealthCheckState {
     if (data is List<ValidationError> && data.isNotEmpty) {
       return data.map((e) => e.message).join('\n');
     }
-    return exception.message;
+    return exception.intlMessage;
   }
 }

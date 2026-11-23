@@ -58,7 +58,7 @@ class RoutesFormCubit extends Cubit<RoutesFormState>
       } on GlobalException catch (global) {
         emit(
           RoutesFormLoadingErrorState(
-            app.intl.errors.errorLoadingRoute(message: global.message),
+            app.intl.errors.errorLoadingRoute(message: global.intlMessage),
           ),
         );
       } on Exception {
@@ -75,7 +75,7 @@ class RoutesFormCubit extends Cubit<RoutesFormState>
       return await repo.validate(model: model);
     } on GlobalException catch (global) {
       if (global.type != GlobalExceptionType.auth) {
-        app.snack.showError(message: global.message);
+        app.snack.showError(message: global.intlMessage);
       }
       return null;
     }

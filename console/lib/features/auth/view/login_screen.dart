@@ -91,9 +91,9 @@ class _LoginScreenState extends State<LoginScreen> {
     } else if (state is AuthLoginErrorState) {
       setState(() {
         _signingIn = false;
-        _wrongCredentials = state.exception.type == GlobalExceptionType.auth;
+        _wrongCredentials = state.exception.hasCode(ApiErrorCode.wrongCredentials);
       });
-      app.snack.showError(message: state.exception.message);
+      app.snack.showError(message: state.exception.intlMessage);
       app.logger.e(state.exception.toString());
     }
   }

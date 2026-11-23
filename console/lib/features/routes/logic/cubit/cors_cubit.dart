@@ -130,5 +130,5 @@ class CorsSaveErrorState extends CorsState {
       action == CorsAction.saved ||
       exception.type == GlobalExceptionType.validation;
 
-  String get message => exception.message;
+  String get message => exception.intlMessage;
 }

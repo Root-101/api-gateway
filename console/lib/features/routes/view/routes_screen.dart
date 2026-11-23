@@ -89,10 +89,10 @@ class _RoutesScreenState extends State<RoutesScreen> {
       app.snack.showSuccess(message: intl.routes.deleted(name: state.name));
     } else if (state is RoutesBackupErrorState) {
       app.loading.hide();
-      app.snack.showError(message: state.exception.message);
+      app.snack.showError(message: state.exception.intlMessage);
     } else if (state is RoutesDeleteErrorState) {
       app.loading.hide();
-      app.snack.showError(message: state.exception.message);
+      app.snack.showError(message: state.exception.intlMessage);
     }
   }
 
@@ -104,7 +104,7 @@ class _RoutesScreenState extends State<RoutesScreen> {
       builder: (context, state) {
         if (state is RoutesSearchErrorState && !cubit.loaded) {
           return ErrorPage(
-            errorMessage: state.exception.message,
+            errorMessage: state.exception.intlMessage,
             buttonText: context.intl.actions.tryAgain,
             onPressed: cubit.search,
           );

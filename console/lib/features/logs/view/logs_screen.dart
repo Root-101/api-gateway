@@ -101,7 +101,7 @@ class _LogsScreenState extends State<LogsScreen> {
       );
     } else if (state is LogsBackupErrorState) {
       app.loading.hide();
-      app.snack.showError(message: state.exception.message);
+      app.snack.showError(message: state.exception.intlMessage);
     }
   }
 
@@ -113,7 +113,7 @@ class _LogsScreenState extends State<LogsScreen> {
       builder: (context, state) {
         if (state is LogsSearchErrorState && !cubit.loaded) {
           return ErrorPage(
-            errorMessage: state.exception.message,
+            errorMessage: state.exception.intlMessage,
             buttonText: context.intl.actions.tryAgain,
             onPressed: cubit.init,
           );

@@ -6,6 +6,11 @@
           `design_system.dart`; `lib/shared/` gone (`ErrorPage` in `features/global/`, two unused pages deleted), the
           shell pieces of `features/base/` in `features/global/`, `view/widget/`, every file imports only
           `app_exporter.dart`, lints of the standard. Before a language is saved the console starts in the browser's.
+        * **Errors** :warning: : The errors of the standard: `GlobalException` keeps what happened as a `code` and the
+          gateway's `code` (`errorCode`, `hasCode()`, `ApiErrorCode`); the views show `intlMessage`, in the current
+          language even for a network error that happened before a language change. The login tells wrong credentials
+          by the gateway's `auth.wrong-credentials`, not by any `401`. A `422`'s fields are named by their pointer
+          (`rewrite_path/replace_from`), the first error of a field wins. `Accept-Language` by `LanguageHeaderInterceptor`.
         * **Errors** :warning: : Reads the gateway 6.2.0 errors: the `422`'s `errors` (`pointer`, `code`, `detail`) instead
           of `violations`, shown on the same fields as before. Needs gateway 6.2.0.
         * **Versions** :arrow_up: : Flutter `3.47.9` → `3.50.1` (Dart `3.14`) in `.fvmrc`, the `Dockerfile` and the CI.
