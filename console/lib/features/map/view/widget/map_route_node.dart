@@ -31,9 +31,9 @@ class MapRouteNode extends StatelessWidget {
       selected: selected,
       dashed: ownOn,
       background: ownOn
-          ? const Color(0xff221b1f)
+          ? app.colors.maintenanceSurface
           : status == RouteStatus.down
-          ? const Color(0xff1f1519)
+          ? app.colors.downSurface
           : c.card,
       border: ownOn
           ? c.maintenance

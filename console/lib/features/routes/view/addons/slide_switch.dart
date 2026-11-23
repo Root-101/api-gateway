@@ -205,10 +205,10 @@ class _SlideSwitchState extends State<SlideSwitch> {
                               decoration: BoxDecoration(
                                 color: live > 0.5 ? accent : c.label,
                                 shape: BoxShape.circle,
-                                boxShadow: const [
+                                boxShadow: [
                                   BoxShadow(
-                                    color: Color(0x59000000),
-                                    offset: Offset(0, 2),
+                                    color: app.colors.shadowSoft,
+                                    offset: const Offset(0, 2),
                                     blurRadius: 8,
                                   ),
                                 ],

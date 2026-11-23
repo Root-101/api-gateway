@@ -8,7 +8,7 @@ class SessionExpiredDialogNavigator {
     app.dialog.open(
       dialog: const SessionExpiredDialog(),
       barrierDismissible: false,
-      barrierColor: const Color(0xb80a090f),
+      barrierColor: app.colors.barrierStrong,
     );
   }
 }

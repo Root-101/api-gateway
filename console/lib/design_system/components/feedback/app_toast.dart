@@ -106,9 +106,7 @@ class _Toast extends StatelessWidget {
                 height: 36,
                 alignment: Alignment.center,
                 decoration: BoxDecoration(
-                  color: error
-                      ? const Color(0xff8c1d18)
-                      : const Color(0xff1f4d25),
+                  color: error ? app.colors.dangerIcon : app.colors.successIcon,
                   shape: BoxShape.circle,
                 ),
                 child:
@@ -117,7 +115,7 @@ class _Toast extends StatelessWidget {
                             : app.assets.icons.general.check)
                         .build(
                           size: 20,
-                          color: error ? const Color(0xfff9dedc) : c.success,
+                          color: error ? app.colors.onDangerIcon : c.success,
                         ),
               ),
               const SizedBox(width: 12),

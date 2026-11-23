@@ -7,7 +7,7 @@ class SplashScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final c = app.colors;
-    //no navigator or intl yet: plain English text
+    //no navigator yet: its own MaterialApp; the texts from AppIntl (the browser's language)
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       theme: AppTheme.dark,
@@ -26,10 +26,10 @@ class SplashScreen extends StatelessWidget {
                     const SizedBox(height: 12),
                     Text.rich(
                       TextSpan(
-                        text: 'One route to ',
+                        text: '${app.intl.app.taglineStart} ',
                         children: [
                           TextSpan(
-                            text: 'rule them all',
+                            text: app.intl.app.taglineEnd,
                             style: TextStyle(color: c.lilac),
                           ),
                         ],
@@ -54,7 +54,7 @@ class SplashScreen extends StatelessWidget {
                     ),
                     const SizedBox(height: 16),
                     Text(
-                      'Connecting to the gateway…',
+                      app.intl.app.connecting,
                       style: TextStyle(fontSize: 14, color: c.textTertiary),
                     ),
                   ],
@@ -67,7 +67,7 @@ class SplashScreen extends StatelessWidget {
                       snapshot.data == null ? '' : 'v${snapshot.data}',
                       style: monoStyle(
                         size: 12,
-                        color: const Color(0xff6f6c7b),
+                        color: app.colors.textPlaceholder,
                       ),
                     ),
                   ),

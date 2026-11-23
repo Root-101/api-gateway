@@ -17,8 +17,6 @@ class AuthCubit extends Cubit<AuthState>
   ///only known after a login in this tab: a remembered token doesn't say who it belongs to
   String? get username => _username;
 
-  bool get sessionExpired => _sessionExpired;
-
   //the header and the 401/403 logout are done by AuthInterceptor
   AuthCubit({required this.repo}) : super(const AuthInitialState());
 

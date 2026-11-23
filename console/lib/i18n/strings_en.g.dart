@@ -47,7 +47,6 @@ class AppTexts with BaseTranslations<AppLocale, AppTexts> {
 
   // Translations
   late final AppTexts$app$en app = AppTexts$app$en._(_root);
-  late final AppTexts$common$en common = AppTexts$common$en._(_root);
   late final AppTexts$actions$en actions = AppTexts$actions$en._(_root);
   late final AppTexts$validations$en validations = AppTexts$validations$en._(
     _root,
@@ -103,6 +102,10 @@ class AppTexts$app$en {
   /// en: 'Connecting to the gateway…'
   String get connecting => 'Connecting to the gateway…';
 
+  /// en: 'Configuration error: {error: String}'
+  String configError({required String error}) =>
+      'Configuration error: ${error}';
+
   /// en: 'Language: {name: String}'
   String languageLabel({required String name}) => 'Language: ${name}';
 
@@ -114,21 +117,6 @@ class AppTexts$app$en {
 
   /// en: 'Collapse menu'
   String get collapseMenu => 'Collapse menu';
-}
-
-// Path: common
-class AppTexts$common$en {
-  AppTexts$common$en._(this._root);
-
-  final AppTexts _root; // ignore: unused_field
-
-  // Translations
-
-  /// en: 'Loading'
-  String get loading => 'Loading';
-
-  /// en: 'You don't have access for this feature'
-  String get noAccess => 'You don\'t have access for this feature';
 }
 
 // Path: actions
@@ -156,9 +144,6 @@ class AppTexts$actions$en {
 
   /// en: 'Copied to clipboard'
   String get copiedToClipboard => 'Copied to clipboard';
-
-  /// en: 'Copy'
-  String get copy => 'Copy';
 
   /// en: 'Refresh'
   String get refresh => 'Refresh';
@@ -227,9 +212,6 @@ class AppTexts$errors$en {
 
   /// en: 'Error {status: int}'
   String status({required int status}) => 'Error ${status}';
-
-  /// en: 'Nothing found here'
-  String get noData => 'Nothing found here';
 
   /// en: 'An error has ocurred'
   String get genericError => 'An error has ocurred';
@@ -1083,9 +1065,6 @@ class AppTexts$health$en {
   /// en: 'DOWN'
   String get down => 'DOWN';
 
-  /// en: 'OFF'
-  String get off => 'OFF';
-
   /// en: 'Endpoint'
   String get endpoint => 'Endpoint';
 
@@ -1621,12 +1600,6 @@ class AppTexts$panel$en {
   /// en: 'Drag the handle, or use the arrow keys'
   String get slideHint => 'Drag the handle, or use the arrow keys';
 
-  /// en: 'Turn on'
-  String get turnOn => 'Turn on';
-
-  /// en: 'Turn off'
-  String get turnOff => 'Turn off';
-
   /// en: 'Controlled by the gateway'
   String get locked => 'Controlled by the gateway';
 
@@ -1769,19 +1742,19 @@ extension on AppTexts {
       'app.taglineStart' => 'One route to',
       'app.taglineEnd' => 'rule them all',
       'app.connecting' => 'Connecting to the gateway…',
+      'app.configError' => ({
+        required String error,
+      }) => 'Configuration error: ${error}',
       'app.languageLabel' => ({required String name}) => 'Language: ${name}',
       'app.logout' => 'Logout',
       'app.expandMenu' => 'Expand menu',
       'app.collapseMenu' => 'Collapse menu',
-      'common.loading' => 'Loading',
-      'common.noAccess' => 'You don\'t have access for this feature',
       'actions.tryAgain' => 'Try again',
       'actions.cancel' => 'Cancel',
       'actions.close' => 'Close',
       'actions.dismiss' => 'Dismiss',
       'actions.back' => 'Back',
       'actions.copiedToClipboard' => 'Copied to clipboard',
-      'actions.copy' => 'Copy',
       'actions.refresh' => 'Refresh',
       'actions.clearSearch' => 'Clear search',
       'validations.requiredField' => 'Required field',
@@ -1801,7 +1774,6 @@ extension on AppTexts {
       'errors.server' => 'Server error',
       'errors.unknown' => 'Unknown error',
       'errors.status' => ({required int status}) => 'Error ${status}',
-      'errors.noData' => 'Nothing found here',
       'errors.genericError' => 'An error has ocurred',
       'errors.errorWrongRouteId' => 'Wrong route id',
       'errors.errorLoadingRoute' => ({
@@ -2115,7 +2087,6 @@ extension on AppTexts {
       'health.title' => 'Health check',
       'health.live' => 'LIVE',
       'health.down' => 'DOWN',
-      'health.off' => 'OFF',
       'health.endpoint' => 'Endpoint',
       'health.every' => 'Every',
       'health.lastCheck' => 'Last check',
@@ -2327,8 +2298,6 @@ extension on AppTexts {
       'panel.slideOn' => 'Slide right to turn on maintenance',
       'panel.slideOff' => 'Slide left to turn off',
       'panel.slideHint' => 'Drag the handle, or use the arrow keys',
-      'panel.turnOn' => 'Turn on',
-      'panel.turnOff' => 'Turn off',
       'panel.locked' => 'Controlled by the gateway',
       'panel.lockedHint' => 'The whole gateway is in maintenance: every route answers its message until it is turned off.',
       'panel.edit' => 'Edit',

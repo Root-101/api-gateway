@@ -37,7 +37,7 @@ class MapHeader extends StatelessWidget {
           const Spacer(),
           MapLegendItem(
             label: intl.map.legendRedirect,
-            color: MapBranch.redirectColor,
+            color: app.colors.redirect,
             dash: const [6, 5],
           ),
           const SizedBox(width: 16),
@@ -59,7 +59,7 @@ class MapHeader extends StatelessWidget {
             color: c.outlineCard,
           ),
           AppIconButton(
-            icon: const SvgAsset('<path d="M5 12h14"/>'),
+            icon: app.assets.icons.actions.minus,
             tooltip: intl.map.zoomOut,
             size: 32,
             iconSize: 16,

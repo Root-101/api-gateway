@@ -253,7 +253,7 @@ class _HealthCheckBlockState extends State<HealthCheckBlock> {
           onLabel: intl.health.slideOn,
           offLabel: intl.health.slideOff,
           color: c.success,
-          onColor: const Color(0xff0f3a14),
+          onColor: app.colors.successDeep,
           onChanged: _toggle,
         ),
       ],

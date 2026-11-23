@@ -147,7 +147,7 @@ class _LogsFilterDialogState extends State<LogsFilterDialog> {
           hintStyle: monoStyle(weight: FontWeight.w500, color: c.textTertiary),
           semanticCounterText: context.intl.logFilters.exactCode,
           filled: true,
-          fillColor: selected ? c.selected : const Color(0xff0f0d16),
+          fillColor: selected ? c.selected : app.colors.fieldDeep,
           contentPadding: const EdgeInsets.symmetric(horizontal: 8),
           enabledBorder: border,
           focusedBorder: border.copyWith(

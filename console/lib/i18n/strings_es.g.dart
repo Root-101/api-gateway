@@ -54,8 +54,6 @@ class AppTextsEs
   @override
   late final AppTexts$app$es app = AppTexts$app$es._(_root);
   @override
-  late final AppTexts$common$es common = AppTexts$common$es._(_root);
-  @override
   late final AppTexts$actions$es actions = AppTexts$actions$es._(_root);
   @override
   late final AppTexts$validations$es validations = AppTexts$validations$es._(
@@ -127,6 +125,9 @@ class AppTexts$app$es implements AppTexts$app$en {
   @override
   String get connecting => 'Conectando con el gateway…';
   @override
+  String configError({required Object error}) =>
+      'Error de configuración: ${error}';
+  @override
   String languageLabel({required Object name}) => 'Idioma: ${name}';
   @override
   String get logout => 'Cerrar sesión';
@@ -134,19 +135,6 @@ class AppTexts$app$es implements AppTexts$app$en {
   String get expandMenu => 'Expandir menú';
   @override
   String get collapseMenu => 'Contraer menú';
-}
-
-// Path: common
-class AppTexts$common$es implements AppTexts$common$en {
-  AppTexts$common$es._(this._root);
-
-  final AppTextsEs _root; // ignore: unused_field
-
-  // Translations
-  @override
-  String get loading => 'Cargando';
-  @override
-  String get noAccess => 'No tienes acceso a esta funcionalidad';
 }
 
 // Path: actions
@@ -168,8 +156,6 @@ class AppTexts$actions$es implements AppTexts$actions$en {
   String get back => 'Atrás';
   @override
   String get copiedToClipboard => 'Copiado al portapapeles';
-  @override
-  String get copy => 'Copiar';
   @override
   String get refresh => 'Actualizar';
   @override
@@ -223,8 +209,6 @@ class AppTexts$errors$es implements AppTexts$errors$en {
   String get unknown => 'Error desconocido';
   @override
   String status({required Object status}) => 'Error ${status}';
-  @override
-  String get noData => 'No hay nada por aquí';
   @override
   String get genericError => 'Ha ocurrido un error';
   @override
@@ -858,8 +842,6 @@ class AppTexts$health$es implements AppTexts$health$en {
   @override
   String get down => 'CAÍDA';
   @override
-  String get off => 'OFF';
-  @override
   String get endpoint => 'Endpoint';
   @override
   String get every => 'Cada';
@@ -1222,10 +1204,6 @@ class AppTexts$panel$es implements AppTexts$panel$en {
   @override
   String get slideHint => 'Arrastra el control o usa las flechas';
   @override
-  String get turnOn => 'Encender';
-  @override
-  String get turnOff => 'Apagar';
-  @override
   String get locked => 'Lo controla el gateway';
   @override
   String get lockedHint =>
@@ -1353,19 +1331,19 @@ extension on AppTextsEs {
       'app.taglineStart' => 'One route to',
       'app.taglineEnd' => 'rule them all',
       'app.connecting' => 'Conectando con el gateway…',
+      'app.configError' => ({
+        required Object error,
+      }) => 'Error de configuración: ${error}',
       'app.languageLabel' => ({required Object name}) => 'Idioma: ${name}',
       'app.logout' => 'Cerrar sesión',
       'app.expandMenu' => 'Expandir menú',
       'app.collapseMenu' => 'Contraer menú',
-      'common.loading' => 'Cargando',
-      'common.noAccess' => 'No tienes acceso a esta funcionalidad',
       'actions.tryAgain' => 'Reintentar',
       'actions.cancel' => 'Cancelar',
       'actions.close' => 'Cerrar',
       'actions.dismiss' => 'Descartar',
       'actions.back' => 'Atrás',
       'actions.copiedToClipboard' => 'Copiado al portapapeles',
-      'actions.copy' => 'Copiar',
       'actions.refresh' => 'Actualizar',
       'actions.clearSearch' => 'Limpiar búsqueda',
       'validations.requiredField' => 'Campo requerido',
@@ -1384,7 +1362,6 @@ extension on AppTextsEs {
       'errors.server' => 'Error del servidor',
       'errors.unknown' => 'Error desconocido',
       'errors.status' => ({required Object status}) => 'Error ${status}',
-      'errors.noData' => 'No hay nada por aquí',
       'errors.genericError' => 'Ha ocurrido un error',
       'errors.errorWrongRouteId' => 'Id de ruta incorrecto',
       'errors.errorLoadingRoute' => ({
@@ -1704,7 +1681,6 @@ extension on AppTextsEs {
       'health.title' => 'Health check',
       'health.live' => 'LIVE',
       'health.down' => 'CAÍDA',
-      'health.off' => 'OFF',
       'health.endpoint' => 'Endpoint',
       'health.every' => 'Cada',
       'health.lastCheck' => 'Última',
@@ -1917,8 +1893,6 @@ extension on AppTextsEs {
       'panel.slideOn' => 'Desliza para encender el mantenimiento',
       'panel.slideOff' => 'Desliza para apagar',
       'panel.slideHint' => 'Arrastra el control o usa las flechas',
-      'panel.turnOn' => 'Encender',
-      'panel.turnOff' => 'Apagar',
       'panel.locked' => 'Lo controla el gateway',
       'panel.lockedHint' => 'Todo el gateway está en mantenimiento: cada ruta responde su mensaje hasta que se apague.',
       'panel.edit' => 'Editar',

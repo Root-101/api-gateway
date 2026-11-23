@@ -22,9 +22,6 @@ enum RouteStatus {
       : none;
 
   bool get inMaintenance => this == paused || this == maintenance;
-
-  ///requests reach the service (a DOWN route still gets them)
-  bool get forwards => !inMaintenance;
 }
 
 ///PAUSED / MAINT / LIVE / DOWN pill next to a name

@@ -30,7 +30,7 @@ class MapGatewayNode extends StatelessWidget {
       onTap: onTap,
       selected: selected,
       dashed: on,
-      background: on ? const Color(0xff221b1f) : c.surface,
+      background: on ? app.colors.maintenanceSurface : c.surface,
       border: on ? c.maintenance : c.outline,
       selectedBorder: on ? c.maintenance : null,
       semanticLabel: 'api-gateway',

@@ -62,7 +62,7 @@ void main() {
         debugShowCheckedModeBanner: false,
         home: Scaffold(
           body: Center(
-            child: SelectableText('Configuration error: $configError'),
+            child: SelectableText(app.intl.app.configError(error: configError)),
           ),
         ),
       ),
@@ -149,8 +149,6 @@ class AppGlobal {
   DI di = DI();
 
   NavigatorHelper navigator = NavigatorHelper();
-
-  AppDimensions dimensions = AppDimensions();
 
   AppColors colors = AppColors();
 

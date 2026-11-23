@@ -23,6 +23,5 @@ export 'icons/app_assets.dart';
 export 'icons/app_icons.dart';
 export 'theme/app_theme.dart';
 export 'tokens/app_colors.dart';
-export 'tokens/app_dimensions.dart';
 export 'tokens/app_motion.dart';
 export 'tokens/app_text_styles.dart';

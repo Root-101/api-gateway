@@ -1,3 +1,4 @@
+import 'package:console/app_exporter.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 
@@ -15,13 +16,13 @@ class AppSkeleton extends StatelessWidget {
       width: width,
       height: height,
       decoration: BoxDecoration(
-        color: const Color(0xff221f2e),
+        color: app.colors.skeleton,
         borderRadius: BorderRadius.circular(radius),
       ),
     );
     if (MediaQuery.disableAnimationsOf(context)) return box;
     return box
         .animate(onPlay: (controller) => controller.repeat())
-        .shimmer(duration: 1300.ms, color: const Color(0xff2e2a3d));
+        .shimmer(duration: 1300.ms, color: app.colors.skeletonShine);
   }
 }

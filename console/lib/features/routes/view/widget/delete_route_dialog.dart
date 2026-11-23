@@ -33,13 +33,13 @@ class DeleteRouteDialog extends StatelessWidget {
               width: 56,
               height: 56,
               alignment: Alignment.center,
-              decoration: const BoxDecoration(
-                color: Color(0xff8c1d18),
+              decoration: BoxDecoration(
+                color: app.colors.dangerIcon,
                 shape: BoxShape.circle,
               ),
               child: app.assets.icons.actions.delete.build(
                 size: 26,
-                color: const Color(0xfff9dedc),
+                color: app.colors.onDangerIcon,
               ),
             ),
             const SizedBox(height: 16),

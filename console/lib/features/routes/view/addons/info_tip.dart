@@ -44,11 +44,11 @@ class InfoTip extends StatelessWidget {
         color: c.popupLilac,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: c.outlineCard),
-        boxShadow: const [
+        boxShadow: [
           BoxShadow(
-            color: Color(0x80000000),
+            color: app.colors.shadowStrong,
             blurRadius: 40,
-            offset: Offset(0, 16),
+            offset: const Offset(0, 16),
           ),
         ],
       ),

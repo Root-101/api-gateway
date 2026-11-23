@@ -73,6 +73,8 @@ How to run each one locally is in the [README](README.md#locally).
   | `app.intl` everywhere                          | `context.intl` in widgets, `app.intl` elsewhere           | Rebuilds the widget on a language change     |
   | Models without JSON                            | `RouteModel` and the logs' models write the backup files  | The backup is the API's own JSON             |
   | One version per package                        | Console and gateway share the version                     | They are released together                   |
+  | Sizes and spacing from `app.space`, no magic numbers | Sizes, radii and gaps as literals copied from the design | No spacing scale in the design yet         |
+  | No color outside `AppColors`                   | `Colors.transparent` and `Colors.black` (shadows) in views | Flutter constants, not design colors        |
 - **Both:** JSON keys are `snake_case`. A change to the contract of `/auth`, `/routes` or
   `/http-logs` changes both folders in the same change. Every error goes through
   `GlobalExceptionHandlerConfig` as a Problem Details; don't write an error body anywhere else.

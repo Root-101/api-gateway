@@ -23,6 +23,11 @@
           the models no longer read or write the API's JSON, the repo maps them (`XResponseToModel` extensions). The
           gateway's add-ons in one `GatewayAddonsModel`; methods named as the gateway's (`list`, `search`, `details`).
           `CONTRIBUTING.md` describes the console's layout by the standard, with a table of its known exceptions.
+        * **Cleanup** :wastebasket: : Seven texts nobody showed deleted from both languages. The splash and the
+          `env.js` configuration error in the browser's language (the splash was always English). Every color of the views
+          is a named token of `AppColors` (17 new ones, each for its one use); the two icons drawn in the map's views are
+          in `AppIcons` (`minus`, `web`). Dead code gone: `AppDimensions` (unused radii and paddings), a date helper, two
+          getters. Only the DM Sans weights in use are bundled (400 to 700, no italics): 14 font files fewer.
         * **Errors** :warning: : Reads the gateway 6.2.0 errors: the `422`'s `errors` (`pointer`, `code`, `detail`) instead
           of `violations`, shown on the same fields as before. Needs gateway 6.2.0.
         * **Versions** :arrow_up: : Flutter `3.47.9` → `3.50.1` (Dart `3.14`) in `.fvmrc`, the `Dockerfile` and the CI.

@@ -27,6 +27,8 @@ class AppIcons {
 class ActionsIcons {
   const ActionsIcons();
 
+  SvgAsset get minus => const SvgAsset('<path d="M5 12h14"/>');
+
   SvgAsset get add =>
       const SvgAsset('<path d="M5 12h14"/><path d="M12 5v14"/>');
 
@@ -146,6 +148,11 @@ class GeneralIcons {
   ///the rate limit add-on
   SvgAsset get gauge => const SvgAsset(
     '<path d="m12 14 4-4"/><path d="M3.34 19a10 10 0 1 1 17.32 0"/>',
+  );
+
+  ///the gateway's public url on the map
+  SvgAsset get web => const SvgAsset(
+    '<circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>',
   );
 
   ///the CORS add-on

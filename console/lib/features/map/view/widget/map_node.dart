@@ -59,10 +59,10 @@ class _MapNodeState extends State<MapNode> {
                   : Border.all(color: border, width: widget.selected ? 2 : 1),
               boxShadow: [
                 if (_hovered)
-                  const BoxShadow(
-                    color: Color(0x73000000),
+                  BoxShadow(
+                    color: app.colors.shadow,
                     blurRadius: 28,
-                    offset: Offset(0, 10),
+                    offset: const Offset(0, 10),
                   ),
               ],
             ),

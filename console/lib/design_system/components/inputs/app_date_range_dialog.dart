@@ -24,7 +24,7 @@ class AppDateRangeDialog extends StatefulWidget {
     required String emptyLabel,
   }) => app.dialog.open<DayRange>(
     dialog: AppDateRangeDialog(initial: initial, emptyLabel: emptyLabel),
-    barrierColor: const Color(0x7308070c),
+    barrierColor: app.colors.barrierSoft,
   );
 
   final DayRange initial;
@@ -304,7 +304,7 @@ class _AppDateRangeDialogState extends State<AppDateRangeDialog> {
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(inRange ? 0 : 10),
           side: isToday && !edge
-              ? const BorderSide(color: Color(0xff938f99))
+              ? BorderSide(color: app.colors.outlineToday)
               : BorderSide.none,
         ),
         child: InkWell(
@@ -324,7 +324,7 @@ class _AppDateRangeDialogState extends State<AppDateRangeDialog> {
                       ? c.onLilac
                       : inMonth
                       ? c.text
-                      : const Color(0xff6f6c7b),
+                      : app.colors.textPlaceholder,
                   fontFeatures: const [FontFeature.tabularFigures()],
                 ),
               ),

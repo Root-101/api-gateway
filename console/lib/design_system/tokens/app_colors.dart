@@ -48,12 +48,64 @@ class AppColors {
   Color get textPlaceholder => const Color(0xff6f6c7b);
   Color get white => const Color(0xffffffff);
 
+  //one use each, named after it
+  ///a skeleton block
+  Color get skeleton => const Color(0xff221f2e);
+
+  ///the shine that runs over a skeleton
+  Color get skeletonShine => const Color(0xff2e2a3d);
+
+  ///the round icon of an error toast or a delete confirmation
+  Color get dangerIcon => const Color(0xff8c1d18);
+
+  ///the glyph on [dangerIcon]
+  Color get onDangerIcon => const Color(0xfff9dedc);
+
+  ///the round icon of a success toast
+  Color get successIcon => const Color(0xff1f4d25);
+
+  ///behind a dialog opened over another one (the calendar)
+  Color get barrierSoft => const Color(0x7308070c);
+
+  ///behind the session expired dialog, which can't be left
+  Color get barrierStrong => const Color(0xb80a090f);
+
+  ///today in the calendar
+  Color get outlineToday => const Color(0xff938f99);
+
+  ///a field inside a dialog (the exact status code)
+  Color get fieldDeep => const Color(0xff0f0d16);
+
+  ///a branch of the map that only redirects
+  Color get redirect => const Color(0xff8b80c0);
+
+  ///a map node in maintenance
+  Color get maintenanceSurface => const Color(0xff221b1f);
+
+  ///a map node whose health check fails
+  Color get downSurface => const Color(0xff1f1519);
+
+  ///the track of an on health check slide switch
+  Color get successDeep => const Color(0xff0f3a14);
+
+  ///the track of an on rate limit slide switch
+  Color get infoDeep => const Color(0xff0b2b45);
+
+  ///shadow of a small control
+  Color get shadowSoft => const Color(0x59000000);
+
+  ///shadow of a map node
+  Color get shadow => const Color(0x73000000);
+
+  ///shadow of a tooltip
+  Color get shadowStrong => const Color(0x80000000);
+
   //status
   Color get success => const Color(0xffa5d6a7);
   Color get successDot => const Color(0xff4caf50);
   Color get info => const Color(0xff90caf9);
-  Color get warn => const Color(0xffffe082);
   Color get orange => const Color(0xffffcc80);
+  Color get warn => const Color(0xffffe082);
   Color get softRed => const Color(0xfff2b8b5);
   Color get onSoftRed => const Color(0xff601410);
   Color get danger => const Color(0xffe95450);

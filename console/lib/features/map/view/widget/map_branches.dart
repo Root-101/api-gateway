@@ -4,8 +4,6 @@ import 'package:console/app_exporter.dart';
 import 'package:material_ui/material_ui.dart';
 
 class MapBranch {
-  static const Color redirectColor = Color(0xff8b80c0);
-
   final Offset from;
   final Offset to;
 
@@ -64,7 +62,7 @@ class MapBranchesPainter extends CustomPainter {
           ? maint
           : b.status == RouteStatus.down
           ? app.colors.danger
-          : MapBranch.redirectColor;
+          : app.colors.redirect;
       final paint = Paint()
         ..color = color.withValues(alpha: b.dimmed ? 0.3 : 1)
         ..strokeWidth = 1.6
