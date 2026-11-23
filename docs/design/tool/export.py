@@ -27,23 +27,23 @@ CHROME = r'C:\Program Files\Google\Chrome\Application\chrome.exe' if sys.platfor
 SCREENS = [
     ('Access', 'splash', 'Splash', 'The console while it starts', ''),
     ('Access', 'login', 'Main', 'Log in', ''),
-    ('Access', 'login-error', 'Main', 'Log in: wrong credentials', 'state=error'),
+    ('Access', 'login-error', 'Main', 'Log in: wrong credentials', 'state=Wrong%20credentials'),
     ('Routes', 'routes', 'Routes', 'Routes', ''),
-    ('Routes', 'routes-empty', 'Routes', 'Routes: none yet', 'state=empty'),
+    ('Routes', 'routes-empty', 'Routes', 'Routes: none yet', 'state=Empty'),
     ('Routes', 'route-create', 'RouteForm', 'Create a route', 'mode=create'),
     ('Routes', 'route-edit', 'RouteForm', 'Edit a route', 'mode=edit'),
     ('Routes', 'route-duplicate', 'RouteForm', 'Duplicate a route', 'mode=duplicate'),
-    ('Routes', 'route-delete', 'Routes', 'Delete a route', 'state=delete'),
+    ('Routes', 'route-delete', 'Routes', 'Delete a route', 'state=Delete'),
     ('Routes', 'routes-restore', 'RoutesRestore', 'Restore routes from a backup', ''),
-    ('Routes', 'routes-restore-confirm', 'Routes', 'Restore routes: confirm the replacement',
-     'state=restore-confirm'),
+    ('Routes', 'routes-restore-confirm', 'RoutesRestore', 'Restore routes: confirm the replacement',
+     'state=Confirm'),
     ('HTTP logs', 'logs', 'Logs', 'HTTP logs', ''),
     ('HTTP logs', 'logs-filter', 'LogsFilter', 'HTTP logs: filters', ''),
     ('HTTP logs', 'log-details', 'LogDetails', 'HTTP logs: details of a request', ''),
-    ('HTTP logs', 'logs-empty', 'Logs', 'HTTP logs: no results', 'state=empty'),
-    ('States', 'loading', 'Routes', 'A screen while it loads: a skeleton of itself', 'state=loading'),
-    ('States', 'offline', 'Routes', 'The gateway can\'t be reached', 'state=offline'),
-    ('States', 'session-expired', 'Routes', 'Session expired: log in again', 'state=session'),
+    ('HTTP logs', 'logs-empty', 'Logs', 'HTTP logs: no results', 'state=Empty'),
+    ('States', 'loading', 'Routes', 'A screen while it loads: a skeleton of itself', 'state=Loading'),
+    ('States', 'offline', 'Routes', 'The gateway can\'t be reached', 'state=Offline'),
+    ('States', 'session-expired', 'Routes', 'Session expired: log in again', 'state=Session%20expired'),
     ('States', 'not-found', 'NotFound', 'A URL that doesn\'t exist', ''),
     ('Navigation', 'rail-expanded', 'Routes', 'Navigation rail, expanded', 'menu=true'),
     ('Gateway map', 'gateway-map', 'GatewayMapScreen', 'Gateway map', 'routeCount=3'),
@@ -80,7 +80,8 @@ def shot(port: int, board: str, props: str, w: int, h: int, out: Path, spare: in
                     '--force-device-scale-factor=1', f'--window-size={max(w + spare, 800)},{h + 96}',
                     '--virtual-time-budget=8000', f'--screenshot={raw}',
                     f'http://127.0.0.1:{port}/{board}.dc.html?{props}'],
-                   check=True, capture_output=True)
+                   # not captured: Chrome's child processes keep the pipes open and the run never returns
+                   check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
     subprocess.run(['ffmpeg', '-loglevel', 'error', '-y', '-i', str(raw),
                     '-vf', f'crop={w}:{h}:0:0', str(out)], check=True)
     raw.unlink()
@@ -127,7 +128,7 @@ def main(source: Path) -> None:
     pdf = DESIGN / 'api-gateway-console-design.pdf'
     subprocess.run([CHROME, '--headless=new', '--disable-gpu', '--no-pdf-header-footer',
                     '--virtual-time-budget=8000', f'--print-to-pdf={pdf}', html.as_uri()],
-                   check=True, capture_output=True)
+                   check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
     server.shutdown()
     shutil.rmtree(work)
     print(pdf.name)

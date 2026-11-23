@@ -68,7 +68,10 @@ async function renderNodes(nodes, scope, out) {
           : document.createElement(tag === 'helmet' ? 'div' : tag);
         for (const a of node.attributes) {
           if (/^on[A-Z]/.test(a.name)) continue;
-          el.setAttribute(a.name, fill(a.value, scope));
+          const v = fill(a.value, scope);
+          // a boolean attribute is on just by being there: the runtime leaves it out when false
+          if (v === 'false' && /^(checked|disabled|selected|readonly|required|hidden)$/.test(a.name)) continue;
+          el.setAttribute(a.name, v);
         }
         await renderNodes(node.childNodes, scope, el);
         out.appendChild(el);
@@ -101,7 +104,7 @@ async function renderFile(name, extra) {
 
 window.addEventListener('DOMContentLoaded', async () => {
   const source = new DOMParser().parseFromString(document.documentElement.outerHTML, 'text/html');
-  // Props from the query (?state=error&menu=true), to shoot an artboard in another state
+  // Props from the query (?state=Empty&menu=true), to shoot an artboard in another state
   const extra = {};
   for (const [k, v] of new URLSearchParams(location.search)) {
     extra[k] = v === 'true' ? true : v === 'false' ? false : v;
