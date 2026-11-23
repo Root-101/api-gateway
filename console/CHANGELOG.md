@@ -1,5 +1,6 @@
 * 6.x:
     * 6.2.0:
+        * **DATE** :date: : 2026-11-23.
         * **Code** :broom: : Layout of the house Flutter app standard, no visible change: texts in `lib/i18n/`
           (`AppIntl`, generated `strings*.g.dart`; `app.intl` without a context, `context.intl` in widgets), the design
           system in `tokens/`, `theme/` (`AppTheme`), `icons/` and `components/` by kind, one component per file, barrel

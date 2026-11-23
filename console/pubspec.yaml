@@ -2,7 +2,7 @@ name: console
 description: "Front-End for Api-Gateway project"
 publish_to: 'none'
 
-version: 6.1.2
+version: 6.2.0
 
 environment:
   flutter: ^3.50.0

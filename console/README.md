@@ -28,8 +28,9 @@ It allows administrators to:
 * 📜 **View HTTP logs** — Filter, search, and inspect requests passing through the gateway.
 * 🔐 **Authenticate safely** — Login using the same credentials as the gateway admin endpoints.
 
-> ⚡ **Note:** The console shares its version number with the API Gateway. Console `6.1.2` needs gateway `6.1.2` or
-> later (the add-ons use `GET /addons` and the `/addons/...` endpoints of each route and of the gateway).
+> ⚡ **Note:** The console shares its version number with the API Gateway. Console `6.2.0` needs gateway `6.2.0` or
+> later (it reads the errors' `code` and the `422`'s `errors`, and the add-ons use `GET /addons` and the `/addons/...`
+> endpoints of each route and of the gateway).
 
 ---
 

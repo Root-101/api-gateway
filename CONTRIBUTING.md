@@ -111,7 +111,7 @@ that would have caught it.
 The integration tests start the whole gateway on a random port with a real PostgreSQL and a fake
 upstream service (`support/IntegrationTest`), and call it over HTTP like a client: every admin
 endpoint, the proxying and what gets logged. `ValidationIT` has one row per broken field of every
-request object, on every endpoint that takes it, pinning the `fieldName` and the message.
+request object, on every endpoint that takes it, pinning the `pointer`, the `code` and the `detail`.
 
 ### Mutation testing
 
