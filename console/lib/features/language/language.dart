@@ -3,3 +3,4 @@ export 'language_init.dart';
 export 'logic/cubit/language_cubit.dart';
 export 'logic/model/language_model.dart';
 export 'view/language_listener.dart';
+export 'view/language_widget.dart';

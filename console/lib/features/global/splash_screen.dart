@@ -10,7 +10,7 @@ class SplashScreen extends StatelessWidget {
     //no navigator or intl yet: plain English text
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      theme: ThemeConfig.theme,
+      theme: AppTheme.dark,
       home: Scaffold(
         body: GridBackground(
           child: SizedBox.expand(

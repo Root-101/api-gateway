@@ -1,5 +1,11 @@
 * 6.x:
     * 6.2.0:
+        * **Code** :broom: : Layout of the house Flutter app standard, no visible change: texts in `lib/i18n/`
+          (`AppIntl`, generated `strings*.g.dart`; `app.intl` without a context, `context.intl` in widgets), the design
+          system in `tokens/`, `theme/` (`AppTheme`), `icons/` and `components/` by kind, one component per file, barrel
+          `design_system.dart`; `lib/shared/` gone (`ErrorPage` in `features/global/`, two unused pages deleted), the
+          shell pieces of `features/base/` in `features/global/`, `view/widget/`, every file imports only
+          `app_exporter.dart`, lints of the standard. Before a language is saved the console starts in the browser's.
         * **Errors** :warning: : Reads the gateway 6.2.0 errors: the `422`'s `errors` (`pointer`, `code`, `detail`) instead
           of `violations`, shown on the same fields as before. Needs gateway 6.2.0.
         * **Versions** :arrow_up: : Flutter `3.47.9` → `3.50.1` (Dart `3.14`) in `.fvmrc`, the `Dockerfile` and the CI.

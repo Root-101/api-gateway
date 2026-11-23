@@ -49,7 +49,7 @@ How to run each one locally is in the [README](README.md#locally).
   filters) needs its hint in `config/ReflectionConfig.java`; the CI builds the native image and
   runs a smoke test against it, which is where a missing hint shows up.
 - **Console:** a feature is `data/rest` → `data/repo` → `logic/cubit` and `logic/model` → `view`,
-  wired in its `<name>_init.dart`. No user-visible text is hardcoded (`lib/l10n/*.i18n.yaml`, both
+  wired in its `<name>_init.dart`. No user-visible text is hardcoded (`lib/i18n/*.i18n.yaml`, both
   languages, then `fvm dart run slang`). See [`console/README.md`](console/README.md).
 - **Both:** JSON keys are `snake_case`. A change to the contract of `/auth`, `/routes` or
   `/http-logs` changes both folders in the same change. Every error goes through

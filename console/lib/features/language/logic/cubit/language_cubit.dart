@@ -27,8 +27,10 @@ class LanguageCubit extends Cubit<LanguageState>
     : super(LanguageInitialState(current: defaultLanguage, allLanguages: []));
 
   Future init() async {
-    String? key = await repo.loadKey();
+    //nothing saved yet: the browser's language (main.dart already set it in AppIntl)
+    String? key = await repo.loadKey() ?? AppIntl.current.languageCode;
     currentSelectedLanguage = _resolve(key: key);
+    AppIntl.current = AppIntl.resolve(currentSelectedLanguage.key);
     await app.dateFormatter.setLocale(currentSelectedLanguage.key);
 
     emit(
@@ -52,6 +54,7 @@ class LanguageCubit extends Cubit<LanguageState>
     }
     currentSelectedLanguage = language;
     repo.save(model: currentSelectedLanguage);
+    AppIntl.current = AppIntl.resolve(language.key);
     await app.dateFormatter.setLocale(language.key);
 
     emit(

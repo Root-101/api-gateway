@@ -1,10 +1,4 @@
 import 'package:console/app_exporter.dart';
-import 'package:console/features/routes/view/form/route_form_field.dart';
-import 'package:console/features/routes/view/form/routes_form_screen.dart';
-import 'package:console/features/routes/view/form/widgets/route_form_preview.dart';
-import 'package:console/features/routes/view/form/widgets/route_form_footer.dart';
-import 'package:console/features/routes/view/form/widgets/route_form_header.dart';
-import 'package:console/features/routes/view/form/widgets/route_form_step.dart';
 import 'package:material_ui/material_ui.dart';
 
 class RoutesFormWidget extends StatefulWidget {

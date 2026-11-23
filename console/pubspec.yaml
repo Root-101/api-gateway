@@ -34,7 +34,7 @@ dependencies:
   #utils
   logger: 2.8.0
   intl: 0.20.3
-  #texts generated from lib/l10n/*.i18n.yaml (`fvm dart run slang`)
+  #texts generated from lib/i18n/*.i18n.yaml (`fvm dart run slang`)
   slang: 4.19.2
   web: 1.1.2
 

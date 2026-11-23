@@ -1,4 +1,4 @@
-import 'package:console/main.dart';
+import 'package:console/app_exporter.dart';
 import 'package:go_router/go_router.dart';
 
 class NavigatorHelper {

@@ -1,5 +1,4 @@
 import 'package:console/app_exporter.dart';
-import 'package:console/features/routes/view/addons/slide_switch.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter/services.dart';
 
