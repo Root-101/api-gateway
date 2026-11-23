@@ -89,7 +89,7 @@ class HealthCheckSaveErrorState extends HealthCheckState {
 
   HealthCheckSaveErrorState(this.exception, {required this.route});
 
-  ///a 422 names what's wrong in its violations, the rest in the message
+  ///a 422 names what's wrong in its errors, the rest in the message
   String get message {
     final data = exception.data;
     if (data is List<ValidationError> && data.isNotEmpty) {

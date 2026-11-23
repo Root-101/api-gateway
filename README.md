@@ -174,7 +174,7 @@ instance), is in [`SECURITY.md`](SECURITY.md).
 ## The admin API
 
 Under `/{ADMIN_PATH}`, JSON, with a token from the login (or Basic auth). Keys in `snake_case`,
-dates in UTC, and every error a Problem Details (RFC 9457), with its `violations` in a `422`:
+dates in UTC, and every error a Problem Details (RFC 9457) with a stable `code`, and its `errors` in a `422`:
 
 | Method   | Path                    | What it does                                                        |
 |----------|-------------------------|---------------------------------------------------------------------|

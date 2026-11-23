@@ -283,9 +283,9 @@ class MaintenanceIT extends IntegrationTest {
                     .exchange()
                     .expectStatus().isEqualTo(HttpStatus.UNPROCESSABLE_CONTENT)
                     .expectBody()
-                    .jsonPath("$.violations.length()").isEqualTo(2)
-                    .jsonPath("$.violations[?(@.fieldName == 'enabled')].message").isEqualTo("Must not be null")
-                    .jsonPath("$.violations[?(@.fieldName == 'message')].message").isEqualTo("Size must be between 0 and 500");
+                    .jsonPath("$.errors.length()").isEqualTo(2)
+                    .jsonPath("$.errors[?(@.pointer == '#/enabled')].detail").isEqualTo("Must not be null")
+                    .jsonPath("$.errors[?(@.pointer == '#/message')].detail").isEqualTo("Size must be between 0 and 500");
             admin(HttpMethod.PUT, path)
                     .bodyValue(Map.of("enabled", true, "retry_after", "tomorrow"))
                     .exchange()
@@ -299,7 +299,7 @@ class MaintenanceIT extends IntegrationTest {
         Map<String, Object> broken = restored("mtv-" + unique(), Map.of("maintenance", maintenance(null, null, null)));
         admin(HttpMethod.PUT, "/routes").bodyValue(List.of(broken)).exchange()
                 .expectStatus().isEqualTo(HttpStatus.UNPROCESSABLE_CONTENT)
-                .expectBody().jsonPath("$.violations[0].fieldName").isEqualTo("[0].addons.maintenance.enabled");
+                .expectBody().jsonPath("$.errors[0].pointer").isEqualTo("#/0/addons/maintenance/enabled");
 
         for (String path : List.of(routePath("not-a-uuid"), routePath("not-a-uuid") + "/enable")) {
             admin(path.endsWith("enable") ? HttpMethod.POST : HttpMethod.PUT, path)

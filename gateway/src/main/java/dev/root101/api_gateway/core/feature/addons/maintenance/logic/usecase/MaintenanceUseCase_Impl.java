@@ -77,7 +77,7 @@ class MaintenanceUseCase_Impl implements MaintenanceUseCase, SmartInitializingSi
                 config.enabled(),
                 config.message(),
                 config.retryAfter(),
-                messages.getMessage("error.maintenance.default", null, locale),
+                messages.getMessage("error.maintenance.active", null, locale),
                 entry.state()
         );
     }

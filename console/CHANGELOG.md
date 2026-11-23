@@ -1,4 +1,7 @@
 * 6.x:
+    * 6.2.0:
+        * **Errors** :warning: : Reads the gateway 6.2.0 errors: the `422`'s `errors` (`pointer`, `code`, `detail`) instead
+          of `violations`, shown on the same fields as before. Needs gateway 6.2.0.
     * 6.1.2:
         * **DATE** :date: : 2026-11-19.
         * **Version** :bookmark: : Version adjustment to match the gateway, no changes in the console.

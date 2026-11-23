@@ -116,7 +116,7 @@ class SecurityIT extends IntegrationTest {
                 .bodyValue(Map.of("username", "", "password", ""))
                 .exchange()
                 .expectStatus().isEqualTo(HttpStatus.UNPROCESSABLE_CONTENT)
-                .expectBody().jsonPath("$.violations.length()").isEqualTo(2);
+                .expectBody().jsonPath("$.errors.length()").isEqualTo(2);
     }
 
     private String loginToken(String clientIp) {

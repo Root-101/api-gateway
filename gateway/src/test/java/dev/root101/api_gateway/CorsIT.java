@@ -215,12 +215,12 @@ class CorsIT extends IntegrationTest {
         admin(HttpMethod.PUT, routePath(routeId)).bodyValue(cors(null, List.of(), null)).exchange()
                 .expectStatus().isEqualTo(HttpStatus.UNPROCESSABLE_CONTENT)
                 .expectBody()
-                .jsonPath("$.violations[?(@.fieldName == 'enabled')]").exists()
-                .jsonPath("$.violations[?(@.fieldName == 'allowed_origins')]").exists();
+                .jsonPath("$.errors[?(@.pointer == '#/enabled')]").exists()
+                .jsonPath("$.errors[?(@.pointer == '#/allowed_origins')]").exists();
         admin(HttpMethod.PUT, routePath(routeId)).bodyValue(cors(true, List.of(APP, "https://app.com/path"), false)).exchange()
                 .expectStatus().isEqualTo(HttpStatus.UNPROCESSABLE_CONTENT)
                 .expectBody()
-                .jsonPath("$.violations[0].fieldName").isEqualTo("allowed_origins[1]")
-                .jsonPath("$.violations[0].message").isEqualTo("Must be * or an origin like https://app.com or https://*.example.com, without a path");
+                .jsonPath("$.errors[0].pointer").isEqualTo("#/allowed_origins/1")
+                .jsonPath("$.errors[0].detail").isEqualTo("Must be * or an origin like https://app.com or https://*.example.com, without a path");
     }
 }

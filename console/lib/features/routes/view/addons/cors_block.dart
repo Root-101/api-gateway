@@ -24,7 +24,7 @@ class _CorsBlockState extends State<CorsBlock> {
   bool _credentials = false;
   bool _busy = false;
 
-  ///422 violations by field (`allowed_origins`, `allowed_origins[1]`...)
+  ///422 errors by field (`allowed_origins`, `allowed_origins[1]`...)
   Map<String, String> _errors = {};
 
   ///a 400 rule (lockout, credentials...): only a message

@@ -21,7 +21,9 @@ import java.net.UnknownHostException;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Stream;
 import dev.root101.api_gateway.core.error.Errors;
+import dev.root101.api_gateway.core.validation.FieldProblems;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.web.ErrorResponseException;
 import org.springframework.http.MediaType;
 import org.springframework.mock.http.server.reactive.MockServerHttpRequest;
@@ -43,7 +45,9 @@ class GlobalExceptionHandlerConfigTest {
         MESSAGES.setFallbackToSystemLocale(false);
     }
 
-    private final GlobalExceptionHandlerConfig handler = new GlobalExceptionHandlerConfig(JsonMapper.builderWithJackson2Defaults().build(), MESSAGES, new PropertyNamingStrategies.SnakeCaseStrategy());
+    private static final FieldProblems FIELD_PROBLEMS = new FieldProblems(MESSAGES, new PropertyNamingStrategies.SnakeCaseStrategy());
+
+    private final GlobalExceptionHandlerConfig handler = new GlobalExceptionHandlerConfig(JsonMapper.builderWithJackson2Defaults().build(), MESSAGES, FIELD_PROBLEMS);
 
     private MockServerWebExchange exchange() {
         return MockServerWebExchange.from(MockServerHttpRequest.get("/any"));
@@ -65,7 +69,7 @@ class GlobalExceptionHandlerConfigTest {
         assertThat(exchange.getResponse().getStatusCode()).isEqualTo(HttpStatus.INTERNAL_SERVER_ERROR);
         assertThat(exchange.getResponse().getHeaders().getContentType()).isEqualTo(MediaType.APPLICATION_PROBLEM_JSON);
         assertThat(exchange.getResponse().getBodyAsString().block()).isEqualTo(
-                "{\"type\":\"about:blank\",\"title\":\"Internal Server Error\",\"status\":500,\"detail\":\"Internal server error\",\"instance\":\"/any\"}");
+                "{\"type\":\"about:blank\",\"title\":\"Internal Server Error\",\"status\":500,\"detail\":\"Internal server error\",\"instance\":\"/any\",\"code\":\"internal-server-error\"}");
     }
 
     @Test
@@ -146,16 +150,31 @@ class GlobalExceptionHandlerConfigTest {
 
         assertThat(body(error, "es")).contains(
                 "\"detail\":\"La petición tiene campos inválidos\"",
-                "{\"fieldName\":\"name\",\"message\":\"No puede estar vacío\"}",
-                "{\"fieldName\":\"uri\",\"message\":\"Debe tener entre 0 y 255 caracteres\"}");
+                "\"code\":\"validation\"",
+                "{\"pointer\":\"#/name\",\"code\":\"not-blank\",\"detail\":\"No puede estar vacío\",\"params\":{}}",
+                "{\"pointer\":\"#/uri\",\"code\":\"size\",\"detail\":\"Debe tener entre 0 y 255 caracteres\",\"params\":{\"max\":255,\"min\":0}}");
         assertThat(body(error, "en")).contains(
-                "{\"fieldName\":\"name\",\"message\":\"Must not be blank\"}",
-                "{\"fieldName\":\"uri\",\"message\":\"Size must be between 0 and 255\"}");
+                "{\"pointer\":\"#/name\",\"code\":\"not-blank\",\"detail\":\"Must not be blank\",\"params\":{}}",
+                "{\"pointer\":\"#/uri\",\"code\":\"size\",\"detail\":\"Size must be between 0 and 255\",\"params\":{\"max\":255,\"min\":0}}");
     }
 
     @Test
-    void fieldNamesAsInTheJson() {
-        assertThat(handler.fieldName("name")).isEqualTo("name");
-        assertThat(handler.fieldName("rewritePath.replaceFrom")).isEqualTo("rewrite_path.replace_from");
+    void pointersAsInTheJson() {
+        assertThat(FIELD_PROBLEMS.pointer("name", null)).isEqualTo("#/name");
+        assertThat(FIELD_PROBLEMS.pointer("rewritePath.replaceFrom", null)).isEqualTo("#/rewrite_path/replace_from");
+        assertThat(FIELD_PROBLEMS.pointer("allowedOrigins[1]", null)).isEqualTo("#/allowed_origins/1");
+        assertThat(FIELD_PROBLEMS.pointer("name", 2)).isEqualTo("#/2/name");
+    }
+
+    @Test
+    void codeIsTheKeyWithoutItsPrefix() {
+        assertThat(body(Errors.notFound("error.route.not-found", "x"), "en")).contains("\"code\":\"route.not-found\"");
+        assertThat(body(new DataIntegrityViolationException("dup"), "en")).contains("\"code\":\"conflict\"");
+        assertThat(body(new ConnectException("refused"), "en")).contains("\"code\":\"upstream.unreachable\"");
+        assertThat(body(new IllegalStateException("bug"), "en")).contains("\"code\":\"internal-server-error\"");
+        //Spring's own: the generic code of its status
+        assertThat(body(new ResponseStatusException(HttpStatus.TOO_MANY_REQUESTS, "Too many"), "en")).contains("\"code\":\"too-many-requests\"");
+        assertThat(body(new ResponseStatusException(HttpStatus.METHOD_NOT_ALLOWED), "en")).contains("\"code\":\"method-not-allowed\"");
+        assertThat(body(new ResponseStatusException(HttpStatusCode.valueOf(413)), "en")).contains("\"code\":\"content-too-large\"");
     }
 }

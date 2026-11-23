@@ -21,6 +21,7 @@ import dev.root101.api_gateway.core.feature.routes.logic.model.RewritePathModel;
 import dev.root101.api_gateway.core.feature.routes.logic.model.RouteRequest;
 import dev.root101.api_gateway.core.feature.routes.logic.model.RouteResponse;
 import dev.root101.api_gateway.core.feature.routes.logic.model.RouteRules;
+import dev.root101.api_gateway.core.error.FieldProblem;
 import org.springframework.aot.hint.annotation.RegisterReflectionForBinding;
 import org.springframework.context.annotation.Configuration;
 
@@ -31,7 +32,7 @@ import java.time.OffsetDateTime;
 @SuppressWarnings("removal")
 @RegisterReflectionForBinding({
         //--------- CONFIG ---------\\
-        GlobalExceptionHandlerConfig.class,
+        GlobalExceptionHandlerConfig.class, FieldProblem.class,
         //--------- ROUTES ---------\\
         RewritePathModel.class, RouteRequest.class, RouteResponse.class,
         //the validator of @ValidRoute, created by hibernate validator

@@ -229,30 +229,30 @@ class HealthCheckIT extends IntegrationTest {
                 .exchange()
                 .expectStatus().isEqualTo(HttpStatus.UNPROCESSABLE_CONTENT)
                 .expectBody()
-                .jsonPath("$.violations.length()").isEqualTo(3)
-                .jsonPath("$.violations[?(@.fieldName == 'enabled')].message").isEqualTo("Must not be null")
-                .jsonPath("$.violations[?(@.fieldName == 'path')].message").isEqualTo("Must start with / and have no spaces")
-                .jsonPath("$.violations[?(@.fieldName == 'interval_seconds')].message").isEqualTo("Must be 10 or more");
+                .jsonPath("$.errors.length()").isEqualTo(3)
+                .jsonPath("$.errors[?(@.pointer == '#/enabled')].detail").isEqualTo("Must not be null")
+                .jsonPath("$.errors[?(@.pointer == '#/path')].detail").isEqualTo("Must start with / and have no spaces")
+                .jsonPath("$.errors[?(@.pointer == '#/interval_seconds')].detail").isEqualTo("Must be 10 or more");
         admin(HttpMethod.PUT, routePath(routeId))
                 .header("Accept-Language", "es")
                 .bodyValue(healthCheck(true, "/a b", 3601))
                 .exchange()
                 .expectStatus().isEqualTo(HttpStatus.UNPROCESSABLE_CONTENT)
                 .expectBody()
-                .jsonPath("$.violations[?(@.fieldName == 'path')].message").isEqualTo("Debe empezar con / y no tener espacios")
-                .jsonPath("$.violations[?(@.fieldName == 'interval_seconds')].message").isEqualTo("Debe ser 3600 o menos");
+                .jsonPath("$.errors[?(@.pointer == '#/path')].detail").isEqualTo("Debe empezar con / y no tener espacios")
+                .jsonPath("$.errors[?(@.pointer == '#/interval_seconds')].detail").isEqualTo("Debe ser 3600 o menos");
         admin(HttpMethod.PUT, routePath(routeId))
                 .bodyValue(healthCheck(true, null, null))
                 .exchange()
                 .expectStatus().isEqualTo(HttpStatus.UNPROCESSABLE_CONTENT)
-                .expectBody().jsonPath("$.violations.length()").isEqualTo(2);
+                .expectBody().jsonPath("$.errors.length()").isEqualTo(2);
         admin(HttpMethod.PUT, routePath(routeId))
                 .bodyValue(healthCheck(true, "/" + "a".repeat(2000), 3601))
                 .exchange()
                 .expectStatus().isEqualTo(HttpStatus.UNPROCESSABLE_CONTENT)
                 .expectBody()
-                .jsonPath("$.violations[?(@.fieldName == 'path')].message").isEqualTo("Size must be between 0 and 2000")
-                .jsonPath("$.violations[?(@.fieldName == 'interval_seconds')].message").isEqualTo("Must be 3600 or less");
+                .jsonPath("$.errors[?(@.pointer == '#/path')].detail").isEqualTo("Size must be between 0 and 2000")
+                .jsonPath("$.errors[?(@.pointer == '#/interval_seconds')].detail").isEqualTo("Must be 3600 or less");
         //the limits are inclusive
         set(routeId, healthCheck(false, "/", 10));
         set(routeId, healthCheck(false, "/" + "a".repeat(1999), 3600));
@@ -261,7 +261,7 @@ class HealthCheckIT extends IntegrationTest {
         Map<String, Object> broken = restored("hcv-" + unique(), Map.of("health_check", healthCheck(true, "health", 60)));
         admin(HttpMethod.PUT, "/routes").bodyValue(List.of(broken)).exchange()
                 .expectStatus().isEqualTo(HttpStatus.UNPROCESSABLE_CONTENT)
-                .expectBody().jsonPath("$.violations[0].fieldName").isEqualTo("[0].addons.health_check.path");
+                .expectBody().jsonPath("$.errors[0].pointer").isEqualTo("#/0/addons/health_check/path");
 
         admin(HttpMethod.PUT, routePath("not-a-uuid")).bodyValue(healthCheck(true, "/", 10)).exchange().expectStatus().isBadRequest();
         String unknown = UUID.randomUUID().toString();

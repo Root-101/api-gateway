@@ -54,13 +54,13 @@ class ApiExceptionConverter {
   static GlobalException _parseBadResponse(DioException error) {
     final int status = error.response?.statusCode ?? 0;
     final dynamic data = error.response?.data;
-    final dynamic violations = data is Map ? data['violations'] : null;
+    final dynamic errors = data is Map ? data['errors'] : null;
 
-    if (status == 422 && violations is List) {
+    if (status == 422 && errors is List) {
       return GlobalException(
         type: GlobalExceptionType.validation,
         message: app.intl.errors.validation,
-        data: violations
+        data: errors
             .whereType<Map<String, dynamic>>()
             .map(ValidationError.fromJson)
             .toList(),
