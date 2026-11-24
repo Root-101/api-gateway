@@ -1,5 +1,5 @@
 import 'package:console/app_exporter.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 class LanguageCubit extends Cubit<LanguageState>
@@ -27,8 +27,10 @@ class LanguageCubit extends Cubit<LanguageState>
     : super(LanguageInitialState(current: defaultLanguage, allLanguages: []));
 
   Future init() async {
-    String? key = await repo.loadKey();
+    //nothing saved yet: the browser's language (main.dart already set it in AppIntl)
+    String? key = await repo.loadKey() ?? AppIntl.current.languageCode;
     currentSelectedLanguage = _resolve(key: key);
+    AppIntl.current = AppIntl.resolve(currentSelectedLanguage.key);
     await app.dateFormatter.setLocale(currentSelectedLanguage.key);
 
     emit(
@@ -52,6 +54,7 @@ class LanguageCubit extends Cubit<LanguageState>
     }
     currentSelectedLanguage = language;
     repo.save(model: currentSelectedLanguage);
+    AppIntl.current = AppIntl.resolve(language.key);
     await app.dateFormatter.setLocale(language.key);
 
     emit(
@@ -83,14 +86,14 @@ abstract class LanguageState {
   const LanguageState({required this.current, required this.allLanguages});
 }
 
-class LanguageInitialState extends LanguageState {
+final class LanguageInitialState extends LanguageState {
   const LanguageInitialState({
     required super.current,
     required super.allLanguages,
   });
 }
 
-class LanguageChangedState extends LanguageState {
+final class LanguageChangedState extends LanguageState {
   const LanguageChangedState({
     required super.current,
     required super.allLanguages,

@@ -1,7 +1,7 @@
 package dev.root101.api_gateway;
 
-import dev.root101.api_gateway.features.http_logs.data.entity.HttpLogEntity;
-import dev.root101.api_gateway.features.http_logs.task.CleanUpOldLogs;
+import dev.root101.api_gateway.core.feature.http_logs.data.entity.HttpLogEntity;
+import dev.root101.api_gateway.core.feature.http_logs.task.CleanUpOldLogs;
 import dev.root101.api_gateway.support.IntegrationTest;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;

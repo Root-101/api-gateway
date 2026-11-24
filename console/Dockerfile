@@ -6,7 +6,7 @@ RUN apt-get update \
     && apt-get install -y --no-install-recommends curl git unzip xz-utils ca-certificates \
     && rm -rf /var/lib/apt/lists/*
 
-ARG FLUTTER_VERSION=3.47.9
+ARG FLUTTER_VERSION=3.50.1
 ARG FLUTTER_SDK_LOCATION=/usr/local/flutter
 
 RUN git clone --depth 1 --branch $FLUTTER_VERSION https://github.com/flutter/flutter.git $FLUTTER_SDK_LOCATION

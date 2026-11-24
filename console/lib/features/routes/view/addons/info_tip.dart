@@ -1,5 +1,5 @@
 import 'package:console/app_exporter.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 ///the (i) beside an add-on's name: hover, focus or a tap shows what it is for and how it works
 class InfoTip extends StatelessWidget {
@@ -44,11 +44,11 @@ class InfoTip extends StatelessWidget {
         color: c.popupLilac,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: c.outlineCard),
-        boxShadow: const [
+        boxShadow: [
           BoxShadow(
-            color: Color(0x80000000),
+            color: app.colors.shadowStrong,
             blurRadius: 40,
-            offset: Offset(0, 16),
+            offset: const Offset(0, 16),
           ),
         ],
       ),

@@ -1,6 +1,5 @@
 import 'package:console/app_exporter.dart';
-import 'package:console/features/routes/view/form/routes_form_screen.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
@@ -12,6 +11,12 @@ class RoutesScreenNavigator {
   Widget builder(BuildContext context, GoRouterState state) {
     return const RoutesScreen();
   }
+
+  void go() => app.navigator.go(name);
+
+  List<RouteBase> routes({List<RouteBase> children = const []}) => [
+    GoRoute(name: name, path: path, builder: builder, routes: children),
+  ];
 
   void neglectGo() {
     Router.neglect(app.context, () {
@@ -77,23 +82,20 @@ class _RoutesScreenState extends State<RoutesScreen> {
 
   void _onState(BuildContext context, RoutesState state) {
     final intl = context.intl;
-    if (state is RoutesBackupProcessingState ||
-        state is RoutesDeleteProcessingState) {
+    if (state is RoutesBackingUpState || state is RoutesDeletingState) {
       app.loading.show();
-    } else if (state is RoutesBackupOkState) {
+    } else if (state is RoutesBackedUpOkState) {
       app.loading.hide();
-      app.snack.showSuccess(
-        message: intl.routes.backupSaved(count: state.count),
-      );
-    } else if (state is RoutesDeleteOkState) {
+      app.toast.success(intl.routes.backupSaved(count: state.count));
+    } else if (state is RoutesDeletedOkState) {
       app.loading.hide();
-      app.snack.showSuccess(message: intl.routes.deleted(name: state.name));
-    } else if (state is RoutesBackupErrorState) {
+      app.toast.success(intl.routes.deleted(name: state.name));
+    } else if (state is RoutesBackingUpErrorState) {
       app.loading.hide();
-      app.snack.showError(message: state.exception.message);
-    } else if (state is RoutesDeleteErrorState) {
+      app.toast.error(state.exception.intlMessage);
+    } else if (state is RoutesDeletingErrorState) {
       app.loading.hide();
-      app.snack.showError(message: state.exception.message);
+      app.toast.error(state.exception.intlMessage);
     }
   }
 
@@ -105,7 +107,7 @@ class _RoutesScreenState extends State<RoutesScreen> {
       builder: (context, state) {
         if (state is RoutesSearchErrorState && !cubit.loaded) {
           return ErrorPage(
-            errorMessage: state.exception.message,
+            errorMessage: state.exception.intlMessage,
             buttonText: context.intl.actions.tryAgain,
             onPressed: cubit.search,
           );
@@ -179,9 +181,7 @@ class _RoutesScreenState extends State<RoutesScreen> {
   }
 
   Future<void> _confirmDelete(RouteModel route) async {
-    final confirmed = await app.dialog.open<bool>(
-      dialog: DeleteRouteDialog(route: route),
-    );
+    final confirmed = await DeleteRouteDialog.navigator.open(route: route);
     if (confirmed == true) cubit.delete(route: route);
   }
 }

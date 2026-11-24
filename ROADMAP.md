@@ -5,7 +5,7 @@ done is in `CHANGELOG.md`.
 
 Rules:
 
-- Every change is recorded in `CHANGELOG.md`, under the in-progress version (currently `6.1.2`).
+- Every change is recorded in `CHANGELOG.md`, under the in-progress version (currently `6.2.0`).
 - Everything in the project is written in English (code, comments, docs, changelog, roadmap).
 - Console: keep its base (Cubit + DI with Get + go_router + Dio). Changes in the contract of
   `/{ADMIN_PATH}/auth|routes|http-log` must be applied in both folders.

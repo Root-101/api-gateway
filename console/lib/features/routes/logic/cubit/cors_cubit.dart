@@ -25,17 +25,17 @@ class CorsCubit extends Cubit<CorsState>
 
   Future load() async {
     try {
-      gateway = CorsModel.tryFromJson((await repo.findGatewayAddons())['cors']);
-      emit(CorsLoadedState());
+      gateway = (await repo.gatewayAddons()).cors;
+      emit(CorsLoadedOkState());
     } on Exception catch (exc) {
       //the panel just doesn't show it: the next load or save fixes it
-      emit(CorsLoadErrorState(ExceptionConverter.parse(exc)));
+      emit(CorsLoadingErrorState(ExceptionConverter.parse(exc)));
     }
   }
 
   void closeEnvInfo() {
     envInfoClosed = true;
-    emit(CorsLoadedState());
+    emit(CorsLoadedOkState());
   }
 
   ///creates ([CorsAction.added]) or replaces it; [route] null = the gateway's
@@ -73,11 +73,11 @@ class CorsCubit extends Cubit<CorsState>
       emit(CorsSavingState());
       final saved = await call();
       if (route == null) gateway = saved;
-      emit(CorsSaveOkState(route: route, action: action));
+      emit(CorsSavedOkState(route: route, action: action));
       return null;
     } on Exception catch (exc) {
       final error = ExceptionConverter.parse(exc);
-      emit(CorsSaveErrorState(error, route: route, action: action));
+      emit(CorsSavingErrorState(error, route: route, action: action));
       //someone else may have changed it meanwhile: show what's there now
       if (route == null && error.type != GlobalExceptionType.validation) {
         load();
@@ -91,44 +91,44 @@ abstract class CorsState {
   const CorsState();
 }
 
-class CorsInitialState extends CorsState {
+final class CorsInitialState extends CorsState {
   const CorsInitialState();
 }
 
-class CorsLoadedState extends CorsState {
-  CorsLoadedState();
+final class CorsLoadedOkState extends CorsState {
+  CorsLoadedOkState();
 }
 
-class CorsLoadErrorState extends CorsState {
+final class CorsLoadingErrorState extends CorsState {
   final GlobalException exception;
 
-  CorsLoadErrorState(this.exception);
+  CorsLoadingErrorState(this.exception);
 }
 
-class CorsSavingState extends CorsState {
+final class CorsSavingState extends CorsState {
   CorsSavingState();
 }
 
-class CorsSaveOkState extends CorsState {
+final class CorsSavedOkState extends CorsState {
   ///null when it was the gateway's
   final RouteModel? route;
   final CorsAction action;
 
-  CorsSaveOkState({required this.route, required this.action});
+  CorsSavedOkState({required this.route, required this.action});
 }
 
-class CorsSaveErrorState extends CorsState {
+final class CorsSavingErrorState extends CorsState {
   final GlobalException exception;
   final RouteModel? route;
 
   ///a failed save is shown in the block itself (the 400s say why); the rest as a toast
   final CorsAction action;
 
-  CorsSaveErrorState(this.exception, {required this.action, this.route});
+  CorsSavingErrorState(this.exception, {required this.action, this.route});
 
   bool get shownInBlock =>
       action == CorsAction.saved ||
       exception.type == GlobalExceptionType.validation;
 
-  String get message => exception.message;
+  String get message => exception.intlMessage;
 }

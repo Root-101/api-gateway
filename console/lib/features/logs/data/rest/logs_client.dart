@@ -7,7 +7,7 @@ class LogsClient extends BaseClient {
 
   LogsClient(super.dio);
 
-  Future<HttpLogSearchResponse> findAll({
+  Future<HttpLogSearchResponse> search({
     required HttpLogSearchRequest search,
   }) async {
     Response rawResponse = await dio.get(
@@ -19,6 +19,7 @@ class LogsClient extends BaseClient {
   }
 }
 
+//------------------ HTTP LOG SEARCH REQUEST ------------------\\
 class HttpLogSearchRequest {
   final int page;
   final int? size;
@@ -57,6 +58,7 @@ class HttpLogSearchRequest {
   }
 }
 
+//------------------ HTTP LOG SEARCH RESPONSE ------------------\\
 class HttpLogSearchResponse {
   final int page;
   final int size;
@@ -90,6 +92,7 @@ class HttpLogSearchResponse {
   }
 }
 
+//------------------ HTTP LOG RESPONSE ------------------\\
 class HttpLogResponse {
   final String id;
   final String sourceIp;
@@ -131,6 +134,7 @@ class HttpLogResponse {
   }
 }
 
+//------------------ ROUTE LOG RESPONSE ------------------\\
 class RouteLogResponse {
   final String routeId;
   final String routeName;

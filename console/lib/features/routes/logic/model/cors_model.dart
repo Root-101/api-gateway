@@ -1,6 +1,3 @@
-import 'package:console/app_exporter.dart';
-import 'package:flutter/widgets.dart';
-
 ///CORS add-on of a route or of the whole gateway: which browser origins may call it, and (routes
 ///only) whether they may send cookies. The gateway's is always there, can't be turned off and has
 ///no credentials; a route without its own, or with it off, uses the gateway's
@@ -27,29 +24,6 @@ class CorsModel {
     allowCredentials: allowCredentials,
     envVar: envVar,
   );
-
-  ///null when it isn't configured (`cors: null`) or can't be (no key)
-  static CorsModel? tryFromJson(dynamic json) {
-    if (json is! Map ||
-        json['enabled'] is! bool ||
-        json['allowed_origins'] is! List) {
-      return null;
-    }
-    return CorsModel(
-      enabled: json['enabled'] as bool,
-      allowedOrigins: (json['allowed_origins'] as List)
-          .whereType<String>()
-          .toList(),
-      allowCredentials: json['allow_credentials'] == true,
-      envVar: CorsEnvVar.tryFromJson(json['env_var']),
-    );
-  }
-
-  Map<String, dynamic> toJson() => {
-    'enabled': enabled,
-    'allowed_origins': allowedOrigins,
-    'allow_credentials': allowCredentials,
-  };
 }
 
 ///the deprecated env var the gateway's CORS was seeded from; read at startup only, so it stays
@@ -66,20 +40,6 @@ class CorsEnvVar {
     required this.origins,
     required this.matches,
   });
-
-  ///null when it isn't set, or on a gateway that doesn't send it
-  static CorsEnvVar? tryFromJson(dynamic json) {
-    if (json is! Map || json['matches'] is! bool) return null;
-    return CorsEnvVar(
-      name: json['name'] is String
-          ? json['name'] as String
-          : 'CORS_ALLOWED_ORIGINS',
-      origins: json['origins'] is List
-          ? (json['origins'] as List).whereType<String>().toList()
-          : const [],
-      matches: json['matches'] as bool,
-    );
-  }
 }
 
 ///`*`, or `scheme://host[:port]` with `*` wildcards and no path: what the api accepts. Checked on
@@ -117,14 +77,3 @@ bool corsAllows(List<String> patterns, String origin) => patterns.any((p) {
       .join(r'(:\d+)?');
   return RegExp('^$regex\$', caseSensitive: false).hasMatch(origin);
 });
-
-///its origins in a few characters: `ALL` for `*`, the origin when there's one, else how many
-String corsShort(BuildContext context, CorsModel cors) {
-  final intl = context.intl.cors;
-  final origins = cors.allowedOrigins;
-  if (origins.any(corsAllowsAll)) return intl.all;
-  if (origins.length == 1) {
-    return origins.first.replaceFirst(RegExp(r'^[a-z]+://'), '');
-  }
-  return intl.originsCount(count: origins.length);
-}

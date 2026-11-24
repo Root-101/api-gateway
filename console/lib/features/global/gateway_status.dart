@@ -4,14 +4,14 @@ import 'package:console/app_exporter.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-class GatewayStatus {
+class GatewayStatusState {
   final bool offline;
   final bool retrying;
 
   ///last time the gateway answered, shown in the offline banner
   final DateTime? lastLoadedAt;
 
-  const GatewayStatus({
+  const GatewayStatusState({
     this.offline = false,
     this.retrying = false,
     this.lastLoadedAt,
@@ -19,29 +19,30 @@ class GatewayStatus {
 }
 
 ///offline banner state: any unanswered request turns it on, the next answer turns it off
-class GatewayStatusCubit extends Cubit<GatewayStatus> {
+class GatewayStatusCubit extends Cubit<GatewayStatusState>
+    with GlobalEventBusCommunication<GatewayStatusState> {
   static const Duration retryEvery = Duration(seconds: 10);
 
   final Future<bool> Function() ping;
   Timer? _timer;
 
-  GatewayStatusCubit({required this.ping}) : super(const GatewayStatus());
+  GatewayStatusCubit({required this.ping}) : super(const GatewayStatusState());
 
   void markOnline() {
     _timer?.cancel();
-    emit(GatewayStatus(lastLoadedAt: DateTime.now()));
+    emit(GatewayStatusState(lastLoadedAt: DateTime.now()));
   }
 
   void markOffline() {
     if (state.offline) return;
-    emit(GatewayStatus(offline: true, lastLoadedAt: state.lastLoadedAt));
+    emit(GatewayStatusState(offline: true, lastLoadedAt: state.lastLoadedAt));
     _timer = Timer.periodic(retryEvery, (_) => retry());
   }
 
   Future<void> retry() async {
     if (!state.offline || state.retrying) return;
     emit(
-      GatewayStatus(
+      GatewayStatusState(
         offline: true,
         retrying: true,
         lastLoadedAt: state.lastLoadedAt,
@@ -51,13 +52,13 @@ class GatewayStatusCubit extends Cubit<GatewayStatus> {
     if (up) {
       markOnline();
     } else if (state.offline) {
-      emit(GatewayStatus(offline: true, lastLoadedAt: state.lastLoadedAt));
+      emit(GatewayStatusState(offline: true, lastLoadedAt: state.lastLoadedAt));
     }
   }
 
   void reset() {
     _timer?.cancel();
-    emit(const GatewayStatus());
+    emit(const GatewayStatusState());
   }
 
   @override

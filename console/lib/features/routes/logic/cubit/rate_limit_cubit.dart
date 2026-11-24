@@ -25,13 +25,13 @@ class RateLimitCubit extends Cubit<RateLimitState>
 
   Future load() async {
     try {
-      final addons = await repo.findGatewayAddons();
-      gatewayCanHave = addons.containsKey('rate_limit');
-      gateway = RateLimitModel.tryFromJson(addons['rate_limit']);
-      emit(RateLimitLoadedState());
+      final addons = await repo.gatewayAddons();
+      gatewayCanHave = addons.rateLimitSupported;
+      gateway = addons.rateLimit;
+      emit(RateLimitLoadedOkState());
     } on Exception catch (exc) {
       //the panel just doesn't show it: the next load or save fixes it
-      emit(RateLimitLoadErrorState(ExceptionConverter.parse(exc)));
+      emit(RateLimitLoadingErrorState(ExceptionConverter.parse(exc)));
     }
   }
 
@@ -72,11 +72,11 @@ class RateLimitCubit extends Cubit<RateLimitState>
       emit(RateLimitSavingState());
       final saved = await call();
       if (route == null) gateway = saved;
-      emit(RateLimitSaveOkState(route: route, action: action));
+      emit(RateLimitSavedOkState(route: route, action: action));
       return null;
     } on Exception catch (exc) {
       final error = ExceptionConverter.parse(exc);
-      emit(RateLimitSaveErrorState(error, route: route));
+      emit(RateLimitSavingErrorState(error, route: route));
       //someone else may have changed it meanwhile (a 404): show what's there now
       if (route == null && error.type != GlobalExceptionType.validation) {
         load();
@@ -90,44 +90,44 @@ abstract class RateLimitState {
   const RateLimitState();
 }
 
-class RateLimitInitialState extends RateLimitState {
+final class RateLimitInitialState extends RateLimitState {
   const RateLimitInitialState();
 }
 
-class RateLimitLoadedState extends RateLimitState {
-  RateLimitLoadedState();
+final class RateLimitLoadedOkState extends RateLimitState {
+  RateLimitLoadedOkState();
 }
 
-class RateLimitLoadErrorState extends RateLimitState {
+final class RateLimitLoadingErrorState extends RateLimitState {
   final GlobalException exception;
 
-  RateLimitLoadErrorState(this.exception);
+  RateLimitLoadingErrorState(this.exception);
 }
 
-class RateLimitSavingState extends RateLimitState {
+final class RateLimitSavingState extends RateLimitState {
   RateLimitSavingState();
 }
 
-class RateLimitSaveOkState extends RateLimitState {
+final class RateLimitSavedOkState extends RateLimitState {
   ///null when it was the gateway's
   final RouteModel? route;
   final RateLimitAction action;
 
-  RateLimitSaveOkState({required this.route, required this.action});
+  RateLimitSavedOkState({required this.route, required this.action});
 }
 
-class RateLimitSaveErrorState extends RateLimitState {
+final class RateLimitSavingErrorState extends RateLimitState {
   final GlobalException exception;
   final RouteModel? route;
 
-  RateLimitSaveErrorState(this.exception, {this.route});
+  RateLimitSavingErrorState(this.exception, {this.route});
 
-  ///a 422 names what's wrong in its violations, the rest in the message
+  ///a 422 names what's wrong in its errors, the rest in the message
   String get message {
     final data = exception.data;
     if (data is List<ValidationError> && data.isNotEmpty) {
       return data.map((e) => e.message).join('\n');
     }
-    return exception.message;
+    return exception.intlMessage;
   }
 }

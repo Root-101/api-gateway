@@ -2,9 +2,8 @@ import 'dart:js_interop';
 import 'dart:ui';
 
 import 'package:console/app_exporter.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:go_router/go_router.dart';
 import 'package:logger/logger.dart';
 
@@ -12,10 +11,6 @@ import 'package:logger/logger.dart';
 external void _removeWebSplash();
 
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
-
-/// The Material texts (date picker, tooltips...); the app's own come from `context.intl` (slang)
-const List<LocalizationsDelegate<dynamic>> appLocalizationsDelegates =
-    GlobalMaterialLocalizations.delegates;
 
 //generate code
 //fvm flutter pub run build_runner build --delete-conflicting-outputs
@@ -40,6 +35,10 @@ void main() {
 
   WidgetsFlutterBinding.ensureInitialized();
   RouteConfig.launchLocation = PlatformDispatcher.instance.defaultRouteName;
+  //until LanguageCubit loads the saved one: the browser's language (an unknown one: English)
+  AppIntl.current = AppIntl.resolve(
+    PlatformDispatcher.instance.locale.languageCode,
+  );
   //the html splash (web/index.html) covers the download of the app; Flutter's SplashScreen looks the same
   WidgetsBinding.instance.addPostFrameCallback((_) => _removeWebSplash());
 
@@ -63,7 +62,7 @@ void main() {
         debugShowCheckedModeBanner: false,
         home: Scaffold(
           body: Center(
-            child: SelectableText('Configuration error: $configError'),
+            child: SelectableText(app.intl.app.configError(error: configError)),
           ),
         ),
       ),
@@ -99,10 +98,10 @@ class App extends StatelessWidget {
         if (size.width < 800 || size.height < 400) {
           return MaterialApp(
             debugShowCheckedModeBanner: false,
-            theme: ThemeConfig.theme,
+            theme: AppTheme.dark,
             locale: locale,
-            localizationsDelegates: appLocalizationsDelegates,
-            supportedLocales: appSupportedLocales,
+            localizationsDelegates: AppIntl.delegates,
+            supportedLocales: AppIntl.supportedLocales,
             builder: (context, child) => Scaffold(
               body: Center(child: Text(context.intl.app.needMoreSpace)),
             ),
@@ -111,12 +110,12 @@ class App extends StatelessWidget {
           return MaterialApp.router(
             debugShowCheckedModeBanner: false,
             onGenerateTitle: (context) => context.intl.app.name,
-            theme: ThemeConfig.theme,
+            theme: AppTheme.dark,
             locale: locale,
             routerConfig: RouteConfig.router,
             builder: (context, child) => ToastHost(child: child!),
-            localizationsDelegates: appLocalizationsDelegates,
-            supportedLocales: appSupportedLocales,
+            localizationsDelegates: AppIntl.delegates,
+            supportedLocales: AppIntl.supportedLocales,
           );
         }
       },
@@ -139,12 +138,8 @@ class AppGlobal {
 
   TextTheme get textTheme => theme.textTheme;
 
-  /// Texts of the app's language; without a navigator yet (or in unit tests) the base ones (`en`).
-  /// The caller does not rebuild on a language change: use `context.intl` for what is on screen behind the selector
-  AppMessages get intl {
-    final context = navigatorKey.currentContext;
-    return context != null ? context.intl : messagesOf(const Locale('en'));
-  }
+  /// Texts of the current language (`AppIntl`); widgets use `context.intl` to rebuild on a language change
+  AppTexts get intl => AppIntl.texts;
 
   //the default filter is silent in release builds, where errors must still reach the console
   Logger logger = Logger(filter: ProductionFilter(), level: Level.warning);
@@ -155,15 +150,13 @@ class AppGlobal {
 
   NavigatorHelper navigator = NavigatorHelper();
 
-  AppDimensions dimensions = AppDimensions();
-
   AppColors colors = AppColors();
 
   AppAssets assets = AppAssets();
 
   DateFormatter dateFormatter = DateFormatter();
 
-  SnackBarAdapter snack = SnackBarAdapter();
+  AppToast toast = AppToast();
 
   DialogHelper dialog = DialogHelper();
 

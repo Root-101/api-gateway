@@ -2,24 +2,24 @@ name: console
 description: "Front-End for Api-Gateway project"
 publish_to: 'none'
 
-version: 6.1.2
+version: 6.2.0
 
 environment:
-  flutter: ^3.47.0
-  sdk: ^3.13.0
+  flutter: ^3.50.0
+  sdk: ^3.14.0
 
 dependencies:
   flutter:
     sdk: flutter
-  flutter_localizations:
-    sdk: flutter
+  #material widgets, out of the flutter sdk since 3.47 (material.dart is deprecated)
+  material_ui: 1.11.1
 
   #state management & dependency injection
   flutter_bloc: 9.1.1
   get: 4.7.3
 
   #routing
-  go_router: 18.1.3
+  go_router: 18.1.4
 
   #rest client
   dio: 5.11.1
@@ -27,14 +27,14 @@ dependencies:
   #view
   flutter_animate: 4.5.2
   gap: 3.1.0    #sizebox with auto with and height in columns and rows
-  flutter_svg: 2.3.2    #to show icons in svg format
+  flutter_svg: 2.5.0    #to show icons in svg format
   flutter_dropzone: 4.2.1       #for drop files in restore routes
   flutter_secure_storage: 11.2.0       #for the remember-me in login
 
   #utils
   logger: 2.8.0
   intl: 0.20.3
-  #texts generated from lib/l10n/*.i18n.yaml (`fvm dart run slang`)
+  #texts generated from lib/i18n/*.i18n.yaml (`fvm dart run slang`)
   slang: 4.19.2
   web: 1.1.2
 
@@ -75,57 +75,13 @@ flutter:
         - asset: assets/fonts/DMMono/DMMono-Medium.ttf
           weight: 500
     - family: DMSans
+      #only the weights the console uses, no italics
       fonts:
-        - asset: assets/fonts/DMSans/DMSans-Thin.ttf
-          weight: 100
-        - asset: assets/fonts/DMSans/DMSans-ThinItalic.ttf
-          weight: 100
-          style: italic
-
-        - asset: assets/fonts/DMSans/DMSans-ExtraLight.ttf
-          weight: 200
-        - asset: assets/fonts/DMSans/DMSans-ExtraLightItalic.ttf
-          weight: 200
-          style: italic
-
-        - asset: assets/fonts/DMSans/DMSans-Light.ttf
-          weight: 300
-        - asset: assets/fonts/DMSans/DMSans-LightItalic.ttf
-          weight: 300
-          style: italic
-
         - asset: assets/fonts/DMSans/DMSans-Regular.ttf
           weight: 400
-        - asset: assets/fonts/DMSans/DMSans-Italic.ttf
-          weight: 400
-          style: italic
-
         - asset: assets/fonts/DMSans/DMSans-Medium.ttf
           weight: 500
-        - asset: assets/fonts/DMSans/DMSans-MediumItalic.ttf
-          weight: 500
-          style: italic
-
         - asset: assets/fonts/DMSans/DMSans-SemiBold.ttf
           weight: 600
-        - asset: assets/fonts/DMSans/DMSans-SemiBoldItalic.ttf
-          weight: 600
-          style: italic
-
         - asset: assets/fonts/DMSans/DMSans-Bold.ttf
           weight: 700
-        - asset: assets/fonts/DMSans/DMSans-BoldItalic.ttf
-          weight: 700
-          style: italic
-
-        - asset: assets/fonts/DMSans/DMSans-ExtraBold.ttf
-          weight: 800
-        - asset: assets/fonts/DMSans/DMSans-ExtraBoldItalic.ttf
-          weight: 800
-          style: italic
-
-        - asset: assets/fonts/DMSans/DMSans-Black.ttf
-          weight: 900
-        - asset: assets/fonts/DMSans/DMSans-BlackItalic.ttf
-          weight: 900
-          style: italic

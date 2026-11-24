@@ -18,7 +18,7 @@ import java.util.stream.Stream;
 
 /**
  * Every validation of every request object, one broken field per row, on every endpoint that takes it.
- * Each row pins the `fieldName` and the message a client gets (the output of the annotations and of the route
+ * Each row pins the `pointer`, the `code` and the `detail` a client gets (the output of the annotations and of the route
  * rules), and that it is the only violation. These rows are not mutated (see CONTRIBUTING, mutation testing).
  */
 class ValidationIT extends IntegrationTest {
@@ -27,6 +27,22 @@ class ValidationIT extends IntegrationTest {
     private static final String SIZE = "Size must be between 0 and 255";
 
     private static final String LONG = "x".repeat(256);
+
+    //the `code` of each message of the rows
+    private static final Map<String, String> CODES = Map.of(
+            BLANK, "not-blank",
+            SIZE, "size",
+            "Must be a valid URL", "url",
+            "Must start with /", "route.path-without-leading-slash",
+            "Must be a valid path pattern", "route.invalid-path",
+            "Must not have a path, use rewrite_path to add a prefix", "route.uri-with-path",
+            "Must be a valid regular expression", "route.invalid-replace-from"
+    );
+
+    //`rewrite_path.replace_from` -> `#/rewrite_path/replace_from`, `#/0/...` in a list body
+    private static String pointer(String field, boolean list) {
+        return (list ? "#/0/" : "#/") + field.replace('.', '/');
+    }
 
     /**
      * A valid route as JSON, so a field can be removed (null) or set to anything
@@ -95,7 +111,7 @@ class ValidationIT extends IntegrationTest {
     }
 
     /**
-     * The lists (`batch`, `PUT /routes`) name the field with its index: `[0].name`. The id of `PUT /routes/{id}`
+     * The lists (`batch`, `PUT /routes`) point to the field with its index: `#/0/name`. The id of `PUT /routes/{id}`
      * doesn't exist: the body is checked first. Nothing is saved, so `PUT /routes` replaces nothing.
      */
     @ParameterizedTest(name = "{0} {1}={2}")
@@ -112,9 +128,11 @@ class ValidationIT extends IntegrationTest {
                 .expectStatus().isEqualTo(HttpStatus.UNPROCESSABLE_CONTENT)
                 .expectHeader().contentType(MediaType.APPLICATION_PROBLEM_JSON)
                 .expectBody()
-                .jsonPath("$.violations.length()").isEqualTo(1)
-                .jsonPath("$.violations[0].fieldName").isEqualTo((list ? "[0]." : "") + field)
-                .jsonPath("$.violations[0].message").isEqualTo(message);
+                .jsonPath("$.code").isEqualTo("validation")
+                .jsonPath("$.errors.length()").isEqualTo(1)
+                .jsonPath("$.errors[0].pointer").isEqualTo(pointer(field, list))
+                .jsonPath("$.errors[0].code").isEqualTo(CODES.get(message))
+                .jsonPath("$.errors[0].detail").isEqualTo(message);
 
         assertNotSaved(route);
     }
@@ -137,12 +155,42 @@ class ValidationIT extends IntegrationTest {
                 .exchange()
                 .expectStatus().isEqualTo(HttpStatus.UNPROCESSABLE_CONTENT)
                 .expectBody()
-                .jsonPath("$.violations.length()").isEqualTo(5)
-                .jsonPath("$.violations[?(@.fieldName == 'name')]").exists()
-                .jsonPath("$.violations[?(@.fieldName == 'path')]").exists()
-                .jsonPath("$.violations[?(@.fieldName == 'uri')]").exists()
-                .jsonPath("$.violations[?(@.fieldName == 'rewrite_path.replace_from')]").exists()
-                .jsonPath("$.violations[?(@.fieldName == 'rewrite_path.replace_to')]").exists();
+                .jsonPath("$.errors.length()").isEqualTo(5)
+                .jsonPath("$.errors[?(@.pointer == '#/name')]").exists()
+                .jsonPath("$.errors[?(@.pointer == '#/path')]").exists()
+                .jsonPath("$.errors[?(@.pointer == '#/uri')]").exists()
+                .jsonPath("$.errors[?(@.pointer == '#/rewrite_path/replace_from')]").exists()
+                .jsonPath("$.errors[?(@.pointer == '#/rewrite_path/replace_to')]").exists();
+    }
+
+    /**
+     * The whole `errors` of a 422, in its stable order: by pointer, then the missing-value rule first, with the
+     * limits of each rule in `params`.
+     * Se espera: `#/name` (not-blank), `#/rewrite_path/replace_from` (size, with min and max), `#/uri` (url).
+     */
+    @Test
+    @SuppressWarnings("unchecked")
+    void errorsOutputIsPinned() {
+        Map<String, Object> route = routeWith("name", "");
+        route.put("uri", "not a url");
+        ((Map<String, Object>) route.get("rewrite_path")).put("replace_from", "/" + LONG);
+        admin(HttpMethod.POST, "/routes/validate")
+                .bodyValue(route)
+                .exchange()
+                .expectStatus().isEqualTo(HttpStatus.UNPROCESSABLE_CONTENT)
+                .expectBody()
+                .jsonPath("$.code").isEqualTo("validation")
+                .jsonPath("$.errors.length()").isEqualTo(3)
+                .jsonPath("$.errors[0].pointer").isEqualTo("#/name")
+                .jsonPath("$.errors[0].code").isEqualTo("not-blank")
+                .jsonPath("$.errors[0].params").isEmpty()
+                .jsonPath("$.errors[1].pointer").isEqualTo("#/rewrite_path/replace_from")
+                .jsonPath("$.errors[1].code").isEqualTo("size")
+                .jsonPath("$.errors[1].params.min").isEqualTo(0)
+                .jsonPath("$.errors[1].params.max").isEqualTo(255)
+                .jsonPath("$.errors[2].pointer").isEqualTo("#/uri")
+                .jsonPath("$.errors[2].code").isEqualTo("url")
+                .jsonPath("$.errors[2].detail").isEqualTo("Must be a valid URL");
     }
 
     /**
@@ -203,8 +251,9 @@ class ValidationIT extends IntegrationTest {
                 .expectStatus().isEqualTo(HttpStatus.UNPROCESSABLE_CONTENT)
                 .expectHeader().contentType(MediaType.APPLICATION_PROBLEM_JSON)
                 .expectBody()
-                .jsonPath("$.violations.length()").isEqualTo(1)
-                .jsonPath("$.violations[0].fieldName").isEqualTo(field)
-                .jsonPath("$.violations[0].message").isEqualTo(BLANK);
+                .jsonPath("$.errors.length()").isEqualTo(1)
+                .jsonPath("$.errors[0].pointer").isEqualTo(pointer(field, false))
+                .jsonPath("$.errors[0].code").isEqualTo("not-blank")
+                .jsonPath("$.errors[0].detail").isEqualTo(BLANK);
     }
 }

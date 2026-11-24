@@ -42,7 +42,7 @@ class GlobalEventBus {
 
   final StreamController<dynamic> _controller = StreamController.broadcast();
 
-  void fire(event) => _controller.add(event);
+  void fire(dynamic event) => _controller.add(event);
 
   Stream<T> on<T>() =>
       _controller.stream.where((event) => event is T).cast<T>();

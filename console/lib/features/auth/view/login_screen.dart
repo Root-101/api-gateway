@@ -1,6 +1,5 @@
 import 'package:console/app_exporter.dart';
-import 'package:console/features/language/view/language_widget.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
@@ -12,6 +11,12 @@ class LoginScreenNavigator {
   Widget builder(BuildContext context, GoRouterState state) {
     return const LoginScreen();
   }
+
+  void go() => app.navigator.go(name);
+
+  List<RouteBase> routes({List<RouteBase> children = const []}) => [
+    GoRoute(name: name, path: path, builder: builder, routes: children),
+  ];
 
   void neglectGo() {
     Router.neglect(app.context, () {
@@ -92,9 +97,11 @@ class _LoginScreenState extends State<LoginScreen> {
     } else if (state is AuthLoginErrorState) {
       setState(() {
         _signingIn = false;
-        _wrongCredentials = state.exception.type == GlobalExceptionType.auth;
+        _wrongCredentials = state.exception.hasCode(
+          ApiErrorCode.wrongCredentials,
+        );
       });
-      app.snack.showError(message: state.exception.message);
+      app.toast.error(state.exception.intlMessage);
       app.logger.e(state.exception.toString());
     }
   }

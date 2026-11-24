@@ -16,20 +16,68 @@ How to run each one locally is in the [README](README.md#locally).
 
 ## How the code is organized
 
-- **Gateway:** a feature is `features/<name>/` with `rest/` (controllers) → `logic/usecase/` (the
-  logic) → `data/repo/` and `data/entity/`, its request and response models in `logic/model/`; only
-  controllers know about HTTP. Security is in `security/`, cross-cutting config in `config/`.
-  Schema changes are new Flyway migrations (`src/main/resources/db/migration/`), never an edit of
-  an old one.
+- **Gateway:** follows the house Spring service standard (`spring-service-standard`), with the
+  exceptions below. A feature is `core/feature/<name>/` with `rest/` (`{Name}Controller`) →
+  `logic/usecase/` (the `{Name}UseCase` interface and its package-private `{Name}UseCase_Impl`) →
+  `data/repo/` and `data/entity/`, its models in `logic/model/` (`{Name}Request`,
+  `Search{Name}Request`, `{Name}Response` with a static `build(...)`). Controllers only bind, call the
+  use case and return; they inject the interface, never an `_Impl` or a repo. A use case reaches
+  another feature only through its interface. Errors are thrown with `core/error/Errors`
+  (`Errors.notFound("error.route.not-found", id)`); a key is `error.{feature}.{rule}` in kebab-case,
+  `error.{rule}` when shared (`error.conflict`), `status.{code}` for the titles, in both
+  `messages*.properties`. Logs with Lombok's `@Slf4j`, beans by their single
+  constructor (no `@Autowired`). Security is in `security/`, cross-cutting config in `config/`, the
+  languages in `core/i18n/`. Schema changes are new Flyway migrations
+  (`src/main/resources/db/migration/`), never an edit of an old one.
+- **Known exceptions to the standard** (on purpose, never "fixed" without a decision):
+
+  | Standard                                   | Gateway                                                        | Why                                              |
+  |--------------------------------------------|----------------------------------------------------------------|--------------------------------------------------|
+  | webmvc, JPA, `@Transactional`              | WebFlux, R2DBC, `TransactionalOperator`                        | Spring Cloud Gateway is reactive                 |
+  | `{Name}JpaRepo`, Specifications, `clone()` | `{Name}Repo` (`ReactiveCrudRepository`), no `clone()`          | R2DBC has no managed entities                    |
+  | `Long` ids                                 | `UUID` ids, a non-UUID id is a `400`                           | Existing data and API                            |
+  | The `user` as the last parameter           | The `Locale` as the last parameter                             | One admin, no users (DECISIONS 4)                |
+  | Context path `/latest`                     | The admin API under `ADMIN_PATH`, proxied paths at the root    | A gateway can't prefix the paths it proxies      |
+  | Actuator health                            | `GET /{ADMIN_PATH}/health`                                     | Native image weight; deploy templates use it     |
+  | `401` with `WWW-Authenticate`              | No `WWW-Authenticate`                                          | The browser's Basic popup (DECISIONS 9)          |
+  | `POST /{names}/search`                     | `GET /http-logs?…`                                             | DECISIONS 14                                     |
+  | Tests in `it/{Name}ApiTest`                | `*IT` classes                                                  | `build.gradle` splits the tasks by `*IT`         |
+  | Filters and tasks in `core/`               | `core/feature/<name>/filter/` and `task/`                      | In a gateway the filter is the feature           |
+  | Add-ons as flat features                   | `core/feature/addons/<type>/`, the shared parts in `base/`     | DECISIONS 17                                     |
+  | `HttpLogWriter` with one constructor       | Two, the one Spring uses has `@Autowired`                      | Tests build it with a small queue                |
 - **Native image:** a class read by reflection (JSON models, entities, gateway predicates and
   filters) needs its hint in `config/ReflectionConfig.java`; the CI builds the native image and
   runs a smoke test against it, which is where a missing hint shows up.
-- **Console:** a feature is `data/rest` → `data/repo` → `logic/cubit` and `logic/model` → `view`,
-  wired in its `<name>_init.dart`. No user-visible text is hardcoded (`lib/l10n/*.i18n.yaml`, both
-  languages, then `fvm dart run slang`). See [`console/README.md`](console/README.md).
+- **Console:** follows the house Flutter app standard (`flutter-app-standard`), with the exceptions
+  below. A feature is `features/<name>/` with `data/rest/` (the client, which returns `*Response`
+  DTOs and lets `DioException` out) → `data/repo/` (models in and out, `ExceptionConverter.parse`,
+  the mapping as `XResponseToModel` extensions) → `logic/model/` and `logic/cubit/` (states below
+  each cubit, `X<Verb>ingState` / `X<Verb>edOkState` / `X<Verb>ingErrorState`, on the global bus)
+  → `view/`, wired in its `<name>_init.dart`; a singleton cubit also goes into `blocProviders` and
+  `_resetCubits()` of `features_init.dart`. Every screen and dialog opens through its
+  `static final navigator` (`DeleteRouteDialog.navigator.open(route: …)`), screens give their
+  routes to `config/route_config.dart` with `routes()`. Errors are shown with
+  `exception.intlMessage`, decided on with `hasCode(ApiErrorCode.…)`, never on the text. Files import
+  only `app_exporter.dart`; the UI comes from `design_system/` (`app.colors`, `App*` components,
+  `app.toast`). No user-visible text is hardcoded (`lib/i18n/*.i18n.yaml`, both languages, then
+  `fvm dart run slang`). See [`console/README.md`](console/README.md).
+- **Known exceptions of the console** (on purpose):
+
+  | Standard                                       | Console                                                   | Why                                          |
+  |------------------------------------------------|-----------------------------------------------------------|----------------------------------------------|
+  | Tests for every cubit, repo and model          | None                                                      | Tests only in `gateway/` for now             |
+  | `token` param on every call (`accessToken`)    | `AuthInterceptor` adds it and logs out on a `401`         | One admin session                            |
+  | Light theme                                    | Dark only                                                 | The design is dark                           |
+  | `AuthCubit.syncAppLanguage()`                  | The language stays in the browser                         | The gateway has no users                     |
+  | Admin forms in an `AppFormDialog`              | `RoutesFormScreen`, a stepper dialog with its own URL     | The design's three-step form                 |
+  | `app.intl` everywhere                          | `context.intl` in widgets, `app.intl` elsewhere           | Rebuilds the widget on a language change     |
+  | Models without JSON                            | `RouteModel` and the logs' models write the backup files  | The backup is the API's own JSON             |
+  | One version per package                        | Console and gateway share the version                     | They are released together                   |
+  | Sizes and spacing from `app.space`, no magic numbers | Sizes, radii and gaps as literals copied from the design | No spacing scale in the design yet         |
+  | No color outside `AppColors`                   | `Colors.transparent` and `Colors.black` (shadows) in views | Flutter constants, not design colors        |
 - **Both:** JSON keys are `snake_case`. A change to the contract of `/auth`, `/routes` or
   `/http-logs` changes both folders in the same change. Every error goes through
-  `GlobalExceptionHandler` as a Problem Details; don't write an error body anywhere else.
+  `GlobalExceptionHandlerConfig` as a Problem Details; don't write an error body anywhere else.
 - Don't add a dependency for something Java, Spring or Flutter already does.
 
 ## Documentation, in the same change
@@ -63,7 +111,7 @@ that would have caught it.
 The integration tests start the whole gateway on a random port with a real PostgreSQL and a fake
 upstream service (`support/IntegrationTest`), and call it over HTTP like a client: every admin
 endpoint, the proxying and what gets logged. `ValidationIT` has one row per broken field of every
-request object, on every endpoint that takes it, pinning the `fieldName` and the message.
+request object, on every endpoint that takes it, pinning the `pointer`, the `code` and the `detail`.
 
 ### Mutation testing
 

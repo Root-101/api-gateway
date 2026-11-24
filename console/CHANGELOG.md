@@ -1,4 +1,44 @@
 * 6.x:
+    * 6.2.0:
+        * **DATE** :date: : 2026-11-23.
+        * **Code** :broom: : Layout of the house Flutter app standard, no visible change: texts in `lib/i18n/`
+          (`AppIntl`, generated `strings*.g.dart`; `app.intl` without a context, `context.intl` in widgets), the design
+          system in `tokens/`, `theme/` (`AppTheme`), `icons/` and `components/` by kind, one component per file, barrel
+          `design_system.dart`; `lib/shared/` gone (`ErrorPage` in `features/global/`, two unused pages deleted), the
+          shell pieces of `features/base/` in `features/global/`, `view/widget/`, every file imports only
+          `app_exporter.dart`, lints of the standard. Before a language is saved the console starts in the browser's.
+        * **Errors** :warning: : The errors of the standard: `GlobalException` keeps what happened as a `code` and the
+          gateway's `code` (`errorCode`, `hasCode()`, `ApiErrorCode`); the views show `intlMessage`, in the current
+          language even for a network error that happened before a language change. The login tells wrong credentials
+          by the gateway's `auth.wrong-credentials`, not by any `401`. A `422`'s fields are named by their pointer
+          (`rewrite_path/replace_from`), the first error of a field wins. `Accept-Language` by `LanguageHeaderInterceptor`.
+        * **Code** :broom: : Cubits, navigation and toasts as the standard: action states named `X<Verb>ingState` /
+          `X<Verb>edOkState` / `X<Verb>ingErrorState` (`RoutesDeletingState`, `CorsSavedOkState`...) and `final`, every
+          cubit on the global bus with its `reset()`, `blocProviders` and the logout reset in init order. Every dialog
+          opens through its `navigator` (`DeleteRouteDialog.navigator.open(route:)`; the log's details are
+          `LogDetailsDialog`), each screen gives its routes to `route_config.dart` (`routes({children})`, `go()`).
+          `app.toast.success()` / `error()` (`AppToast`) instead of `app.snack`; no toast or `BuildContext` in a cubit or
+          model (the CORS badge text is `CorsModelIntl.short`).
+        * **Code** :broom: : Data layer as the standard: the clients return DTOs only, a `*Request` (what the admin
+          writes) and a `*Response` (what the gateway answers, read-only state included) per add-on, each under its header;
+          the models no longer read or write the API's JSON, the repo maps them (`XResponseToModel` extensions). The
+          gateway's add-ons in one `GatewayAddonsModel`; methods named as the gateway's (`list`, `search`, `details`).
+          `CONTRIBUTING.md` describes the console's layout by the standard, with a table of its known exceptions.
+        * **Cleanup** :wastebasket: : Seven texts nobody showed deleted from both languages. The splash and the
+          `env.js` configuration error in the browser's language (the splash was always English). Every color of the views
+          is a named token of `AppColors` (17 new ones, each for its one use); the two icons drawn in the map's views are
+          in `AppIcons` (`minus`, `web`). Dead code gone: `AppDimensions` (unused radii and paddings), a date helper, two
+          getters. Only the DM Sans weights in use are bundled (400 to 700, no italics): 14 font files fewer.
+        * **Errors** :warning: : Reads the gateway 6.2.0 errors: the `422`'s `errors` (`pointer`, `code`, `detail`) instead
+          of `violations`, shown on the same fields as before. Needs gateway 6.2.0.
+        * **Versions** :arrow_up: : Flutter `3.47.9` → `3.50.1` (Dart `3.14`) in `.fvmrc`, the `Dockerfile` and the CI.
+          Material widgets from the `material_ui` package (`package:flutter/material.dart` is deprecated since 3.47),
+          `flutter_localizations` no longer a direct dependency. Every package on its latest version (`go_router`
+          `18.1.4`, `flutter_svg` `2.5.0`). No lint warnings left.
+        * **Texts** :pencil2: : Spanish slide switches shortened to "Desliza para …" (the handle already shows the
+          direction): the longer ones were cut in the route panel ("Desliza a la izquierda para dejar de co…").
+        * **Texts** :pencil2: : Counts with a singular: "1 caída", "1 ruta lista para restaurar", "Filtros, 1 activo",
+          "1 petición coincide con tu búsqueda", the backup and restore notices (it said "1 caídas" in the routes header).
     * 6.1.2:
         * **DATE** :date: : 2026-11-19.
         * **Version** :bookmark: : Version adjustment to match the gateway, no changes in the console.

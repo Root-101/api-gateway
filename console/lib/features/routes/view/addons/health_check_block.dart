@@ -1,5 +1,5 @@
 import 'package:console/app_exporter.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter/services.dart';
 
 enum _Mode { view, edit, confirm }
@@ -253,7 +253,7 @@ class _HealthCheckBlockState extends State<HealthCheckBlock> {
           onLabel: intl.health.slideOn,
           offLabel: intl.health.slideOff,
           color: c.success,
-          onColor: const Color(0xff0f3a14),
+          onColor: app.colors.successDeep,
           onChanged: _toggle,
         ),
       ],

@@ -1,6 +1,5 @@
 import 'package:console/app_exporter.dart';
-import 'package:console/features/routes/view/form/routes_form_screen.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:go_router/go_router.dart';
 
 class RouteConfig {
@@ -25,71 +24,32 @@ class RouteConfig {
     },
     //unknown url: 404 inside the shell (the guard sends it to login when logged out)
     onException: (context, state, router) =>
-        router.go(NotFoundScreen.location(state.uri.toString())),
+        router.go(NotFoundScreen.navigator.location(state.uri.toString())),
     routes: [
       StatefulShellRoute.indexedStack(
         builder: (context, state, navigationShell) {
           return BaseScreen(navigationShell);
         },
         branches: [
+          ///   /map (start screen)
+          StatefulShellBranch(routes: GatewayMapScreen.navigator.routes()),
+
+          ///   /routes, /routes/:id/edit
           StatefulShellBranch(
-            routes: <RouteBase>[
-              ///   /map (start screen)
-              GoRoute(
-                name: GatewayMapScreen.navigator.name,
-                path: GatewayMapScreen.navigator.path,
-                builder: GatewayMapScreen.navigator.builder,
-              ),
-            ],
+            routes: RoutesScreen.navigator.routes(
+              children: RoutesFormScreen.navigator.routes(),
+            ),
           ),
-          StatefulShellBranch(
-            routes: <RouteBase>[
-              ///   /routes
-              GoRoute(
-                name: RoutesScreen.navigator.name,
-                path: RoutesScreen.navigator.path,
-                builder: RoutesScreen.navigator.builder,
-                routes: [
-                  ///   /routes/:id/edit (dialog over the whole app, so on the root navigator)
-                  GoRoute(
-                    name: RoutesFormScreen.navigator.editName,
-                    path: RoutesFormScreen.navigator.editPath,
-                    parentNavigatorKey: navigatorKey,
-                    pageBuilder: RoutesFormScreen.navigator.editPageBuilder,
-                  ),
-                ],
-              ),
-            ],
-          ),
-          StatefulShellBranch(
-            routes: <RouteBase>[
-              ///   /logs
-              GoRoute(
-                name: LogsScreen.navigator.name,
-                path: LogsScreen.navigator.path,
-                builder: LogsScreen.navigator.builder,
-              ),
-            ],
-          ),
-          StatefulShellBranch(
-            routes: <RouteBase>[
-              ///   /not-found
-              GoRoute(
-                path: NotFoundScreen.path,
-                builder: (context, state) => NotFoundScreen(
-                  requested: state.uri.queryParameters['path'] ?? '',
-                ),
-              ),
-            ],
-          ),
+
+          ///   /logs
+          StatefulShellBranch(routes: LogsScreen.navigator.routes()),
+
+          ///   /not-found
+          StatefulShellBranch(routes: NotFoundScreen.navigator.routes()),
         ],
       ),
       //---------------- LOGIN ----------------\\
-      GoRoute(
-        name: LoginScreen.navigator.name,
-        path: LoginScreen.navigator.path,
-        builder: LoginScreen.navigator.builder,
-      ),
+      ...LoginScreen.navigator.routes(),
     ],
   );
 }

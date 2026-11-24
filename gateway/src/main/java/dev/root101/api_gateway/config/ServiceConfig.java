@@ -1,16 +1,16 @@
 package dev.root101.api_gateway.config;
 
+import lombok.extern.slf4j.Slf4j;
 import tools.jackson.databind.DeserializationFeature;
 import tools.jackson.databind.PropertyNamingStrategies;
 import tools.jackson.databind.json.JsonMapper;
 import tools.jackson.databind.cfg.DateTimeFeature;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.cloud.gateway.filter.headers.TrustedProxies;
 import org.springframework.context.event.EventListener;
 import org.hibernate.validator.messageinterpolation.ResourceBundleMessageInterpolator;
+import dev.root101.api_gateway.core.i18n.I18n;
 import org.springframework.context.MessageSource;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -26,10 +26,9 @@ import org.springframework.validation.beanvalidation.MessageSourceResourceBundle
  * - ObjectMapper
  * - Validation Service
  */
+@Slf4j
 @Configuration
 public class ServiceConfig {
-
-    private static final Logger log = LoggerFactory.getLogger(ServiceConfig.class);
 
     @Value("${spring.r2dbc.password}")
     private String dbPassword;

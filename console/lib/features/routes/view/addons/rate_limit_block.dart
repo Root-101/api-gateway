@@ -1,5 +1,5 @@
 import 'package:console/app_exporter.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter/services.dart';
 
 enum _Mode { view, edit, confirm }
@@ -190,7 +190,7 @@ class _RateLimitBlockState extends State<RateLimitBlock> {
       onLabel: intl.slideOn,
       offLabel: intl.slideOff,
       color: c.info,
-      onColor: const Color(0xff0b2b45),
+      onColor: app.colors.infoDeep,
       onChanged: _toggle,
     );
   }

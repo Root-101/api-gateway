@@ -1,5 +1,5 @@
 import 'package:console/app_exporter.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 ///where the admin credentials come from, under the login and the session expired dialog
 class CredentialsHint extends StatelessWidget {

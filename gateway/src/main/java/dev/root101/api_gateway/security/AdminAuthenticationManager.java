@@ -1,9 +1,7 @@
 package dev.root101.api_gateway.security;
 
-import dev.root101.api_gateway.config.LocalizedException;
-import org.springframework.http.HttpStatus;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
+import dev.root101.api_gateway.core.error.Errors;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.ReactiveAuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -20,10 +18,9 @@ import java.util.Base64;
 import java.util.Collection;
 import java.util.Collections;
 
+@Slf4j
 @Component
 public class AdminAuthenticationManager implements ReactiveAuthenticationManager {
-
-    private static final Logger log = LoggerFactory.getLogger(AdminAuthenticationManager.class);
 
     private final String adminUsername;
 
@@ -69,17 +66,17 @@ public class AdminAuthenticationManager implements ReactiveAuthenticationManager
         try {
             values = new String(Base64.getDecoder().decode(base64Credentials.trim()), StandardCharsets.UTF_8).split(":", 2);
         } catch (IllegalArgumentException e) {//not valid base64
-            return Mono.error(new LocalizedException(HttpStatus.UNAUTHORIZED, "auth.invalid_basic"));
+            return Mono.error(Errors.unauthorized("error.auth.invalid-basic"));
         }
 
         if (values.length == 2 && values[0] != null && values[1] != null && !values[0].isBlank() && !values[1].isBlank()) {
             if (matches(values[0], values[1])) {
                 return Mono.just(adminAuthentication());
             } else {
-                return Mono.error(new LocalizedException(HttpStatus.UNAUTHORIZED, "auth.wrong_credentials"));
+                return Mono.error(Errors.unauthorized("error.auth.wrong-credentials"));
             }
         } else {
-            return Mono.error(new LocalizedException(HttpStatus.UNAUTHORIZED, "auth.invalid_basic"));
+            return Mono.error(Errors.unauthorized("error.auth.invalid-basic"));
         }
     }
 

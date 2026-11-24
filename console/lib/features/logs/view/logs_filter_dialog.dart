@@ -1,5 +1,5 @@
 import 'package:console/app_exporter.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter/services.dart';
 
 typedef FilterCallback = void Function({
@@ -20,8 +20,8 @@ const List<String> httpMethods = [
   'OPTIONS',
 ];
 
-class LogsFilterDialog extends StatefulWidget {
-  static void show({
+class LogsFilterDialogNavigator {
+  void open({
     required LogsSearchFilters filters,
     required FilterCallback callback,
     required List<RouteLogModel> routes,
@@ -34,6 +34,11 @@ class LogsFilterDialog extends StatefulWidget {
       ),
     );
   }
+}
+
+class LogsFilterDialog extends StatefulWidget {
+  static final LogsFilterDialogNavigator navigator =
+      LogsFilterDialogNavigator();
 
   final LogsSearchFilters filters;
   final FilterCallback callback;
@@ -142,7 +147,7 @@ class _LogsFilterDialogState extends State<LogsFilterDialog> {
           hintStyle: monoStyle(weight: FontWeight.w500, color: c.textTertiary),
           semanticCounterText: context.intl.logFilters.exactCode,
           filled: true,
-          fillColor: selected ? c.selected : const Color(0xff0f0d16),
+          fillColor: selected ? c.selected : app.colors.fieldDeep,
           contentPadding: const EdgeInsets.symmetric(horizontal: 8),
           enabledBorder: border,
           focusedBorder: border.copyWith(

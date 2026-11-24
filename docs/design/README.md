@@ -18,7 +18,9 @@ the language stay only in the canvas.
 One Claude Design canvas, "API Gateway Console": https://claude.ai/artifact/JJsr56r92JUPHJqwdZqFfw.
 Its pages are **Screens** (a replica of every screen and state of the console, all driven by one
 artboard, `Prototype`, and its props) and **Visual identity** (the identity sheet, the app icon
-and the identity image).
+and the identity image). On **Screens** each row is one screen (access, gateway map, routes, HTTP
+logs, states) with its dialogs to the right; each artboard has a `language` tweak (English or
+Español, with the console's own texts) and its states as tweaks. The export is in English.
 
 ## Keeping it up to date
 
@@ -38,7 +40,7 @@ built with the canvas until they match** (a new screen, URL or action gets its s
    (`tool/support.js` stands in for the canvas runtime: it runs each artboard's `renderVals()`
    with its default props, with animations off) and rewrites `screens/`, `brand/images/` and the
    PDF. A new screen goes into `SCREENS`; a shot of an artboard in another state passes its props
-   in the query (`state=error`, `mode=edit`, `menu=true`).
+   in the query, as the tweak shows it (`state=Wrong%20credentials`, `mode=edit`, `menu=true`).
 3. Look at the result and commit it with the change.
 
 The SVGs in `brand/` are kept by hand, with the values of the canvas's `AppIcon` artboard.

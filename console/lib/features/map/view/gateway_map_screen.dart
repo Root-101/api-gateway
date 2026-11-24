@@ -1,7 +1,7 @@
 import 'dart:math';
 
 import 'package:console/app_exporter.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
@@ -13,6 +13,12 @@ class GatewayMapScreenNavigator {
   Widget builder(BuildContext context, GoRouterState state) {
     return const GatewayMapScreen();
   }
+
+  void go() => app.navigator.go(name);
+
+  List<RouteBase> routes({List<RouteBase> children = const []}) => [
+    GoRoute(name: name, path: path, builder: builder, routes: children),
+  ];
 
   void neglectGo() {
     Router.neglect(app.context, () {
@@ -162,7 +168,7 @@ class _GatewayMapScreenState extends State<GatewayMapScreen>
             builder: (context, _) {
               if (state is RoutesSearchErrorState && !_routes.loaded) {
                 return ErrorPage(
-                  errorMessage: state.exception.message,
+                  errorMessage: state.exception.intlMessage,
                   buttonText: context.intl.actions.tryAgain,
                   onPressed: _routes.search,
                 );
@@ -296,7 +302,7 @@ class _GatewayMapScreenState extends State<GatewayMapScreen>
                   onClose: () => GatewayMapScreen.selected.value = null,
                   onRedirect: (route) {
                     _routes.query.value = route.name;
-                    app.navigator.go(RoutesScreen.navigator.name);
+                    RoutesScreen.navigator.go();
                   },
                 ),
               ),

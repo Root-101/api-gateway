@@ -25,29 +25,6 @@ class RateLimitModel {
     period: period,
     burst: burst,
   );
-
-  ///null when it isn't configured (`rate_limit: null`) or can't be (no key)
-  static RateLimitModel? tryFromJson(dynamic json) {
-    if (json is! Map ||
-        json['enabled'] is! bool ||
-        json['limit'] is! int ||
-        json['period'] is! String) {
-      return null;
-    }
-    return RateLimitModel(
-      enabled: json['enabled'] as bool,
-      limit: json['limit'] as int,
-      period: json['period'] as String,
-      burst: json['burst'] as int?,
-    );
-  }
-
-  Map<String, dynamic> toJson() => {
-    'enabled': enabled,
-    'limit': limit,
-    'period': period,
-    'burst': burst,
-  };
 }
 
 ///"100/min", "20/s", "5000/h"

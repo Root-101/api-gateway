@@ -28,8 +28,9 @@ It allows administrators to:
 * 📜 **View HTTP logs** — Filter, search, and inspect requests passing through the gateway.
 * 🔐 **Authenticate safely** — Login using the same credentials as the gateway admin endpoints.
 
-> ⚡ **Note:** The console shares its version number with the API Gateway. Console `6.1.2` needs gateway `6.1.2` or
-> later (the add-ons use `GET /addons` and the `/addons/...` endpoints of each route and of the gateway).
+> ⚡ **Note:** The console shares its version number with the API Gateway. Console `6.2.0` needs gateway `6.2.0` or
+> later (it reads the errors' `code` and the `422`'s `errors`, and the add-ons use `GET /addons` and the `/addons/...`
+> endpoints of each route and of the gateway).
 
 ---
 
@@ -70,7 +71,7 @@ fvm flutter run -d chrome
 
 ## Flutter<a name="3"></a>
 
-This project is developed using **Flutter**, currently version `3.47.9` (pinned in `.fvmrc` and the `Dockerfile`).
+This project is developed using **Flutter**, currently version `3.50.1` (pinned in `.fvmrc` and the `Dockerfile`).
 
 > 💡 **Note:** Flutter was chosen for rapid development and cross-platform compatibility.
 > As a single developer project, it allows quick updates while maintaining a clean and responsive admin interface.

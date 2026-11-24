@@ -7,7 +7,7 @@ class RoutesClient extends BaseClient {
 
   RoutesClient(super.dio);
 
-  Future<List<RouteResponse>> findAll() async {
+  Future<List<RouteResponse>> list() async {
     Response rawResponse = await dio.get(baseUrl);
 
     return rawResponse.data!
@@ -38,7 +38,7 @@ class RoutesClient extends BaseClient {
     await dio.delete('$baseUrl/$routeId');
   }
 
-  Future details({required String routeId}) async {
+  Future<RouteResponse> details({required String routeId}) async {
     Response rawResponse = await dio.get('$baseUrl/$routeId');
     return RouteResponse.fromJson(rawResponse.data! as Map<String, dynamic>);
   }
@@ -48,25 +48,27 @@ class RoutesClient extends BaseClient {
       ? '${Environment.baseApiUrl}/addons'
       : '$baseUrl/$routeId/addons';
 
-  ///the gateway's add-ons: its maintenance, null when it isn't configured
-  Future<MaintenanceEntity?> findGatewayMaintenance() async {
+  ///the gateway's add-ons (`maintenance`, `rate_limit`, `cors`: null = not configured)
+  Future<GatewayAddonsResponse> gatewayAddons() async {
     Response rawResponse = await dio.get(_addons(null));
     final data = rawResponse.data;
-    return MaintenanceEntity.tryFromJson(
-      data is Map ? data['maintenance'] : null,
+    return GatewayAddonsResponse.fromJson(
+      data is Map<String, dynamic> ? data : {},
     );
   }
 
   ///creates or replaces it: 200 with the saved object; 404 when the route doesn't exist, 422 when invalid
-  Future<MaintenanceEntity> putMaintenance({
-    required MaintenanceEntity model,
+  Future<MaintenanceResponse> putMaintenance({
+    required MaintenanceRequest model,
     String? routeId,
   }) async {
     Response rawResponse = await dio.put(
       '${_addons(routeId)}/maintenance',
       data: model.toJson(),
     );
-    return MaintenanceEntity.fromJson(rawResponse.data as Map<String, dynamic>);
+    return MaintenanceResponse.fromJson(
+      rawResponse.data as Map<String, dynamic>,
+    );
   }
 
   ///204, also when there is none; [routeId] null = the gateway's
@@ -75,33 +77,28 @@ class RoutesClient extends BaseClient {
   }
 
   ///idempotent; 404 when it isn't configured
-  Future<MaintenanceEntity> setMaintenanceEnabled({
+  Future<MaintenanceResponse> setMaintenanceEnabled({
     required bool enabled,
     String? routeId,
   }) async {
     Response rawResponse = await dio.post(
       '${_addons(routeId)}/maintenance/${enabled ? 'enable' : 'disable'}',
     );
-    return MaintenanceEntity.fromJson(rawResponse.data as Map<String, dynamic>);
-  }
-
-  ///the gateway's add-ons as sent (`maintenance`, `rate_limit`...: null = not configured)
-  Future<Map<String, dynamic>> findGatewayAddons() async {
-    Response rawResponse = await dio.get(_addons(null));
-    final data = rawResponse.data;
-    return data is Map<String, dynamic> ? data : {};
+    return MaintenanceResponse.fromJson(
+      rawResponse.data as Map<String, dynamic>,
+    );
   }
 
   ///creates or replaces it; 422 fields `enabled`, `limit`, `period`, `burst`
-  Future<RateLimitModel?> putRateLimit({
-    required RateLimitModel model,
+  Future<RateLimitResponse?> putRateLimit({
+    required RateLimitRequest model,
     String? routeId,
   }) async {
     Response rawResponse = await dio.put(
       '${_addons(routeId)}/rate-limit',
       data: model.toJson(),
     );
-    return RateLimitModel.tryFromJson(rawResponse.data);
+    return RateLimitResponse.tryFromJson(rawResponse.data);
   }
 
   ///204, also when there is none; [routeId] null = the gateway's
@@ -110,27 +107,27 @@ class RoutesClient extends BaseClient {
   }
 
   ///keeps the rest; 404 when it isn't configured
-  Future<RateLimitModel?> setRateLimitEnabled({
+  Future<RateLimitResponse?> setRateLimitEnabled({
     required bool enabled,
     String? routeId,
   }) async {
     Response rawResponse = await dio.post(
       '${_addons(routeId)}/rate-limit/${enabled ? 'enable' : 'disable'}',
     );
-    return RateLimitModel.tryFromJson(rawResponse.data);
+    return RateLimitResponse.tryFromJson(rawResponse.data);
   }
 
-  ///creates or replaces it; 422 fields `enabled`, `allowed_origins`, `allowed_origins[i]`; the
+  ///creates or replaces it; 422 fields `enabled`, `allowed_origins`, `allowed_origins/i`; the
   ///rules (credentials with `*`, the gateway's off or with credentials, a console lockout) a 400
-  Future<CorsModel?> putCors({
-    required CorsModel model,
+  Future<CorsResponse?> putCors({
+    required CorsRequest model,
     String? routeId,
   }) async {
     Response rawResponse = await dio.put(
       '${_addons(routeId)}/cors',
       data: model.toJson(),
     );
-    return CorsModel.tryFromJson(rawResponse.data);
+    return CorsResponse.tryFromJson(rawResponse.data);
   }
 
   ///routes only (the gateway's: 405); 204, also when there is none
@@ -139,20 +136,20 @@ class RoutesClient extends BaseClient {
   }
 
   ///routes only (the gateway's: 405); keeps the rest; 404 when it isn't configured
-  Future<CorsModel?> setCorsEnabled({
+  Future<CorsResponse?> setCorsEnabled({
     required bool enabled,
     required String routeId,
   }) async {
     Response rawResponse = await dio.post(
       '${_addons(routeId)}/cors/${enabled ? 'enable' : 'disable'}',
     );
-    return CorsModel.tryFromJson(rawResponse.data);
+    return CorsResponse.tryFromJson(rawResponse.data);
   }
 
   ///creates or replaces it (keeps the last state); 422 fields `enabled`, `path`, `interval_seconds`
   Future putHealthCheck({
     required String routeId,
-    required HealthCheckEntity model,
+    required HealthCheckRequest model,
   }) async {
     await dio.put('${_addons(routeId)}/health-check', data: model.toJson());
   }
@@ -178,12 +175,13 @@ class RoutesClient extends BaseClient {
   }
 }
 
+//------------------ ROUTE REQUEST ------------------\\
 class RouteRequest {
   final String name;
   final String path;
   final String uri;
   //optional in the api: null = no rewrite filter
-  final RewritePathEntity? rewritePath;
+  final RewritePathRequest? rewritePath;
   final String description;
 
   ///only restore (PUT /routes) applies it, as it came in the backup; create, edit and validate ignore it.
@@ -210,18 +208,38 @@ class RouteRequest {
     };
   }
 
+  ///a route of a backup file (the routes as `GET /routes` answers them)
   factory RouteRequest.fromJson(Map<String, dynamic> json) {
+    final rewrite = RewritePathResponse.tryFromJson(json['rewrite_path']);
     return RouteRequest(
       name: json['name'],
       path: json['path'],
       uri: json['uri'],
-      rewritePath: RewritePathEntity.tryFromJson(json['rewrite_path']),
+      rewritePath: rewrite == null
+          ? null
+          : RewritePathRequest(
+              replaceFrom: rewrite.replaceFrom,
+              replaceTo: rewrite.replaceTo,
+            ),
       description: json['description'] ?? '',
       addons: json['addons'] is Map<String, dynamic> ? json['addons'] : null,
     );
   }
 }
 
+//------------------ REWRITE PATH REQUEST ------------------\\
+class RewritePathRequest {
+  final String replaceFrom;
+  final String replaceTo;
+
+  RewritePathRequest({required this.replaceFrom, required this.replaceTo});
+
+  Map<String, dynamic> toJson() {
+    return {'replace_from': replaceFrom, 'replace_to': replaceTo};
+  }
+}
+
+//------------------ ROUTE RESPONSE ------------------\\
 class RouteResponse {
   final String id;
   final String createdAt;
@@ -229,17 +247,22 @@ class RouteResponse {
   final String name;
   final String path;
   final String uri;
-  final RewritePathEntity? rewritePath;
+  final RewritePathResponse? rewritePath;
   final String description;
 
   ///every add-on this gateway knows, `null` the ones not configured; kept whole for the backup
   final Map<String, dynamic> addons;
 
-  MaintenanceEntity? get maintenance =>
-      MaintenanceEntity.tryFromJson(addons['maintenance']);
+  MaintenanceResponse? get maintenance =>
+      MaintenanceResponse.tryFromJson(addons['maintenance']);
 
-  HealthCheckEntity? get healthCheck =>
-      HealthCheckEntity.tryFromJson(addons['health_check']);
+  HealthCheckResponse? get healthCheck =>
+      HealthCheckResponse.tryFromJson(addons['health_check']);
+
+  RateLimitResponse? get rateLimit =>
+      RateLimitResponse.tryFromJson(addons['rate_limit']);
+
+  CorsResponse? get cors => CorsResponse.tryFromJson(addons['cors']);
 
   RouteResponse({
     required this.name,
@@ -258,7 +281,7 @@ class RouteResponse {
       name: json['name'],
       path: json['path'],
       uri: json['uri'],
-      rewritePath: RewritePathEntity.tryFromJson(json['rewrite_path']),
+      rewritePath: RewritePathResponse.tryFromJson(json['rewrite_path']),
       description: json['description'] ?? '',
       createdAt: json['created_at'],
       addons: json['addons'] is Map<String, dynamic> ? json['addons'] : {},
@@ -266,7 +289,66 @@ class RouteResponse {
   }
 }
 
-class MaintenanceEntity {
+//------------------ REWRITE PATH RESPONSE ------------------\\
+class RewritePathResponse {
+  final String replaceFrom;
+  final String replaceTo;
+
+  RewritePathResponse({required this.replaceFrom, required this.replaceTo});
+
+  ///null when the route has no rewrite (api sends `rewrite_path: null`)
+  static RewritePathResponse? tryFromJson(dynamic json) {
+    if (json is! Map<String, dynamic>) return null;
+    final from = json['replace_from'];
+    final to = json['replace_to'];
+    if (from is! String || to is! String) return null;
+    return RewritePathResponse(replaceFrom: from, replaceTo: to);
+  }
+}
+
+//------------------ GATEWAY ADDONS RESPONSE ------------------\\
+class GatewayAddonsResponse {
+  final MaintenanceResponse? maintenance;
+  final RateLimitResponse? rateLimit;
+  final CorsResponse? cors;
+
+  ///a gateway that knows the rate limit add-on sends the key (`null` when not configured)
+  final bool hasRateLimitKey;
+
+  GatewayAddonsResponse({
+    required this.hasRateLimitKey,
+    this.maintenance,
+    this.rateLimit,
+    this.cors,
+  });
+
+  factory GatewayAddonsResponse.fromJson(Map<String, dynamic> json) {
+    return GatewayAddonsResponse(
+      maintenance: MaintenanceResponse.tryFromJson(json['maintenance']),
+      rateLimit: RateLimitResponse.tryFromJson(json['rate_limit']),
+      cors: CorsResponse.tryFromJson(json['cors']),
+      hasRateLimitKey: json.containsKey('rate_limit'),
+    );
+  }
+}
+
+//------------------ MAINTENANCE REQUEST ------------------\\
+///only what the admin writes: `default_message` and `state` are read-only
+class MaintenanceRequest {
+  final bool enabled;
+  final String? message;
+  //ISO-8601 with offset
+  final String? retryAfter;
+
+  MaintenanceRequest({required this.enabled, this.message, this.retryAfter});
+
+  Map<String, dynamic> toJson() {
+    return {'enabled': enabled, 'message': message, 'retry_after': retryAfter};
+  }
+}
+
+//------------------ MAINTENANCE RESPONSE ------------------\\
+class MaintenanceResponse {
   final bool enabled;
   final String? message;
   //ISO-8601 with offset
@@ -277,7 +359,7 @@ class MaintenanceEntity {
   final String? enabledAt;
   final String? disabledAt;
 
-  MaintenanceEntity({
+  MaintenanceResponse({
     required this.enabled,
     this.message,
     this.retryAfter,
@@ -286,9 +368,9 @@ class MaintenanceEntity {
     this.disabledAt,
   });
 
-  factory MaintenanceEntity.fromJson(Map<String, dynamic> json) {
+  factory MaintenanceResponse.fromJson(Map<String, dynamic> json) {
     final state = json['state'];
-    return MaintenanceEntity(
+    return MaintenanceResponse(
       enabled: json['enabled'] as bool,
       message: json['message'] as String?,
       retryAfter: json['retry_after'] as String?,
@@ -299,18 +381,36 @@ class MaintenanceEntity {
   }
 
   ///null when it isn't configured (the api sends `maintenance: null`)
-  static MaintenanceEntity? tryFromJson(dynamic json) {
+  static MaintenanceResponse? tryFromJson(dynamic json) {
     if (json is! Map<String, dynamic> || json['enabled'] is! bool) return null;
-    return MaintenanceEntity.fromJson(json);
-  }
-
-  ///only what the admin writes: `default_message` and `state` are read-only
-  Map<String, dynamic> toJson() {
-    return {'enabled': enabled, 'message': message, 'retry_after': retryAfter};
+    return MaintenanceResponse.fromJson(json);
   }
 }
 
-class HealthCheckEntity {
+//------------------ HEALTH CHECK REQUEST ------------------\\
+///only what the admin writes: `state` is read-only
+class HealthCheckRequest {
+  final bool enabled;
+  final String path;
+  final int intervalSeconds;
+
+  HealthCheckRequest({
+    required this.enabled,
+    required this.path,
+    required this.intervalSeconds,
+  });
+
+  Map<String, dynamic> toJson() {
+    return {
+      'enabled': enabled,
+      'path': path,
+      'interval_seconds': intervalSeconds,
+    };
+  }
+}
+
+//------------------ HEALTH CHECK RESPONSE ------------------\\
+class HealthCheckResponse {
   final bool enabled;
   final String path;
   final int intervalSeconds;
@@ -321,7 +421,7 @@ class HealthCheckEntity {
   final int? status;
   final int? millis;
 
-  HealthCheckEntity({
+  HealthCheckResponse({
     required this.enabled,
     required this.path,
     required this.intervalSeconds,
@@ -332,7 +432,7 @@ class HealthCheckEntity {
   });
 
   ///null when it isn't configured (`health_check: null`) or the route can't have one (no key)
-  static HealthCheckEntity? tryFromJson(dynamic json) {
+  static HealthCheckResponse? tryFromJson(dynamic json) {
     if (json is! Map<String, dynamic> ||
         json['enabled'] is! bool ||
         json['path'] is! String ||
@@ -340,7 +440,7 @@ class HealthCheckEntity {
       return null;
     }
     final state = json['state'];
-    return HealthCheckEntity(
+    return HealthCheckResponse(
       enabled: json['enabled'] as bool,
       path: json['path'] as String,
       intervalSeconds: json['interval_seconds'] as int,
@@ -350,33 +450,138 @@ class HealthCheckEntity {
       millis: state is Map ? state['millis'] as int? : null,
     );
   }
+}
 
-  ///only what the admin writes: `state` is read-only
-  Map<String, dynamic> toJson() {
-    return {
-      'enabled': enabled,
-      'path': path,
-      'interval_seconds': intervalSeconds,
-    };
+//------------------ RATE LIMIT REQUEST ------------------\\
+class RateLimitRequest {
+  final bool enabled;
+  final int limit;
+  final String period;
+  final int? burst;
+
+  RateLimitRequest({
+    required this.enabled,
+    required this.limit,
+    required this.period,
+    this.burst,
+  });
+
+  Map<String, dynamic> toJson() => {
+    'enabled': enabled,
+    'limit': limit,
+    'period': period,
+    'burst': burst,
+  };
+}
+
+//------------------ RATE LIMIT RESPONSE ------------------\\
+///the api answers exactly what was saved (no read-only fields)
+class RateLimitResponse {
+  final bool enabled;
+  final int limit;
+  final String period;
+  final int? burst;
+
+  RateLimitResponse({
+    required this.enabled,
+    required this.limit,
+    required this.period,
+    this.burst,
+  });
+
+  ///null when it isn't configured (`rate_limit: null`) or can't be (no key)
+  static RateLimitResponse? tryFromJson(dynamic json) {
+    if (json is! Map ||
+        json['enabled'] is! bool ||
+        json['limit'] is! int ||
+        json['period'] is! String) {
+      return null;
+    }
+    return RateLimitResponse(
+      enabled: json['enabled'] as bool,
+      limit: json['limit'] as int,
+      period: json['period'] as String,
+      burst: json['burst'] as int?,
+    );
   }
 }
 
-class RewritePathEntity {
-  final String replaceFrom;
-  final String replaceTo;
+//------------------ CORS REQUEST ------------------\\
+class CorsRequest {
+  final bool enabled;
+  final List<String> allowedOrigins;
+  final bool allowCredentials;
 
-  RewritePathEntity({required this.replaceFrom, required this.replaceTo});
+  CorsRequest({
+    required this.enabled,
+    required this.allowedOrigins,
+    required this.allowCredentials,
+  });
 
-  ///null when the route has no rewrite (api sends `rewrite_path: null`)
-  static RewritePathEntity? tryFromJson(dynamic json) {
-    if (json is! Map<String, dynamic>) return null;
-    final from = json['replace_from'];
-    final to = json['replace_to'];
-    if (from is! String || to is! String) return null;
-    return RewritePathEntity(replaceFrom: from, replaceTo: to);
+  Map<String, dynamic> toJson() => {
+    'enabled': enabled,
+    'allowed_origins': allowedOrigins,
+    'allow_credentials': allowCredentials,
+  };
+}
+
+//------------------ CORS RESPONSE ------------------\\
+class CorsResponse {
+  final bool enabled;
+  final List<String> allowedOrigins;
+  final bool allowCredentials;
+
+  ///gateway only, read-only: `CORS_ALLOWED_ORIGINS` when it's set (deprecated, gone in 7.0)
+  final CorsEnvVarResponse? envVar;
+
+  CorsResponse({
+    required this.enabled,
+    required this.allowedOrigins,
+    required this.allowCredentials,
+    this.envVar,
+  });
+
+  ///null when it isn't configured (`cors: null`) or can't be (no key)
+  static CorsResponse? tryFromJson(dynamic json) {
+    if (json is! Map ||
+        json['enabled'] is! bool ||
+        json['allowed_origins'] is! List) {
+      return null;
+    }
+    return CorsResponse(
+      enabled: json['enabled'] as bool,
+      allowedOrigins: (json['allowed_origins'] as List)
+          .whereType<String>()
+          .toList(),
+      allowCredentials: json['allow_credentials'] == true,
+      envVar: CorsEnvVarResponse.tryFromJson(json['env_var']),
+    );
   }
+}
 
-  Map<String, dynamic> toJson() {
-    return {'replace_from': replaceFrom, 'replace_to': replaceTo};
+//------------------ CORS ENV VAR RESPONSE ------------------\\
+class CorsEnvVarResponse {
+  final String name;
+  final List<String> origins;
+  final bool matches;
+
+  CorsEnvVarResponse({
+    required this.name,
+    required this.origins,
+    required this.matches,
+  });
+
+  ///null when it isn't set, or on a gateway that doesn't send it
+  static CorsEnvVarResponse? tryFromJson(dynamic json) {
+    if (json is! Map || json['matches'] is! bool) return null;
+    return CorsEnvVarResponse(
+      name: json['name'] is String
+          ? json['name'] as String
+          : 'CORS_ALLOWED_ORIGINS',
+      origins: json['origins'] is List
+          ? (json['origins'] as List).whereType<String>().toList()
+          : const [],
+      matches: json['matches'] as bool,
+    );
   }
 }

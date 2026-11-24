@@ -23,11 +23,11 @@ class MaintenanceCubit extends Cubit<MaintenanceState>
 
   Future load() async {
     try {
-      gateway = await repo.findGatewayMaintenance();
-      emit(MaintenanceLoadedState());
+      gateway = (await repo.gatewayAddons()).maintenance;
+      emit(MaintenanceLoadedOkState());
     } on Exception catch (exc) {
       //no banner is better than a broken screen: the next load or save fixes it
-      emit(MaintenanceLoadErrorState(ExceptionConverter.parse(exc)));
+      emit(MaintenanceLoadingErrorState(ExceptionConverter.parse(exc)));
     }
   }
 
@@ -68,11 +68,11 @@ class MaintenanceCubit extends Cubit<MaintenanceState>
       emit(MaintenanceSavingState());
       final saved = await call();
       if (route == null) gateway = saved;
-      emit(MaintenanceSaveOkState(route: route, action: action, model: saved));
+      emit(MaintenanceSavedOkState(route: route, action: action, model: saved));
       return null;
     } on Exception catch (exc) {
       final error = ExceptionConverter.parse(exc);
-      emit(MaintenanceSaveErrorState(error, route: route));
+      emit(MaintenanceSavingErrorState(error, route: route));
       //someone else may have changed it meanwhile (a 404): show what's there now
       if (error.type != GlobalExceptionType.validation) {
         if (route == null) load();
@@ -86,25 +86,25 @@ abstract class MaintenanceState {
   const MaintenanceState();
 }
 
-class MaintenanceInitialState extends MaintenanceState {
+final class MaintenanceInitialState extends MaintenanceState {
   const MaintenanceInitialState();
 }
 
-class MaintenanceLoadedState extends MaintenanceState {
-  MaintenanceLoadedState();
+final class MaintenanceLoadedOkState extends MaintenanceState {
+  MaintenanceLoadedOkState();
 }
 
-class MaintenanceLoadErrorState extends MaintenanceState {
+final class MaintenanceLoadingErrorState extends MaintenanceState {
   final GlobalException exception;
 
-  MaintenanceLoadErrorState(this.exception);
+  MaintenanceLoadingErrorState(this.exception);
 }
 
-class MaintenanceSavingState extends MaintenanceState {
+final class MaintenanceSavingState extends MaintenanceState {
   MaintenanceSavingState();
 }
 
-class MaintenanceSaveOkState extends MaintenanceState {
+final class MaintenanceSavedOkState extends MaintenanceState {
   ///null when it was the gateway's
   final RouteModel? route;
   final MaintenanceAction action;
@@ -112,25 +112,25 @@ class MaintenanceSaveOkState extends MaintenanceState {
   ///null after a delete
   final MaintenanceModel? model;
 
-  MaintenanceSaveOkState({
+  MaintenanceSavedOkState({
     required this.route,
     required this.action,
     required this.model,
   });
 }
 
-class MaintenanceSaveErrorState extends MaintenanceState {
+final class MaintenanceSavingErrorState extends MaintenanceState {
   final GlobalException exception;
   final RouteModel? route;
 
-  MaintenanceSaveErrorState(this.exception, {this.route});
+  MaintenanceSavingErrorState(this.exception, {this.route});
 
-  ///a 422 names what's wrong in its violations, the rest in the message
+  ///a 422 names what's wrong in its errors, the rest in the message
   String get message {
     final data = exception.data;
     if (data is List<ValidationError> && data.isNotEmpty) {
       return data.map((e) => e.message).join('\n');
     }
-    return exception.message;
+    return exception.intlMessage;
   }
 }

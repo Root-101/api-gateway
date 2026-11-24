@@ -1,10 +1,5 @@
 import 'package:console/app_exporter.dart';
-import 'package:console/features/routes/view/addons/cors_block.dart';
-import 'package:console/features/routes/view/addons/health_check_block.dart';
-import 'package:console/features/routes/view/addons/maintenance_block.dart';
-import 'package:console/features/routes/view/addons/rate_limit_block.dart';
-import 'package:console/features/routes/view/form/routes_form_screen.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 ///what a route shows by its name: maintenance (the gateway's first) beats its health check
@@ -27,9 +22,6 @@ enum RouteStatus {
       : none;
 
   bool get inMaintenance => this == paused || this == maintenance;
-
-  ///requests reach the service (a DOWN route still gets them)
-  bool get forwards => !inMaintenance;
 }
 
 ///PAUSED / MAINT / LIVE / DOWN pill next to a name
@@ -84,6 +76,9 @@ class StatusTag extends StatelessWidget {
 ///its redirect, its add-ons and the ones it can still get. Reads the route from [RoutesCubit],
 ///so it always shows what was saved last
 class RoutePanel extends StatelessWidget {
+  /// The panel as a sheet on the right of the screen (Routes; the map shows it inside its canvas)
+  static final RoutePanelSheetNavigator navigator = RoutePanelSheetNavigator();
+
   final String? routeId;
   final VoidCallback onClose;
 
@@ -765,8 +760,11 @@ class _AddTile extends StatelessWidget {
 }
 
 ///the panel as a sheet on the right of the screen (Routes; the map shows it inside its canvas)
-class RoutePanelSheet {
-  static Future<void> show(BuildContext context, RouteModel route) {
+class RoutePanelSheetNavigator {
+  Future<void> open({
+    required BuildContext context,
+    required RouteModel route,
+  }) {
     return app.dialog.open(
       context: context,
       dialog: Align(

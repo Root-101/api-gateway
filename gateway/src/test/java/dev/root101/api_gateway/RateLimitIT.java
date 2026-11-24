@@ -1,10 +1,10 @@
 package dev.root101.api_gateway;
 
-import dev.root101.api_gateway.features.addons.base.data.entity.AddonEntity;
-import dev.root101.api_gateway.features.addons.base.data.entity.AddonJson;
-import dev.root101.api_gateway.features.addons.base.data.repo.AddonRepo;
-import dev.root101.api_gateway.features.addons.base.logic.usecase.AddonsUseCase;
-import dev.root101.api_gateway.features.addons.rate_limit.logic.model.RateLimit;
+import dev.root101.api_gateway.core.feature.addons.base.data.entity.AddonEntity;
+import dev.root101.api_gateway.core.feature.addons.base.data.entity.AddonJson;
+import dev.root101.api_gateway.core.feature.addons.base.data.repo.AddonRepo;
+import dev.root101.api_gateway.core.feature.addons.base.logic.usecase.AddonsUseCase;
+import dev.root101.api_gateway.core.feature.addons.rate_limit.logic.model.RateLimit;
 import dev.root101.api_gateway.support.IntegrationTest;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -263,28 +263,28 @@ class RateLimitIT extends IntegrationTest {
                     .exchange()
                     .expectStatus().isEqualTo(HttpStatus.UNPROCESSABLE_CONTENT)
                     .expectBody()
-                    .jsonPath("$.violations.length()").isEqualTo(4)
-                    .jsonPath("$.violations[?(@.fieldName == 'enabled')].message").isEqualTo("Must not be null")
-                    .jsonPath("$.violations[?(@.fieldName == 'limit')].message").isEqualTo("Must be 1 or more")
-                    .jsonPath("$.violations[?(@.fieldName == 'period')].message").isEqualTo("Must be second, minute or hour")
-                    .jsonPath("$.violations[?(@.fieldName == 'burst')].message").isEqualTo("Must be 1 or more");
+                    .jsonPath("$.errors.length()").isEqualTo(4)
+                    .jsonPath("$.errors[?(@.pointer == '#/enabled')].detail").isEqualTo("Must not be null")
+                    .jsonPath("$.errors[?(@.pointer == '#/limit')].detail").isEqualTo("Must be 1 or more")
+                    .jsonPath("$.errors[?(@.pointer == '#/period')].detail").isEqualTo("Must be second, minute or hour")
+                    .jsonPath("$.errors[?(@.pointer == '#/burst')].detail").isEqualTo("Must be 1 or more");
             admin(HttpMethod.PUT, path)
                     .header("Accept-Language", "es")
                     .bodyValue(rateLimit(true, 1_000_001, null, 1_000_001))
                     .exchange()
                     .expectStatus().isEqualTo(HttpStatus.UNPROCESSABLE_CONTENT)
                     .expectBody()
-                    .jsonPath("$.violations.length()").isEqualTo(3)
-                    .jsonPath("$.violations[?(@.fieldName == 'limit')].message").isEqualTo("Debe ser 1000000 o menos")
-                    .jsonPath("$.violations[?(@.fieldName == 'period')].message").isEqualTo("Es obligatorio")
-                    .jsonPath("$.violations[?(@.fieldName == 'burst')].message").isEqualTo("Debe ser 1000000 o menos");
+                    .jsonPath("$.errors.length()").isEqualTo(3)
+                    .jsonPath("$.errors[?(@.pointer == '#/limit')].detail").isEqualTo("Debe ser 1000000 o menos")
+                    .jsonPath("$.errors[?(@.pointer == '#/period')].detail").isEqualTo("Es obligatorio")
+                    .jsonPath("$.errors[?(@.pointer == '#/burst')].detail").isEqualTo("Debe ser 1000000 o menos");
             admin(HttpMethod.PUT, path)
                     .header("Accept-Language", "es")
                     .bodyValue(rateLimit(true, 1, "Minute", null))
                     .exchange()
                     .expectStatus().isEqualTo(HttpStatus.UNPROCESSABLE_CONTENT)
                     .expectBody()
-                    .jsonPath("$.violations[?(@.fieldName == 'period')].message").isEqualTo("Debe ser second, minute u hour");
+                    .jsonPath("$.errors[?(@.pointer == '#/period')].detail").isEqualTo("Debe ser second, minute u hour");
         }
         //the limits are inclusive (off: it never limits the other tests)
         setRoute(routeId, rateLimit(false, 1, "second", 1));
@@ -299,7 +299,7 @@ class RateLimitIT extends IntegrationTest {
         Map<String, Object> broken = restored("rlv-" + unique(), Map.of("rate_limit", rateLimit(true, 1, "day", null)));
         admin(HttpMethod.PUT, "/routes").bodyValue(List.of(broken)).exchange()
                 .expectStatus().isEqualTo(HttpStatus.UNPROCESSABLE_CONTENT)
-                .expectBody().jsonPath("$.violations[0].fieldName").isEqualTo("[0].addons.rate_limit.period");
+                .expectBody().jsonPath("$.errors[0].pointer").isEqualTo("#/0/addons/rate_limit/period");
 
         admin(HttpMethod.PUT, routePath("not-a-uuid")).bodyValue(rateLimit(true, 1, "second", null)).exchange().expectStatus().isBadRequest();
         admin(HttpMethod.DELETE, routePath("not-a-uuid")).exchange().expectStatus().isBadRequest();

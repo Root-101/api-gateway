@@ -1,7 +1,7 @@
 import 'dart:async';
 
 import 'package:console/app_exporter.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
@@ -14,6 +14,12 @@ class LogsScreenNavigator {
   Widget builder(BuildContext context, GoRouterState state) {
     return const LogsScreen();
   }
+
+  void go() => app.navigator.go(name);
+
+  List<RouteBase> routes({List<RouteBase> children = const []}) => [
+    GoRoute(name: name, path: path, builder: builder, routes: children),
+  ];
 
   void neglectGo() {
     Router.neglect(app.context, () {
@@ -31,7 +37,7 @@ class LogsScreen extends StatefulWidget {
   State<LogsScreen> createState() => _LogsScreenState();
 }
 
-///the screen keeps the search (debounced) and the snacks; header, toolbar, table and footer are widgets of their own
+///the screen keeps the search (debounced) and the toasts; header, toolbar, table and footer are widgets of their own
 class _LogsScreenState extends State<LogsScreen> {
   static const Duration _debounce = Duration(milliseconds: 400);
 
@@ -76,8 +82,8 @@ class _LogsScreenState extends State<LogsScreen> {
     final intl = context.intl;
     final added = await cubit.refresh();
     if (cubit.state is! LogsSearchOkState) return;
-    app.snack.showSuccess(
-      message: added == null
+    app.toast.success(
+      added == null
           ? intl.logs.refreshed
           : added <= 0
           ? intl.logs.noNewRequests
@@ -88,20 +94,20 @@ class _LogsScreenState extends State<LogsScreen> {
   }
 
   void _onState(BuildContext context, LogsState state) {
-    if (state is LogsBackupProcessingState) {
+    if (state is LogsBackingUpState) {
       app.loading.show();
-    } else if (state is LogsBackupOkState) {
+    } else if (state is LogsBackedUpOkState) {
       app.loading.hide();
-      app.snack.showSuccess(
-        message: state.capped
+      app.toast.success(
+        state.capped
             ? context.intl.logs.exportedCapped(
                 count: _number.format(state.count),
               )
             : context.intl.logs.exported(count: _number.format(state.count)),
       );
-    } else if (state is LogsBackupErrorState) {
+    } else if (state is LogsBackingUpErrorState) {
       app.loading.hide();
-      app.snack.showError(message: state.exception.message);
+      app.toast.error(state.exception.intlMessage);
     }
   }
 
@@ -113,7 +119,7 @@ class _LogsScreenState extends State<LogsScreen> {
       builder: (context, state) {
         if (state is LogsSearchErrorState && !cubit.loaded) {
           return ErrorPage(
-            errorMessage: state.exception.message,
+            errorMessage: state.exception.intlMessage,
             buttonText: context.intl.actions.tryAgain,
             onPressed: cubit.init,
           );

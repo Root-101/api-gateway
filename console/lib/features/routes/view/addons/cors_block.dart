@@ -1,5 +1,5 @@
 import 'package:console/app_exporter.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter/services.dart';
 
 enum _Mode { view, edit, confirm }
@@ -24,7 +24,7 @@ class _CorsBlockState extends State<CorsBlock> {
   bool _credentials = false;
   bool _busy = false;
 
-  ///422 violations by field (`allowed_origins`, `allowed_origins[1]`...)
+  ///422 errors by field (`allowed_origins`, `allowed_origins/1`...)
   Map<String, String> _errors = {};
 
   ///a 400 rule (lockout, credentials...): only a message
@@ -268,10 +268,10 @@ class _CorsBlockState extends State<CorsBlock> {
           borderSide: BorderSide(color: color, width: width),
         );
     final listError = _errors['allowed_origins'];
-    //a bad pattern names its index: `allowed_origins[1]`
+    //a bad pattern names its index: `allowed_origins/1`
     final chipErrors = [
       for (final (i, o) in _origins.indexed)
-        if (_errors['allowed_origins[$i]'] case final e?) '$o: $e',
+        if (_errors['allowed_origins/$i'] case final e?) '$o: $e',
     ];
     final console = _consoleOrigin;
     final lockout =
@@ -296,7 +296,7 @@ class _CorsBlockState extends State<CorsBlock> {
               for (final (i, o) in _origins.indexed)
                 _OriginChip(
                   o,
-                  error: _errors.containsKey('allowed_origins[$i]'),
+                  error: _errors.containsKey('allowed_origins/$i'),
                   onRemove: () => _removeAt(i),
                 ),
             ],

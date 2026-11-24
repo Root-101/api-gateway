@@ -2,8 +2,8 @@ package dev.root101.api_gateway.security;
 
 
 import org.springframework.cloud.gateway.filter.headers.TrustedProxies;
-import dev.root101.api_gateway.features.http_logs.filter.HttpLogsWebFilter;
-import dev.root101.api_gateway.config.GlobalExceptionHandler;
+import dev.root101.api_gateway.core.feature.http_logs.filter.HttpLogsWebFilter;
+import dev.root101.api_gateway.config.GlobalExceptionHandlerConfig;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
@@ -16,7 +16,7 @@ import org.springframework.web.server.WebFilterChain;
 import reactor.core.publisher.Mono;
 
 /**
- * Created in `SecurityConfig`, NOT a bean (see comment there).
+ * Created in `ApplicationSecurityConfig`, NOT a bean (see comment there).
  */
 public class AdminAuthenticationWebFilter implements WebFilter {
 
@@ -32,7 +32,7 @@ public class AdminAuthenticationWebFilter implements WebFilter {
 
     private final String adminBasePath;
 
-    private final GlobalExceptionHandler errorHandler;
+    private final GlobalExceptionHandlerConfig errorHandler;
 
     private final TrustedProxies trustedProxies;
 
@@ -41,7 +41,7 @@ public class AdminAuthenticationWebFilter implements WebFilter {
             AdminTokens adminTokens,
             LoginAttemptsGuard loginAttemptsGuard,
             String adminBasePath,
-            GlobalExceptionHandler errorHandler,
+            GlobalExceptionHandlerConfig errorHandler,
             TrustedProxies trustedProxies
     ) {
         this.errorHandler = errorHandler;
@@ -75,10 +75,9 @@ public class AdminAuthenticationWebFilter implements WebFilter {
         if ((isLogin || isBasic) && !loginAttemptsGuard.tryAcquire(clientIp)) {
             long seconds = loginAttemptsGuard.retryAfterSeconds(clientIp);
             exchange.getResponse().getHeaders().set(HttpHeaders.RETRY_AFTER, String.valueOf(seconds));
-            return errorHandler.writeProblem(exchange, HttpStatus.TOO_MANY_REQUESTS,
-                    //in minutes (rounded up) from one minute on: "559 s" is hard to read; Retry-After keeps the seconds
-                    seconds >= 60 ? "auth.locked.minutes" : "auth.locked.seconds",
-                    String.valueOf(seconds >= 60 ? (seconds + 59) / 60 : seconds));
+            //in minutes (rounded up) from one minute on: "559 s" is hard to read; Retry-After keeps the seconds
+            String wait = seconds >= 60 ? (seconds + 59) / 60 + " min" : seconds + " s";
+            return errorHandler.writeProblem(exchange, HttpStatus.TOO_MANY_REQUESTS, "error.auth.locked", wait);
         }
 
         Mono<Void> result;

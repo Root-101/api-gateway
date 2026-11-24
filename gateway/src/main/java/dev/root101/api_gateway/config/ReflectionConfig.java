@@ -1,26 +1,27 @@
 package dev.root101.api_gateway.config;
 
-import dev.root101.api_gateway.features.auth.logic.model.LoginRequest;
-import dev.root101.api_gateway.features.auth.logic.model.LoginResponse;
-import dev.root101.api_gateway.features.http_logs.data.entity.HttpLogEntity;
-import dev.root101.api_gateway.features.http_logs.logic.model.HttpLogResponse;
-import dev.root101.api_gateway.features.http_logs.logic.model.HttpLogSearchResponse;
-import dev.root101.api_gateway.features.addons.base.logic.model.Addons;
-import dev.root101.api_gateway.features.addons.base.logic.model.AddonsRequest;
-import dev.root101.api_gateway.features.addons.base.logic.model.GatewayAddons;
-import dev.root101.api_gateway.features.addons.cors.logic.model.Cors;
-import dev.root101.api_gateway.features.addons.cors.logic.model.CorsResponse;
-import dev.root101.api_gateway.features.addons.health_check.logic.model.HealthCheck;
-import dev.root101.api_gateway.features.addons.health_check.logic.model.HealthCheckResponse;
-import dev.root101.api_gateway.features.addons.health_check.logic.model.HealthCheckState;
-import dev.root101.api_gateway.features.addons.maintenance.logic.model.Maintenance;
-import dev.root101.api_gateway.features.addons.maintenance.logic.model.MaintenanceResponse;
-import dev.root101.api_gateway.features.addons.maintenance.logic.model.MaintenanceState;
-import dev.root101.api_gateway.features.addons.rate_limit.logic.model.RateLimit;
-import dev.root101.api_gateway.features.routes.logic.model.RewritePathModel;
-import dev.root101.api_gateway.features.routes.logic.model.RouteConfigRequest;
-import dev.root101.api_gateway.features.routes.logic.model.RouteConfigResponse;
-import dev.root101.api_gateway.features.routes.utils.RouteRules;
+import dev.root101.api_gateway.core.feature.auth.logic.model.LoginRequest;
+import dev.root101.api_gateway.core.feature.auth.logic.model.LoginResponse;
+import dev.root101.api_gateway.core.feature.http_logs.data.entity.HttpLogEntity;
+import dev.root101.api_gateway.core.feature.http_logs.logic.model.HttpLogResponse;
+import dev.root101.api_gateway.core.feature.http_logs.logic.model.SearchHttpLogResponse;
+import dev.root101.api_gateway.core.feature.addons.base.logic.model.Addons;
+import dev.root101.api_gateway.core.feature.addons.base.logic.model.AddonsRequest;
+import dev.root101.api_gateway.core.feature.addons.base.logic.model.GatewayAddons;
+import dev.root101.api_gateway.core.feature.addons.cors.logic.model.Cors;
+import dev.root101.api_gateway.core.feature.addons.cors.logic.model.CorsResponse;
+import dev.root101.api_gateway.core.feature.addons.health_check.logic.model.HealthCheck;
+import dev.root101.api_gateway.core.feature.addons.health_check.logic.model.HealthCheckResponse;
+import dev.root101.api_gateway.core.feature.addons.health_check.logic.model.HealthCheckState;
+import dev.root101.api_gateway.core.feature.addons.maintenance.logic.model.Maintenance;
+import dev.root101.api_gateway.core.feature.addons.maintenance.logic.model.MaintenanceResponse;
+import dev.root101.api_gateway.core.feature.addons.maintenance.logic.model.MaintenanceState;
+import dev.root101.api_gateway.core.feature.addons.rate_limit.logic.model.RateLimit;
+import dev.root101.api_gateway.core.feature.routes.logic.model.RewritePathModel;
+import dev.root101.api_gateway.core.feature.routes.logic.model.RouteRequest;
+import dev.root101.api_gateway.core.feature.routes.logic.model.RouteResponse;
+import dev.root101.api_gateway.core.feature.routes.logic.model.RouteRules;
+import dev.root101.api_gateway.core.error.FieldProblem;
 import org.springframework.aot.hint.annotation.RegisterReflectionForBinding;
 import org.springframework.context.annotation.Configuration;
 
@@ -31,9 +32,9 @@ import java.time.OffsetDateTime;
 @SuppressWarnings("removal")
 @RegisterReflectionForBinding({
         //--------- CONFIG ---------\\
-        GlobalExceptionHandler.class,
+        GlobalExceptionHandlerConfig.class, FieldProblem.class,
         //--------- ROUTES ---------\\
-        RewritePathModel.class, RouteConfigRequest.class, RouteConfigResponse.class,
+        RewritePathModel.class, RouteRequest.class, RouteResponse.class,
         //the validator of @ValidRoute, created by hibernate validator
         RouteRules.class,
         OffsetDateTime.class,
@@ -46,7 +47,7 @@ import java.time.OffsetDateTime;
         //--------- AUTH ---------\\
         LoginRequest.class, LoginResponse.class,
         //--------- HTTP LOGS ---------\\
-        HttpLogSearchResponse.class, HttpLogResponse.class, HttpLogEntity.RouteLog.class,
+        SearchHttpLogResponse.class, HttpLogResponse.class, HttpLogEntity.RouteLog.class,
         //--------- Flyway ---------\\
         org.flywaydb.database.postgresql.TransactionalModel.class,
         //--------- CLOUD ---------\\

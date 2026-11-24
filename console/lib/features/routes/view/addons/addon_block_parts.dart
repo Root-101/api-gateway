@@ -1,6 +1,5 @@
 import 'package:console/app_exporter.dart';
-import 'package:console/features/routes/view/addons/slide_switch.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 ///an add-on block's top row: icon, name with its (i) and, while viewing, [extraActions], Edit and
 ///Remove (the slide below says whether it's on)

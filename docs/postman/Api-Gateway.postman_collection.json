@@ -493,11 +493,12 @@
                   "    pm.expect(p).to.include.all.keys('type', 'title', 'status', 'detail', 'instance');",
                   "    pm.expect(p.detail).to.eql('The request has invalid fields');",
                   "});",
-                  "pm.test('violations name the JSON fields', () => {",
-                  "    const violations = pm.response.json().violations;",
-                  "    pm.expect(violations).to.be.an('array').that.is.not.empty;",
-                  "    violations.forEach(v => pm.expect(v).to.have.all.keys('fieldName', 'message'));",
-                  "    pm.expect(violations.map(v => v.fieldName)).to.include.members(['name', 'uri']);",
+                  "pm.test('errors point to the JSON fields', () => {",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body.code).to.eql('validation');",
+                  "    pm.expect(body.errors).to.be.an('array').that.is.not.empty;",
+                  "    body.errors.forEach(e => pm.expect(e).to.have.all.keys('pointer', 'code', 'detail', 'params'));",
+                  "    pm.expect(body.errors.map(e => e.pointer)).to.include.members(['#/name', '#/uri']);",
                   "});"
                 ]
               }
@@ -594,11 +595,12 @@
                   "    pm.expect(p).to.include.all.keys('type', 'title', 'status', 'detail', 'instance');",
                   "    pm.expect(p.detail).to.eql('The request has invalid fields');",
                   "});",
-                  "pm.test('violations name the JSON fields', () => {",
-                  "    const violations = pm.response.json().violations;",
-                  "    pm.expect(violations).to.be.an('array').that.is.not.empty;",
-                  "    violations.forEach(v => pm.expect(v).to.have.all.keys('fieldName', 'message'));",
-                  "    pm.expect(violations.map(v => v.fieldName)).to.include.members(['name', 'uri']);",
+                  "pm.test('errors point to the JSON fields', () => {",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body.code).to.eql('validation');",
+                  "    pm.expect(body.errors).to.be.an('array').that.is.not.empty;",
+                  "    body.errors.forEach(e => pm.expect(e).to.have.all.keys('pointer', 'code', 'detail', 'params'));",
+                  "    pm.expect(body.errors.map(e => e.pointer)).to.include.members(['#/name', '#/uri']);",
                   "});"
                 ]
               }
@@ -1205,7 +1207,7 @@
                 "type": "text/javascript",
                 "exec": [
                   "pm.test('status is 422', () => pm.response.to.have.status(422));",
-                  "pm.test('names the field', () => pm.expect(pm.response.json().violations[0].fieldName).to.eql('enabled'));"
+                  "pm.test('names the field', () => pm.expect(pm.response.json().errors[0].pointer).to.eql('#/enabled'));"
                 ]
               }
             }
@@ -1410,8 +1412,8 @@
                 "exec": [
                   "pm.test('status is 422', () => pm.response.to.have.status(422));",
                   "pm.test('names the broken fields', () => {",
-                  "    const fields = pm.response.json().violations.map(v => v.fieldName);",
-                  "    pm.expect(fields).to.include.members(['path', 'interval_seconds']);",
+                  "    const fields = pm.response.json().errors.map(e => e.pointer);",
+                  "    pm.expect(fields).to.include.members(['#/path', '#/interval_seconds']);",
                   "});"
                 ]
               }
@@ -1616,8 +1618,8 @@
                 "exec": [
                   "pm.test('status is 422', () => pm.response.to.have.status(422));",
                   "pm.test('names the broken fields', () => {",
-                  "    const fields = pm.response.json().violations.map(v => v.fieldName);",
-                  "    pm.expect(fields).to.include.members(['limit', 'period']);",
+                  "    const fields = pm.response.json().errors.map(e => e.pointer);",
+                  "    pm.expect(fields).to.include.members(['#/limit', '#/period']);",
                   "});"
                 ]
               }
@@ -1868,8 +1870,8 @@
                 "exec": [
                   "pm.test('status is 422', () => pm.response.to.have.status(422));",
                   "pm.test('names the broken origin', () => {",
-                  "    const fields = pm.response.json().violations.map(v => v.fieldName);",
-                  "    pm.expect(fields).to.include('allowed_origins[0]');",
+                  "    const fields = pm.response.json().errors.map(e => e.pointer);",
+                  "    pm.expect(fields).to.include('#/allowed_origins/0');",
                   "});"
                 ]
               }

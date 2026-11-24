@@ -1,3 +1,6 @@
+//the getters are named as the variables of env.js (and of the container), not in lowerCamelCase
+// ignore_for_file: non_constant_identifier_names
+
 import 'dart:js_interop';
 
 //null when env.js is missing or doesn't define window.env

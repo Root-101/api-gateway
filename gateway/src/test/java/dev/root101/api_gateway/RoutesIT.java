@@ -1,8 +1,8 @@
 package dev.root101.api_gateway;
 
-import dev.root101.api_gateway.features.routes.data.entity.RouteEntity;
-import dev.root101.api_gateway.features.routes.logic.model.RewritePathModel;
-import dev.root101.api_gateway.features.routes.logic.model.RouteConfigRequest;
+import dev.root101.api_gateway.core.feature.routes.data.entity.RouteEntity;
+import dev.root101.api_gateway.core.feature.routes.logic.model.RewritePathModel;
+import dev.root101.api_gateway.core.feature.routes.logic.model.RouteRequest;
 import dev.root101.api_gateway.support.IntegrationTest;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -34,7 +34,7 @@ class RoutesIT extends IntegrationTest {
     @Test
     void saveSingleRoute() {
         String id = unique();
-        RouteConfigRequest request = new RouteConfigRequest(
+        RouteRequest request = new RouteRequest(
                 "abc-" + id, "/abc-" + id + "/**", "http://localhost:8080",
                 new RewritePathModel("/abc-" + id + "/", "/"), "description", null
         );
@@ -69,7 +69,7 @@ class RoutesIT extends IntegrationTest {
     @Test
     void listAndGetKeepTheirShape() {
         String id = unique();
-        createRoute(new RouteConfigRequest(
+        createRoute(new RouteRequest(
                 "shape-" + id, "/shape-" + id + "/**", upstreamUrl(),
                 new RewritePathModel("/shape-" + id + "/(?<segment>.*)", "/${segment}"), "desc", null
         ));
@@ -101,20 +101,20 @@ class RoutesIT extends IntegrationTest {
                 .jsonPath("$.rewrite_path_from").doesNotExist();
     }
 
-    static Stream<RouteConfigRequest> invalidRoutes() {
+    static Stream<RouteRequest> invalidRoutes() {
         String ok = "http://localhost:8080";
         return Stream.of(
-                new RouteConfigRequest(" ", "/x/**", ok, null, null, null),
-                new RouteConfigRequest("n", "", ok, null, null, null),
-                new RouteConfigRequest("n", "/x/**", null, null, null, null),
-                new RouteConfigRequest("n", "/x/**", "not a url", null, null, null),
-                new RouteConfigRequest("n".repeat(256), "/x/**", ok, null, null, null)
+                new RouteRequest(" ", "/x/**", ok, null, null, null),
+                new RouteRequest("n", "", ok, null, null, null),
+                new RouteRequest("n", "/x/**", null, null, null, null),
+                new RouteRequest("n", "/x/**", "not a url", null, null, null),
+                new RouteRequest("n".repeat(256), "/x/**", ok, null, null, null)
         );
     }
 
     @ParameterizedTest
     @MethodSource("invalidRoutes")
-    void invalidRouteIs422WithFieldErrors(RouteConfigRequest request) {
+    void invalidRouteIs422WithFieldErrors(RouteRequest request) {
         admin(HttpMethod.POST, "/routes").bodyValue(request).exchange()
                 .expectStatus().isEqualTo(HttpStatus.UNPROCESSABLE_CONTENT)
                 .expectHeader().contentType(MediaType.APPLICATION_PROBLEM_JSON)
@@ -122,36 +122,36 @@ class RoutesIT extends IntegrationTest {
                 .jsonPath("$.status").isEqualTo(422)
                 .jsonPath("$.detail").isEqualTo("The request has invalid fields")
                 .jsonPath("$.instance").isEqualTo("/%s/routes".formatted(ADMIN_PATH))
-                .jsonPath("$.violations[0].fieldName").isNotEmpty()
-                .jsonPath("$.violations[0].message").isNotEmpty();
+                .jsonPath("$.errors[0].pointer").isNotEmpty()
+                .jsonPath("$.errors[0].detail").isNotEmpty();
     }
 
     /**
-     * `fieldName` is the JSON path as the client sent it: snake_case, `[i].` in a list
+     * `pointer` is a JSON Pointer with the names the client sent: snake_case, the index first in a list
      */
     @Test
-    void violationsNameTheJsonField() {
+    void errorsPointToTheJsonField() {
         admin(HttpMethod.POST, "/routes")
-                .bodyValue(new RouteConfigRequest("n-" + unique(), "/x/**", "not a url", null, null, null))
+                .bodyValue(new RouteRequest("n-" + unique(), "/x/**", "not a url", null, null, null))
                 .exchange()
                 .expectStatus().isEqualTo(HttpStatus.UNPROCESSABLE_CONTENT)
                 .expectBody()
-                .jsonPath("$.violations.length()").isEqualTo(1)
-                .jsonPath("$.violations[0].fieldName").isEqualTo("uri");
+                .jsonPath("$.errors.length()").isEqualTo(1)
+                .jsonPath("$.errors[0].pointer").isEqualTo("#/uri");
 
         admin(HttpMethod.POST, "/routes/batch")
-                .bodyValue(List.of(route("ok-" + unique(), "ok-" + unique()), new RouteConfigRequest(" ", "/x/**", upstreamUrl(), null, null, null)))
+                .bodyValue(List.of(route("ok-" + unique(), "ok-" + unique()), new RouteRequest(" ", "/x/**", upstreamUrl(), null, null, null)))
                 .exchange()
                 .expectStatus().isEqualTo(HttpStatus.UNPROCESSABLE_CONTENT)
                 .expectBody()
-                .jsonPath("$.violations[0].fieldName").isEqualTo("[1].name");
+                .jsonPath("$.errors[0].pointer").isEqualTo("#/1/name");
 
         admin(HttpMethod.POST, "/routes")
-                .bodyValue(new RouteConfigRequest("n-" + unique(), "/x/**", upstreamUrl(), new RewritePathModel("", "/"), null, null))
+                .bodyValue(new RouteRequest("n-" + unique(), "/x/**", upstreamUrl(), new RewritePathModel("", "/"), null, null))
                 .exchange()
                 .expectStatus().isEqualTo(HttpStatus.UNPROCESSABLE_CONTENT)
                 .expectBody()
-                .jsonPath("$.violations[0].fieldName").isEqualTo("rewrite_path.replace_from");
+                .jsonPath("$.errors[0].pointer").isEqualTo("#/rewrite_path/replace_from");
     }
 
     /**
@@ -162,39 +162,39 @@ class RoutesIT extends IntegrationTest {
     void unusableRoutesAre422() {
         String id = unique();
         admin(HttpMethod.POST, "/routes")
-                .bodyValue(new RouteConfigRequest("re-" + id, "/re-" + id + "/**", upstreamUrl(), new RewritePathModel("/a/(?<x.*)", "/"), null, null))
+                .bodyValue(new RouteRequest("re-" + id, "/re-" + id + "/**", upstreamUrl(), new RewritePathModel("/a/(?<x.*)", "/"), null, null))
                 .exchange()
                 .expectStatus().isEqualTo(HttpStatus.UNPROCESSABLE_CONTENT)
                 .expectBody()
-                .jsonPath("$.violations[0].fieldName").isEqualTo("rewrite_path.replace_from")
-                .jsonPath("$.violations[0].message").isEqualTo("Must be a valid regular expression");
+                .jsonPath("$.errors[0].pointer").isEqualTo("#/rewrite_path/replace_from")
+                .jsonPath("$.errors[0].detail").isEqualTo("Must be a valid regular expression");
 
         admin(HttpMethod.POST, "/routes")
-                .bodyValue(new RouteConfigRequest("pp-" + id, "/pp-" + id + "/{x", upstreamUrl(), null, null, null))
+                .bodyValue(new RouteRequest("pp-" + id, "/pp-" + id + "/{x", upstreamUrl(), null, null, null))
                 .exchange()
                 .expectStatus().isEqualTo(HttpStatus.UNPROCESSABLE_CONTENT)
-                .expectBody().jsonPath("$.violations[0].fieldName").isEqualTo("path");
+                .expectBody().jsonPath("$.errors[0].pointer").isEqualTo("#/path");
 
         //parses, but a request path always starts with `/`: it would never match
         admin(HttpMethod.POST, "/routes/validate")
-                .bodyValue(new RouteConfigRequest("ns-" + id, "ns-" + id + "/**", upstreamUrl(), null, null, null))
+                .bodyValue(new RouteRequest("ns-" + id, "ns-" + id + "/**", upstreamUrl(), null, null, null))
                 .exchange()
                 .expectStatus().isEqualTo(HttpStatus.UNPROCESSABLE_CONTENT)
                 .expectBody()
-                .jsonPath("$.violations[0].fieldName").isEqualTo("path")
-                .jsonPath("$.violations[0].message").isEqualTo("Must start with /");
+                .jsonPath("$.errors[0].pointer").isEqualTo("#/path")
+                .jsonPath("$.errors[0].detail").isEqualTo("Must start with /");
 
         admin(HttpMethod.PUT, "/routes")
-                .bodyValue(List.of(new RouteConfigRequest("up-" + id, "/up-" + id + "/**", upstreamUrl() + "/api", null, null, null)))
+                .bodyValue(List.of(new RouteRequest("up-" + id, "/up-" + id + "/**", upstreamUrl() + "/api", null, null, null)))
                 .exchange()
                 .expectStatus().isEqualTo(HttpStatus.UNPROCESSABLE_CONTENT)
                 .expectBody()
-                .jsonPath("$.violations[0].fieldName").isEqualTo("[0].uri")
-                .jsonPath("$.violations[0].message").isEqualTo("Must not have a path, use rewrite_path to add a prefix");
+                .jsonPath("$.errors[0].pointer").isEqualTo("#/0/uri")
+                .jsonPath("$.errors[0].detail").isEqualTo("Must not have a path, use rewrite_path to add a prefix");
 
         assertThat(routeRepo.findByName("re-" + id).block()).isNull();
         //a uri ending in `/` is fine
-        createRoute(new RouteConfigRequest("slash-" + id, "/slash-" + id + "/**", upstreamUrl() + "/", null, null, null));
+        createRoute(new RouteRequest("slash-" + id, "/slash-" + id + "/**", upstreamUrl() + "/", null, null, null));
     }
 
     /**
@@ -204,24 +204,24 @@ class RoutesIT extends IntegrationTest {
     void errorsInTheLanguageOfTheRequest() {
         admin(HttpMethod.POST, "/routes/validate")
                 .header(HttpHeaders.ACCEPT_LANGUAGE, "es")
-                .bodyValue(new RouteConfigRequest("", "/es/**", upstreamUrl(), null, null, null))
+                .bodyValue(new RouteRequest("", "/es/**", upstreamUrl(), null, null, null))
                 .exchange()
                 .expectStatus().isEqualTo(HttpStatus.UNPROCESSABLE_CONTENT)
                 .expectBody()
                 .jsonPath("$.title").isEqualTo("Contenido no procesable")
                 .jsonPath("$.detail").isEqualTo("La petición tiene campos inválidos")
-                .jsonPath("$.violations[0].fieldName").isEqualTo("name")
-                .jsonPath("$.violations[0].message").isEqualTo("No puede estar vacío");
+                .jsonPath("$.errors[0].pointer").isEqualTo("#/name")
+                .jsonPath("$.errors[0].detail").isEqualTo("No puede estar vacío");
 
         //the route rules (checked once the fields are valid)
         admin(HttpMethod.POST, "/routes/validate")
                 .header(HttpHeaders.ACCEPT_LANGUAGE, "es")
-                .bodyValue(new RouteConfigRequest("es", "/es/**", upstreamUrl() + "/api", null, null, null))
+                .bodyValue(new RouteRequest("es", "/es/**", upstreamUrl() + "/api", null, null, null))
                 .exchange()
                 .expectStatus().isEqualTo(HttpStatus.UNPROCESSABLE_CONTENT)
                 .expectBody()
-                .jsonPath("$.violations[0].fieldName").isEqualTo("uri")
-                .jsonPath("$.violations[0].message").isEqualTo("No debe tener ruta, usa rewrite_path para agregar un prefijo");
+                .jsonPath("$.errors[0].pointer").isEqualTo("#/uri")
+                .jsonPath("$.errors[0].detail").isEqualTo("No debe tener ruta, usa rewrite_path para agregar un prefijo");
 
         String routeId = UUID.randomUUID().toString();
         admin(HttpMethod.GET, "/routes/" + routeId)
@@ -244,24 +244,24 @@ class RoutesIT extends IntegrationTest {
     void validateChecksWithoutSaving() {
         String id = unique();
         admin(HttpMethod.POST, "/routes/validate")
-                .bodyValue(new RouteConfigRequest("va-" + id, "/va-" + id + "/**", upstreamUrl(), null, null, null))
+                .bodyValue(new RouteRequest("va-" + id, "/va-" + id + "/**", upstreamUrl(), null, null, null))
                 .exchange()
                 .expectStatus().isNoContent();
         assertThat(routeRepo.findByName("va-" + id).block()).isNull();
 
         admin(HttpMethod.POST, "/routes/validate")
-                .bodyValue(new RouteConfigRequest(" ", "/va-" + id + "/{x", "not a url", null, null, null))
+                .bodyValue(new RouteRequest(" ", "/va-" + id + "/{x", "not a url", null, null, null))
                 .exchange()
                 .expectStatus().isEqualTo(HttpStatus.UNPROCESSABLE_CONTENT)
                 .expectBody()
-                .jsonPath("$.violations[?(@.fieldName == 'name')]").exists()
-                .jsonPath("$.violations[?(@.fieldName == 'uri')]").exists();
+                .jsonPath("$.errors[?(@.pointer == '#/name')]").exists()
+                .jsonPath("$.errors[?(@.pointer == '#/uri')]").exists();
 
         admin(HttpMethod.POST, "/routes/validate")
-                .bodyValue(new RouteConfigRequest("va-" + id, "/va-" + id + "/{x", upstreamUrl(), null, null, null))
+                .bodyValue(new RouteRequest("va-" + id, "/va-" + id + "/{x", upstreamUrl(), null, null, null))
                 .exchange()
                 .expectStatus().isEqualTo(HttpStatus.UNPROCESSABLE_CONTENT)
-                .expectBody().jsonPath("$.violations[0].fieldName").isEqualTo("path");
+                .expectBody().jsonPath("$.errors[0].pointer").isEqualTo("#/path");
     }
 
     /**
@@ -301,23 +301,23 @@ class RoutesIT extends IntegrationTest {
     void batchAndEditCheckTheRules() {
         String id = unique();
         admin(HttpMethod.POST, "/routes/batch")
-                .bodyValue(List.of(route("bok-" + id, "bok-" + id), new RouteConfigRequest("bad-" + id, "bad-" + id + "/**", upstreamUrl(), null, null, null)))
+                .bodyValue(List.of(route("bok-" + id, "bok-" + id), new RouteRequest("bad-" + id, "bad-" + id + "/**", upstreamUrl(), null, null, null)))
                 .exchange()
                 .expectStatus().isEqualTo(HttpStatus.UNPROCESSABLE_CONTENT)
-                .expectBody().jsonPath("$.violations[0].fieldName").isEqualTo("[1].path");
+                .expectBody().jsonPath("$.errors[0].pointer").isEqualTo("#/1/path");
         assertThat(routeRepo.findByName("bok-" + id).block()).isNull();
 
         String routeId = createRoute(route("ed-" + id, "ed-" + id));
         admin(HttpMethod.PUT, "/routes/" + routeId)
-                .bodyValue(new RouteConfigRequest(" ", "/ed-" + id + "/**", upstreamUrl(), null, null, null))
+                .bodyValue(new RouteRequest(" ", "/ed-" + id + "/**", upstreamUrl(), null, null, null))
                 .exchange()
                 .expectStatus().isEqualTo(HttpStatus.UNPROCESSABLE_CONTENT)
-                .expectBody().jsonPath("$.violations[0].fieldName").isEqualTo("name");
+                .expectBody().jsonPath("$.errors[0].pointer").isEqualTo("#/name");
         admin(HttpMethod.PUT, "/routes/" + routeId)
-                .bodyValue(new RouteConfigRequest("ed-" + id, "/ed-" + id + "/**", upstreamUrl() + "/api", null, null, null))
+                .bodyValue(new RouteRequest("ed-" + id, "/ed-" + id + "/**", upstreamUrl() + "/api", null, null, null))
                 .exchange()
                 .expectStatus().isEqualTo(HttpStatus.UNPROCESSABLE_CONTENT)
-                .expectBody().jsonPath("$.violations[0].fieldName").isEqualTo("uri");
+                .expectBody().jsonPath("$.errors[0].pointer").isEqualTo("#/uri");
         assertThat(routeRepo.findByName("ed-" + id).block().getUri()).isEqualTo(upstreamUrl());
     }
 
@@ -538,7 +538,7 @@ class RoutesIT extends IntegrationTest {
 
         //keeping its own name is fine
         admin(HttpMethod.PUT, "/routes/" + routeId("second-" + id))
-                .bodyValue(new RouteConfigRequest("second-" + id, "/s-" + id + "/**", upstreamUrl(), null, "edited", null))
+                .bodyValue(new RouteRequest("second-" + id, "/s-" + id + "/**", upstreamUrl(), null, "edited", null))
                 .exchange()
                 .expectStatus().isOk();
         assertThat(routeRepo.findByName("second-" + id).map(RouteEntity::getDescription).block()).isEqualTo("edited");

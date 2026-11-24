@@ -10,13 +10,13 @@ class RoutesRestoreCubit extends Cubit<RoutesRestoreState>
 
   Future restore({required String rawFileContent}) async {
     try {
-      emit(RoutesRestoreProcessingState());
+      emit(RoutesRestoringState());
 
       await repo.restore(rawFileContent: rawFileContent);
 
-      emit(RoutesRestoreOkState(repo.parseBackup(rawFileContent).length));
+      emit(RoutesRestoredOkState(repo.parseBackup(rawFileContent).length));
     } on Exception catch (exc) {
-      emit(RoutesRestoreErrorState(ExceptionConverter.parse(exc)));
+      emit(RoutesRestoringErrorState(ExceptionConverter.parse(exc)));
     }
   }
 }
@@ -25,22 +25,22 @@ abstract class RoutesRestoreState {
   const RoutesRestoreState();
 }
 
-class RoutesRestoreInitialState extends RoutesRestoreState {
+final class RoutesRestoreInitialState extends RoutesRestoreState {
   const RoutesRestoreInitialState();
 }
 
-class RoutesRestoreProcessingState extends RoutesRestoreState {
-  RoutesRestoreProcessingState();
+final class RoutesRestoringState extends RoutesRestoreState {
+  RoutesRestoringState();
 }
 
-class RoutesRestoreOkState extends RoutesRestoreState {
+final class RoutesRestoredOkState extends RoutesRestoreState {
   final int count;
 
-  RoutesRestoreOkState(this.count);
+  RoutesRestoredOkState(this.count);
 }
 
-class RoutesRestoreErrorState extends RoutesRestoreState {
+final class RoutesRestoringErrorState extends RoutesRestoreState {
   GlobalException exception;
 
-  RoutesRestoreErrorState(this.exception);
+  RoutesRestoringErrorState(this.exception);
 }

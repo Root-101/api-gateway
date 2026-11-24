@@ -8,9 +8,9 @@ class RoutesRepo {
 
   RoutesRepo({required this.client});
 
-  Future<List<RouteModel>> findAll() async {
+  Future<List<RouteModel>> list() async {
     try {
-      List<RouteResponse> response = await client.findAll();
+      List<RouteResponse> response = await client.list();
       return response.toModel(gatewayUrl: gatewayUrl);
     } on Exception catch (exc) {
       throw ExceptionConverter.parse(exc);
@@ -86,10 +86,10 @@ class RoutesRepo {
     }
   }
 
-  ///[routeId] null = the gateway; null when it isn't configured
-  Future<MaintenanceModel?> findGatewayMaintenance() async {
+  ///the gateway's add-ons, each null when it isn't configured
+  Future<GatewayAddonsModel> gatewayAddons() async {
     try {
-      return (await client.findGatewayMaintenance())?.toModel();
+      return (await client.gatewayAddons()).toModel();
     } on Exception catch (exc) {
       throw ExceptionConverter.parse(exc);
     }
@@ -103,7 +103,7 @@ class RoutesRepo {
     try {
       final response = await client.putMaintenance(
         routeId: routeId,
-        model: model.toEntity(),
+        model: model.toRequest(),
       );
       return response.toModel();
     } on Exception catch (exc) {
@@ -134,21 +134,16 @@ class RoutesRepo {
     }
   }
 
-  Future<Map<String, dynamic>> findGatewayAddons() async {
-    try {
-      return await client.findGatewayAddons();
-    } on Exception catch (exc) {
-      throw ExceptionConverter.parse(exc);
-    }
-  }
-
   ///[routeId] null = the gateway's
   Future<RateLimitModel?> putRateLimit({
     required RateLimitModel model,
     String? routeId,
   }) async {
     try {
-      return await client.putRateLimit(model: model, routeId: routeId);
+      return (await client.putRateLimit(
+        model: model.toRequest(),
+        routeId: routeId,
+      ))?.toModel();
     } on Exception catch (exc) {
       throw ExceptionConverter.parse(exc);
     }
@@ -167,10 +162,10 @@ class RoutesRepo {
     String? routeId,
   }) async {
     try {
-      return await client.setRateLimitEnabled(
+      return (await client.setRateLimitEnabled(
         enabled: enabled,
         routeId: routeId,
-      );
+      ))?.toModel();
     } on Exception catch (exc) {
       throw ExceptionConverter.parse(exc);
     }
@@ -182,7 +177,10 @@ class RoutesRepo {
     String? routeId,
   }) async {
     try {
-      return await client.putCors(model: model, routeId: routeId);
+      return (await client.putCors(
+        model: model.toRequest(),
+        routeId: routeId,
+      ))?.toModel();
     } on Exception catch (exc) {
       throw ExceptionConverter.parse(exc);
     }
@@ -201,7 +199,10 @@ class RoutesRepo {
     required String routeId,
   }) async {
     try {
-      return await client.setCorsEnabled(enabled: enabled, routeId: routeId);
+      return (await client.setCorsEnabled(
+        enabled: enabled,
+        routeId: routeId,
+      ))?.toModel();
     } on Exception catch (exc) {
       throw ExceptionConverter.parse(exc);
     }
@@ -215,7 +216,7 @@ class RoutesRepo {
     try {
       await client.putHealthCheck(
         routeId: routeId,
-        model: HealthCheckEntity(
+        model: HealthCheckRequest(
           enabled: model.enabled,
           path: model.path.trim(),
           intervalSeconds: model.intervalSeconds,
@@ -263,7 +264,7 @@ class RoutesRepo {
   }
 }
 
-extension RouteRequestParser on RouteFormModel {
+extension RouteFormModelToRequest on RouteFormModel {
   RouteRequest toRequest() => RouteRequest(
     name: name,
     description: description,
@@ -271,14 +272,14 @@ extension RouteRequestParser on RouteFormModel {
     uri: uri,
     rewritePath: rewritePath == null
         ? null
-        : RewritePathEntity(
+        : RewritePathRequest(
             replaceFrom: rewritePath!.replaceFrom,
             replaceTo: rewritePath!.replaceTo,
           ),
   );
 }
 
-extension RouteModelParser on RouteResponse {
+extension RouteResponseToModel on RouteResponse {
   RouteModel toModel({String? gatewayUrl}) => RouteModel(
     id: id,
     name: name,
@@ -305,14 +306,14 @@ extension RouteModelParser on RouteResponse {
         millis: h.millis,
       ),
     },
-    rateLimit: RateLimitModel.tryFromJson(addons['rate_limit']),
-    cors: CorsModel.tryFromJson(addons['cors']),
+    rateLimit: rateLimit?.toModel(),
+    cors: cors?.toModel(),
     addons: addons,
     gatewayUrl: gatewayUrl,
   );
 }
 
-extension MaintenanceModelParser on MaintenanceEntity {
+extension MaintenanceResponseToModel on MaintenanceResponse {
   MaintenanceModel toModel() => MaintenanceModel(
     enabled: enabled,
     message: message,
@@ -323,16 +324,67 @@ extension MaintenanceModelParser on MaintenanceEntity {
   );
 }
 
-extension MaintenanceEntityParser on MaintenanceModel {
-  MaintenanceEntity toEntity() => MaintenanceEntity(
+extension MaintenanceModelToRequest on MaintenanceModel {
+  MaintenanceRequest toRequest() => MaintenanceRequest(
     enabled: enabled,
     message: hasOwnMessage ? message!.trim() : null,
     retryAfter: retryAfter?.toUtc().toIso8601String(),
   );
 }
 
-extension RouteModelListParser on List<RouteResponse> {
+extension RouteResponseListToModel on List<RouteResponse> {
   List<RouteModel> toModel({String? gatewayUrl}) =>
       map((singleResponse) => singleResponse.toModel(gatewayUrl: gatewayUrl))
           .toList();
+}
+
+extension GatewayAddonsResponseToModel on GatewayAddonsResponse {
+  GatewayAddonsModel toModel() => GatewayAddonsModel(
+    maintenance: maintenance?.toModel(),
+    rateLimit: rateLimit?.toModel(),
+    cors: cors?.toModel(),
+    rateLimitSupported: hasRateLimitKey,
+  );
+}
+
+extension RateLimitResponseToModel on RateLimitResponse {
+  RateLimitModel toModel() => RateLimitModel(
+    enabled: enabled,
+    limit: limit,
+    period: period,
+    burst: burst,
+  );
+}
+
+extension RateLimitModelToRequest on RateLimitModel {
+  RateLimitRequest toRequest() => RateLimitRequest(
+    enabled: enabled,
+    limit: limit,
+    period: period,
+    burst: burst,
+  );
+}
+
+extension CorsResponseToModel on CorsResponse {
+  CorsModel toModel() => CorsModel(
+    enabled: enabled,
+    allowedOrigins: allowedOrigins,
+    allowCredentials: allowCredentials,
+    envVar: switch (envVar) {
+      null => null,
+      final e => CorsEnvVar(
+        name: e.name,
+        origins: e.origins,
+        matches: e.matches,
+      ),
+    },
+  );
+}
+
+extension CorsModelToRequest on CorsModel {
+  CorsRequest toRequest() => CorsRequest(
+    enabled: enabled,
+    allowedOrigins: allowedOrigins,
+    allowCredentials: allowCredentials,
+  );
 }

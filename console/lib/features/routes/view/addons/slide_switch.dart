@@ -1,7 +1,7 @@
 import 'dart:math';
 
 import 'package:console/app_exporter.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter/services.dart';
 
 ///slide control: drag the handle right to turn on, left to turn off, no confirmation.
@@ -205,10 +205,10 @@ class _SlideSwitchState extends State<SlideSwitch> {
                               decoration: BoxDecoration(
                                 color: live > 0.5 ? accent : c.label,
                                 shape: BoxShape.circle,
-                                boxShadow: const [
+                                boxShadow: [
                                   BoxShadow(
-                                    color: Color(0x59000000),
-                                    offset: Offset(0, 2),
+                                    color: app.colors.shadowSoft,
+                                    offset: const Offset(0, 2),
                                     blurRadius: 8,
                                   ),
                                 ],

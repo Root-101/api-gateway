@@ -86,13 +86,19 @@ build per URL.
 ## 9. One shape for every error
 
 Every error is a Problem Details (RFC 9457, `application/problem+json`): `type`, `title`, `status`,
-`detail`, `instance`, and in a `422` the `violations`, each with the `fieldName` as the client sent
-it (`rewrite_path.replace_from`, `[0].name`) and its `message`. The 401 of the security layer and
-the 429 of the lockout are written by the same handler.
+`detail`, `instance`, a stable `code` (the message key without `error.`: `route.not-found`), and in
+a `422` the `errors`, each with a JSON Pointer to the field as the client sent it
+(`#/rewrite_path/replace_from`, `#/0/name`), the `code` of the broken rule, its `detail` and its
+limits in `params`. The 401 of the security layer and the 429 of the lockout are written by the
+same handler.
+
+Clients decide on `code`, never on the text: the texts are translated and get reworded, a `code`
+only changes as an API change. Since 6.2.0, the same shape as the other Root-101 services
+(`spring-service-standard`); before it, a `422` had `violations` with `fieldName` and `message`.
 
 Before 6.0.0 there were four shapes (plain text, a bare list, an empty body and a Problem Details
 full of `null`s), so every client had to guess. It is the format of the other Root-101 services,
-and the console reads `detail` and `violations` for all of them. `detail` never carries internals:
+and the console reads `detail` and `errors` for all of them. `detail` never carries internals:
 not the Java types of a body that can't be read, not the static resources of Spring for a path no
 route matches, not the host of a service that doesn't answer.
 

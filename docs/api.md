@@ -38,13 +38,13 @@ Without credentials, or with an unknown or expired token, the answer is a `401` 
 HTTP/1.1 401 Unauthorized
 Content-Type: application/problem+json
 
-{"type":"about:blank","title":"Unauthorized","status":401,"detail":"Authentication required","instance":"/_admin/routes"}
+{"type":"about:blank","title":"Unauthorized","status":401,"detail":"Authentication required","instance":"/_admin/routes","code":"unauthorized"}
 ```
 
 Basic auth with a wrong username or password is also a `401`:
 
 ```json
-{"type":"about:blank","title":"Unauthorized","status":401,"detail":"Wrong username or password","instance":"/_admin/routes"}
+{"type":"about:blank","title":"Unauthorized","status":401,"detail":"Wrong username or password","instance":"/_admin/routes","code":"auth.wrong-credentials"}
 ```
 
 A `Basic` header that isn't `base64(username:password)` has `"detail":"Invalid Basic credentials"`.
@@ -65,7 +65,7 @@ HTTP/1.1 429 Too Many Requests
 Retry-After: 900
 Content-Type: application/problem+json
 
-{"type":"about:blank","title":"Too Many Requests","status":429,"detail":"Too many failed attempts, try again in 15 min","instance":"/_admin/auth/login"}
+{"type":"about:blank","title":"Too Many Requests","status":429,"detail":"Too many failed attempts, try again in 15 min","instance":"/_admin/auth/login","code":"auth.locked"}
 ```
 
 `Retry-After` is the seconds left in the window; `detail` says it in minutes, rounded up (in seconds under one minute).
@@ -98,21 +98,25 @@ Details ([RFC 9457](https://www.rfc-editor.org/rfc/rfc9457)) with
 HTTP/1.1 404 Not Found
 Content-Type: application/problem+json
 
-{"type":"about:blank","title":"Not Found","status":404,"detail":"Route does not exist: 00000000-0000-0000-0000-000000000001","instance":"/_admin/routes/00000000-0000-0000-0000-000000000001"}
+{"type":"about:blank","title":"Not Found","status":404,"detail":"Route does not exist: 00000000-0000-0000-0000-000000000001","instance":"/_admin/routes/00000000-0000-0000-0000-000000000001","code":"route.not-found"}
 ```
 
-| Field        | Type    | Description                                                     |
-|--------------|---------|-----------------------------------------------------------------|
-| `type`       | string  | Always `about:blank`: the status says what kind of error it is  |
-| `title`      | string  | The name of the status (`Not Found`, `Conflict`…)               |
-| `status`     | integer | The HTTP status, again                                          |
-| `detail`     | string  | What went wrong, for people                                     |
-| `instance`   | string  | The path of the request                                         |
-| `violations` | array   | Only in a `422`: one entry per broken rule                      |
+| Field      | Type    | Description                                                                          |
+|------------|---------|--------------------------------------------------------------------------------------|
+| `type`     | string  | Always `about:blank`: the status says what kind of error it is                       |
+| `title`    | string  | The name of the status (`Not Found`, `Conflict`…)                                    |
+| `status`   | integer | The HTTP status, again                                                               |
+| `detail`   | string  | What went wrong, for people                                                          |
+| `instance` | string  | The path of the request                                                              |
+| `code`     | string  | What went wrong, for programs: stable, the same in every language (see [codes](#error-codes)) |
+| `errors`   | array   | Only in a `422`: one entry per broken rule                                           |
 
-**Language.** `title`, `detail` and each violation's `message` follow the request's
+A client decides on `code`, never on `detail` or `title`: the texts can change, a `code` only
+changes as an API change written in the changelog.
+
+**Language.** `title`, `detail` and each error's `detail` follow the request's
 `Accept-Language`: `es` (or `es-ES`…) answers in Spanish, anything else, or no header, in English.
-Only the texts change: the statuses, the keys and the `fieldName`s are the same in every language.
+Only the texts change: the statuses, the `code`s and the `pointer`s are the same in every language.
 
 ```http
 GET /_admin/routes/00000000-0000-0000-0000-000000000001
@@ -121,14 +125,15 @@ Accept-Language: es
 HTTP/1.1 404 Not Found
 Content-Type: application/problem+json
 
-{"type":"about:blank","title":"No encontrado","status":404,"detail":"La ruta no existe: 00000000-0000-0000-0000-000000000001","instance":"/_admin/routes/00000000-0000-0000-0000-000000000001"}
+{"type":"about:blank","title":"No encontrado","status":404,"detail":"La ruta no existe: 00000000-0000-0000-0000-000000000001","instance":"/_admin/routes/00000000-0000-0000-0000-000000000001","code":"route.not-found"}
 ```
 
 The texts are in `gateway/src/main/resources/messages.properties` (English) and
 `messages_es.properties` (Spanish).
 
-A body that breaks a rule is a `422` with `violations`. A field that breaks two rules comes twice;
-the order of the entries is not fixed:
+A body that breaks a rule is a `422` with `code` `validation` and its `errors`. A field that breaks
+two rules comes twice. The order is fixed: by `pointer`, and inside a field the missing value first
+(`not-null`, `not-blank`, `not-empty`), so a client that shows one error per field shows that one:
 
 ```json
 {
@@ -137,21 +142,44 @@ the order of the entries is not fixed:
   "status": 422,
   "detail": "The request has invalid fields",
   "instance": "/_admin/routes",
-  "violations": [
-    {"fieldName": "name", "message": "Must not be blank"},
-    {"fieldName": "uri", "message": "Must be a valid URL"},
-    {"fieldName": "rewrite_path.replace_from", "message": "Must not be blank"}
+  "code": "validation",
+  "errors": [
+    {"pointer": "#/name", "code": "not-blank", "detail": "Must not be blank", "params": {}},
+    {"pointer": "#/rewrite_path/replace_from", "code": "size", "detail": "Size must be between 0 and 255", "params": {"max": 255, "min": 0}},
+    {"pointer": "#/uri", "code": "url", "detail": "Must be a valid URL", "params": {"host": "", "port": -1, "protocol": "", "regexp": ".*"}}
   ]
 }
 ```
 
-| Field       | Type   | Description                                                                          |
-|-------------|--------|--------------------------------------------------------------------------------------|
-| `fieldName` | string | The field, as a JSON path: `rewrite_path.replace_from`, or `[1].name` in a list body |
-| `message`   | string | What is wrong (`Must not be blank`, `Size must be between 0 and 255`…)               |
+| Field     | Type   | Description                                                                                         |
+|-----------|--------|-----------------------------------------------------------------------------------------------------|
+| `pointer` | string | The field, as a JSON Pointer (RFC 6901) with the names of the JSON: `#/rewrite_path/replace_from`, `#/allowed_origins/1`, `#/1/name` in a list body |
+| `code`    | string | The broken rule: a constraint (`not-null`, `not-blank`, `not-empty`, `size`, `min`, `max`, `url`, `pattern`) or one of the gateway's own (`route.invalid-path`…) |
+| `detail`  | string | What is wrong, in the request's language                                                            |
+| `params`  | object | The limits of the rule (`min`, `max`, `value`…), so a client can write its own text; `{}` if none   |
 
 A body that can't be read is a `400` that names the field when it can, never the Java types:
-`"detail":"Invalid value for name"` (a list where a text goes), or `"The body is not valid JSON"`.
+`"detail":"Invalid value for name"` (`code` `invalid-value`, a list where a text goes), or
+`"The body is not valid JSON"` (`bad-request`).
+
+### Error codes
+
+| Status | `code`                                                                                           |
+|--------|--------------------------------------------------------------------------------------------------|
+| `400`  | `invalid-value`, `bad-request`, `unreadable-request`, `route.invalid-id`, `http-log.invalid-page`, `http-log.invalid-size`, `http-log.invalid-status`, `http-log.invalid-route-id`, `cors.credentials-any-origin`, `cors.gateway-disabled`, `cors.gateway-credentials`, `cors.gateway-lockout` |
+| `401`  | `unauthorized` (no credentials), `auth.wrong-credentials`, `auth.invalid-basic`                  |
+| `403`  | `forbidden`                                                                                      |
+| `404`  | `route.not-found`, `no-route` (no route matches the path), `maintenance.gateway-not-found`, `maintenance.route-not-found`, `health-check.route-not-found`, `rate-limit.gateway-not-found`, `rate-limit.route-not-found`, `cors.route-not-found` |
+| `409`  | `route.name-taken`, `route.duplicated-name`, `conflict`                                          |
+| `422`  | `validation`, with the `errors`; the gateway's own rules in them: `route.invalid-path`, `route.path-without-leading-slash`, `route.uri-with-path`, `route.invalid-replace-from`, `health-check.invalid-path`, `rate-limit.invalid-period`, `cors.invalid-origin` |
+| `429`  | `auth.locked` (too many failed logins), `rate-limit.exceeded`                                    |
+| `500`  | `internal-server-error`                                                                          |
+| `502`  | `upstream.unreachable`, `upstream.closed`                                                        |
+| `503`  | `maintenance.active`, with the admin's `message` or the default text as `detail`                 |
+| `504`  | `upstream.connect-timeout`, `upstream.timeout`                                                   |
+
+Any other status Spring answers by itself (`405`, `406`, `413`, `415`) has the name of the status as
+its `code`: `method-not-allowed`, `not-acceptable`, `content-too-large`, `unsupported-media-type`.
 
 | Status | When                                                                                                 |
 |--------|------------------------------------------------------------------------------------------------------|
@@ -218,7 +246,7 @@ Wrong credentials:
 HTTP/1.1 401 Unauthorized
 Content-Type: application/problem+json
 
-{"type":"about:blank","title":"Unauthorized","status":401,"detail":"Wrong username or password","instance":"/_admin/auth/login"}
+{"type":"about:blank","title":"Unauthorized","status":401,"detail":"Wrong username or password","instance":"/_admin/auth/login","code":"auth.wrong-credentials"}
 ```
 
 A blank or missing field is a `422`:
@@ -230,9 +258,10 @@ A blank or missing field is a `422`:
   "status": 422,
   "detail": "The request has invalid fields",
   "instance": "/_admin/auth/login",
-  "violations": [
-    {"fieldName": "password", "message": "Must not be blank"},
-    {"fieldName": "username", "message": "Must not be blank"}
+  "code": "validation",
+  "errors": [
+    {"pointer": "#/password", "code": "not-blank", "detail": "Must not be blank", "params": {}},
+    {"pointer": "#/username", "code": "not-blank", "detail": "Must not be blank", "params": {}}
   ]
 }
 ```
@@ -329,7 +358,7 @@ An id that doesn't exist is a `404` (`"detail":"Route does not exist: …"`, see
 An id that isn't a UUID is a `400`, here and in the edit and delete:
 
 ```json
-{"type":"about:blank","title":"Bad Request","status":400,"detail":"Route id must be a UUID: not-a-uuid","instance":"/_admin/routes/not-a-uuid"}
+{"type":"about:blank","title":"Bad Request","status":400,"detail":"Route id must be a UUID: not-a-uuid","instance":"/_admin/routes/not-a-uuid","code":"route.invalid-id"}
 ```
 
 ## Create a route
@@ -367,7 +396,7 @@ A name already taken:
 HTTP/1.1 409 Conflict
 Content-Type: application/problem+json
 
-{"type":"about:blank","title":"Conflict","status":409,"detail":"Route already exists: users-service","instance":"/_admin/routes"}
+{"type":"about:blank","title":"Conflict","status":409,"detail":"Route already exists: users-service","instance":"/_admin/routes","code":"route.name-taken"}
 ```
 
 ## Validate a route
@@ -388,7 +417,7 @@ step of its route form with it, so the rules live only in the gateway. Not logge
 HTTP/1.1 422 Unprocessable Content
 Content-Type: application/problem+json
 
-{"type":"about:blank","title":"Unprocessable Content","status":422,"detail":"The request has invalid fields","instance":"/_admin/routes/validate","violations":[{"fieldName":"path","message":"Must be a valid path pattern"}]}
+{"type":"about:blank","title":"Unprocessable Content","status":422,"detail":"The request has invalid fields","instance":"/_admin/routes/validate","code":"validation","errors":[{"pointer":"#/path","code":"route.invalid-path","detail":"Must be a valid path pattern","params":{}}]}
 ```
 
 ## Create several routes
@@ -438,10 +467,10 @@ All or nothing: a name already taken (`409 Route already exists: …`), the same
 list, or a broken rule, and none is created.
 
 ```json
-{"type":"about:blank","title":"Conflict","status":409,"detail":"Duplicated route: a","instance":"/_admin/routes/batch"}
+{"type":"about:blank","title":"Conflict","status":409,"detail":"Duplicated route: a","instance":"/_admin/routes/batch","code":"route.duplicated-name"}
 ```
 
-The violations of a list name the item by its index:
+The errors of a list point to the item by its index:
 
 ```json
 {
@@ -450,7 +479,8 @@ The violations of a list name the item by its index:
   "status": 422,
   "detail": "The request has invalid fields",
   "instance": "/_admin/routes/batch",
-  "violations": [{"fieldName": "[1].name", "message": "Must not be blank"}]
+  "code": "validation",
+  "errors": [{"pointer": "#/1/name", "code": "not-blank", "detail": "Must not be blank", "params": {}}]
 }
 ```
 
@@ -548,7 +578,7 @@ Content-Type: application/json
 `404` when the route doesn't exist, `409` when the new name belongs to another route:
 
 ```json
-{"type":"about:blank","title":"Conflict","status":409,"detail":"Route already exists: orders-service","instance":"/_admin/routes/687b86ec-7c3b-4c78-9f82-69e82ebb8338"}
+{"type":"about:blank","title":"Conflict","status":409,"detail":"Route already exists: orders-service","instance":"/_admin/routes/687b86ec-7c3b-4c78-9f82-69e82ebb8338","code":"route.name-taken"}
 ```
 
 ## Delete a route
@@ -561,7 +591,7 @@ DELETE /_admin/routes/f5f1ab1b-0430-4c01-b653-7dd0ebf3bb11
 the second time):
 
 ```json
-{"type":"about:blank","title":"Not Found","status":404,"detail":"Route does not exist: f5f1ab1b-0430-4c01-b653-7dd0ebf3bb11","instance":"/_admin/routes/f5f1ab1b-0430-4c01-b653-7dd0ebf3bb11"}
+{"type":"about:blank","title":"Not Found","status":404,"detail":"Route does not exist: f5f1ab1b-0430-4c01-b653-7dd0ebf3bb11","instance":"/_admin/routes/f5f1ab1b-0430-4c01-b653-7dd0ebf3bb11","code":"route.not-found"}
 ```
 
 The logs of a deleted route stay, with its id and name. Its add-ons are deleted with it.
@@ -660,7 +690,7 @@ HTTP/1.1 503 Service Unavailable
 Retry-After: 3600
 Content-Type: application/problem+json
 
-{"type":"about:blank","title":"Service Unavailable","status":503,"detail":"Back at 14:00","instance":"/users/42"}
+{"type":"about:blank","title":"Service Unavailable","status":503,"detail":"Back at 14:00","instance":"/users/42","code":"maintenance.active"}
 ```
 
 - The gateway's maintenance wins: while it is on, every route answers with the gateway's message
@@ -793,7 +823,7 @@ HTTP/1.1 429 Too Many Requests
 Retry-After: 12
 Content-Type: application/problem+json
 
-{"type":"about:blank","title":"Too Many Requests","status":429,"detail":"Too many requests, try again in 12 s","instance":"/users/42"}
+{"type":"about:blank","title":"Too Many Requests","status":429,"detail":"Too many requests, try again in 12 s","instance":"/users/42","code":"rate-limit.exceeded"}
 ```
 
 - The gateway's counts each IP on **every route together**; a route's, on that route only. With
@@ -967,7 +997,7 @@ Wrong filters are a `400`, with what is wrong in `detail`: `status must be a num
 `route_id must be a uuid or NO-ROUTE`, `page must be 0 or more`, `size must be 1 or more`.
 
 ```json
-{"type":"about:blank","title":"Bad Request","status":400,"detail":"status must be a number","instance":"/_admin/http-logs"}
+{"type":"about:blank","title":"Bad Request","status":400,"detail":"status must be a number","instance":"/_admin/http-logs","code":"http-log.invalid-status"}
 ```
 
 A date that can't be read is a `400` naming its parameter (`"detail":"Invalid value for from"`).
@@ -1030,7 +1060,7 @@ GET /users/42
 HTTP/1.1 502 Bad Gateway
 Content-Type: application/problem+json
 
-{"type":"about:blank","title":"Bad Gateway","status":502,"detail":"The service can't be reached","instance":"/users/42"}
+{"type":"about:blank","title":"Bad Gateway","status":502,"detail":"The service can't be reached","instance":"/users/42","code":"upstream.unreachable"}
 ```
 
 ```http
@@ -1041,7 +1071,7 @@ GET /nothing/here
 HTTP/1.1 404 Not Found
 Content-Type: application/problem+json
 
-{"type":"about:blank","title":"Not Found","status":404,"detail":"No route matches /nothing/here","instance":"/nothing/here"}
+{"type":"about:blank","title":"Not Found","status":404,"detail":"No route matches /nothing/here","instance":"/nothing/here","code":"no-route"}
 ```
 
 If the service fails after the status was sent (in the middle of the body), the connection is cut.
